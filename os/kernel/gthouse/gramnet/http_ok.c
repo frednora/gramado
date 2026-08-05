@@ -13,7 +13,8 @@ gramnet_handle_http(
     if (!conn || !conn->tcp_conn || len < 4)
         return -1;
 
-    // The client only accepts this many bytes right now.
+
+    // The client only accepts this n bytes
     uint16_t peer_window = (uint16_t) conn->tcp_conn->snd_wnd;
 
     // Debug
@@ -38,11 +39,13 @@ gramnet_handle_http(
     // ============================================================
     //  Beautiful response for bragging rights
     // ============================================================
-    // The body is its own string, so its length is always known
-    // exactly via sizeof(). Content-Length is derived from it below,
-    // instead of being a hand-typed number that can drift out of sync.
-
-    static const char body[] =
+    static const char resp[] =
+        "HTTP/1.0 200 OK\r\n"
+        "Server: Gramado/0.1 (kernel)\r\n"
+        "Content-Type: text/html; charset=utf-8\r\n"
+        "Content-Length: 1464\r\n"
+        "Connection: close\r\n"
+        "\r\n"
         "<!DOCTYPE html>\n"
         "<html lang=\"en\">\n"
         "<head>\n"
@@ -71,73 +74,28 @@ gramnet_handle_http(
         "</body>\n"
         "</html>";
 
-    size_t body_len = sizeof(body) - 1;  // exclude null terminator
+    size_t resp_len = sizeof(resp) - 1;   // exclude null terminator
 
-    // Convert body_len to decimal ASCII manually (no snprintf).
-    char len_str[8];
-    {
-        size_t v = body_len;
-        int i = 0;
-        char tmp[8];
+//
+// Window
+//
 
-        if (v == 0) {
-            tmp[i++] = '0';
-        } else {
-            while (v > 0 && i < (int) sizeof(tmp)) {
-                tmp[i++] = (char) ('0' + (v % 10));
-                v /= 10;
-            }
-        }
-        // tmp holds digits reversed; flip into len_str.
-        int j = 0;
-        while (i > 0) {
-            len_str[j++] = tmp[--i];
-        }
-        len_str[j] = 0;
-    }
-
-    // Headers are assembled with strcat, so Content-Length always
-    // matches the real body size instead of a hand-typed literal.
-    char resp[2048];
-    resp[0] = 0;
-
-    strcat(resp, "HTTP/1.0 200 OK\r\n");
-    strcat(resp, "Server: Gramado/0.1 (kernel)\r\n");
-    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
-    strcat(resp, "Content-Length: ");
-    strcat(resp, len_str);
-    strcat(resp, "\r\n");
-    strcat(resp, "Connection: close\r\n");
-    strcat(resp, "\r\n");
-    strcat(resp, body);
-
-    size_t resp_len = strlen(resp);
-
-    //
-    // Window
-    //
-    if (resp_len > peer_window) {
-        printk("HTTP: [ALERT] response %u bytes exceeds peer window %u\n",
-               (unsigned) resp_len, (unsigned) peer_window);
+    if (resp_len > peer_window){
+        printk("HTTP: [ALERT] window\n");
     }
 
     tcp_seq seq = conn->tcp_conn->snd_nxt;
     tcp_ack ack = conn->tcp_conn->rcv_nxt;
 
-    int rv = network_send_tcp(
+    network_send_tcp(
         dhcp_info.your_ipv4,
         NetworkSaved.caller_ipv4,
         NetworkSaved.caller_mac,
         11888, sport,
         seq, ack,
         TH_ACK | TH_PUSH | TH_FIN,
-        resp,
+        (char *)resp,
         resp_len);
-
-    if (rv < 0) {
-        printk("HTTP: send failed, not advancing state\n");
-        return -1;
-    }
 
     // Data + FIN
     conn->tcp_conn->snd_nxt += resp_len + 1;
@@ -145,3 +103,4 @@ gramnet_handle_http(
 
     return 0;
 }
+

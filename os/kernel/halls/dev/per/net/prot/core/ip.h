@@ -119,13 +119,11 @@ struct ip_d
 
 // IP:
 // Source and dest IP address.
-// Address in network byte order.
+// Address in network byte order. 32bit size.
 // See: net/in.h 
-    struct in_addr  ip_src;  //(32bits)
 
-//-------------------------------
-
-    struct in_addr  ip_dst;  //(32bits) 
+    struct in_addr  ip_src;
+    struct in_addr  ip_dst;
 
 // Optional if IHL > 5.
 // 0~320 bits.

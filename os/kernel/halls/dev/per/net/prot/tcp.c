@@ -533,18 +533,23 @@ fail:
 //
 
 // When receiving tcp frame from NIC device.
+// Transport layer.
+// The TCP header tracks the state of 
+// communication between two TCP endpoints.
+
 void 
 network_handle_tcp( 
     const unsigned char *buffer, 
     ssize_t size )
 {
-// Transport layer.
-// The TCP header tracks the state of 
-// communication between two TCP endpoints.
-
-    struct tcp_d *tcp;
+    struct tcp_d *tcp;  // The buffer
     //register int i=0;
     uint16_t flags=0;
+
+    // No payload for handshake
+    char dummy_payload[2];
+    dummy_payload[0] = 0x00;
+    dummy_payload[1] = 0;
 
     // #debug
     //printk("network_handle_tcp: #todo\n");
@@ -566,16 +571,30 @@ network_handle_tcp(
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
 
+//
+// Super drop
+//
+
+    // #debug:
+    // Not listening to these ports for now. Too much noise.
+    if (dport == 80)
+        return;
+    if (dport == 443)
+        return;
+
     tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
     tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
-// Clean the payload local buffer.
-    memset(__tcp_payload,0,sizeof(__tcp_payload));
+    // Clean the payload local buffer
+    memset(__tcp_payload, 0, sizeof(__tcp_payload));
 
 // Create a local copy of the TCP payload.
 // The size is 1024
     strncpy( __tcp_payload, (buffer + TCP_HEADER_LENGHT), 1020 );
     __tcp_payload[1021] = 0;
+
+    // Window: The client can only accept this n bytes.
+    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
 
 //
 // Control fields
@@ -593,6 +612,9 @@ network_handle_tcp(
     uint16_t fACK=0;  // ACK :)
     uint16_t fURG=0;
 
+
+// The general rule: 
+// Receiving a FIN means "the peer is done sending," not "the connection is dead".
     if (flags & TH_FIN){
         fFIN = 1;
     }
@@ -635,43 +657,35 @@ network_handle_tcp(
     //printk("TCP: sport{%d}   #debug\n",sport);
     //printk("TCP: dport{%d}   #debug\n",dport);
 
-    // #todo
-    // Ignore it for now.
+    // #todo: Ignore it for now
     if (dport == 443)
     {
         return;  // No verbose
     }
-
-    // #todo
+    // #todo: Ignore it for now
     if (dport == 80)
     {
         printk("TCP: dport{%d} (Server not implemented yet)\n", dport);
         printk("SYN={%d} ACK={%d}\n", fSYN, fACK);
-
         if ( fSYN == 1 && fACK == 1 )
         {
             printk("TCP: SYS/ACK received in port{%d}\n", dport);
         }
-
         return;
     }
-
 
 // Show
 
 // Special port.
 // Just a test.
+// >> Connection request: 
+// SYN=1, ACK=0
+// >> Reply: 
+// SYN=1, ACK=1
+
     if (dport == 11888)
     {
-        printk ("------------------------\n");
-        printk ("---- [11888] << TCP ----\n");
-
-        // >> Connection request: 
-        // SYN=1, ACK=0
-        // >> Reply: 
-        // SYN=1, ACK=1
-
-        printk("SYN={%d} ACK={%d}\n", fSYN, fACK);
+        printk("TCP_11888: SYN={%d} ACK={%d} FIN={%d}\n", fSYN, fACK, fFIN);
 
         // (1) SYN
         // A client is trying to initialize a new connection.
@@ -679,9 +693,7 @@ network_handle_tcp(
         // It means the server here needs to respond.
         if ( fSYN == 1 && fACK == 0 )
         {
-            printk("\n");
-            printk("<<<< [TCP] SYN     (1)\n");
-            printk("SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
+            printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
             // Example sequence/ack numbers
             tcp_seq seq = 1000;              // server initial sequence number
@@ -717,6 +729,8 @@ network_handle_tcp(
             conn->tcp_conn->iss     = 1000;             // our ISN (or randomize later)
             conn->tcp_conn->snd_una = conn->tcp_conn->iss;
             conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1; // our SYN will consume 1
+
+            conn->tcp_conn->snd_wnd = peer_window;  // Window
 
             printk("Connection %d created, state=SYN_RECEIVED\n", id);                 
 
@@ -788,11 +802,6 @@ network_handle_tcp(
             //
             printk(">> Sending SYN/ACK\n");
 
-            // No payload for handshake
-            char dummy_payload[4];
-            dummy_payload[0] = 0x00;
-            dummy_payload[1] = 0;
-
             network_send_tcp(
                 dhcp_info.your_ipv4,       //my_ip,           // server IP
                 NetworkSaved.caller_ipv4,  //client_ip,       // client IP
@@ -815,27 +824,18 @@ network_handle_tcp(
         // A server accepted the connection.
         // We received a syn/ack as a response to
         // our syn sent by a process in this machine.
+        // #todo: Apply the connection structure that handles this connection.
 
         if ( fSYN == 1 && fACK == 1 )
         {
-            // #todo: Apply the connection structure that handles this connection.
-
-            printk("\n");
-            printk("<<<< [TCP] SYN/ACK (2)\n");
-            printk("SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number);
+            printk("TCP_SYN_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number);
+            printk("TCP_SYN_ACK: Sending final ACK\n");
 
             // We're the client here — the remote side acked our SYN and sent
             // its own SYN. Complete the handshake with the final ACK.
 
             tcp_seq final_seq = _ack_number;       // = our ISN + 1, given by the server's ack
             tcp_ack final_ack = _seq_number + 1;   // acknowledge the server's ISN
-
-            printk(">> Sending final ACK (3)\n");
-
-            // No payload for handshake
-            char no_payload[4];
-            no_payload[0] = 0x00;
-            no_payload[1] = 0;
 
             network_send_tcp(
                 dhcp_info.your_ipv4,        // our IP
@@ -846,7 +846,7 @@ network_handle_tcp(
                 final_seq,
                 final_ack,
                 TH_ACK,                     // ACK only, no SYN
-                no_payload,
+                dummy_payload,              // No payload
                 0                           // no payload — pure ACK doesn't consume a seq number
             );
 
@@ -866,10 +866,7 @@ network_handle_tcp(
         if (test_conn->magic == 1234 && test_conn->status == CONN_STATUS_SYN_RECEIVED){
         if ( fSYN == 0 && fACK == 1 )
         {
-            printk("\n");
-            printk("<<<< [TCP] ACK     (3)\n");
-            printk("SEQ={%d} | ACK={%d}\n",
-                _seq_number, _ack_number );
+            printk("TCP_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
             // -----------------------------------------------------
             // #todo
@@ -893,13 +890,13 @@ network_handle_tcp(
                 if (_ack_number != test_conn->tcp_conn->snd_nxt)
                 {
                     printk("TCP: step 3 ack mismatch, expected %d got %d\n",
-                        test_conn->tcp_conn->snd_nxt, _ack_number);
+                        test_conn->tcp_conn->snd_nxt, _ack_number );
                     return; // don't establish on a bad ack  
                 }
                 test_conn->tcp_conn->snd_una = _ack_number;
                 test_conn->tcp_conn->state   = TCP_ESTABLISHED;
                 test_conn->status = CONN_STATUS_ESTABLISHED;
-                printk("Connection %d is now ESTABLISHED\n", test_conn->id);
+                printk("TCP_ACK: Connection ESTABLISHED for id={%d} :)\n", test_conn->id);
             }
 
             return;
@@ -941,11 +938,15 @@ network_handle_tcp(
         //if (fSYN == 0 && fACK == 1)
         //{
             // #todo:
-            printk("11888: packet after handshake\n");
+            // printk("11888: packet after handshake\n");
 
             // #test: Checking for HTTP traffic on port 11888.
             gramnet_handle_http(
-                test_conn, __tcp_payload, sizeof(__tcp_payload ), sport, dport);
+                test_conn, 
+                __tcp_payload, 
+                sizeof(__tcp_payload ), 
+                sport, 
+                dport );
 
             return;
         //}

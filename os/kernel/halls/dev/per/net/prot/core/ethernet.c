@@ -112,27 +112,26 @@ int ethernet_on_sending (void)
 // + frame base address
 // + frame total size
 // Called by __e1000_on_receive() in e1000.c.
+// + Handle ethernet header.
+// + Call the handler for the given protocol.
+
 int 
 network_handle_ethernet ( 
     const unsigned char *frame, 
     ssize_t frame_size )
 {
-// + Handle ethernet header.
-// + Call the handler for the given protocol.
-
     struct ether_header *eth = (struct ether_header *) frame;
     uint16_t Type=0;
 
-// Drop it!
-// Set this flag using the command "net-on" on terminal.bin.
+    // Drop it!
+    // Set this flag using the command "net-on" on terminal.bin.
     if (NetworkInitialization.initialized != TRUE)
     {
         //#debug
         //printk("Packet: Network is OFF\n");
         goto fail;
     }
-
-// If the network is locked
+    // If the network is locked
     if (NetworkInitialization.locked == TRUE)
         goto fail;
 
@@ -142,17 +141,13 @@ network_handle_ethernet (
         //printk("network_on_receiving: frame\n");
         goto fail;
     }
-
-    // 1~8192
-    if ( frame_size <= 0 || 
-         frame_size > E1000_DEFAULT_BUFFER_SIZE )
+    // 1 ~ 8192
+    if (frame_size <= 0 || frame_size > E1000_DEFAULT_BUFFER_SIZE)
     {
         //printk("network_on_receiving: frame_size\n");
         goto fail;
     }
-
-    // #test
-    // Smaller than ethernet header
+    // #test: Smaller than ethernet header
     if ( frame_size < sizeof(struct ether_header) )
     {
         goto fail;
@@ -182,7 +177,7 @@ network_handle_ethernet (
     //printk("\n");
     //printk("Ethernet Header\n");
 
-// Ethernet header
+    // Invalid Ethernet header
     if ((void*) eth == NULL){
         goto fail;
     }
@@ -219,11 +214,8 @@ network_handle_ethernet (
     }
 */
 
-
-// Save the MAC of the caller.
-    network_fill_mac(
-        NetworkSaved.caller_mac, 
-        eth->mac_src );
+// Save the MAC of the caller
+    network_fill_mac( NetworkSaved.caller_mac, eth->mac_src );
 
 // #todo
 // Here we can check if the destination is us,
@@ -238,12 +230,11 @@ network_handle_ethernet (
 
     // #todo
     case ETHERTYPE_IPV6:
-        // Drop it
-        goto fail;
         // #todo
         //network_handle_ipv6( 
             //(frame + ETHERNET_HEADER_LENGHT), 
             //(frame_size - ETHERNET_HEADER_LENGHT) );
+        goto fail;  // Drop it
         break;
 
     case ETHERTYPE_IPV4:
@@ -260,10 +251,9 @@ network_handle_ethernet (
 
     // ...
 
-    // Unsupported type.
+    // Unsupported type
     default:
-        // Drop it
-        goto fail;
+        goto fail;  // Drop it
         break;
     };
 

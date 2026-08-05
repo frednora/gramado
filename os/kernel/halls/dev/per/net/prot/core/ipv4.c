@@ -214,19 +214,19 @@ fail:
 // IN:
 // buffer = ip header base address.
 // size = ip packet size. (ip header + ip payload).
+// Network layer.
+// Called by network_on_receiving() in network.c.
+// 0x0800
+
 void 
 network_handle_ipv4( 
     const unsigned char *buffer, 
     ssize_t size )
 {
-// Network layer.
-// Called by network_on_receiving() in network.c.
-// 0x0800
-
-// The buffer.
-    struct ip_d *ip;
-// The protocol for the payload.
-    uint8_t Protocol=0;
+    struct ip_d *ip;     // The buffer
+    uint8_t Protocol=0;  // The protocol for the payload
+    unsigned char *payload_pointer;
+    ssize_t payload_size;
 
     //printk ("IP: received\n");
 
@@ -234,11 +234,14 @@ network_handle_ipv4(
 // It's ok to use pointer here.
 // We're not allocating memory, we're using 
 // a pre-allocated buffer.
+
+    // ip
     ip = (struct ip_d *) buffer;
     if ((void*) ip == NULL){
         printk("network_handle_ipv4: ip\n");
         goto fail;
     }
+    // size
     if (size <= 0){
         printk("network_handle_ipv4: size 0\n");
         goto fail;
@@ -247,9 +250,8 @@ network_handle_ipv4(
         printk("network_handle_ipv4: size\n");
         goto fail;
     }
-
-// The minimum size.
-// Only the ip header.
+    // The minimum size.
+    // Only the ip header.
     //if (size < IP_HEADER_LENGHT){
     //    printk("network_handle_ipv4: size\n");
     //    goto fail;
@@ -263,14 +265,12 @@ network_handle_ipv4(
     unsigned char *src_ipv4 = (unsigned char *) &ip->ip_src.s_addr;
     unsigned char *dst_ipv4 = (unsigned char *) &ip->ip_dst.s_addr;
 
-// Save the IP of the caller.
-// For fast response.
-    network_fill_ipv4(
-        NetworkSaved.caller_ipv4, 
-        src_ipv4 );
+    // Save the IP of the caller.
+    // For fast response.
+    network_fill_ipv4( NetworkSaved.caller_ipv4, src_ipv4 );
 
-
-// #debug: Cathing broadcast
+// #debug: 
+// Catching broadcast
 
 /*
     if ( dst_ipv4[0]==255 && 
@@ -328,13 +328,9 @@ network_handle_ipv4(
         panic("IP: Bad total lenght #debug\n");
     }
 
-
-    unsigned char *payload_pointer;
-    ssize_t payload_size;
-
+// Payload
     payload_pointer = (buffer + IP_HEADER_LENGHT);
     payload_size = (ip_lenght - IP_HEADER_LENGHT);
-
 
     //printk ("target: %d.%d.%d.%d \n",
     //    dst_ipv4[0],dst_ipv4[1],dst_ipv4[2],dst_ipv4[3]);
@@ -355,23 +351,21 @@ network_handle_ipv4(
     Protocol = (uint8_t) ip->ip_p;
     //printk("Protocol: {%xH}\n",Protocol);
 
-    switch (Protocol)
-    {
-        case PROTOCOL_IP_TCP:
-            network_handle_tcp( payload_pointer, payload_size );
-            return;
-            break;
-        case PROTOCOL_IP_UDP:
-            network_handle_udp( payload_pointer, payload_size );
-            return;
-            break;
-
-        // Not supported ipv4 protocol.
-        case PROTOCOL_IP_ICMP:
-        // ...
-        default:
-            goto drop;
-            break;
+    switch (Protocol){
+    case PROTOCOL_IP_TCP:
+        network_handle_tcp( payload_pointer, payload_size );
+        return;
+        break;
+    case PROTOCOL_IP_UDP:
+        network_handle_udp( payload_pointer, payload_size );
+        return;
+        break;
+    // Not supported ipv4 protocol.
+    //case PROTOCOL_IP_ICMP:
+    // ...
+    default:
+        goto drop;
+        break;
     };
 
 // Something went wrong!

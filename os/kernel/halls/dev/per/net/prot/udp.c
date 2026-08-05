@@ -490,17 +490,17 @@ fail:
 // When receving UDP packet from NIC device.
 // IN:
 // buffer = udp header base address.
-// size     = udp packet size. (header + data)
+// size   = udp packet size. (header + data)
 void 
 network_handle_udp( 
     const unsigned char *buffer, 
     ssize_t size )
 {
-    struct udp_d *udp;
+    struct udp_d *udp;  // The buffer
     //register int i=0;
 
     // #debug
-    printk ("UDP: Received\n");
+    // printk ("UDP: Received\n");
 
 // Parameters:
     if ((void*) buffer == NULL){
@@ -534,6 +534,18 @@ network_handle_udp(
     printk ("len={%d}\n",udp->uh_ulen);
     printk ("sum={%d}\n",udp->uh_sum);
 */
+
+//
+// Super drop
+//
+
+    // #debug:
+    // Not listening to these ports for now. Too much noise.
+    if (dport == 80)
+        return;
+    if (dport == 443)
+        return;
+
 
 // Clean the payload local buffer.
     //memset( udp_payload, 0, sizeof(udp_payload) );
@@ -684,9 +696,7 @@ network_handle_udp(
 
 // Fail
 // Return if something goes wrong.
-
-    printk("UDP: [fail] port %d\n",dport);
-
+    // printk("UDP: [fail] port %d\n", dport);
     return;
 }
 
