@@ -23,6 +23,12 @@ gramnet_handle_http(
     dbg[n] = 0;
     printk("HTTP: {%s}\n", dbg);
 
+// #test
+// Push and return
+    // ps: len
+    // network_push_packet( payload, 512 );  // #test
+    // return 0;
+
     if (payload[0] != 'G' || payload[1] != 'E' ||
         payload[2] != 'T' || payload[3] != ' ')
     {
@@ -121,8 +127,8 @@ gramnet_handle_http(
                (unsigned) resp_len, (unsigned) peer_window);
     }
 
-    tcp_seq seq = conn->tcp_conn->snd_nxt;
-    tcp_ack ack = conn->tcp_conn->rcv_nxt;
+    tcp_seq seq = conn->tcp_conn->snd_nxt;   // 1001 after SYN
+    tcp_ack ack = conn->tcp_conn->rcv_nxt;   // client’s ISN + 1
 
     int rv = network_send_tcp(
         dhcp_info.your_ipv4,

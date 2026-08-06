@@ -73,8 +73,8 @@ int main()
     struct sockaddr_in servaddr;
 
     // Create a socket for the server.
-    sockfd=socket(AF_INET,SOCK_DGRAM,0);
-    if(sockfd==-1){
+    sockfd=socket(AF_INET, SOCK_DGRAM, 0);
+    if(sockfd == -1){
         printf("socket creation failed...\n");
         exit(0);
     }else{

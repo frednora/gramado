@@ -58,6 +58,9 @@ all:
 
 	make -C lua1/
 
+#test
+	make -C http/
+
 
 clean:
 	-rm -f *.o 

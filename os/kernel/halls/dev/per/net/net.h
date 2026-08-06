@@ -216,6 +216,9 @@ struct connection_d
     struct endpoint_pair_d *ep_pair;
     struct tcp_connection_d *tcp_conn;
     // future: struct udp_connection_d *udp_conn;
+
+// #test
+    struct network_buffer_d  *n_buf;
 };
 
 

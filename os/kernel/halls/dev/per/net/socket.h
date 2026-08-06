@@ -235,7 +235,6 @@ struct socket_d
 // Link to the current connection.
     struct socket_d *link;
 
-// States: SOCKET_CONNECTED, SOCKET_NOT_CONNECTED.
     int state;
 
 // flag

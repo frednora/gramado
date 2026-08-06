@@ -140,8 +140,9 @@ int sys_socket( int family, int type, int protocol )
 
 // #debug
 // '0' is the only valid value for now.
-    if (protocol != 0){
-        panic ("sys_socket: protocol not supported yet.\n");
+    if (protocol != 0)
+    {
+        //panic("sys_socket: protocol not supported yet.\n");
     }
 
 //
@@ -249,6 +250,26 @@ int sys_socket( int family, int type, int protocol )
         // If the IP address is Localhost, so it is a local connection.
         // #todo: For now we set it to '0'.
 
+        int IsValidProtocol = FALSE;
+        if (type == SOCK_STREAM)
+        {
+            if (protocol == 0)
+                __socket->protocol = IPPROTO_TCP;
+
+            if (protocol == IPPROTO_TCP)
+            {
+                IsValidProtocol = TRUE;
+            }
+            if (IsValidProtocol != TRUE)
+                goto fail;
+            return (int) socket_inet( 
+                (struct socket_d *) __socket, 
+                AF_INET, 
+                type, 
+                __socket->protocol  //protocol 
+            );
+        }
+
         // For now we're only accepting raw sockets
         // AF_INET sockets can also use a type of SOCK_RAW. 
         // If this type is set, the application connects directly to the IP layer and 
@@ -256,13 +277,16 @@ int sys_socket( int family, int type, int protocol )
         // #bugbug #todo
         // But in this case, for local connections we're gonna use raw type
         // and do not use any protocol ... just the raw frame.
-        
-        // #debug
-        if (type != SOCK_RAW)
-            panic("sys_socket: Only SOCK_RAW in AF_INET for now\n");
 
-        return (int) socket_inet( (struct socket_d *) __socket, 
-                        AF_INET, type, protocol );
+        if (type == SOCK_RAW)
+        {
+            return (int) socket_inet( 
+                (struct socket_d *) __socket, 
+                AF_INET, 
+                type, 
+                protocol 
+            );
+        }
         break;
 
     // ...
@@ -718,6 +742,7 @@ sys_gramado_accept (
 // i.e. a specified local 'IP address' and a 'port number'.
 // See:
 // https://man7.org/linux/man-pages/man2/bind.2.html
+// Service 7003
 
 int 
 sys_bind ( 
@@ -725,8 +750,6 @@ sys_bind (
     const struct sockaddr *addr,
     socklen_t addrlen )
 {
-// Service 7003
-
     struct te_d  *p;   // Process
     pid_t current_process = -1;
     struct file_d     *f;   // File
@@ -746,7 +769,7 @@ sys_bind (
         return (int) (-EBADF);
     }
 
-// Check addr structure.
+// Check addr structure
     if ((void *) addr == NULL)
     {
         debug_print("sys_bind: addr\n");
@@ -880,14 +903,36 @@ sys_bind (
 
 // ---------------------
 // AF_INET
-    if (s->addr.sa_family == AF_INET)
-    {
-        debug_print ("sys_bind: AF_INET not supported yet\n");
-        printk      ("sys_bind: AF_INET not supported yet\n");
-        // Copy.
-        //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
+    struct sockaddr_in *in_addr = (struct sockaddr_in *) addr;
 
-        goto fail;
+    if (in_addr->sin_family == AF_INET)
+    {
+        debug_print ("sys_bind: AF_INET family\n");
+        printk      ("sys_bind: AF_INET family\n");
+
+        // Copy values into the socket structure
+        s->addr_in.sin_family      = in_addr->sin_family;
+        s->addr_in.sin_addr.s_addr = in_addr->sin_addr.s_addr;
+        s->addr_in.sin_port        = in_addr->sin_port;
+
+        // Copy IP:PORT
+        s->ip_ipv4 = in_addr->sin_addr.s_addr;
+        s->port = ntohs(in_addr->sin_port);
+
+        // Mark socket as bound
+        s->state = SS_UNCONNECTED;
+        s->flags = 0;
+
+        if (s->port == 0){
+            printk("sys_bind: Port not defined\n");
+            goto fail;
+        }
+
+        printk("sys_bind: AF_INET bound to IP %x port %d\n",
+            s->ip_ipv4, s->port);
+
+        return 0; // success
+        //goto fail;
     }
 
 // #fail
