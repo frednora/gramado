@@ -3,6 +3,9 @@
 
 #include <kernel.h>
 
+
+#define __SAFE_MSS  1400   // conservative
+
 int 
 gramnet_handle_http(
     struct connection_d *conn,
@@ -48,6 +51,7 @@ gramnet_handle_http(
     // exactly via sizeof(). Content-Length is derived from it below,
     // instead of being a hand-typed number that can drift out of sync.
 
+/*
     static const char body[] =
         "<!DOCTYPE html>\n"
         "<html lang=\"en\">\n"
@@ -76,8 +80,32 @@ gramnet_handle_http(
         "</div>\n"
         "</body>\n"
         "</html>";
-
     size_t body_len = sizeof(body) - 1;  // exclude null terminator
+*/
+
+
+    // -------------------------------------------------
+    // Small but complete HTML (full DOM)
+    // -------------------------------------------------
+    static const char body[] =
+        "<!DOCTYPE html>\n"
+        "<html lang=\"en\">\n"
+        "<head>\n"
+        "<meta charset=\"utf-8\">\n"
+        "<title>Gramado OS</title>\n"
+        "</head>\n"
+        "<body>\n"
+        "<h1>Hello from Gramado OS!</h1>\n"
+        "<p>This page was served directly from the <b>kernel</b>.</p>\n"
+        "<p>Pure TCP/IP stack written from scratch.</p>\n"
+        "<p>No userspace web server.</p>\n"
+        "<hr>\n"
+        "<p>Port 11888 &mdash; Built by Fred Nora</p>\n"
+        "</body>\n"
+        "</html>\n";
+
+    size_t body_len = sizeof(body) - 1;
+
 
     // Convert body_len to decimal ASCII manually (no snprintf).
     char len_str[8];
@@ -105,27 +133,50 @@ gramnet_handle_http(
     // Headers are assembled with strcat, so Content-Length always
     // matches the real body size instead of a hand-typed literal.
     char resp[2048];
-    resp[0] = 0;
+    memset(resp, 0, sizeof(resp));
+    //resp[0] = 0;
 
     strcat(resp, "HTTP/1.0 200 OK\r\n");
+
     strcat(resp, "Server: Gramado/0.1 (kernel)\r\n");
+    //strcat(resp, "Server: Apache/2.4.41 (Ubuntu)\r\n");
+    //strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
+
     strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+
     strcat(resp, "Content-Length: ");
     strcat(resp, len_str);
     strcat(resp, "\r\n");
+
     strcat(resp, "Connection: close\r\n");
     strcat(resp, "\r\n");
+    strcat(resp, "\00");
+
     strcat(resp, body);
 
     size_t resp_len = strlen(resp);
 
-    //
-    // Window
-    //
+//
+// Window
+//
     if (resp_len > peer_window) {
         printk("HTTP: [ALERT] response %u bytes exceeds peer window %u\n",
                (unsigned) resp_len, (unsigned) peer_window);
+
+        goto fail;
     }
+
+//
+// No fragment
+//
+
+    if (resp_len > __SAFE_MSS) {
+        printk("HTTP: response too big (%u > %u), truncating or splitting needed\n",
+           (int)resp_len, (int)__SAFE_MSS);
+        // for now just refuse or use a smaller page
+        goto fail;
+    }
+
 
     tcp_seq seq = conn->tcp_conn->snd_nxt;   // 1001 after SYN
     tcp_ack ack = conn->tcp_conn->rcv_nxt;   // client’s ISN + 1
@@ -147,7 +198,10 @@ gramnet_handle_http(
 
     // Data + FIN
     conn->tcp_conn->snd_nxt += resp_len + 1;
+    // #ps: We are waiting for a FIN because we sent a FIN.
     conn->status = CONN_STATUS_FIN_WAIT;
 
     return 0;
+fail:
+    return -1;
 }

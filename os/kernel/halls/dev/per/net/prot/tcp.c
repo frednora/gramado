@@ -24,7 +24,8 @@
 static struct connection_d *test_conn = NULL;
 
 
-static char __tcp_payload[1024];
+//static char __tcp_payload[1024];
+static char __tcp_payload[1400];   // or 1460
 
 static uint16_t 
 __tcp_checksum(
@@ -276,7 +277,7 @@ network_send_tcp (
     // Flags (3bits) (Do we have fragments?)
     // Fragment offset (13bits) (fragment position)
     // Don't fragment for now.
-    Lipv4.ip_off = ToNetByteOrder16(0x4000); 
+    Lipv4.ip_off = ToNetByteOrder16(0x4000);  //DF bit 
 
     // Time to live (8bits)
     Lipv4.ip_ttl = 255;  // 64
@@ -585,13 +586,31 @@ network_handle_tcp(
     tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
     tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
-    // Clean the payload local buffer
+    // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
 
 // Create a local copy of the TCP payload.
 // The size is 1024
-    strncpy( __tcp_payload, (buffer + TCP_HEADER_LENGHT), 1020 );
-    __tcp_payload[1021] = 0;
+
+    size_t data_len = 0;
+
+    if (size >= TCP_HEADER_LENGHT){
+        data_len = (size - TCP_HEADER_LENGHT);
+        if (data_len >= 1400)
+            data_len = 1400 -2;
+        strncpy( __tcp_payload, (buffer + TCP_HEADER_LENGHT), data_len );
+        __tcp_payload[data_len + 1] = 0;
+        //__tcp_payload[1400 -1] = 0;
+        __tcp_payload[1400 -1] = 0;
+    } 
+    if (size < TCP_HEADER_LENGHT)
+    {
+        //data_len = 0;
+        //__tcp_payload[data_len + 1] = 0;
+        // #bugbug: Drop it
+        printk("TCP: Invalid buffer size %d\n", size);
+        return;
+    }
 
     // Window: The client can only accept this n bytes.
     uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
@@ -923,7 +942,7 @@ network_handle_tcp(
 
     // If we received something right after the connection was stablished
     // #ps: Not using the right structure for connection handling yet.
-    
+ 
     // Drop packets that are not for port 11888.
     if (dport != 11888) {
         return;
@@ -933,6 +952,8 @@ network_handle_tcp(
         return;
     if (test_conn->magic != 1234)
         return;
+
+// --------------------------------------------------
     if (test_conn->status == CONN_STATUS_ESTABLISHED)
     {
         //if (fSYN == 0 && fACK == 1)
@@ -944,12 +965,92 @@ network_handle_tcp(
             gramnet_handle_http(
                 test_conn, 
                 __tcp_payload, 
-                sizeof(__tcp_payload ), 
+                data_len,  //sizeof(__tcp_payload), //#bugbug: always 1024 
                 sport, 
                 dport );
 
             return;
         //}
+    }
+
+// -----------------------------------------------------
+// We already sent our response + FIN in gramnet_handle_http(),
+// so the connection is in FIN_WAIT. This is where the client's
+// own FIN (closing their side) is expected to show up.
+// -----------------------------------------------------
+/*
+Most common causes in your situation:
+You send data + FIN, but the browser’s FIN is not ACKed cleanly
+rcv_nxt is wrong when you send the final ACK
+You close the connection too early (set CONN_STATUS_CLOSED before the browser is finished)
+The browser sends a large GET and you didn’t advance rcv_nxt by the real length
+Retransmissions or duplicate ACKs confuse the state machine
+*/
+
+    if (test_conn->status == CONN_STATUS_FIN_WAIT)
+    {
+
+        // 2. If the peer sent FIN, ACK it and close
+        if (fFIN == 1)
+        {
+            printk("TCP_11888: FIN received in FIN_WAIT, sending ACK\n");
+
+            // #maybe: rcv_nxt is wrong when you send the final ACK
+
+            // The FIN consumes one sequence number, same as SYN.
+            test_conn->tcp_conn->rcv_nxt += 1;
+
+            int rv = 
+            network_send_tcp(
+                dhcp_info.your_ipv4,
+                NetworkSaved.caller_ipv4,
+                NetworkSaved.caller_mac,
+                11888,
+                sport,
+                test_conn->tcp_conn->snd_nxt,
+                test_conn->tcp_conn->rcv_nxt,
+                TH_ACK,
+                dummy_payload,
+                0
+            );
+
+            if (rv < 0) {
+                printk("TCP_11888: failed to ACK client FIN\n");
+                return;  // leave state as-is; a retransmitted FIN can retry
+            }
+
+            printk("TCP_11888: FIN acked\n");
+            
+            // We can close the connection now
+            test_conn->status = CONN_STATUS_CLOSED;   // adjust to your actual enum
+            //test_conn->tcp_conn->state = TCP_CLOSED;
+
+            return;
+        }
+
+        if (fACK == 1) 
+        {
+            // Just an ACK for our data+FIN — normal, do nothing special
+            printk("FIN_WAIT: received ACK\n");
+        }
+
+        // 1. Always advance rcv_nxt for any data that still arrives
+        // While in FIN_WAIT, never call the HTTP handler again. 
+        // Just consume the data (advance rcv_nxt) and wait for the FIN.
+        if (data_len > 0) {
+            test_conn->tcp_conn->rcv_nxt += data_len;
+            printk("FIN_WAIT: received %u extra bytes (ignored)\n", (unsigned)data_len);
+        }
+
+        return;  // whatever arrived while in FIN_WAIT, we're done with it here
+    }
+
+    if (test_conn->status == CONN_STATUS_CLOSED)
+    {
+        if (fFIN == 1){
+            printk("FIN on closed connection\n");
+            return;
+        }
     }
 
     //

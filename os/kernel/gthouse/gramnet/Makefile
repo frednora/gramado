@@ -67,14 +67,12 @@ KERNEL_INCLUDE := -I $(INCLUDE)
 # LDFLAGS := -m elf_x86_64 -static
 LDFLAGS := -m elf_x86_64 -s -x -static  
 
-# Everything is a file.
+# Objects
 OBJS = http.o gprot.o gramnet.o    
-
 
 all:
 	$(CC) -c http.c     $(KERNEL_INCLUDE) $(CFLAGS) -o http.o
 	$(CC) -c gprot.c    $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
-#	$(CC) -c gramnet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramnet.o
 	$(CC) -c gramnet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramnet.o
 
 # link

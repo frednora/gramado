@@ -211,24 +211,10 @@ struct connection_d *create_connection(int type)
     };
 
 // #test
-// -------------------------------------------------------------------------
-// TEMPORARY BUFFER LINKAGE
-// For now, every new TCP connection shares the same global queue (nb_rx_11888).
-// This is only a provisional shortcut to let us test data flow quickly.
-// IMPORTANT:
-//   - This does NOT allocate a private buffer per connection.
-//   - All connections will collide in the same circular buffer.
-//   - Message assembly across multiple clients is unreliable in this mode.
-// TODO (future work):
-//   - Allocate a fresh network_buffer_d for each connection (via kmalloc).
-//   - Initialize per-connection queues so each client can accumulate its own
-//     TCP stream and build complete messages independently.
-//   - Remove this global linkage once per-connection buffering is stable.
-// -------------------------------------------------------------------------
+// Maybe we can associate the connection structure with
+// a queue of buffers.
 
-    if (nb_rx_11888.initialized != TRUE){
-        new_conn->n_buf = (struct network_buffer_d *) &nb_rx_11888;
-    }
+    new_conn->n_buf = NULL;
 
     // Validation
     new_conn->used = TRUE;
