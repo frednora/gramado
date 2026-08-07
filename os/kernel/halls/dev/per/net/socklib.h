@@ -17,7 +17,7 @@
 #define SS_DISCONNECTING  5
 
 // Ports
-#define PORTS_WS  4040  // Window server
+#define PORTS_WS  4040  // Window server (actually: Display Server)
 #define PORTS_NS  4041  // Network server
 #define PORTS_FS  4042  // Filesystem server
 #define PORTS_WM  4043  // Window manager service
@@ -36,9 +36,9 @@
 // ports for local servers.
 // What pid is on each port.
 // It can be used to setup the main components of the system,
-// or maybe only the services in the gramado_ports.
+// or maybe only the services in the gramado_server_pids.
 // AF_GRAMADO
-// ... gramado_ports[]
+// ... gramado_server_pids[]
 // ...
 
 #define GRAMADO_PORT_DS  11  // Display server
@@ -53,7 +53,11 @@
 // ...
 #define GRAMADO_PORT_BR  20  // Gramado browser.
 
+// For server in the context of local client-server communication.
 #define GRAMADO_PORT_MAX  32
+
+// For servers in the context tcp connections with remote peers.
+#define GRAMADO_TCPSERVER_PORT_MAX  32
 //--
 //=====================================================
 

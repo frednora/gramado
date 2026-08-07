@@ -454,7 +454,7 @@
 // 513 - Register the ring3 display server.
 // Set ws PID for a given cgroup
 // Register a display server.
-// gramado_ports[11] = ws_pid
+// gramado_server_pids[11] = ws_pid
 // Called by the window server.
 // arg2 = cgroup structure pointer.
 // arg3 = The window server PID.
@@ -487,7 +487,7 @@
 
 // 521 - Set ns PID for a given cgroup
 // Register a network server.
-// gramado_ports[11] = ws_pid
+// gramado_server_pids[11] = ws_pid
 
 // 600 - dup
 // 601 - dup2

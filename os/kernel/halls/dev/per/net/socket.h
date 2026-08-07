@@ -315,9 +315,15 @@ int socket_ioctl ( int fd, unsigned long request, unsigned long arg );
 int socket_read ( int fd, char *buf, int count );
 int socket_write ( int fd, char *buf, int count );
 
-// gramado ports.
-pid_t socket_get_gramado_port (int port);
-int socket_set_gramado_port (int port, pid_t pid);
+// gramado server pids
+pid_t socket_get_gramado_server_pid (int port);
+int socket_set_gramado_server_pid (int port, pid_t pid);
+
+// gramado tcpserver pids
+pid_t socket_get_tcpserver_pid(int port);
+int socket_set_tcpserver_pid(int port, pid_t pid);
+
+int socket_find_empty_tcpserver_slot(void);
 
 int 
 update_socket ( 

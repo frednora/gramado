@@ -1562,7 +1562,7 @@ void *sci0 (
 // 513 - Register the ring3 display server.
 // Set display PID for a given cgroup structure.
 // Register a display server.
-// gramado_ports[11] = ws_pid
+// gramado_server_pids[11] = ws_pid
 // Called by the ring 3 display server.
 // >> arg2 = ring 0 cgroup structure pointer.
 // >> arg3 = The display erver PID.
@@ -1603,7 +1603,7 @@ void *sci0 (
 // 518 - Register the ring3 browser.
 // Set browser PID for a given cgroup structure.
 // Register a display server.
-// gramado_ports[11] = ws_pid
+// gramado_server_pids[11] = ws_pid
 // Called by the ring 3 display server.
 // >> arg2 = cgroup structure pointer.
 // >> arg3 = The display erver PID.
@@ -1648,9 +1648,10 @@ void *sci0 (
             if (cg->used == TRUE && cg->magic == 1234)
             {
                 cg->service_network_server.pid = (pid_t) arg3;
-                socket_set_gramado_port(
+                socket_set_gramado_server_pid (
                     GRAMADO_PORT_NS,
-                    (pid_t) current_process );
+                    (pid_t) current_process 
+                );
 
                 return (void *) TRUE;  //ok 
             }
@@ -2032,8 +2033,12 @@ void *sci0 (
 // 7006 - Set socket gramado port
 // Salvar um pid em uma das portas.
 // IN: gramado port, PID
-    if (number == 7006){
-        return (void *) socket_set_gramado_port( (int) arg2, (int) arg3 );
+    if (number == 7006)
+    {
+        return (void *) socket_set_gramado_server_pid ( 
+            (int) arg2, 
+            (int) arg3 
+        );
     }
 
 // 7007 - sys_getsockname()

@@ -22,35 +22,19 @@
 #define CONN_LSRC   4   // Local Server -> Remote Client
 
 
-struct remote_endpoint_d 
-{
-    struct sockaddr_in addr;
-    int protocol;
-
-//
-// tcp
-//
-    int tcp_state;
-    // future: seq numbers, ack numbers, flags, etc.
-};
-
-
+// Represents a single socket endpoint (local or remote).
 struct endpoint_d
 {
     int used;
     int magic;
 
-// An endpoint belongs to a side, inside a corner of a square.
-    int side_id;     // which side of the square (server or client)
-    int case_id;     // which of the 4 square cases (LCLS, LCRS, LSLC, LSRC)
-
+    struct socket_d *socket;
     int is_remote;   // ENDPOINT_LOCAL or ENDPOINT_REMOTE
 
-// it is one or another
-    struct socket_d *socket;
-    struct remote_endpoint_d *remote;     // valid only if type == REMOTE
+    struct sockaddr_in  addr;
 };
 
+// Couples client/server endpoints into a case (LC→LS, LC→RS, etc.).
 struct endpoint_pair_d 
 {
     int used;
@@ -58,7 +42,12 @@ struct endpoint_pair_d
 
 // An endpoint pair belongs to a case.
 //  One of the 4 corners of a square.
+//#define CONN_LCLS   1   // Local Client -> Local Server
+//#define CONN_LCRS   2   // Local Client -> Remote Server
+//#define CONN_LSLC   3   // Local Server -> Local Client
+//#define CONN_LSRC   4   // Local Server -> Remote Client
     int case_id;
+
     struct endpoint_d *s_ep;  // server endpoint
     struct endpoint_d *c_ep;  // client endpoint
 };
@@ -132,6 +121,8 @@ At this point, state = TCP_ESTABLISHED.
 #define TCP_TIME_WAIT     10
 
 
+// Holds TCP state machine info 
+// (sequence numbers, windows, timers, congestion control).
 struct tcp_connection_d 
 {
     int used;
@@ -202,7 +193,7 @@ struct tcp_connection_d
 #define CONN_STATUS_FIN_WAIT    4
 #define CONN_STATUS_CLOSED      5
 
-
+// Abstracts a communication link (TCP, UDP, LOCAL, IPC).
 struct connection_d 
 {
     int used;
@@ -210,15 +201,16 @@ struct connection_d
 
     int id;       // unique connection identifier
     int type;     // LOCAL, TCP, UDP, etc.
-
+    //int protocol;
     int status;   // NEW: generic connection status
 
-    struct endpoint_pair_d *ep_pair;
     struct tcp_connection_d *tcp_conn;
     // future: struct udp_connection_d *udp_conn;
+    // #test
+    //struct network_buffer_d  *n_buf;
 
-// #test
-    struct network_buffer_d  *n_buf;
+// ep pair
+    struct endpoint_pair_d *ep_pair;
 };
 
 
@@ -227,7 +219,6 @@ struct connection_d
 extern unsigned long connectionList[MAX_CONNECTIONS];
 
 // ================================================
-
 
 // Used for fast responses
 struct network_saved_d
@@ -261,6 +252,7 @@ extern struct network_saved_d  NetworkSaved;
 
 //#define DEFAULT_NUMBER_OF_NETWORK_BUFFERS  32
 
+// Buffers for packet queues (per port/protocol).
 struct network_buffer_d
 {
     int used;
@@ -326,6 +318,7 @@ extern struct network_initialization_d  NetworkInitialization;
 
 // =================================================
 
+// Metadata about the network interface (gateway, NICs, stats, etc.).
 // Describe our network
 // #todo
 // There is a lot of fields here,
@@ -336,12 +329,11 @@ struct network_info_d
     int magic;
     int initialized;  // This structure was initialied
 
-// Número identificador da rede.
-    int id;
+    int id;  // Network ID
 
 // Strings
 
-// Nome da rede.
+// Network name
     char *name_string;
     size_t name_string_size;
 // String mostrando a versão. ex: (1.1.1234)
@@ -401,8 +393,6 @@ extern struct network_info_d *NetworkInfo;
 
 // =================================================
 
-struct remote_endpoint_d *create_remote_endpoint(
-    uint8_t ip[4], unsigned short port, int protocol);
 struct endpoint_d *create_endpoint_object(void);
 struct endpoint_pair_d *create_endpoint_pair_object(void);
 struct connection_d *create_connection(int type);

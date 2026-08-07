@@ -49,33 +49,8 @@ static int __connection_get_free_slot(void);
 
 // ====================================================
 
-// remote ep
-struct remote_endpoint_d *create_remote_endpoint(
-    uint8_t ip[4], unsigned short port, int protocol)
-{
-    struct remote_endpoint_d *re;
-
-    re = (struct remote_endpoint_d *) kmalloc(sizeof(struct remote_endpoint_d));
-    if (!re) {
-        printk("create_remote_endpoint: allocation failed\n");
-        return NULL;
-    }
-
-    memset(re, 0, sizeof(struct remote_endpoint_d));
-
-    // Validation
-    re->protocol = protocol;
-    re->tcp_state = TCP_CLOSED;
-
-    // Fill sockaddr_in
-    re->addr.sin_family = AF_INET;
-    re->addr.sin_port   = ToNetByteOrder16(port);
-    memcpy(&re->addr.sin_addr, ip, 4);
-
-    return re;
-}
-
 // ep
+// Allocates and initializes a single endpoint (endpoint_d).
 struct endpoint_d *create_endpoint_object(void)
 {
     struct endpoint_d *new_ep;
@@ -89,19 +64,16 @@ struct endpoint_d *create_endpoint_object(void)
     // Validation
     new_ep->used = TRUE;
     new_ep->magic = 1234;
-    new_ep->side_id = 0;
-    new_ep->case_id = 0;
     new_ep->is_remote = FALSE;
     new_ep->socket = NULL;  // socket
-    new_ep->remote = NULL;  // remote endpoint
     return (struct endpoint_d *) new_ep;
 
 fail:
     return NULL;
 };
 
-
-// Pair
+// ep pair
+// Couples endpoints into a pair (endpoint_pair_d).
 struct endpoint_pair_d *create_endpoint_pair_object(void)
 {
     struct endpoint_pair_d *new_epp;
@@ -124,8 +96,8 @@ fail:
     return NULL;
 };
 
-// Create the connection structure,
-// a typeless structure.
+// Internal helper to allocate a generic connection_d.
+// Create the connection structure, a typeless structure.
 static struct connection_d *__create_connection_object(void)
 {
     struct connection_d *new_conn;
@@ -152,7 +124,10 @@ fail:
     return NULL;
 }
 
-// Create connection given a type (TCP, UDP, etc). Returns NULL on failure.
+// Public function to create a connection of a given type 
+// (currently only TCP fully supported).
+// Create connection given a type (TCP, UDP, etc). 
+// Returns NULL on failure.
 struct connection_d *create_connection(int type)
 {
     struct connection_d *new_conn;
@@ -210,12 +185,6 @@ struct connection_d *create_connection(int type)
         printk("create_connection: type %d not fully supported yet\n", type);
     };
 
-// #test
-// Maybe we can associate the connection structure with
-// a queue of buffers.
-
-    new_conn->n_buf = NULL;
-
     // Validation
     new_conn->used = TRUE;
     new_conn->magic = 1234;
@@ -241,7 +210,7 @@ static int __connection_get_free_slot(void)
     return -1; // no free slot
 }
 
-// Register a connection into the list
+// Places the connection into the global connectionList[].
 int connection_register(struct connection_d *conn)
 {
     if (!conn) 
@@ -259,6 +228,7 @@ int connection_register(struct connection_d *conn)
     return (int) slot;
 }
 
+// Retrieves a connection by ID.
 struct connection_d *get_connection(int id)
 {
     if (id < 0 || id >= MAX_CONNECTIONS) {
@@ -279,6 +249,7 @@ struct connection_d *get_connection(int id)
     return conn;
 }
 
+// Debug utility to print all active connections.
 // Walk the connection list and print valid ones (magic == 1234).
 void network_show_connections(void)
 {
@@ -508,7 +479,10 @@ network_register_ring3_display_server(
 
 // #todo: Maybe this method belongs to the sys_bind() routine.
 // #ps: This is the Display Server.
-    socket_set_gramado_port( GRAMADO_PORT_DS, (pid_t) current_process );
+    socket_set_gramado_server_pid( 
+        GRAMADO_PORT_DS, 
+        (pid_t) current_process 
+    );
 
 // Initialize DisplayServerInfo structure.
 // See: dispsrv.h and dispsrv.c.
@@ -644,7 +618,10 @@ network_register_ring3_browser(
 
 // #todo
 // Maybe this method belongs to the sys_bind() routine.
-    socket_set_gramado_port( GRAMADO_PORT_BR, (pid_t) current_process );
+    socket_set_gramado_server_pid( 
+        GRAMADO_PORT_BR, 
+        (pid_t) current_process 
+    );
 
     // This is for display servers, not browsers
     //__initialize_ds_info(current_process);
@@ -795,6 +772,7 @@ void network_test_NIC(void)
     //printk("testNIC: done\n");
 }
 
+// Sends raw Ethernet frames (currently via Intel NIC / ethernet_send).
 void 
 network_send_raw_packet (
     size_t frame_len, 
@@ -821,6 +799,9 @@ network_send_raw_packet (
     ethernet_send( frame_len, frame_address );
 }
 
+// Entry point when NIC delivers a frame. 
+// + Handle ethernet header.
+// + Call the handler for the given protocol.
 // IN:
 // + frame base address
 // + frame total size
@@ -830,11 +811,8 @@ network_on_receiving (
     const unsigned char *frame, 
     ssize_t frame_size )
 {
-// + Handle ethernet header.
-// + Call the handler for the given protocol.
-
-// If the kernel is not initialized yet.
-// No NIC device can call us yet.
+    // If the kernel is not initialized yet.
+    // No NIC device can call us yet.
     if (system_state != SYSTEM_RUNNING)
         return (int) -1;
 
@@ -980,6 +958,7 @@ network_on_receiving (
     //return (int) -1;
 }
 
+// Called when sending routines push data out.
 // Called when sending some raw packet.
 // #ps: We do NOT send, we're called by the sending routines.
 int network_on_sending (void)
@@ -993,8 +972,8 @@ int network_on_sending (void)
     return 0;
 }
 
-
 // network_push_packet:
+// Saves incoming payloads into the circular buffer (nb_rx_11888).
 // in: (Do buffer indicado para o buffer tail)
 // Isso é usado pelo driver de dispositivo
 // pra salvar o conteúdo que veio da rede em
@@ -1101,6 +1080,7 @@ fail:
 }
 
 // network_pop_packet:
+// Lets applications retrieve packets from the buffer.
 // out: (Do buffer head para o buffer indicado)
 // Isso é usado pelos aplicativos
 // para pegarem os conteúdos salvos nos buffers.
@@ -1207,6 +1187,7 @@ fail:
 // ============================================================
 // Service 118: sys_network_push_packet
 // ------------------------------------------------------------
+// Ring 3 syscall for injecting packets into the kernel buffer (testing).
 // Perspective: Ring 3 (user process)
 // This syscall allows a user process to *push* data into the
 // kernel's network receive buffer. 
@@ -1229,6 +1210,7 @@ unsigned long sys_network_push_packet(void *u_buffer, int len)
 // ============================================================
 // Service 119: sys_network_pop_packet
 // ------------------------------------------------------------
+// Ring 3 syscall for dequeuing packets.
 // Perspective: Ring 3 (user process)
 // This syscall allows a user process to *pop* (dequeue) data
 // from the kernel's network receive buffer.

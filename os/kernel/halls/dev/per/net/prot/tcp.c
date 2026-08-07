@@ -625,11 +625,11 @@ network_handle_tcp(
         return;
     }
 
-    // Window: The client can only accept this n bytes.
+    // Window: The client can only accept this n bytes
     uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
 
 //
-// Control fields
+// Flags
 //
     flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
 
@@ -690,8 +690,7 @@ network_handle_tcp(
     //printk("TCP: dport{%d}   #debug\n",dport);
 
     // #todo: Ignore it for now
-    if (dport == 443)
-    {
+    if (dport == 443){
         return;  // No verbose
     }
     // #todo: Ignore it for now
@@ -699,10 +698,9 @@ network_handle_tcp(
     {
         printk("TCP: dport{%d} (Server not implemented yet)\n", dport);
         printk("SYN={%d} ACK={%d}\n", fSYN, fACK);
-        if ( fSYN == 1 && fACK == 1 )
-        {
-            printk("TCP: SYS/ACK received in port{%d}\n", dport);
-        }
+        //if ( fSYN == 1 && fACK == 1 ){
+        //    printk("TCP: SYS/ACK received in port{%d}\n", dport);
+        //}
         return;
     }
 
@@ -775,38 +773,35 @@ network_handle_tcp(
             }
             pair->case_id = CONN_LSRC; // Local Server → Remote Client
 
-            // -- remote ep ---------------
+            // -- remote ep (client) ---------------
             // Remote client endpoint
             struct endpoint_d *client_ep = create_endpoint_object();
-            client_ep->side_id   = CONN_SIDE_CLIENT;
-            client_ep->case_id   = CONN_LSRC;
             client_ep->is_remote = TRUE;  // <<< REMOTE EP
-            client_ep->remote = 
-                create_remote_endpoint(
-                    NetworkSaved.caller_ipv4,
-                    sport,
-                    CONN_TYPE_TCP );
             if (!client_ep) {
                 printk("Failed to create remote endpoint\n");
                 return; // do not respond
             }
+            client_ep->socket = (struct socket_d *) kmalloc(sizeof(struct socket_d));
+            memset(client_ep->socket, 0, sizeof(struct socket_d));
             pair->c_ep = client_ep;
 
-            // -- local ep ---------------
+            // -- local ep (server) ---------------
             // Local server endpoint
             struct endpoint_d *server_ep = create_endpoint_object();
-            server_ep->side_id   = CONN_SIDE_SERVER;
-            server_ep->case_id   = CONN_LSRC;
             server_ep->is_remote = FALSE;  // NOT REMOTE EP (LOCAL)
-            // #todo:
-            // This is the part where we get the socket 
-            // from the listening server process. 
-            // For now, we set it to NULL.
-            server_ep->socket = NULL;  
             if (!server_ep) {
                 printk("Failed to create local endpoint\n");
                 return; // do not respond
             }
+            // #todo:
+            // This is the part where we get the socket 
+            // from the listening server process. 
+            // For now, we set it to NULL.
+            // #todo: 
+            // It should look up the process that registered itself as 
+            // the listener for port 11888 and then grab the socket object 
+            // that belongs to that process.
+            server_ep->socket = NULL;
             pair->s_ep = server_ep;
 
             // Plug them together

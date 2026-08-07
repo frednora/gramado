@@ -857,7 +857,7 @@ sys_bind (
 // #todo
 // Maybe we can use this method to update the cache
 // when we realized what is the server that is calling this routine.
-    socket_set_gramado_port(
+    socket_set_gramado_server_pid (
         GRAMADO_PORT_DS,
         (pid_t) current_process );
 */
@@ -930,6 +930,21 @@ sys_bind (
 
         printk("sys_bind: AF_INET bound to IP %x port %d\n",
             s->ip_ipv4, s->port);
+
+
+        /*
+        // #todo: This is a test yet.
+        // lets register our new AF_INET server
+        int slot = socket_find_empty_tcpserver_slot();
+        if (slot >= 0) {
+            socket_set_tcpserver_pid(slot, current_process);
+            printk("AF_INET server registered: pid=%d port=%d slot=%d\n",
+               current_process, s->port, slot);
+        } else {
+            printk("sys_bind: No free TCP server slots\n");
+        }
+        */
+
 
         return 0; // success
         //goto fail;
@@ -1179,7 +1194,7 @@ __connect_inet (
 
         if (addr_in->sin_port == __PORTS_DISPLAY_SERVER)
         {
-            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_DS);
+            target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_DS);
             if (Verbose == TRUE)
             {
                 printk("__connect_inet: [AF_INET] Connecting to the Window Server\n");
@@ -1197,7 +1212,7 @@ __connect_inet (
         // Se a porta for , então usaremos o pid do Network server.
         if (addr_in->sin_port == __PORTS_NETWORK_SERVER)
         {
-            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_NS);
+            target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_NS);
             if (Verbose==TRUE)
             {
                 printk("__connect_inet: [AF_INET] Connecting to the Network Server\n");
@@ -1697,28 +1712,28 @@ __connect_local (
 
         // ds: Display server
         if ( addr->sa_data[0] == 'd' && addr->sa_data[1] == 's' ){
-            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_DS);
+            target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_DS);
         }
         // wm: ...
         // ns: Network server
         if ( addr->sa_data[0] == 'n' && addr->sa_data[1] == 's' ){
-            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_NS);
+            target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_NS);
         }
         // fs: File system server
         if ( addr->sa_data[0] == 'f' && addr->sa_data[1] == 's' ){
-            target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_FS);
+            target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_FS);
         }
         // #todo: we: Web server
         //if (addr->sa_data[0] == 'w' && addr->sa_data[1] == 'e'){
-        //    target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_WE);
+        //    target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_WE);
         //}
         // #todo:  ft: FTP server
         //if (addr->sa_data[0] == 'f' && addr->sa_data[1] == 't'){
-        //    target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_FT);
+        //    target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_FT);
         //}
         // #todo:  tn: Telnet server
         //if (addr->sa_data[0] == 't' && addr->sa_data[1] == 'n'){
-        //   target_pid = (pid_t) socket_get_gramado_port(GRAMADO_PORT_TN);
+        //   target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_TN);
         //}
 
         if ( target_pid<0 || target_pid >= PROCESS_COUNT_MAX ){

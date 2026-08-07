@@ -18,52 +18,143 @@ struct socket_d  *LocalHostHTTPSocket;
 
 unsigned long socketList[SOCKET_COUNT_MAX];
 
-// private:
+
+
+// Local IPC servers
 // A small list of PIDs.
 // A server can register its PID here
 // telling the system that it is responsible for this kind of service.
-static pid_t gramado_ports[GRAMADO_PORT_MAX];
+static pid_t gramado_server_pids[GRAMADO_PORT_MAX];
+
+// TCP servers
+static pid_t gramado_tcpserver_pids[GRAMADO_TCPSERVER_PORT_MAX];
+
 
 // ----------------------------
 
-static int __socket_initialize_gramado_ports(void);
+static int __initialize_gramado_server_pids_table(void);
+static int __initialize_gramado_tcpserver_pids_table(void);
 
 // -------------------------------
 
-static int __socket_initialize_gramado_ports(void)
+static int __initialize_gramado_server_pids_table(void)
 {
     register int i=0;
     for (i=0; i<GRAMADO_PORT_MAX; i++){
-        gramado_ports[i] = 0;
+        gramado_server_pids[i] = 0;
+    };
+    return 0;
+}
+static int __initialize_gramado_tcpserver_pids_table(void)
+{
+    register int i=0;
+    for (i=0; i<GRAMADO_TCPSERVER_PORT_MAX; i++){
+        gramado_tcpserver_pids[i] = 0;
     };
     return 0;
 }
 
-pid_t socket_get_gramado_port (int port)
+
+/*
+ * socket_get_gramado_server_pid:
+ *     Retrieve the PID of a local IPC server (AF_GRAMADO) from the table.
+ *     IN: index (0..GRAMADO_PORT_MAX-1)
+ *     OUT: PID of the server registered at that index, or -1 on error.
+ */
+pid_t socket_get_gramado_server_pid (int port)
 {
     if (port<0 || port >31){
-        debug_print ("socket_set_gramado_port: port fail\n");
+        debug_print ("socket_get_gramado_server_pid: port fail\n");
         return (pid_t) -1;
     }
-    return (pid_t) gramado_ports[port];
+    return (pid_t) gramado_server_pids[port];
 }
 
-// Conjunto especiais de portas.
-// Usados apenas na famíla AF_GRAMADO.
-int socket_set_gramado_port (int port, pid_t pid)
+/*
+ * socket_set_gramado_server_pid:
+ *     Register a local IPC server (AF_GRAMADO) in the PID table.
+ *     IN: index (0..GRAMADO_PORT_MAX-1), PID of the server process.
+ *     OUT: 0 on success, -1 on error.
+ *     NOTE: This allows the kernel to know which process is responsible
+ *           for handling requests on a given Gramado service slot.
+ *     NOTE: Normally used for AF_GRAMADO in local c/s communication.
+ */
+int socket_set_gramado_server_pid (int port, pid_t pid)
 {
     if (port<0 || port >31){
-        debug_print ("socket_set_gramado_port: port fail\n");
+        debug_print ("socket_set_gramado_server_pid: port fail\n");
         return -1;
     }
     if (pid<0 || pid >= PROCESS_COUNT_MAX){
-        debug_print ("socket_set_gramado_port: port fail\n");
+        debug_print ("socket_set_gramado_server_pid: port fail\n");
         return -1;
     }
-    gramado_ports[port] = (pid_t) pid;
-
+    gramado_server_pids[port] = (pid_t) pid;
     return 0;
 }
+
+/*
+ * socket_get_tcpserver_pid:
+ *     Retrieve the PID of a TCP server (AF_INET) from the table.
+ *     IN: index (0..GRAMADO_TCPSERVER_PORT_MAX-1)
+ *     OUT: PID of the server registered at that index, or -1 on error.
+ *     NOTE: Used when a SYN arrives for a given port, so the kernel
+ *           can locate the listening process.
+ */
+pid_t socket_get_tcpserver_pid(int port) 
+{
+    if (port < 0 || port >= GRAMADO_TCPSERVER_PORT_MAX) {
+        debug_print("socket_get_tcpserver_pid: port fail\n");
+        return (pid_t) -1;
+    }
+    return (pid_t) gramado_tcpserver_pids[port];
+}
+
+/*
+ * socket_set_tcpserver_pid:
+ *     Register a TCP server (AF_INET) in the PID table.
+ *     IN: index (0..GRAMADO_TCPSERVER_PORT_MAX-1), PID of the server process.
+ *     OUT: 0 on success, -1 on error.
+ *     NOTE: Called during bind()+listen() so the kernel knows which
+ *           process owns a given TCP listening port.
+ */
+int socket_set_tcpserver_pid(int port, pid_t pid) 
+{
+    if (port < 0 || port >= GRAMADO_TCPSERVER_PORT_MAX) {
+        debug_print("socket_set_tcpserver_pid: port fail\n");
+        return -1;
+    }
+    if (pid < 0 || pid >= PROCESS_COUNT_MAX) {
+        debug_print("socket_set_tcpserver_pid: pid fail\n");
+        return -1;
+    }
+    gramado_tcpserver_pids[port] = (pid_t) pid;
+    return 0;
+}
+
+
+/*
+ * socket_find_empty_tcpserver_slot:
+ *     Search the gramado_tcpserver_pids[] table for a free slot.
+ *     A free slot is one where the PID value is 0 (unused).
+ *     OUT: index of the free slot (0..GRAMADO_TCPSERVER_PORT_MAX-1),
+ *          or -1 if no slot is available.
+ *     NOTE: Called when a new AF_INET server is created, before
+ *           registering its PID with socket_set_tcpserver_pid().
+ */
+int socket_find_empty_tcpserver_slot(void)
+{
+    int i;
+    for (i=0; i < GRAMADO_TCPSERVER_PORT_MAX; i++)
+    {
+        if (gramado_tcpserver_pids[i] == 0) {
+            return (int) i;  // free slot found
+        }
+    };
+    return (int) -1;  // no free slot
+}
+
+
 
 /*
  * create_socket_object: 
@@ -1151,7 +1242,13 @@ int socket_init(void)
     for (i=0; i<32; i++){
         socketList[i] = (unsigned long) 0;
     };
-    __socket_initialize_gramado_ports();
+
+    // A table for PIDs of the local servers
+    __initialize_gramado_server_pids_table();
+
+    // A table for PIDs of TCP connection servers
+    __initialize_gramado_tcpserver_pids_table();
+
     // ...
     return 0;
 }
