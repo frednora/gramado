@@ -19,6 +19,9 @@ gramnet_handle_http(
     // The client only accepts this many bytes right now.
     uint16_t peer_window = (uint16_t) conn->tcp_conn->snd_wnd;
 
+    printk("\n");
+    printk("\n");
+
     // Debug
     char dbg[80];
     size_t n = len < 79 ? len : 79;
@@ -26,17 +29,28 @@ gramnet_handle_http(
     dbg[n] = 0;
     printk("HTTP: {%s}\n", dbg);
 
-// #test
-// Push and return
+    // #test
+    // Push and return
     // ps: len
     // network_push_packet( payload, 512 );  // #test
     // return 0;
 
-    if (payload[0] != 'G' || payload[1] != 'E' ||
-        payload[2] != 'T' || payload[3] != ' ')
+    char *p;
+    p = payload;
+
+    if (p[0] != 'G' || p[1] != 'E' || p[2] != 'T' || p[3] != ' ')
     {
         printk("HTTP: Not a GET request\n");
         return 0;
+    }
+    p = p+4;
+    if (p[0] == '/')
+    {
+        p++;
+        if (p[0] != 'i' || p[1] != 'd' || p[2] != '=')
+        {
+            printk("HTTP: id=%d\n", (int)p[4]);
+        }
     }
 
     printk("HTTP GET from %d.%d.%d.%d:%u\n",
@@ -100,9 +114,12 @@ gramnet_handle_http(
         "<p>Pure TCP/IP stack written from scratch.</p>\n"
         "<p>No userspace web server.</p>\n"
         "<hr>\n"
-        "<p>Port 11888 &mdash; Built by Fred Nora</p>\n"
+        "<p>Port 11888 &mdash; Built by <a href=\"https://github.com/frednora\">Fred Nora</a></p>\n"
         "</body>\n"
         "</html>\n";
+
+    static const char notfound_body[] =
+        "<html><body><h1>404 Not Found</h1></body></html>\n";
 
     size_t body_len = sizeof(body) - 1;
 
@@ -136,21 +153,28 @@ gramnet_handle_http(
     memset(resp, 0, sizeof(resp));
     //resp[0] = 0;
 
-    strcat(resp, "HTTP/1.0 200 OK\r\n");
+    //strcat(resp, "HTTP/1.0 200 OK\r\n");
+    strcat(resp, "HTTP/1.1 200 OK\r\n");
 
-    strcat(resp, "Server: Gramado/0.1 (kernel)\r\n");
+
+    // -- server --------
+    strcat(resp, "Server: Gramnet/0.1 (Gramado)\r\n");
+    //strcat(resp, "Server: Gramado/0.1 (kernel)\r\n");
     //strcat(resp, "Server: Apache/2.4.41 (Ubuntu)\r\n");
     //strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
 
+    // -- content type --------
     strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
 
+    // -- content lenght --------
     strcat(resp, "Content-Length: ");
     strcat(resp, len_str);
     strcat(resp, "\r\n");
 
+    // -- connection --------
     strcat(resp, "Connection: close\r\n");
     strcat(resp, "\r\n");
-    strcat(resp, "\00");
+    //strcat(resp, "\00");
 
     strcat(resp, body);
 

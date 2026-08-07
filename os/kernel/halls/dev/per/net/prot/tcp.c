@@ -327,8 +327,8 @@ network_send_tcp (
     Ltcp.th_dport = (uint16_t) ToNetByteOrder16(target_port);
 
     // Sequence number and Acknowledgement number. (32,32)
-    Ltcp.th_seq   = ToNetByteOrder32(seq);
-    Ltcp.th_ack   = ToNetByteOrder32(ack);
+    Ltcp.th_seq = ToNetByteOrder32(seq);
+    Ltcp.th_ack = ToNetByteOrder32(ack);
 
     // Flags (16bit)
     // 4,6,6
@@ -589,20 +589,33 @@ network_handle_tcp(
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
 
+
+    // #test: Doing this instead of TCP_HEADER_LENGHT.
+    //size_t header_len =
+        //((FromNetByteOrder16(tcp->do_res_flags) >> 12) & 0xF) * 4;
+
+    //if (header_len != 20)
+        //printk("TCP: header_len\n");
+
 // Create a local copy of the TCP payload.
 // The size is 1024
 
     size_t data_len = 0;
 
     if (size >= TCP_HEADER_LENGHT){
+    //if (size >= header_len){
+
         data_len = (size - TCP_HEADER_LENGHT);
+        //data_len = (size - header_len);
         if (data_len >= 1400)
             data_len = 1400 -2;
         strncpy( __tcp_payload, (buffer + TCP_HEADER_LENGHT), data_len );
+        //strncpy( __tcp_payload, (buffer + header_len), data_len );
         __tcp_payload[data_len + 1] = 0;
         //__tcp_payload[1400 -1] = 0;
         __tcp_payload[1400 -1] = 0;
     } 
+    //if (size < header_len)
     if (size < TCP_HEADER_LENGHT)
     {
         //data_len = 0;
@@ -707,6 +720,7 @@ network_handle_tcp(
         printk("TCP_11888: SYN={%d} ACK={%d} FIN={%d}\n", fSYN, fACK, fFIN);
 
         // (1) SYN
+        // Step 1 — SYN received (initialize, not increment)
         // A client is trying to initialize a new connection.
         // The client shares an Initial Sequence Number (ISN) with the server.
         // It means the server here needs to respond.
@@ -954,12 +968,18 @@ network_handle_tcp(
         return;
 
 // --------------------------------------------------
+// Step 4 — the GET request arrives
     if (test_conn->status == CONN_STATUS_ESTABLISHED)
     {
         //if (fSYN == 0 && fACK == 1)
         //{
             // #todo:
             // printk("11888: packet after handshake\n");
+
+            // Acknowledge the bytes we just received (the GET request itself)
+            // before responding, or the client's TCP will think this data
+            // was never ACKed and will retransmit it.
+            test_conn->tcp_conn->rcv_nxt += data_len;
 
             // #test: Checking for HTTP traffic on port 11888.
             gramnet_handle_http(
@@ -987,6 +1007,7 @@ The browser sends a large GET and you didn’t advance rcv_nxt by the real lengt
 Retransmissions or duplicate ACKs confuse the state machine
 */
 
+// Step 5 — client's FIN arrives
     if (test_conn->status == CONN_STATUS_FIN_WAIT)
     {
 
@@ -1034,12 +1055,19 @@ Retransmissions or duplicate ACKs confuse the state machine
             printk("FIN_WAIT: received ACK\n");
         }
 
+        // Step 6 — stray data while in FIN_WAIT
         // 1. Always advance rcv_nxt for any data that still arrives
         // While in FIN_WAIT, never call the HTTP handler again. 
         // Just consume the data (advance rcv_nxt) and wait for the FIN.
-        if (data_len > 0) {
+        if (data_len > 0) 
+        {
+            printk("FIN_WAIT: received %u extra bytes (ignored)\n", (unsigned)data_len);       
             test_conn->tcp_conn->rcv_nxt += data_len;
-            printk("FIN_WAIT: received %u extra bytes (ignored)\n", (unsigned)data_len);
+            // #test: Checking for HTTP traffic on port 11888.
+            //gramnet_handle_http(
+                //test_conn, __tcp_payload, data_len, 
+                //sport, dport );
+            return;
         }
 
         return;  // whatever arrived while in FIN_WAIT, we're done with it here
