@@ -325,6 +325,9 @@ int socket_set_tcpserver_pid(int port, pid_t pid);
 
 int socket_find_empty_tcpserver_slot(void);
 
+struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port);
+
+
 int 
 update_socket ( 
     struct socket_d *socket, 

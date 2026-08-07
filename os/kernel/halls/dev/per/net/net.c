@@ -40,6 +40,7 @@ char *default_network_version_string = "0.0.0";
 // Used for fast responses
 struct network_saved_d  NetworkSaved;
 
+
 // ====================================================
 
 
@@ -48,6 +49,11 @@ static struct connection_d *__create_connection_object(void);
 static int __connection_get_free_slot(void);
 
 // ====================================================
+
+
+
+
+
 
 // ep
 // Allocates and initializes a single endpoint (endpoint_d).

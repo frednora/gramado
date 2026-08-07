@@ -4,7 +4,6 @@
 #ifndef __NET_NET_H
 #define __NET_NET_H    1
 
-
 // For side_id
 #define CONN_SIDE_SERVER  0
 #define CONN_SIDE_CLIENT  1

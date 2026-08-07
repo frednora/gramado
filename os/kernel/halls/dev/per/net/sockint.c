@@ -27,8 +27,8 @@ unsigned long socketList[SOCKET_COUNT_MAX];
 static pid_t gramado_server_pids[GRAMADO_PORT_MAX];
 
 // TCP servers
-static pid_t gramado_tcpserver_pids[GRAMADO_TCPSERVER_PORT_MAX];
-
+// static pid_t gramado_tcpserver_pids[SERVER_COUNT_MAX];
+unsigned long serverList[SERVER_COUNT_MAX];
 
 // ----------------------------
 
@@ -48,8 +48,9 @@ static int __initialize_gramado_server_pids_table(void)
 static int __initialize_gramado_tcpserver_pids_table(void)
 {
     register int i=0;
-    for (i=0; i<GRAMADO_TCPSERVER_PORT_MAX; i++){
-        gramado_tcpserver_pids[i] = 0;
+    for (i=0; i<SERVER_COUNT_MAX; i++)
+    {
+        serverList[i] = (unsigned long) 0;
     };
     return 0;
 }
@@ -96,31 +97,43 @@ int socket_set_gramado_server_pid (int port, pid_t pid)
 /*
  * socket_get_tcpserver_pid:
  *     Retrieve the PID of a TCP server (AF_INET) from the table.
- *     IN: index (0..GRAMADO_TCPSERVER_PORT_MAX-1)
+ *     IN: index (0..SERVER_COUNT_MAX-1)
  *     OUT: PID of the server registered at that index, or -1 on error.
  *     NOTE: Used when a SYN arrives for a given port, so the kernel
  *           can locate the listening process.
  */
 pid_t socket_get_tcpserver_pid(int port) 
 {
-    if (port < 0 || port >= GRAMADO_TCPSERVER_PORT_MAX) {
+    struct server_d *s;
+
+    if (port < 0 || port >= SERVER_COUNT_MAX) {
         debug_print("socket_get_tcpserver_pid: port fail\n");
         return (pid_t) -1;
     }
-    return (pid_t) gramado_tcpserver_pids[port];
+
+    s = (struct server_d *) serverList[port];
+    if ((void*) s == NULL)
+        return -1;
+    if (s->magic != 1234)
+        return -1;
+
+    // return PID
+    return (pid_t) s->pid;
 }
 
 /*
  * socket_set_tcpserver_pid:
  *     Register a TCP server (AF_INET) in the PID table.
- *     IN: index (0..GRAMADO_TCPSERVER_PORT_MAX-1), PID of the server process.
+ *     IN: index (0..SERVER_COUNT_MAX-1), PID of the server process.
  *     OUT: 0 on success, -1 on error.
  *     NOTE: Called during bind()+listen() so the kernel knows which
  *           process owns a given TCP listening port.
  */
 int socket_set_tcpserver_pid(int port, pid_t pid) 
 {
-    if (port < 0 || port >= GRAMADO_TCPSERVER_PORT_MAX) {
+    struct server_d *s;
+
+    if (port < 0 || port >= SERVER_COUNT_MAX) {
         debug_print("socket_set_tcpserver_pid: port fail\n");
         return -1;
     }
@@ -128,8 +141,15 @@ int socket_set_tcpserver_pid(int port, pid_t pid)
         debug_print("socket_set_tcpserver_pid: pid fail\n");
         return -1;
     }
-    gramado_tcpserver_pids[port] = (pid_t) pid;
-    return 0;
+
+    s = (struct server_d *) serverList[port];
+    if ((void*) s == NULL)
+        return -1;
+    if (s->magic != 1234)
+        return -1;
+    s->pid = (pid_t) pid;
+
+    return 0;  // done
 }
 
 
@@ -137,23 +157,58 @@ int socket_set_tcpserver_pid(int port, pid_t pid)
  * socket_find_empty_tcpserver_slot:
  *     Search the gramado_tcpserver_pids[] table for a free slot.
  *     A free slot is one where the PID value is 0 (unused).
- *     OUT: index of the free slot (0..GRAMADO_TCPSERVER_PORT_MAX-1),
+ *     OUT: index of the free slot (0..SERVER_COUNT_MAX-1),
  *          or -1 if no slot is available.
  *     NOTE: Called when a new AF_INET server is created, before
  *           registering its PID with socket_set_tcpserver_pid().
  */
 int socket_find_empty_tcpserver_slot(void)
 {
+    struct server_d *s;
     int i;
-    for (i=0; i < GRAMADO_TCPSERVER_PORT_MAX; i++)
+
+    for (i=0; i < SERVER_COUNT_MAX; i++)
     {
-        if (gramado_tcpserver_pids[i] == 0) {
-            return (int) i;  // free slot found
+        s = (struct server_d *) serverList[i]; // Get one pointer
+        if ((void*) s == NULL)
+        {
+            return (int) i;  // done
         }
     };
+
     return (int) -1;  // no free slot
 }
 
+/*
+ * socket_get_tcpserver_socket_by_port:
+ *     Retrieve the listening socket_d pointer for a TCP server
+ *     bound to a given real port number.
+ *     IN: real TCP port number (unsigned short)
+ *     OUT: pointer to the socket_d structure if found,
+ *          or NULL if no server is registered for that port.
+ *     NOTE: Used when handling incoming connections or data,
+ *           so the kernel can route directly to the server's socket.
+ */
+struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port)
+{
+    struct server_d *srv;
+    int i;
+
+    for (i=0; i < SERVER_COUNT_MAX; i++)
+    {
+        srv = (struct server_d *) serverList[i];
+        if ((void*) srv != NULL){
+            if (srv->magic == 1234)
+            {
+                if (srv->port == port){
+                    return (struct socket_d *) srv->socket;  // Direct pointer to the listening socket
+                }
+            }
+        }
+    }
+
+    return NULL;  // Not found
+}
 
 
 /*

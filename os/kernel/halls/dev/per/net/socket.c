@@ -852,16 +852,6 @@ sys_bind (
 // For now we have only two server, gwssrv and gnssrv,
 // and they are using this type of family.
 
-
-/*
-// #todo
-// Maybe we can use this method to update the cache
-// when we realized what is the server that is calling this routine.
-    socket_set_gramado_server_pid (
-        GRAMADO_PORT_DS,
-        (pid_t) current_process );
-*/
-
 //
 // Domains
 //
@@ -929,25 +919,34 @@ sys_bind (
         }
 
         printk("sys_bind: AF_INET bound to IP %x port %d\n",
-            s->ip_ipv4, s->port);
+            s->ip_ipv4, s->port );
 
-
-        /*
-        // #todo: This is a test yet.
-        // lets register our new AF_INET server
+        // #test: Register our new AF_INET server
         int slot = socket_find_empty_tcpserver_slot();
         if (slot >= 0) {
-            socket_set_tcpserver_pid(slot, current_process);
+            struct server_d *srv = kmalloc(sizeof(struct server_d));
+            memset(srv, 0, sizeof(struct server_d));
+
+            // Quick hook
+            srv->pid     = current_process;   // PID
+            srv->port    = s->port;  // The port
+
+            // Real store
+            srv->process = p;       // te_d for the process
+            srv->file    = f;       // file_d from Objects[sockfd]
+            srv->socket  = s;       // direct pointer to socket_d
+
+            // Validation
+            srv->used =  TRUE;
+            srv->magic = 1234;
+
             printk("AF_INET server registered: pid=%d port=%d slot=%d\n",
                current_process, s->port, slot);
         } else {
             printk("sys_bind: No free TCP server slots\n");
         }
-        */
 
-
-        return 0; // success
-        //goto fail;
+        return 0;  // done
     }
 
 // #fail

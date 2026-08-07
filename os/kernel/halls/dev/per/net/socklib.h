@@ -57,8 +57,25 @@
 #define GRAMADO_PORT_MAX  32
 
 // For servers in the context tcp connections with remote peers.
-#define GRAMADO_TCPSERVER_PORT_MAX  32
-//--
+
+#define SERVER_COUNT_MAX  32
+
+struct server_d 
+{
+    int used;
+    int magic;
+  
+  // Quick hooks
+    pid_t pid;              // Owner process
+    unsigned short port;    // Real TCP port number
+
+// Real path: fp->socket where fp is inside p->Objects[i].
+    struct te_d *process;    // The pointer for a process structure.
+    struct file_d   *file;   // Optional: file object for the socket
+    struct socket_d *socket; // Direct pointer to the listening socket
+};
+
+
 //=====================================================
 
 typedef unsigned  socklen_t;

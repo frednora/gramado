@@ -782,7 +782,18 @@ network_handle_tcp(
                 return; // do not respond
             }
             client_ep->socket = (struct socket_d *) kmalloc(sizeof(struct socket_d));
-            memset(client_ep->socket, 0, sizeof(struct socket_d));
+            if ((void*) client_ep->socket == NULL)
+                panic("TCP: on client_ep->socket\n");
+            if ((void*) client_ep->socket != NULL)
+            {
+                memset(client_ep->socket, 0, sizeof(struct socket_d));
+                // #todo:
+                // We need to fill this structure.
+                client_ep->socket->used = TRUE;
+                client_ep->socket->magic = 1234;
+                // ...   <<<<< #todo: A lot of element are missing
+            }
+
             pair->c_ep = client_ep;
 
             // -- local ep (server) ---------------
@@ -804,8 +815,33 @@ network_handle_tcp(
             server_ep->socket = NULL;
             pair->s_ep = server_ep;
 
+            // --------------------------------------------
+
             // Plug them together
             conn->ep_pair = pair;
+
+            // --------------------------------------------
+
+            struct socket_d *sk_listener = socket_get_tcpserver_socket_by_port(11888);
+            if ((void*) sk_listener != NULL)
+            {
+                if (sk_listener->magic == 1234)
+                {
+                    sk_listener->pending_client_count++;
+                    if (sk_listener->pending_client_count > sk_listener->backlog_max)
+                    {
+                        sk_listener->pending_client_count = 0;
+                    }
+                    int backlog_tail = sk_listener->pending_client_count;
+
+                    sk_listener->pending_client_endpoints[backlog_tail] = 
+                        client_ep->socket;
+                    sk_listener->pending_client_count++;
+                    sk_listener->state = SS_CONNECTING;
+
+                    server_ep->socket = sk_listener;   // Save into the ep
+                }
+            }
 
             // #important: Connection status.
             conn->status = CONN_STATUS_SYN_RECEIVED;
