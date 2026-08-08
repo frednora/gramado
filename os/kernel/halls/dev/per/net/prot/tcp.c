@@ -21,7 +21,7 @@
 
 // For testing only: track the last connection we created.
 // Later this will be replaced with endpoint-based lookup.
-static struct connection_d *test_conn = NULL;
+static struct connection_d *cur_conn = NULL;
 
 
 //static char __tcp_payload[1024];
@@ -870,7 +870,7 @@ network_handle_tcp(
             conn->status = CONN_STATUS_SYN_RECEIVED;
 
             // Our current connection been stablished.
-            test_conn = conn;  // remember this connection for later ACK
+            cur_conn = conn;  // remember this connection for later ACK
 
             // #todo
             // The client is saying: "I want to connect to the 
@@ -949,8 +949,8 @@ network_handle_tcp(
         // Once the matching connection is found in SYN_RECEIVED state,
         // we transition it to ESTABLISHED.
 
-        if ((void*)test_conn !=NULL){
-        if (test_conn->magic == 1234 && test_conn->status == CONN_STATUS_SYN_RECEIVED){
+        if ((void*)cur_conn !=NULL){
+        if (cur_conn->magic == 1234 && cur_conn->status == CONN_STATUS_SYN_RECEIVED){
         if ( fSYN == 0 && fACK == 1 )
         {
             printk("TCP_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
@@ -964,26 +964,27 @@ network_handle_tcp(
             // handles this connection yet.
             // No response is sent now.
 
-            if ((void*) test_conn == NULL){
-                printk("network_handle_tcp: [step 3] test_conn\n");
+            if ((void*) cur_conn == NULL){
+                printk("network_handle_tcp: [step 3] cur_conn\n");
                 return;
             }
-            if (test_conn->magic != 1234){
-                printk("network_handle_tcp: [step 3] test_conn validation\n");
+            if (cur_conn->magic != 1234){
+                printk("network_handle_tcp: [step 3] cur_conn validation\n");
                 return;
             }
-            if (test_conn->status == CONN_STATUS_SYN_RECEIVED)
+            if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
             {
-                if (_ack_number != test_conn->tcp_conn->snd_nxt)
+                if (_ack_number != cur_conn->tcp_conn->snd_nxt)
                 {
                     printk("TCP: step 3 ack mismatch, expected %d got %d\n",
-                        test_conn->tcp_conn->snd_nxt, _ack_number );
+                        cur_conn->tcp_conn->snd_nxt, _ack_number );
                     return; // don't establish on a bad ack  
                 }
-                test_conn->tcp_conn->snd_una = _ack_number;
-                test_conn->tcp_conn->state   = TCP_ESTABLISHED;
-                test_conn->status = CONN_STATUS_ESTABLISHED;
-                printk("TCP_ACK: Connection ESTABLISHED for id={%d} :)\n", test_conn->id);
+                cur_conn->tcp_conn->snd_una = _ack_number;
+                cur_conn->tcp_conn->state   = TCP_ESTABLISHED;
+                cur_conn->status = CONN_STATUS_ESTABLISHED;
+                printk("TCP_ACK: Connection ESTABLISHED for id={%d} :)\n", 
+                    cur_conn->id );
             }
 
             return;
@@ -1037,6 +1038,7 @@ network_handle_tcp(
     );
 */
 
+// Getting pointer based on remote ep.
     struct connection_d *c_conn = 
         tcp_find_connection_by_client(
             NetworkSaved.caller_ip_int, sport );  // remote
@@ -1044,13 +1046,13 @@ network_handle_tcp(
         NetworkSaved.caller_ip_int, sport
     );
 
-
+// Switch current connection
     if ((void*)c_conn != NULL) 
     {
         // Update state, window, sequence numbers, deliver payload
         if (c_conn->magic == 1234)
         {
-            test_conn = c_conn;
+            cur_conn = c_conn;
             // #debug
             printk("TCP: Reusing conn structure   <<<<<<<< \n");
         }
@@ -1059,14 +1061,14 @@ network_handle_tcp(
 
 
     // drop
-    if ((void*) test_conn == NULL)
+    if ((void*) cur_conn == NULL)
         return;
-    if (test_conn->magic != 1234)
+    if (cur_conn->magic != 1234)
         return;
 
 // --------------------------------------------------
 // Step 4 — the GET request arrives
-    if (test_conn->status == CONN_STATUS_ESTABLISHED)
+    if (cur_conn->status == CONN_STATUS_ESTABLISHED)
     {
         //if (fSYN == 0 && fACK == 1)
         //{
@@ -1076,11 +1078,11 @@ network_handle_tcp(
             // Acknowledge the bytes we just received (the GET request itself)
             // before responding, or the client's TCP will think this data
             // was never ACKed and will retransmit it.
-            test_conn->tcp_conn->rcv_nxt += data_len;
+            cur_conn->tcp_conn->rcv_nxt += data_len;
 
             // #test: Checking for HTTP traffic on port 11888.
             gramnet_handle_http(
-                test_conn, 
+                cur_conn, 
                 __tcp_payload, 
                 data_len,  //sizeof(__tcp_payload), //#bugbug: always 1024 
                 sport, 
@@ -1105,7 +1107,7 @@ Retransmissions or duplicate ACKs confuse the state machine
 */
 
 // Step 5 — client's FIN arrives
-    if (test_conn->status == CONN_STATUS_FIN_WAIT)
+    if (cur_conn->status == CONN_STATUS_FIN_WAIT)
     {
 
         // 2. If the peer sent FIN, ACK it and close
@@ -1116,7 +1118,7 @@ Retransmissions or duplicate ACKs confuse the state machine
             // #maybe: rcv_nxt is wrong when you send the final ACK
 
             // The FIN consumes one sequence number, same as SYN.
-            test_conn->tcp_conn->rcv_nxt += 1;
+            cur_conn->tcp_conn->rcv_nxt += 1;
 
             int rv = 
             network_send_tcp(
@@ -1125,8 +1127,8 @@ Retransmissions or duplicate ACKs confuse the state machine
                 NetworkSaved.caller_mac,
                 11888,
                 sport,
-                test_conn->tcp_conn->snd_nxt,
-                test_conn->tcp_conn->rcv_nxt,
+                cur_conn->tcp_conn->snd_nxt,
+                cur_conn->tcp_conn->rcv_nxt,
                 TH_ACK,
                 dummy_payload,
                 0
@@ -1140,8 +1142,8 @@ Retransmissions or duplicate ACKs confuse the state machine
             printk("TCP_11888: FIN acked\n");
             
             // We can close the connection now
-            test_conn->status = CONN_STATUS_CLOSED;   // adjust to your actual enum
-            //test_conn->tcp_conn->state = TCP_CLOSED;
+            cur_conn->status = CONN_STATUS_CLOSED;   // adjust to your actual enum
+            //cur_conn->tcp_conn->state = TCP_CLOSED;
 
             return;
         }
@@ -1158,11 +1160,12 @@ Retransmissions or duplicate ACKs confuse the state machine
         // Just consume the data (advance rcv_nxt) and wait for the FIN.
         if (data_len > 0) 
         {
-            printk("FIN_WAIT: received %u extra bytes (ignored)\n", (unsigned)data_len);       
-            test_conn->tcp_conn->rcv_nxt += data_len;
+            printk("FIN_WAIT: received %u extra bytes (ignored)\n", 
+                (unsigned)data_len );       
+            cur_conn->tcp_conn->rcv_nxt += data_len;
             // #test: Checking for HTTP traffic on port 11888.
             //gramnet_handle_http(
-                //test_conn, __tcp_payload, data_len, 
+                //cur_conn, __tcp_payload, data_len, 
                 //sport, dport );
             return;
         }
@@ -1170,7 +1173,7 @@ Retransmissions or duplicate ACKs confuse the state machine
         return;  // whatever arrived while in FIN_WAIT, we're done with it here
     }
 
-    if (test_conn->status == CONN_STATUS_CLOSED)
+    if (cur_conn->status == CONN_STATUS_CLOSED)
     {
         if (fFIN == 1){
             printk("FIN on closed connection\n");

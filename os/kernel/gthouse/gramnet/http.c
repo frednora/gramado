@@ -6,6 +6,147 @@
 
 #define __SAFE_MSS  1400   // conservative
 
+
+static char http_method[8]; 
+static char http_uri[256];
+static char http_version[16];
+
+static int ParameterId = 0;  // Invalid
+
+
+static int 
+__parse_http_request_line(
+    const char *payload, size_t len,
+    char *method, size_t msz,
+    char *uri, size_t usz,
+    char *version, size_t vsz );
+
+static int __http_parse_first_line(char *payload, size_t len);
+
+// ---------------------------------------------
+
+// Parse the first line: METHOD URI VERSION
+static int 
+__parse_http_request_line(
+    const char *payload, size_t len,
+    char *method, size_t msz,
+    char *uri, size_t usz,
+    char *version, size_t vsz )
+{
+    size_t i = 0;
+    size_t pos = 0;
+
+    if (!payload || len == 0) return -1;
+
+    // METHOD
+    while (i < len && payload[i] != ' ' && pos < msz-1) 
+    {
+        method[pos++] = payload[i++];
+    }
+    method[pos] = 0;
+    if (i >= len || payload[i] != ' ') 
+        return -1;
+    i++; // skip space
+
+    // URI
+    pos = 0;
+    while (i < len && payload[i] != ' ' && payload[i] != '\r' && pos < usz-1) 
+    {
+        uri[pos++] = payload[i++];
+    }
+    uri[pos] = 0;
+    if (i >= len || payload[i] != ' ') 
+        return -1;
+    i++; // skip space
+
+    // VERSION
+    pos = 0;
+    while (i < len && payload[i] != '\r' && payload[i] != '\n' && pos < vsz-1) 
+    {
+        version[pos++] = payload[i++];
+    }
+    version[pos] = 0;
+
+    return 0;
+}
+
+static int __http_parse_first_line(char *payload, size_t len)
+{
+    int Status = -1;
+
+// Parameters:
+    if ((void*) payload == NULL)
+        return -1;
+    if (len <= 0)
+        return -1;
+
+    Status = 
+    (int) __parse_http_request_line(
+            payload, len, 
+            http_method, sizeof(http_method),
+            http_uri, sizeof(http_uri), 
+            http_version, sizeof(http_version) 
+        );
+
+    if (Status != 0)
+        return -1;
+
+// ---
+
+    printk("HTTP: method=%s uri=%s version=%s\n", 
+        http_method, http_uri, http_version );
+
+// Method id:
+    int MethodId = 0;     // Invalid
+
+    if ( gramado_strncmp(http_method,"GET",3) == 0 )
+        MethodId = 1;
+    if ( gramado_strncmp(http_method,"POST",4) == 0 )
+        MethodId = 2;
+
+    if (MethodId == 0)
+        return -1;
+
+
+//
+// ROUTE: 
+// Decide which path the request belongs to
+//
+
+// Parameter id:
+// 1–4 → /id=N
+// 5   → /favicon.ico
+// 6   → /index.html
+
+    // Using: Request Uniform Resource Identifier
+
+    // id
+    if ( gramado_strncmp(http_uri, "/id=1", 5) == 0 )
+        ParameterId = 1;
+    if ( gramado_strncmp(http_uri, "/id=2", 5) == 0 )
+        ParameterId = 2;
+    if ( gramado_strncmp(http_uri, "/id=3", 5) == 0 )
+        ParameterId = 3;
+    if ( gramado_strncmp(http_uri, "/id=4", 5) == 0 )
+        ParameterId = 4;
+
+    // files
+    if ( gramado_strncmp(http_uri, "/favicon.ico", 12) == 0 )
+        ParameterId = 5;
+    if ( gramado_strncmp(http_uri, "/index.html",  11) == 0 )
+        ParameterId = 6;
+    if ( gramado_strncmp(http_uri, "/", 1) == 0 )
+        ParameterId = 7;
+    if ( gramado_strncmp(http_uri, "/about", 6) == 0 )
+        ParameterId = 8;
+
+    return (int) MethodId;  // Done
+}
+
+// Tokens for the first line:
+// (Request Uniform Resource Identifier) 
+// METHOD SP REQUEST-URI SP HTTP-VERSION CRLF
+// GET /index.html HTTP/1.1
 int 
 gramnet_handle_http(
     struct connection_d *conn,
@@ -35,28 +176,31 @@ gramnet_handle_http(
     // network_push_packet( payload, 512 );  // #test
     // return 0;
 
-    char *p;
-    p = payload;
-
-    if (p[0] != 'G' || p[1] != 'E' || p[2] != 'T' || p[3] != ' ')
-    {
-        printk("HTTP: Not a GET request\n");
-        return 0;
-    }
-    p = p+4;
-    if (p[0] == '/')
-    {
-        p++;
-        if (p[0] != 'i' || p[1] != 'd' || p[2] != '=')
-        {
-            printk("HTTP: id=%d\n", (int)p[4]);
-        }
-    }
-
     printk("HTTP GET from %d.%d.%d.%d:%u\n",
            NetworkSaved.caller_ipv4[0], NetworkSaved.caller_ipv4[1],
            NetworkSaved.caller_ipv4[2], NetworkSaved.caller_ipv4[3],
            sport);
+
+    //char *p;
+    //p = payload;
+
+    int WhatMethod = 0;
+    WhatMethod = (int) __http_parse_first_line(payload, len);
+
+    if (WhatMethod == 0){
+        printk("HTTP: Invalid method\n");
+        goto fail;
+    }
+    // Not a GET
+    //if (WhatMethod != 1){
+    //    printk("HTTP: Not a GET \n");
+    //    goto fail;
+    //}
+
+
+    //static const char notfound_body[] =
+        //"<html><body><h1>404 Not Found</h1></body></html>\n";
+
 
     // ============================================================
     //  Beautiful response for bragging rights
@@ -98,6 +242,7 @@ gramnet_handle_http(
 */
 
 
+/*
     // -------------------------------------------------
     // Small but complete HTML (full DOM)
     // -------------------------------------------------
@@ -117,9 +262,25 @@ gramnet_handle_http(
         "<p>Port 11888 &mdash; Built by <a href=\"https://github.com/frednora\">Fred Nora</a></p>\n"
         "</body>\n"
         "</html>\n";
+*/
 
-    static const char notfound_body[] =
-        "<html><body><h1>404 Not Found</h1></body></html>\n";
+    static const char body[] =
+    "<!DOCTYPE html>\n"
+    "<html lang=\"en\">\n"
+    "<head><meta charset=\"utf-8\"><title>Gramado OS</title></head>\n"
+    "<body>\n"
+    "<h1>Hello from Gramado OS!</h1>\n"
+    "<p>This page was served directly from the <b>kernel</b>.</p>\n"
+    "<p>Try exploring:</p>\n"
+    "<ul>\n"
+    "  <li><a href=\"/index.html\">Home</a></li>\n"
+    "  <li><a href=\"/about\">About Gramado</a></li>\n"
+    "  <li><a href=\"/id=1\">Special ID=1 page</a></li>\n"
+    "</ul>\n"
+    "<hr>\n"
+    "<p>Port 11888 &mdash; Built by Fred Nora</p>\n"
+    "</body>\n"
+    "</html>\n";
 
     size_t body_len = sizeof(body) - 1;
 
@@ -153,18 +314,47 @@ gramnet_handle_http(
     memset(resp, 0, sizeof(resp));
     //resp[0] = 0;
 
-    //strcat(resp, "HTTP/1.0 200 OK\r\n");
-    strcat(resp, "HTTP/1.1 200 OK\r\n");
 
+    // -- status -------------
+    switch (ParameterId) {
+    case 1:
+        strcat(resp, "HTTP/1.1 200 OK\r\n");
+        break;
+    case 2:
+        strcat(resp, "HTTP/1.1 201 Created\r\n");
+        break;
+    case 3:
+        strcat(resp, "HTTP/1.1 404 Not Found\r\n");
+        break;
+    case 4:
+        strcat(resp, "HTTP/1.1 500 Internal Server Error\r\n");
+        break;
+    default:
+        strcat(resp, "HTTP/1.1 200 OK\r\n");
+        //strcat(resp, "HTTP/1.0 200 OK\r\n");
+        //strcat(resp, "HTTP/1.1 200 OK\r\n");
+        break;
+    };
 
     // -- server --------
-    strcat(resp, "Server: Gramnet/0.1 (Gramado)\r\n");
-    //strcat(resp, "Server: Gramado/0.1 (kernel)\r\n");
-    //strcat(resp, "Server: Apache/2.4.41 (Ubuntu)\r\n");
-    //strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
+    switch (ParameterId){
+    case 1:  strcat(resp, "Server: Gramnet/0.1 (Gramado)\r\n");   break;
+    case 2:  strcat(resp, "Server: Kerenel/0.8 (Gramado)\r\n");   break;
+    case 3:  strcat(resp, "Server: Apache/2.4.41 (Ubuntu)\r\n");  break;
+    case 4:  strcat(resp, "Server: Microsoft-IIS/10.0\r\n");      break;
+    default:
+        strcat(resp, "Server: Gramnet/0.1 (Gramado)\r\n");
+        break;
+    };
 
     // -- content type --------
-    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+    switch (ParameterId) {
+    case 5:  strcat(resp, "Content-Type: image/x-icon\r\n"); break;
+    case 6:  strcat(resp, "Content-Type: text/html; charset=utf-8\r\n"); break;
+    default: 
+        strcat(resp, "Content-Type: text/html; charset=utf-8\r\n"); 
+        break;
+    }
 
     // -- content lenght --------
     strcat(resp, "Content-Length: ");
@@ -172,9 +362,17 @@ gramnet_handle_http(
     strcat(resp, "\r\n");
 
     // -- connection --------
-    strcat(resp, "Connection: close\r\n");
+    switch (WhatMethod) {
+    case 1:  strcat(resp, "Connection: close\r\n"); break;  // GET
+    case 2:  strcat(resp, "Connection: keep-alive\r\n"); break; // POST
+    default: strcat(resp, "Connection: close\r\n"); break;
+    }
     strcat(resp, "\r\n");
-    //strcat(resp, "\00");
+
+//
+// VIEW: 
+// Render the HTML body
+//
 
     strcat(resp, body);
 
