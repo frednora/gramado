@@ -870,16 +870,24 @@ static int ServerLoop(void)
     // Socket address
     struct sockaddr server_address;
     socklen_t addrlen=0;
+    int server_fd = -1;
+    register int newconn = -1;
+
+    memset(&server_address, 0, sizeof(struct sockaddr));
+
     server_address.sa_family = AF_GRAMADO;
+
+    // 'ns' for Network Server
     server_address.sa_data[0] = 'n';
     server_address.sa_data[1] = 's';
+    server_address.sa_data[2] = 0x00;
+
     addrlen = sizeof(server_address);
 
-    int server_fd = -1; 
+
     int bind_status = -1;
     register int i=0;
     int _status = -1;
-
 
     int InitializeFirstClient = TRUE;
 
@@ -960,11 +968,9 @@ static int ServerLoop(void)
 // via mensagens e repassar via socket. 
 
 // Clients
-    register int newconn = -1;
-    int curconn = ____saved_server_fd;
+    // int curconn = ____saved_server_fd;
 
-// Accept connection from clients and 
-// processing the request.
+// Accept connection from clients and processing the request.
     isTimeToQuit = FALSE;
     while (1)
     {

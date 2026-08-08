@@ -694,6 +694,11 @@ sys_bind (
 // Domains
 //
 
+// AF_GRAMADO: Uses a symbolic service name (sa_data) as the endpoint identity
+// AF_UNIX:    Uses a pathname in sa_data
+// AF_INET:    Uses ip:port as the endpoint identity
+
+
 // ---------------------
 // AF_GRAMADO
 // Copy. Always 14.
@@ -704,6 +709,9 @@ sys_bind (
     if (s->addr.sa_family == AF_GRAMADO)
     {
         debug_print ("sys_bind: [AF_GRAMADO] Bind the name to the socket\n");
+
+        //memset(&s->addr, 0, sizeof(struct sockaddr));
+
         for (i=0; i<14; i++){
             s->addr.sa_data[i] = addr->sa_data[i];
         };
@@ -712,6 +720,12 @@ sys_bind (
             printk ("sys_bind: process %d | family %d | len %d\n", 
                 current_process, addr->sa_family, addrlen  );
         }
+
+        s->addr.sa_family = addr->sa_family;
+
+        // No IP/port for these families
+        // s->ip_ipv4 = 0;
+        // s->port    = 0;
 
         return 0;  // Done
     }
@@ -723,8 +737,23 @@ sys_bind (
     {
         debug_print ("sys_bind: AF_UNIX not supported yet\n");
         printk      ("sys_bind: AF_UNIX not supported yet\n");
-        // Copy.
-        //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
+
+        //memset(&s->addr, 0, sizeof(struct sockaddr));
+
+        for (i=0; i<14; i++){
+            s->addr.sa_data[i] = addr->sa_data[i];
+        };
+        // #debug
+        if (Verbose == TRUE){
+            printk ("sys_bind: process %d | family %d | len %d\n", 
+                current_process, addr->sa_family, addrlen  );
+        }
+
+        s->addr.sa_family = addr->sa_family;
+
+        // No IP/port for these families
+        // s->ip_ipv4 = 0;
+        // s->port    = 0;
         
         goto fail;
     }
@@ -744,8 +773,10 @@ sys_bind (
         s->addr_in.sin_port        = in_addr->sin_port;
 
         // Copy IP:PORT
-        s->ip_ipv4 = in_addr->sin_addr.s_addr;
-        s->port = ntohs(in_addr->sin_port);
+        s->ip_ipv4 = ntohl(in_addr->sin_addr.s_addr);  // convert to host order
+        s->port    = ntohs(in_addr->sin_port);         // convert to host order
+        //s->ip_ipv4 = in_addr->sin_addr.s_addr;
+        //s->port = ntohs(in_addr->sin_port);
 
         // Mark socket as bound
         s->state = SS_UNCONNECTED;
@@ -766,8 +797,8 @@ sys_bind (
             memset(srv, 0, sizeof(struct server_d));
 
             // Quick hook
-            srv->pid     = current_process;   // PID
-            srv->port    = s->port;  // The port
+            srv->pid = current_process;   // PID
+            srv->port = s->port;  // The port
 
             // Real store
             srv->process = p;       // te_d for the process

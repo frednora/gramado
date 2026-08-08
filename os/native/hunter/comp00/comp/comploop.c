@@ -4344,6 +4344,8 @@ static int ServerLoop(int client_index)
     int server_fd = -1; 
     int newconn_fd = -1;
 
+    memset(&server_address, 0, sizeof(struct sockaddr));
+
     server_address.sa_family = AF_GRAMADO;
 
     server_address.sa_data[0] = 'd';
