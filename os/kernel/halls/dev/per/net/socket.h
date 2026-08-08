@@ -184,8 +184,8 @@ struct socket_d
 
 // Local
 // ip and port.
-    unsigned int ip_ipv4;
     unsigned long ip_ipv6;
+    unsigned int ip_ipv4;
     unsigned short port;
 
 // Remote
@@ -327,6 +327,11 @@ int socket_find_empty_tcpserver_slot(void);
 
 struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port);
 
+struct connection_d *tcp_find_connection_by_endpoints(
+    unsigned int local_ip,
+    unsigned short local_port,
+    unsigned int remote_ip,
+    unsigned short remote_port);
 
 int 
 update_socket ( 

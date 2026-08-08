@@ -724,6 +724,7 @@ network_handle_tcp(
         // It means the server here needs to respond.
         if ( fSYN == 1 && fACK == 0 )
         {
+            printk("\n");
             printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
             // Example sequence/ack numbers
@@ -781,18 +782,39 @@ network_handle_tcp(
                 printk("Failed to create remote endpoint\n");
                 return; // do not respond
             }
-            client_ep->socket = (struct socket_d *) kmalloc(sizeof(struct socket_d));
-            if ((void*) client_ep->socket == NULL)
+            // Create a socket for the remote client
+            //client_ep->socket = (struct socket_d *) kmalloc(sizeof(struct socket_d));
+            client_ep->socket = (struct socket_d *) create_socket_object();
+            if ((void*) client_ep->socket == NULL){
                 panic("TCP: on client_ep->socket\n");
-            if ((void*) client_ep->socket != NULL)
-            {
-                memset(client_ep->socket, 0, sizeof(struct socket_d));
-                // #todo:
-                // We need to fill this structure.
-                client_ep->socket->used = TRUE;
-                client_ep->socket->magic = 1234;
-                // ...   <<<<< #todo: A lot of element are missing
+                //return;
             }
+            client_ep->socket->family = AF_INET;
+            client_ep->socket->type = SOCK_STREAM;
+            client_ep->socket->protocol = IPPROTO_TCP;
+
+            // Remote peer identity
+            client_ep->socket->pid = -1;   // remote client, not a local process
+            client_ep->socket->uid = 0;
+            client_ep->socket->gid = 0;
+
+            // IP/Port
+            //client_ep->socket->ip_ipv6 = 0;
+            // or build from tcp->th_sport
+            client_ep->socket->ip_ipv4 = NetworkSaved.caller_ip_int;
+            client_ep->socket->port = sport;
+
+            // Connection state
+            client_ep->socket->state   = SS_CONNECTING;
+            client_ep->socket->flags   = 0;
+            client_ep->socket->conn_copy = FALSE;
+
+            // Backlog defaults
+            client_ep->socket->backlog_max = 0;
+            client_ep->socket->pending_client_count = 0;
+            client_ep->socket->pending_server_count = 0;
+            // magic string? It indicates pending connection?
+            // client_ep->socket->magic_string[0] = 'C';
 
             pair->c_ep = client_ep;
 
@@ -822,7 +844,8 @@ network_handle_tcp(
 
             // --------------------------------------------
 
-            struct socket_d *sk_listener = socket_get_tcpserver_socket_by_port(11888);
+            struct socket_d *sk_listener = 
+                socket_get_tcpserver_socket_by_port(11888);  // dport?
             if ((void*) sk_listener != NULL)
             {
                 if (sk_listener->magic == 1234)
@@ -992,6 +1015,30 @@ network_handle_tcp(
     if (dport != 11888) {
         return;
     }
+
+
+// -------------------------
+// #test: 
+// Switch to the connection that belongs to the client.
+// #bugbug: Maybe this function is not working.
+// Maybe the values are wrong or even the value format is wrong.
+    struct connection_d *c_conn = 
+        tcp_find_connection_by_endpoints(
+            NetworkSaved.target_ip_int, dport,    // local
+            NetworkSaved.caller_ip_int, sport );  // remote
+    if ((void*)c_conn != NULL) 
+    {
+        // Update state, window, sequence numbers, deliver payload
+        if (c_conn->magic == 1234)
+        {
+            test_conn = c_conn;
+            // #debug
+            printk("TCP: Reusing conn structure\n");
+        }
+    }
+// -------------------------
+
+
     // drop
     if ((void*) test_conn == NULL)
         return;

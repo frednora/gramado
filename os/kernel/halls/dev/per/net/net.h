@@ -232,6 +232,10 @@ struct network_saved_d
 // Caller's info.
     unsigned char caller_ipv4[4];
     unsigned char caller_mac[6];
+
+    // when the packet arrives
+    unsigned int caller_ip_int;
+    unsigned int target_ip_int;
 };
 extern struct network_saved_d  NetworkSaved;
 

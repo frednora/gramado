@@ -269,6 +269,10 @@ network_handle_ipv4(
     // For fast response.
     network_fill_ipv4( NetworkSaved.caller_ipv4, src_ipv4 );
 
+    // Grab client IP directly
+    NetworkSaved.caller_ip_int = FromNetByteOrder32(ip->ip_src.s_addr);
+    NetworkSaved.target_ip_int = FromNetByteOrder32(ip->ip_dst.s_addr);
+
 // #debug: 
 // Catching broadcast
 
