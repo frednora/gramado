@@ -1022,10 +1022,29 @@ network_handle_tcp(
 // Switch to the connection that belongs to the client.
 // #bugbug: Maybe this function is not working.
 // Maybe the values are wrong or even the value format is wrong.
+// See: sockint.c
+// If a client refuses to close, you can still 
+// find the connection later and reclaim it after timeout.
+
+/*
     struct connection_d *c_conn = 
         tcp_find_connection_by_endpoints(
             NetworkSaved.target_ip_int, dport,    // local
             NetworkSaved.caller_ip_int, sport );  // remote
+    printk("ip:%x port:%d | ip:%x port:%d \n", 
+        NetworkSaved.target_ip_int, dport,
+        NetworkSaved.caller_ip_int, sport
+    );
+*/
+
+    struct connection_d *c_conn = 
+        tcp_find_connection_by_client(
+            NetworkSaved.caller_ip_int, sport );  // remote
+    printk("REMOTE: ip:%x port:%d \n", 
+        NetworkSaved.caller_ip_int, sport
+    );
+
+
     if ((void*)c_conn != NULL) 
     {
         // Update state, window, sequence numbers, deliver payload
@@ -1033,7 +1052,7 @@ network_handle_tcp(
         {
             test_conn = c_conn;
             // #debug
-            printk("TCP: Reusing conn structure\n");
+            printk("TCP: Reusing conn structure   <<<<<<<< \n");
         }
     }
 // -------------------------

@@ -331,9 +331,9 @@ struct connection_d *tcp_find_connection_by_endpoints(
                     if (c_sock->ip_ipv4 == remote_ip &&
                         c_sock->port    == remote_port &&
                         s_sock->ip_ipv4 == local_ip &&
-                        s_sock->port    == local_port)
+                        s_sock->port    == local_port )
                     {
-                        return conn; // Found the right connection
+                        return (struct connection_d *) conn; // Found the right connection
                     }
                 }
             }
@@ -341,6 +341,34 @@ struct connection_d *tcp_find_connection_by_endpoints(
     }
     return NULL; // Not found
 }
+
+struct connection_d *tcp_find_connection_by_client(
+    unsigned int remote_ip,
+    unsigned short remote_port)
+{
+    int i;
+    for (i = 0; i < MAX_CONNECTIONS; i++) 
+    {
+        struct connection_d *conn = connectionList[i];
+        if (conn && conn->magic == 1234) 
+        {
+            if (conn->ep_pair && conn->ep_pair->c_ep) 
+            {
+                struct socket_d *c_sock = conn->ep_pair->c_ep->socket;
+                if (c_sock && c_sock->magic == 1234) 
+                {
+                    if (c_sock->ip_ipv4 == remote_ip &&
+                        c_sock->port    == remote_port)
+                    {
+                        return conn; // Found by client side only
+                    }
+                }
+            }
+        }
+    }
+    return NULL; // Not found
+}
+
 
 // #debug
 // Show the private socket for a process
