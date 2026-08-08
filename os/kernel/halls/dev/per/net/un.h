@@ -25,10 +25,10 @@ typedef __sa_family_t  sa_family_t;
 
 #define UNIX_PATH_MAX  108
 
+// #bugbug
+// #ps: Historically it was 16 bytes
 struct sockaddr_un 
 {
-    //#bugbug
-    //ps: It needs to be 16 bit.
     uint16_t sun_family; 
     char sun_path[UNIX_PATH_MAX];
 };

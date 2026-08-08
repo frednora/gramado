@@ -1,7 +1,9 @@
 // socket.c
+// Wrappers for the implementation of main libc socket related functions.
 // Kernel-side implementation of socket infrastructure.
 // The APIs for the syscalls related to sockets.
 // Called by sci.c
+// #ps: Implementations are in sockint.c
 // Created by Fred Nora.
 
 // See:
@@ -19,6 +21,15 @@ static unsigned short __new_client_port_number =
 unsigned char localhost_ipv4[4] = { 127, 0, 0, 1 };
 
 
+static int __listen_imp(int sockfd, int backlog);
+
+static int 
+__accept_imp (
+    int sockfd, 
+    struct sockaddr *addr, 
+    socklen_t *addrlen,
+    unsigned long flags );
+
 static int 
 __connect_inet ( 
     int sockfd, 
@@ -34,16 +45,272 @@ __connect_local (
     unsigned long connection_flags );
 
 
-static int 
-__accept_imp (
+// ====================
+
+
+int 
+sys_getsockname ( 
     int sockfd, 
     struct sockaddr *addr, 
-    socklen_t *addrlen,
-    unsigned long flags );
+    socklen_t *addrlen )
+{
+// Service 7007
 
-static int __listen_imp(int sockfd, int backlog);
+// Process, file and socket.
+    struct te_d  *p;
+    pid_t current_process = -1;
+    struct file_d     *f;
+    struct socket_d   *s;
 
-// ====================
+// Parameter
+    if ( sockfd < 0 || sockfd >= OPEN_MAX ){
+        printk ("sys_getsockname: sockfd\n");
+        goto fail;
+    }
+// addr
+// Usando a estrutura que nos foi passada.
+    if ((void *) addr == NULL){
+        printk ("sys_getsockname: addr\n");
+        goto fail;
+    }
+// Invalid pointer for return value.
+    if ((void*)addrlen == NULL){
+        printk ("sys_getsockname: addrlen\n");
+        return (int) (-EINVAL);
+    }
+
+// process
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    p = (struct te_d *) teList[current_process]; 
+    if ((void *) p == NULL){
+        printk ("sys_getsockname: p fail\n");
+        goto fail;
+    }
+
+// file
+    f = (file *) p->Objects[sockfd];
+    if ((void *) f == NULL){
+        printk ("sys_getsockname: f fail\n");
+        goto fail;
+    }
+
+//socket
+    s = (struct socket_d *) p->priv;
+    if ((void *) s == NULL){
+        printk ("sys_getsockname: s fail\n");
+        goto fail;
+    }
+
+// Everything is ok.
+// So now we need to include the 'name' into the socket structure
+// respecting the socket's family.
+    register int n = 0;
+    
+    if (s->addr.sa_family == AF_GRAMADO)
+    {
+        // Binding the name to the socket.
+        printk ("sys_getsockname: Getting the name and the size\n");
+        addrlen[0] = n;
+        // Always 14.
+        for (n=0; n<14; n++){
+            addr->sa_data[n] = s->addr.sa_data[n];
+        };
+        debug_print ("sys_getsockname: copy ok\n");
+
+        // Done!
+        return 0;
+    }
+
+    // #todo
+    // More families.
+    //if ( ...
+    //if ( ...
+    //if ( ...
+    // ...
+
+    printk ("sys_getsockname: process %d ; family %d ; len %d\n", 
+        current_process, addr->sa_family, addrlen  );
+ 
+ fail:
+    printk ("sys_getsockname: fail\n");
+    return (int) -1;
+}
+
+// libc shutdown() function.
+// See: https://linux.die.net/man/3/shutdown
+int sys_socket_shutdown(int socket, int how)
+{
+// Service 7009
+
+    // #todo
+    // Desconectar dois sockets,
+    // mas nao destruir o socket?
+
+// The current process.
+    struct te_d *p;
+    pid_t current_process = -1;
+// The file indicated by the fd.
+    file *f;
+// The socket structure for the file.
+    struct socket_d *s;
+// Is this file a socket object?
+    int IsSocketObject = -1;
+
+    debug_print ("sys_socket_shutdown: [TODO]\n");
+    //printk      ("sys_socket_shutdown: [TODO] fd=%d how=%d\n",
+    //    socket, how );
+
+// Invalid fd.
+    if ( socket < 0 || socket >= OPEN_MAX ){
+        debug_print ("sys_socket_shutdown: [FAIL] fd\n");
+        printk      ("sys_socket_shutdown: [FAIL] fd\n");
+        return (int) (-EBADF);
+    }
+
+// Process
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if (current_process < 0  || current_process >= PROCESS_COUNT_MAX){
+        printk      ("sys_socket_shutdown: p fail\n");
+        goto fail;        
+    }
+    p = (struct te_d *) teList[current_process];
+    if ((void *) p == NULL){
+        debug_print ("sys_socket_shutdown: p fail\n");
+        printk      ("sys_socket_shutdown: p fail\n");
+        goto fail;
+    }
+
+// File
+// sender's file
+// Objeto do tipo socket.
+
+    f = (file *) p->Objects[socket];
+    if ((void *) f == NULL){
+        debug_print("sys_socket_shutdown: f fail\n");
+        printk     ("sys_socket_shutdown: f fail\n");
+        goto fail;
+    }
+
+// Is this file a socket object?
+    IsSocketObject = (int) is_socket((file *) f);
+    if (IsSocketObject != TRUE){
+        return (int) (-ENOTSOCK);
+    }
+
+// Socket
+// Yes, This is a socket object.
+// Let's get the socket structure associated with the file.
+// Let's simply change the flag for this socket.
+    s = (struct socket_d *) f->socket;
+    if ((void *) s == NULL){
+        debug_print ("sys_socket_shutdown: s fail\n");
+        printk      ("sys_socket_shutdown: s fail\n");
+        goto fail;
+    // permanece conectado, mas usaremos outro da fila.
+    } else {
+        s->state = 216;  // ?
+        return 0;
+    };
+
+    // ...
+
+fail:
+    debug_print("sys_socket_shutdown: [FAIL]\n");
+    printk     ("sys_socket_shutdown: [FAIL]\n");
+    return (int) -1;
+}
+
+
+// https://linux.die.net/man/2/sendto
+ssize_t 
+sys_sendto ( 
+    int sockfd, 
+    const void *ubuf, 
+    size_t len, 
+    int flags,
+    const struct sockaddr *dest_addr, 
+    socklen_t addrlen )
+{
+/*
+    if (sockfd < 0 || !ubuf || len == 0 || !dest_addr)
+        return -EINVAL;
+
+    struct sockaddr_in *k_dest_addr = (struct sockaddr_in *)dest_addr;
+    if (addrlen < sizeof(struct sockaddr_in))
+        return -EINVAL;
+
+    // Convert the destination IP address from struct sockaddr_in
+    uint8_t target_ip[4] = { k_dest_addr->sin_addr.s_addr & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 8) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 16) & 0xFF,
+                             (k_dest_addr->sin_addr.s_addr >> 24) & 0xFF };
+
+    uint8_t target_mac[6] = {  }; // Resolve MAC via ARP or existing table 
+    unsigned short source_port = ; //Retrieve from socket state
+    unsigned short target_port = ntohs(k_dest_addr->sin_port);
+
+    // Call the UDP worker function using the user-provided buffer directly
+    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port, (char *)ubuf, len);
+
+    return (ret < 0) ? ret : len; // Return number of bytes sent or error code
+
+*/
+    return (int) -ENOSYS;
+}
+
+ssize_t sys_sendmsg (int sockfd, const struct msghdr *msg, int flags)
+{
+/*
+    if (sockfd < 0 || !msg || msg->msg_iovlen == 0)
+        return -EINVAL; // Invalid argument
+
+    struct sockaddr_in *dest_addr = (struct sockaddr_in *)msg->msg_name;
+    if (!dest_addr || msg->msg_namelen < sizeof(struct sockaddr_in))
+        return -EINVAL;
+
+    // Convert destination IP
+    uint8_t target_ip[4] = { dest_addr->sin_addr.s_addr & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 8) & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 16) & 0xFF,
+                             (dest_addr->sin_addr.s_addr >> 24) & 0xFF };
+
+    uint8_t target_mac[6] = {  };   // Resolve MAC via ARP or internal table
+    unsigned short source_port = ;  // Retrieve from socket state 
+    unsigned short target_port = ntohs(dest_addr->sin_port);
+
+    // Compute total buffer length
+    size_t total_len = 0;
+    for (int i = 0; i < msg->msg_iovlen; i++)
+        total_len += msg->msg_iov[i].iov_len;
+
+    if (total_len == 0)
+        return -EINVAL; // No data to send
+
+    // Call the UDP worker directly using user-space buffer(s)
+    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port,
+                               (char *)msg->msg_iov[0].iov_base, total_len);
+
+    return (ret < 0) ? ret : total_len; // Return bytes sent or error code
+*/
+
+    return (int) -ENOSYS;
+}
+
+//
+// ============================================================
+// Well know libc methods for socket support
+//
+
 
 /*
  * sys_socket:
@@ -70,17 +337,13 @@ static int __listen_imp(int sockfd, int backlog);
 //     -1 if it fails.
 
 // Service 7000
+// #ps: This wrapper calls some workers inside sockint.c file.
 int sys_socket( int family, int type, int protocol )
 {
-
-    //#todo
-    // call create_socket(...)
-    // it will return a pointer.
-
     struct endpoint_d *ep;
     struct socket_d *__socket;
 
-// Current process
+    // Current process
     struct te_d *p;
     pid_t current_process = -1;
 
@@ -306,7 +569,404 @@ fail:
 }
 
 /*
- * sys_accept: 
+ * sys_bind:
+ *    When a socket is created with socket(), it exists in a 
+ *    name space (address family) but has no address assigned to it. 
+ *    bind() assigns the address specified by addr to the socket 
+ *    referred to by the file descriptor sockfd.
+ */
+// bind() is typically used on the server side, and 
+// associates a socket with a socket address structure, 
+// i.e. a specified local 'IP address' and a 'port number'.
+// See:
+// https://man7.org/linux/man-pages/man2/bind.2.html
+// Service 7003
+
+int 
+sys_bind ( 
+    int sockfd, 
+    const struct sockaddr *addr,
+    socklen_t addrlen )
+{
+    struct te_d  *p;   // Process
+    pid_t current_process = -1;
+    struct file_d     *f;   // File
+    struct socket_d   *s;   // Socket
+    register int i=0;
+    int Verbose=FALSE;
+
+    // #debug
+    //debug_print ("sys_bind:\n");
+    do_credits_by_tid( lapic_info[0].current_tid );
+
+// fd
+    if ( sockfd < 0 || sockfd >= OPEN_MAX )
+    {
+        debug_print("sys_bind: sockfd\n");
+        printk     ("sys_bind: sockfd\n");
+        return (int) (-EBADF);
+    }
+
+// Check addr structure
+    if ((void *) addr == NULL)
+    {
+        debug_print("sys_bind: addr\n");
+        printk     ("sys_bind: addr\n");
+        goto fail;
+    }
+
+// Address validation.
+// It needs to be a ring3 address.
+// #todo: Check agains more limits.
+    if (addr < FLOWERTHREAD_BASE){
+        panic("sys_bind: addr is not ring3\n");
+        //return (int) (-EINVAL);
+    }
+
+// Invalid lenght for the address.
+    if (addrlen == 0)
+        return (int) (-EINVAL);
+
+// Process
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    // #debug
+    if (Verbose == TRUE){
+        printk("sys_bind: PID %d | fd %d \n", current_process, sockfd );
+    }
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
+        printk("sys_bind: current_process\n");
+        goto fail;
+    }
+    p = (struct te_d *) teList[current_process];
+    if ((void *) p == NULL){
+        debug_print("sys_bind: p\n");
+        printk     ("sys_bind: p\n");
+        goto fail;
+    }
+    if (p->magic != 1234){
+        printk("sys_bind: p validation\n");
+        goto fail;
+    }
+
+// file:
+// The objects type is 'socket'.
+
+    f = (file *) p->Objects[sockfd];
+    if ((void *) f == NULL){
+        debug_print ("sys_bind: f\n");
+        printk      ("sys_bind: f\n");
+        goto fail;
+    }
+    if (f->magic != 1234){
+       printk("sys_bind: f validation\n");
+       goto fail; 
+    }
+
+// Is this file a socket object?
+    if ( is_socket(f) != TRUE ){
+        return (int) (-ENOTSOCK);
+    }
+
+// socket structure:
+// A socket object has a socket structure associates with the file.
+    s = (struct socket_d *) f->socket;
+    if ((void *) s == NULL){
+        debug_print("sys_bind: s\n");
+        printk     ("sys_bind: s\n");
+        goto fail; 
+    }
+
+// family
+// Binding the name to the socket.
+// So, now we need to include the 'name' into the socket structure,
+// respecting the socket's family.
+// Each family has a different size?
+// For now we have only two server, gwssrv and gnssrv,
+// and they are using this type of family.
+
+//
+// Domains
+//
+
+// ---------------------
+// AF_GRAMADO
+// Copy. Always 14.
+// #important:
+// For this family, the information associated with the
+// servers socket is a two byte string. Example: 'ws' or 'ns'.
+
+    if (s->addr.sa_family == AF_GRAMADO)
+    {
+        debug_print ("sys_bind: [AF_GRAMADO] Bind the name to the socket\n");
+        for (i=0; i<14; i++){
+            s->addr.sa_data[i] = addr->sa_data[i];
+        };
+        // #debug
+        if (Verbose == TRUE){
+            printk ("sys_bind: process %d | family %d | len %d\n", 
+                current_process, addr->sa_family, addrlen  );
+        }
+
+        return 0;  // Done
+    }
+
+// ---------------------
+// AF_UNIX ou AF_LOCAL
+// See: http://man7.org/linux/man-pages/man7/unix.7.html
+    if (s->addr.sa_family == AF_UNIX)
+    {
+        debug_print ("sys_bind: AF_UNIX not supported yet\n");
+        printk      ("sys_bind: AF_UNIX not supported yet\n");
+        // Copy.
+        //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
+        
+        goto fail;
+    }
+
+// ---------------------
+// AF_INET
+    struct sockaddr_in *in_addr = (struct sockaddr_in *) addr;
+
+    if (in_addr->sin_family == AF_INET)
+    {
+        debug_print ("sys_bind: AF_INET family\n");
+        printk      ("sys_bind: AF_INET family\n");
+
+        // Copy values into the socket structure
+        s->addr_in.sin_family      = in_addr->sin_family;
+        s->addr_in.sin_addr.s_addr = in_addr->sin_addr.s_addr;
+        s->addr_in.sin_port        = in_addr->sin_port;
+
+        // Copy IP:PORT
+        s->ip_ipv4 = in_addr->sin_addr.s_addr;
+        s->port = ntohs(in_addr->sin_port);
+
+        // Mark socket as bound
+        s->state = SS_UNCONNECTED;
+        s->flags = 0;
+
+        if (s->port == 0){
+            printk("sys_bind: Port not defined\n");
+            goto fail;
+        }
+
+        printk("sys_bind: AF_INET bound to IP %x port %d\n",
+            s->ip_ipv4, s->port );
+
+        // #test: Register our new AF_INET server
+        int slot = socket_find_empty_tcpserver_slot();
+        if (slot >= 0) {
+            struct server_d *srv = kmalloc(sizeof(struct server_d));
+            memset(srv, 0, sizeof(struct server_d));
+
+            // Quick hook
+            srv->pid     = current_process;   // PID
+            srv->port    = s->port;  // The port
+
+            // Real store
+            srv->process = p;       // te_d for the process
+            srv->file    = f;       // file_d from Objects[sockfd]
+            srv->socket  = s;       // direct pointer to socket_d
+
+            // Validation
+            srv->used =  TRUE;
+            srv->magic = 1234;
+
+            printk("AF_INET server registered: pid=%d port=%d slot=%d\n",
+               current_process, s->port, slot);
+        } else {
+            printk("sys_bind: No free TCP server slots\n");
+        }
+
+        return 0;  // done
+    }
+
+// #fail
+// A família é de um tipo não suportado.
+    debug_print ("sys_bind: [FAIL] family not valid\n");
+    printk      ("sys_bind: [FAIL] family not valid\n");
+
+fail:
+    debug_print ("sys_bind: fail\n");
+    printk      ("sys_bind: fail\n");
+    return (int) (-1);
+}
+
+/*
+ * __listen_imp:
+ *     It's used to say that the server ready to accept connections 
+ * and how many connection it accepts.
+ */
+// Used by a server to place a stream socket in a passive state, 
+// indicating that it is ready to accept incoming client connection requests.
+// listen() is used on the server side, and 
+// causes a bound TCP socket to enter listening state.
+// Setup how many pending connections.
+// See:
+// https://man7.org/linux/man-pages/man2/listen.2.html
+/*
+ The backlog argument defines the maximum length to which the queue of
+ pending connections for sockfd may grow. If a connection request
+ arrives when the queue is full, the client may receive an error with
+ an indication of ECONNREFUSED or, if the underlying protocol supports
+ retransmission, the request may be ignored so that a later reattempt
+ at connection succeed.
+*/
+// SOMAXCONN is the default limit on backlog.
+// IN:
+// sockfd  = The fd of the server's socket.
+// backlog = The server indicates the 'size of the list'.
+static int __listen_imp(int sockfd, int backlog) 
+{
+    file *f;
+    int DesiredBacklog=0;
+    struct socket_d  *server_socket;
+
+    struct te_d  *p;
+    pid_t current_process = -1;
+
+    int i=0;
+
+    do_credits_by_tid( lapic_info[0].current_tid );
+
+// #debug
+    //debug_print ("__listen_imp: [TODO]\n");
+    //printk      ("__listen_imp: [TODO] fd=%d backlog=%d\n",
+        //sockfd, backlog);
+
+// Parameter
+// The fd of the server's socket.
+    if ( sockfd < 0 || sockfd >= OPEN_MAX )
+    {
+        debug_print ("__listen_imp: sockfd\n");
+        printk      ("__listen_imp: sockfd\n");
+        return (int) (-EBADF);
+    }
+
+// ==============================================
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    current_process = (pid_t) get_current_process(0);
+
+    if ( current_process < 0 || 
+         current_process >= PROCESS_COUNT_MAX )
+    {
+        printk("__listen_imp: current_process\n");
+        goto fail;
+    }
+// process
+    p = (struct te_d *) teList[current_process];
+    if ((void *) p == NULL){
+        debug_print("__listen_imp: p fail\n");
+        printk     ("__listen_imp: p fail\n");
+        goto fail;
+    }
+
+// The server's socket fd opens the fp associated with a socket structure.
+    f = (file *) p->Objects[sockfd];
+    if ((void *) f == NULL){
+        debug_print("__listen_imp: f fail\n");
+        printk     ("__listen_imp: f fail\n");
+        goto fail;
+    }
+
+// Is this file a socket object?
+    int IsSocketObject = -1;
+    IsSocketObject = (int) is_socket((file *) f);
+    if (IsSocketObject != TRUE){
+        return (int) (-ENOTSOCK);
+    }
+
+// This is right place for doing this?
+// Not ready yet?
+    //f->sync.can_accept = TRUE;
+
+// Get the socket structure associated with the file
+    server_socket = (struct socket_d *) f->socket;
+    if ((void *) server_socket == NULL){
+        printk("__listen_imp: server_socket fail\n");
+        goto fail;
+    }
+    server_socket->isAcceptingConnections = FALSE;
+
+    // #todo: Why?
+    if (f->socket != p->priv){
+        panic("__listen_imp: [TEST] f->socket != p->priv\n");
+    }
+
+//
+// Backlog
+//
+
+// The limit of connected clients.
+// #bugbug:
+// It can't be bigger than the size of the array.
+// #todo: Use SOCKET_MAX_PENDING_CONNECTIONS
+// SOMAXCONN
+
+    DesiredBacklog = backlog;
+    if (DesiredBacklog < 1) { DesiredBacklog=1; }
+    if (DesiredBacklog > 31){ DesiredBacklog=31; }
+
+    server_socket->backlog_max = (int) DesiredBacklog;
+ 
+    // what is this?
+    for (i=0; i<32; i++){
+        server_socket->pending_server_endpoints[i] = 0;
+        server_socket->pending_client_endpoints[i] = 0;
+    };
+    server_socket->pending_server_count = 0;
+    server_socket->pending_client_count = 0;
+
+// This server is ready to accept new connections
+    server_socket->state = SS_LISTENING;
+// This server is now accepting new connections
+    server_socket->isAcceptingConnections = TRUE;
+
+    // ...
+
+    return 0;
+
+fail:
+    debug_print("__listen_imp: fail\n");
+    printk     ("__listen_imp: fail\n");
+    return (int) -1;
+}
+
+// Service 7004
+// Called by sci.c
+// IN:
+// sockfd  = The fd of the server's socket.
+// backlog = The server indicates the 'size of the list'.
+// #todo: Listen operation is not valid for datagrams.
+int sys_listen (int sockfd, int backlog)
+{
+    int rv=0;
+
+// There is a file associated with the server's socket.
+    if ( sockfd < 0 || sockfd >= OPEN_MAX )
+    {
+        debug_print ("sys_listen: sockfd\n");
+        printk      ("sys_listen: sockfd\n");
+        return (int) (-EBADF);
+    }
+
+// Call the implemetation
+    rv = (int) __listen_imp(sockfd, backlog);
+
+    return (int) rv;
+}
+
+/*
+ * __accept_imp: 
  *     This is a work in progress.
  */
 // accept() is used on the server side. 
@@ -727,237 +1387,6 @@ sys_gramado_accept (
 // Call the implementation
     rv = (int) __accept_imp( sockfd, addr, addrlen, Flags );
     return (int) rv;
-}
-
-
-/*
- * sys_bind:
- *    When a socket is created with socket(), it exists in a 
- *    name space (address family) but has no address assigned to it. 
- *    bind() assigns the address specified by addr to the socket 
- *    referred to by the file descriptor sockfd.
- */
-// bind() is typically used on the server side, and 
-// associates a socket with a socket address structure, 
-// i.e. a specified local 'IP address' and a 'port number'.
-// See:
-// https://man7.org/linux/man-pages/man2/bind.2.html
-// Service 7003
-
-int 
-sys_bind ( 
-    int sockfd, 
-    const struct sockaddr *addr,
-    socklen_t addrlen )
-{
-    struct te_d  *p;   // Process
-    pid_t current_process = -1;
-    struct file_d     *f;   // File
-    struct socket_d   *s;   // Socket
-    register int i=0;
-    int Verbose=FALSE;
-
-    // #debug
-    //debug_print ("sys_bind:\n");
-    do_credits_by_tid( lapic_info[0].current_tid );
-
-// fd
-    if ( sockfd < 0 || sockfd >= OPEN_MAX )
-    {
-        debug_print("sys_bind: sockfd\n");
-        printk     ("sys_bind: sockfd\n");
-        return (int) (-EBADF);
-    }
-
-// Check addr structure
-    if ((void *) addr == NULL)
-    {
-        debug_print("sys_bind: addr\n");
-        printk     ("sys_bind: addr\n");
-        goto fail;
-    }
-
-// Address validation.
-// It needs to be a ring3 address.
-// #todo: Check agains more limits.
-    if (addr < FLOWERTHREAD_BASE){
-        panic("sys_bind: addr is not ring3\n");
-        //return (int) (-EINVAL);
-    }
-
-// Invalid lenght for the address.
-    if (addrlen == 0)
-        return (int) (-EINVAL);
-
-// Process
-
-    // Get PID for the current process for a given core.
-    // IN: core id
-
-    current_process = (pid_t) get_current_process(0);
-
-    // #debug
-    if (Verbose == TRUE){
-        printk("sys_bind: PID %d | fd %d \n", current_process, sockfd );
-    }
-    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
-    {
-        printk("sys_bind: current_process\n");
-        goto fail;
-    }
-    p = (struct te_d *) teList[current_process];
-    if ((void *) p == NULL){
-        debug_print("sys_bind: p\n");
-        printk     ("sys_bind: p\n");
-        goto fail;
-    }
-    if (p->magic != 1234){
-        printk("sys_bind: p validation\n");
-        goto fail;
-    }
-
-// file:
-// The objects type is 'socket'.
-
-    f = (file *) p->Objects[sockfd];
-    if ((void *) f == NULL){
-        debug_print ("sys_bind: f\n");
-        printk      ("sys_bind: f\n");
-        goto fail;
-    }
-    if (f->magic != 1234){
-       printk("sys_bind: f validation\n");
-       goto fail; 
-    }
-
-// Is this file a socket object?
-    if ( is_socket(f) != TRUE ){
-        return (int) (-ENOTSOCK);
-    }
-
-// socket structure:
-// A socket object has a socket structure associates with the file.
-    s = (struct socket_d *) f->socket;
-    if ((void *) s == NULL){
-        debug_print("sys_bind: s\n");
-        printk     ("sys_bind: s\n");
-        goto fail; 
-    }
-
-// family
-// Binding the name to the socket.
-// So, now we need to include the 'name' into the socket structure,
-// respecting the socket's family.
-// Each family has a different size?
-// For now we have only two server, gwssrv and gnssrv,
-// and they are using this type of family.
-
-//
-// Domains
-//
-
-// ---------------------
-// AF_GRAMADO
-// Copy. Always 14.
-// #important:
-// For this family, the information associated with the
-// servers socket is a two byte string. Example: 'ws' or 'ns'.
-
-    if (s->addr.sa_family == AF_GRAMADO)
-    {
-        debug_print ("sys_bind: [AF_GRAMADO] Bind the name to the socket\n");
-        for (i=0; i<14; i++){
-            s->addr.sa_data[i] = addr->sa_data[i];
-        };
-        // #debug
-        if (Verbose == TRUE){
-            printk ("sys_bind: process %d | family %d | len %d\n", 
-                current_process, addr->sa_family, addrlen  );
-        }
-
-        return 0;  // Done
-    }
-
-// ---------------------
-// AF_UNIX ou AF_LOCAL
-// See: http://man7.org/linux/man-pages/man7/unix.7.html
-    if (s->addr.sa_family == AF_UNIX)
-    {
-        debug_print ("sys_bind: AF_UNIX not supported yet\n");
-        printk      ("sys_bind: AF_UNIX not supported yet\n");
-        // Copy.
-        //for (i=0; i<14; i++){ s->addr.sa_data[i] = addr->sa_data[i]; }; 
-        
-        goto fail;
-    }
-
-// ---------------------
-// AF_INET
-    struct sockaddr_in *in_addr = (struct sockaddr_in *) addr;
-
-    if (in_addr->sin_family == AF_INET)
-    {
-        debug_print ("sys_bind: AF_INET family\n");
-        printk      ("sys_bind: AF_INET family\n");
-
-        // Copy values into the socket structure
-        s->addr_in.sin_family      = in_addr->sin_family;
-        s->addr_in.sin_addr.s_addr = in_addr->sin_addr.s_addr;
-        s->addr_in.sin_port        = in_addr->sin_port;
-
-        // Copy IP:PORT
-        s->ip_ipv4 = in_addr->sin_addr.s_addr;
-        s->port = ntohs(in_addr->sin_port);
-
-        // Mark socket as bound
-        s->state = SS_UNCONNECTED;
-        s->flags = 0;
-
-        if (s->port == 0){
-            printk("sys_bind: Port not defined\n");
-            goto fail;
-        }
-
-        printk("sys_bind: AF_INET bound to IP %x port %d\n",
-            s->ip_ipv4, s->port );
-
-        // #test: Register our new AF_INET server
-        int slot = socket_find_empty_tcpserver_slot();
-        if (slot >= 0) {
-            struct server_d *srv = kmalloc(sizeof(struct server_d));
-            memset(srv, 0, sizeof(struct server_d));
-
-            // Quick hook
-            srv->pid     = current_process;   // PID
-            srv->port    = s->port;  // The port
-
-            // Real store
-            srv->process = p;       // te_d for the process
-            srv->file    = f;       // file_d from Objects[sockfd]
-            srv->socket  = s;       // direct pointer to socket_d
-
-            // Validation
-            srv->used =  TRUE;
-            srv->magic = 1234;
-
-            printk("AF_INET server registered: pid=%d port=%d slot=%d\n",
-               current_process, s->port, slot);
-        } else {
-            printk("sys_bind: No free TCP server slots\n");
-        }
-
-        return 0;  // done
-    }
-
-// #fail
-// A família é de um tipo não suportado.
-    debug_print ("sys_bind: [FAIL] family not valid\n");
-    printk      ("sys_bind: [FAIL] family not valid\n");
-
-fail:
-    debug_print ("sys_bind: fail\n");
-    printk      ("sys_bind: fail\n");
-    return (int) (-1);
 }
 
 /*
@@ -2061,8 +2490,9 @@ sys_connect (
 {
     //unsigned long *limit_address = (unsigned long *) FLOWERTHREAD_BASE;
 
-// fd
-    if ( sockfd < 0 || sockfd >= OPEN_MAX )
+// Parameters:
+
+    if (sockfd < 0 || sockfd >= OPEN_MAX)
     {
         debug_print("sys_connect: sockfd\n");
         printk     ("sys_connect: sockfd\n");
@@ -2083,7 +2513,7 @@ sys_connect (
         //return (int) (-EINVAL);
     }
 
-// Invalid lenght for the address.
+// Invalid lenght for the address
     if (addrlen == 0)
         return (int) (-EINVAL);
 
@@ -2125,432 +2555,6 @@ sys_connect (
 // Unexpected error
     return (int) -1;
 }
-
-int 
-sys_getsockname ( 
-    int sockfd, 
-    struct sockaddr *addr, 
-    socklen_t *addrlen )
-{
-// Service 7007
-
-// Process, file and socket.
-    struct te_d  *p;
-    pid_t current_process = -1;
-    struct file_d     *f;
-    struct socket_d   *s;
-
-// Parameter
-    if ( sockfd < 0 || sockfd >= OPEN_MAX ){
-        printk ("sys_getsockname: sockfd\n");
-        goto fail;
-    }
-// addr
-// Usando a estrutura que nos foi passada.
-    if ((void *) addr == NULL){
-        printk ("sys_getsockname: addr\n");
-        goto fail;
-    }
-// Invalid pointer for return value.
-    if ((void*)addrlen == NULL){
-        printk ("sys_getsockname: addrlen\n");
-        return (int) (-EINVAL);
-    }
-
-// process
-
-    // Get PID for the current process for a given core.
-    // IN: core id
-
-    current_process = (pid_t) get_current_process(0);
-
-    p = (struct te_d *) teList[current_process]; 
-    if ((void *) p == NULL){
-        printk ("sys_getsockname: p fail\n");
-        goto fail;
-    }
-
-// file
-    f = (file *) p->Objects[sockfd];
-    if ((void *) f == NULL){
-        printk ("sys_getsockname: f fail\n");
-        goto fail;
-    }
-
-//socket
-    s = (struct socket_d *) p->priv;
-    if ((void *) s == NULL){
-        printk ("sys_getsockname: s fail\n");
-        goto fail;
-    }
-
-// Everything is ok.
-// So now we need to include the 'name' into the socket structure
-// respecting the socket's family.
-    register int n = 0;
-    
-    if (s->addr.sa_family == AF_GRAMADO)
-    {
-        // Binding the name to the socket.
-        printk ("sys_getsockname: Getting the name and the size\n");
-        addrlen[0] = n;
-        // Always 14.
-        for (n=0; n<14; n++){
-            addr->sa_data[n] = s->addr.sa_data[n];
-        };
-        debug_print ("sys_getsockname: copy ok\n");
-
-        // Done!
-        return 0;
-    }
-
-    // #todo
-    // More families.
-    //if ( ...
-    //if ( ...
-    //if ( ...
-    // ...
-
-    printk ("sys_getsockname: process %d ; family %d ; len %d\n", 
-        current_process, addr->sa_family, addrlen  );
- 
- fail:
-    printk ("sys_getsockname: fail\n");
-    return (int) -1;
-}
-
-/*
- * sys_listen:
- *     It's used to say that the server ready to accept connections 
- * and how many connection it accepts.
- */
-// Used by a server to place a stream socket in a passive state, 
-// indicating that it is ready to accept incoming client connection requests.
-// listen() is used on the server side, and 
-// causes a bound TCP socket to enter listening state.
-// Setup how many pending connections.
-// See:
-// https://man7.org/linux/man-pages/man2/listen.2.html
-/*
- The backlog argument defines the maximum length to which the queue of
- pending connections for sockfd may grow. If a connection request
- arrives when the queue is full, the client may receive an error with
- an indication of ECONNREFUSED or, if the underlying protocol supports
- retransmission, the request may be ignored so that a later reattempt
- at connection succeed.
-*/
-// SOMAXCONN is the default limit on backlog.
-// IN:
-// sockfd  = The fd of the server's socket.
-// backlog = The server indicates the 'size of the list'.
-static int __listen_imp(int sockfd, int backlog) 
-{
-    file *f;
-    int DesiredBacklog=0;
-    struct socket_d  *server_socket;
-
-    struct te_d  *p;
-    pid_t current_process = -1;
-
-    int i=0;
-
-    do_credits_by_tid( lapic_info[0].current_tid );
-
-// #debug
-    //debug_print ("__listen_imp: [TODO]\n");
-    //printk      ("__listen_imp: [TODO] fd=%d backlog=%d\n",
-        //sockfd, backlog);
-
-// Parameter
-// The fd of the server's socket.
-    if ( sockfd < 0 || sockfd >= OPEN_MAX )
-    {
-        debug_print ("__listen_imp: sockfd\n");
-        printk      ("__listen_imp: sockfd\n");
-        return (int) (-EBADF);
-    }
-
-// ==============================================
-
-    // Get PID for the current process for a given core.
-    // IN: core id
-
-    current_process = (pid_t) get_current_process(0);
-
-    if ( current_process < 0 || 
-         current_process >= PROCESS_COUNT_MAX )
-    {
-        printk("__listen_imp: current_process\n");
-        goto fail;
-    }
-// process
-    p = (struct te_d *) teList[current_process];
-    if ((void *) p == NULL){
-        debug_print("__listen_imp: p fail\n");
-        printk     ("__listen_imp: p fail\n");
-        goto fail;
-    }
-
-// The server's socket fd opens the fp associated with a socket structure.
-    f = (file *) p->Objects[sockfd];
-    if ((void *) f == NULL){
-        debug_print("__listen_imp: f fail\n");
-        printk     ("__listen_imp: f fail\n");
-        goto fail;
-    }
-
-// Is this file a socket object?
-    int IsSocketObject = -1;
-    IsSocketObject = (int) is_socket((file *) f);
-    if (IsSocketObject != TRUE){
-        return (int) (-ENOTSOCK);
-    }
-
-// This is right place for doing this?
-// Not ready yet?
-    //f->sync.can_accept = TRUE;
-
-// Get the socket structure associated with the file
-    server_socket = (struct socket_d *) f->socket;
-    if ((void *) server_socket == NULL){
-        printk("__listen_imp: server_socket fail\n");
-        goto fail;
-    }
-    server_socket->isAcceptingConnections = FALSE;
-
-    // #todo: Why?
-    if (f->socket != p->priv){
-        panic("__listen_imp: [TEST] f->socket != p->priv\n");
-    }
-
-//
-// Backlog
-//
-
-// The limit of connected clients.
-// #bugbug:
-// It can't be bigger than the size of the array.
-// #todo: Use SOCKET_MAX_PENDING_CONNECTIONS
-// SOMAXCONN
-
-    DesiredBacklog = backlog;
-    if (DesiredBacklog < 1) { DesiredBacklog=1; }
-    if (DesiredBacklog > 31){ DesiredBacklog=31; }
-
-    server_socket->backlog_max = (int) DesiredBacklog;
- 
-    // what is this?
-    for (i=0; i<32; i++){
-        server_socket->pending_server_endpoints[i] = 0;
-        server_socket->pending_client_endpoints[i] = 0;
-    };
-    server_socket->pending_server_count = 0;
-    server_socket->pending_client_count = 0;
-
-// This server is ready to accept new connections
-    server_socket->state = SS_LISTENING;
-// This server is now accepting new connections
-    server_socket->isAcceptingConnections = TRUE;
-
-    // ...
-
-    return 0;
-
-fail:
-    debug_print("__listen_imp: fail\n");
-    printk     ("__listen_imp: fail\n");
-    return (int) -1;
-}
-
-// Service 7004
-// Called by sci.c
-// IN:
-// sockfd  = The fd of the server's socket.
-// backlog = The server indicates the 'size of the list'.
-// #todo: Listen operation is not valid for datagrams.
-int sys_listen (int sockfd, int backlog)
-{
-    int rv=0;
-
-// There is a file associated with the server's socket.
-    if ( sockfd < 0 || sockfd >= OPEN_MAX )
-    {
-        debug_print ("sys_listen: sockfd\n");
-        printk      ("sys_listen: sockfd\n");
-        return (int) (-EBADF);
-    }
-
-// Call the implemetation
-    rv = (int) __listen_imp(sockfd, backlog);
-
-    return (int) rv;
-}
-
-// libc shutdown() function.
-// See: https://linux.die.net/man/3/shutdown
-int sys_socket_shutdown(int socket, int how)
-{
-// Service 7009
-
-    // #todo
-    // Desconectar dois sockets,
-    // mas nao destruir o socket?
-
-// The current process.
-    struct te_d *p;
-    pid_t current_process = -1;
-// The file indicated by the fd.
-    file *f;
-// The socket structure for the file.
-    struct socket_d *s;
-// Is this file a socket object?
-    int IsSocketObject = -1;
-
-    debug_print ("sys_socket_shutdown: [TODO]\n");
-    //printk      ("sys_socket_shutdown: [TODO] fd=%d how=%d\n",
-    //    socket, how );
-
-// Invalid fd.
-    if ( socket < 0 || socket >= OPEN_MAX ){
-        debug_print ("sys_socket_shutdown: [FAIL] fd\n");
-        printk      ("sys_socket_shutdown: [FAIL] fd\n");
-        return (int) (-EBADF);
-    }
-
-// Process
-
-    // Get PID for the current process for a given core.
-    // IN: core id
-
-    current_process = (pid_t) get_current_process(0);
-
-    if (current_process < 0  || current_process >= PROCESS_COUNT_MAX){
-        printk      ("sys_socket_shutdown: p fail\n");
-        goto fail;        
-    }
-    p = (struct te_d *) teList[current_process];
-    if ((void *) p == NULL){
-        debug_print ("sys_socket_shutdown: p fail\n");
-        printk      ("sys_socket_shutdown: p fail\n");
-        goto fail;
-    }
-
-// File
-// sender's file
-// Objeto do tipo socket.
-
-    f = (file *) p->Objects[socket];
-    if ((void *) f == NULL){
-        debug_print("sys_socket_shutdown: f fail\n");
-        printk     ("sys_socket_shutdown: f fail\n");
-        goto fail;
-    }
-
-// Is this file a socket object?
-    IsSocketObject = (int) is_socket((file *) f);
-    if (IsSocketObject != TRUE){
-        return (int) (-ENOTSOCK);
-    }
-
-// Socket
-// Yes, This is a socket object.
-// Let's get the socket structure associated with the file.
-// Let's simply change the flag for this socket.
-    s = (struct socket_d *) f->socket;
-    if ((void *) s == NULL){
-        debug_print ("sys_socket_shutdown: s fail\n");
-        printk      ("sys_socket_shutdown: s fail\n");
-        goto fail;
-    // permanece conectado, mas usaremos outro da fila.
-    } else {
-        s->state = 216;  // ?
-        return 0;
-    };
-
-    // ...
-
-fail:
-    debug_print("sys_socket_shutdown: [FAIL]\n");
-    printk     ("sys_socket_shutdown: [FAIL]\n");
-    return (int) -1;
-}
-
-
-// https://linux.die.net/man/2/sendto
-ssize_t 
-sys_sendto ( 
-    int sockfd, 
-    const void *ubuf, 
-    size_t len, 
-    int flags,
-    const struct sockaddr *dest_addr, 
-    socklen_t addrlen )
-{
-/*
-    if (sockfd < 0 || !ubuf || len == 0 || !dest_addr)
-        return -EINVAL;
-
-    struct sockaddr_in *k_dest_addr = (struct sockaddr_in *)dest_addr;
-    if (addrlen < sizeof(struct sockaddr_in))
-        return -EINVAL;
-
-    // Convert the destination IP address from struct sockaddr_in
-    uint8_t target_ip[4] = { k_dest_addr->sin_addr.s_addr & 0xFF,
-                             (k_dest_addr->sin_addr.s_addr >> 8) & 0xFF,
-                             (k_dest_addr->sin_addr.s_addr >> 16) & 0xFF,
-                             (k_dest_addr->sin_addr.s_addr >> 24) & 0xFF };
-
-    uint8_t target_mac[6] = {  }; // Resolve MAC via ARP or existing table 
-    unsigned short source_port = ; //Retrieve from socket state
-    unsigned short target_port = ntohs(k_dest_addr->sin_port);
-
-    // Call the UDP worker function using the user-provided buffer directly
-    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port, (char *)ubuf, len);
-
-    return (ret < 0) ? ret : len; // Return number of bytes sent or error code
-
-*/
-    return (int) -ENOSYS;
-}
-
-ssize_t sys_sendmsg (int sockfd, const struct msghdr *msg, int flags)
-{
-/*
-    if (sockfd < 0 || !msg || msg->msg_iovlen == 0)
-        return -EINVAL; // Invalid argument
-
-    struct sockaddr_in *dest_addr = (struct sockaddr_in *)msg->msg_name;
-    if (!dest_addr || msg->msg_namelen < sizeof(struct sockaddr_in))
-        return -EINVAL;
-
-    // Convert destination IP
-    uint8_t target_ip[4] = { dest_addr->sin_addr.s_addr & 0xFF,
-                             (dest_addr->sin_addr.s_addr >> 8) & 0xFF,
-                             (dest_addr->sin_addr.s_addr >> 16) & 0xFF,
-                             (dest_addr->sin_addr.s_addr >> 24) & 0xFF };
-
-    uint8_t target_mac[6] = {  };   // Resolve MAC via ARP or internal table
-    unsigned short source_port = ;  // Retrieve from socket state 
-    unsigned short target_port = ntohs(dest_addr->sin_port);
-
-    // Compute total buffer length
-    size_t total_len = 0;
-    for (int i = 0; i < msg->msg_iovlen; i++)
-        total_len += msg->msg_iov[i].iov_len;
-
-    if (total_len == 0)
-        return -EINVAL; // No data to send
-
-    // Call the UDP worker directly using user-space buffer(s)
-    int ret = network_send_udp(source_ip, target_ip, target_mac, source_port, target_port,
-                               (char *)msg->msg_iov[0].iov_base, total_len);
-
-    return (ret < 0) ? ret : total_len; // Return bytes sent or error code
-*/
-
-    return (int) -ENOSYS;
-}
-
 
 //
 // End

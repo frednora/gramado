@@ -16,14 +16,12 @@ struct sockpeercred
 typedef unsigned  socklen_t;
 //typedef unsigned int socklen_t;
 
-/*
- * Structure used for manipulating linger option.
- * BSD-style.
- */
+// Structure used for manipulating linger option.
+// #ps: BSD-style
 struct linger 
 {
-    int l_onoff;     /* option on/off */
-    int l_linger;    /* linger time in seconds */
+    int l_onoff;   // option on/off
+    int l_linger;  // linger time in seconds
 };
 
 //bsd
@@ -55,7 +53,7 @@ struct sockaddr_gram
 /*
  * Structure used by kernel to pass protocol
  * information in raw sockets.
- * bsd
+ * bsd style
  */
 struct sockproto 
 {
@@ -149,13 +147,12 @@ struct sockcred
 };
 */
 
-// The socket structure
+// This is the Gramado Kernel implementation for socke structure
 struct socket_d
 {
-    struct kobject_d kobj;
+    struct kobject_d  kobj;
     int used;
     int magic;
-
     int id;
 
     // Basic socket parameters
@@ -172,7 +169,7 @@ struct socket_d
     uid_t uid; 
     gid_t gid;
 
-// maybe
+    // maybe
     //struct sockpeercred  peercred;
 
 //
@@ -193,7 +190,6 @@ struct socket_d
     //unsigned int remote_ip_ipv4;
     //unsigned long remote_ip_ipv6;
     //unsigned short remote_port;
-
 
 //
 // Protocol flags
@@ -251,7 +247,7 @@ struct socket_d
     char magic_string[8];
 
 // Local address storage (if needed as a fallback)
-    struct sockaddr     addr;
+    struct sockaddr  addr;
     struct sockaddr_in  addr_in; 
 
 // Navigation
@@ -264,94 +260,9 @@ extern struct socket_d  *CurrentSocket;
 extern struct socket_d  *LocalHostHTTPSocket;
 // ...
 
-// #todo:
-// Refazer esse limite proviório.
-#define SOCKET_COUNT_MAX  32
-extern unsigned long socketList[SOCKET_COUNT_MAX];
-
 //
 // == prototypes =========================
 //
-
-struct socket_d *create_socket_object(void);
-
-// Get the socket structure in the process list given the port number.
-struct socket_d *get_socket_in_process_list(unsigned short target_port);
-
-unsigned int getSocketIPV4(struct socket_d *socket);
-unsigned long getSocketIPV6(struct socket_d *socket);
-unsigned short getSocketPort(struct socket_d *socket);
-struct socket_d *get_socket_from_fd(int fd);
-void show_socket_for_a_process(pid_t pid);
-
-//
-// sys_socket() support.
-//
-
-int 
-socket_gramado ( 
-    struct socket_d *sock, 
-    int family, 
-    int type, 
-    int protocol );
-
-int 
-socket_unix ( 
-    struct socket_d *sock, 
-    int family, 
-    int type, 
-    int protocol );
-
-int 
-socket_inet ( 
-    struct socket_d *sock, 
-    int family,
-    int type, 
-    int protocol );
-
-int socket_init (void);
-int socket_ioctl ( int fd, unsigned long request, unsigned long arg );
-
-int socket_read ( int fd, char *buf, int count );
-int socket_write ( int fd, char *buf, int count );
-
-// gramado server pids
-pid_t socket_get_gramado_server_pid (int port);
-int socket_set_gramado_server_pid (int port, pid_t pid);
-
-// gramado tcpserver pids
-pid_t socket_get_tcpserver_pid(int port);
-int socket_set_tcpserver_pid(int port, pid_t pid);
-
-int socket_find_empty_tcpserver_slot(void);
-
-struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port);
-
-struct connection_d *tcp_find_connection_by_endpoints(
-    unsigned int local_ip,
-    unsigned short local_port,
-    unsigned int remote_ip,
-    unsigned short remote_port);
-
-int 
-update_socket ( 
-    struct socket_d *socket, 
-    unsigned int ip_ipv4, 
-    unsigned short port );
-
-int
-sock_socketpair ( 
-    int family, 
-    int type, 
-    int protocol, 
-    int usockvec[2] );
-
-unsigned long 
-socket_dialog ( 
-    unsigned long number, 
-    unsigned long arg2, 
-    unsigned long arg3, 
-    unsigned long arg4 );
 
 //
 // ------------------------------------------
@@ -360,36 +271,11 @@ socket_dialog (
 // Belongs to socket.c
 
 int 
-sys_accept (
-    int sockfd, 
-    struct sockaddr *addr, 
-    socklen_t *addrlen );
-int 
-sys_gramado_accept (
-    int sockfd, 
-    struct sockaddr *addr, 
-    socklen_t *addrlen );
-
-int 
-sys_bind ( 
-    int sockfd, 
-    const struct sockaddr *addr,
-    socklen_t addrlen );
-
-int 
-sys_connect ( 
-    int sockfd, 
-    const struct sockaddr *addr,
-    socklen_t addrlen );
-
-int 
 sys_getsockname ( 
     int sockfd, 
     struct sockaddr *addr, 
     socklen_t *addrlen );
 
-int sys_listen (int sockfd, int backlog);
-int sys_socket (int family, int type, int protocol);
 int sys_socket_shutdown (int socket, int how);
 
 // https://linux.die.net/man/2/sendto
@@ -403,6 +289,39 @@ sys_sendto (
     socklen_t addrlen );
 
 ssize_t sys_sendmsg (int sockfd, const struct msghdr *msg, int flags);
+
+//
+// ============================================================
+// Well know libc methods for socket support
+//
+
+int sys_socket(int family, int type, int protocol);
+
+int 
+sys_bind ( 
+    int sockfd, 
+    const struct sockaddr *addr,
+    socklen_t addrlen );
+
+int sys_listen(int sockfd, int backlog);
+
+int 
+sys_accept (
+    int sockfd, 
+    struct sockaddr *addr, 
+    socklen_t *addrlen );
+
+int 
+sys_gramado_accept (
+    int sockfd, 
+    struct sockaddr *addr, 
+    socklen_t *addrlen );
+
+int 
+sys_connect ( 
+    int sockfd, 
+    const struct sockaddr *addr,
+    socklen_t addrlen );
 
 #endif    
 

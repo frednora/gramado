@@ -322,8 +322,8 @@
 #include "../halls/dev/per/net/nports.h"     //(network) Network Ports  (sw)
 #include "../halls/dev/per/net/inet.h"
 
-#include "../halls/dev/per/net/socklib.h"     //
-#include "../halls/dev/per/net/socket.h"      //last always
+#include "../halls/dev/per/net/sockint.h"  //
+#include "../halls/dev/per/net/socket.h"   // last always
 
 #include "../halls/dev/per/net/domain.h"
 

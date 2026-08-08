@@ -1,12 +1,24 @@
-// socklib.h
+// sockint.h
 // Library for socket support.
 // Created by Fred Nora.
 
 #ifndef __NET_SOCKLIB_H
 #define __NET_SOCKLIB_H    1
 
-//#define SOCKET_MAX_BACKLOG  32
+
+// Internal
+#define SYS_SOCKET_IP(a, b, c, d) \
+    (a << 24 | b << 16 | c << 8 | d)
+
+
+// #todo: Provisory limit
+#define SOCKET_COUNT_MAX  32
+extern unsigned long socketList[SOCKET_COUNT_MAX];
+
+
 #define SOCKET_MAX_PENDING_CONNECTIONS   32
+//#define SOCKET_MAX_BACKLOG  32
+
 
 // Socket state
 #define SS_NULL           0
@@ -422,6 +434,109 @@ struct mmsghdr {
 #define SHUT_RDWR  2    /* Disallow further sends/receives. */
 
 //-----------
+
+
+//
+// == Prototypes ==================================
+//
+
+struct socket_d *create_socket_object(void);
+
+// gramado server pids
+pid_t socket_get_gramado_server_pid (int port);
+int socket_set_gramado_server_pid (int port, pid_t pid);
+
+// gramado tcpserver pids
+pid_t socket_get_tcpserver_pid(int port);
+int socket_set_tcpserver_pid(int port, pid_t pid);
+
+
+int socket_find_empty_tcpserver_slot(void);
+
+struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port);
+
+struct connection_d *tcp_find_connection_by_endpoints(
+    unsigned int local_ip,
+    unsigned short local_port,
+    unsigned int remote_ip,
+    unsigned short remote_port);
+
+void show_socket_for_a_process(pid_t pid);
+
+struct socket_d *get_socket_from_fd(int fd);
+
+int
+sock_socketpair ( 
+    int family, 
+    int type, 
+    int protocol, 
+    int usockvec[2] );
+
+
+// #test: Dialog (procedure) for multiple services.
+unsigned long 
+socket_dialog ( 
+    unsigned long number, 
+    unsigned long arg2, 
+    unsigned long arg3, 
+    unsigned long arg4 );
+
+unsigned int getSocketIPV4(struct socket_d *socket);
+unsigned long getSocketIPV6(struct socket_d *socket);
+unsigned short getSocketPort(struct socket_d *socket);
+
+// Get the socket structure in the process list given the port number.
+struct socket_d *get_socket_in_process_list(unsigned short target_port);
+
+
+// Helper for updating ip:port into a socket.
+int 
+update_socket ( 
+    struct socket_d *socket, 
+    unsigned int ip_ipv4, 
+    unsigned short port );
+
+//
+// Read and write support
+//
+
+int socket_read(int fd, char *buf, int count);
+int socket_write(int fd, char *buf, int count);
+
+
+// ioctl:
+int socket_ioctl(int fd, unsigned long request, unsigned long arg);
+
+//
+// Workers for sys_socket() support
+//
+
+int 
+socket_gramado ( 
+    struct socket_d *sock, 
+    int family, 
+    int type, 
+    int protocol );
+
+int 
+socket_unix ( 
+    struct socket_d *sock, 
+    int family, 
+    int type, 
+    int protocol );
+
+int 
+socket_inet ( 
+    struct socket_d *sock, 
+    int family,
+    int type, 
+    int protocol );
+
+//
+// Initialization support
+//
+
+int socket_init (void);
 
 #endif   
 

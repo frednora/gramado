@@ -1,13 +1,10 @@
 // sockint.c
+// The implementation of socket related functions.
 // Internal routines.
 // Low level worker called by socket.c
 // Created by Fred Nora.
 
 #include <kernel.h>
-
-// Internal
-#define SYS_SOCKET_IP(a, b, c, d) \
-    (a << 24 | b << 16 | c << 8 | d)
 
 
 // globals
@@ -55,6 +52,103 @@ static int __initialize_gramado_tcpserver_pids_table(void)
     return 0;
 }
 
+/*
+ * create_socket_object: 
+ *     It creates a socket structure.
+ *     Every process has its own socket structure.
+ *     The status is: NOT CONNECTED.
+ * #ps: See the structure in socket.h
+ */
+struct socket_d *create_socket_object(void)
+{
+    struct socket_d *s;
+    register int i=0;
+
+// Create and clean the structure
+    s = (void *) kmalloc( sizeof(struct socket_d) );
+    if ((void *) s ==  NULL){
+        printk("create_socket_object: s\n");
+        goto fail;
+    }
+    memset( s, 0, sizeof(struct socket_d) );
+
+    //s->kobj._type = 0
+    //s->kobj._class = 0
+
+    s->id = 0;  //#todo
+
+    // Get PID for the current process for a given core.
+    // IN: core id
+
+    s->pid = (pid_t) get_current_process(0);
+    s->uid = (uid_t) current_user;
+    s->gid = (gid_t) current_group;
+
+// #todo
+    //s->addr = 0;
+
+    s->family = 0;
+    s->type = 0;   // (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW ...)
+    s->protocol = 0;
+
+// IP:Port
+    s->ip_ipv6 = (unsigned long) 0;
+    s->ip_ipv4 = (unsigned int) 0;
+    s->port = (unsigned short) 0;
+
+// The buffer.
+// The data goes into the stream.
+    s->private_file = NULL;  //(file *) 0;
+
+// Socket flags
+// The flags that describe the state of this socket.
+    s->flags = 0;
+
+// The flags used in TCP connections,
+// Data Offset (4bits) | Reserved (6bits) | Control bits (6bits).
+    s->tcp__do_res_flags = 0;
+
+// Initializing pointers.
+// We don't want this kinda crash in the real machine.
+
+// It's a pointer to another socket. 
+    s->link = NULL;
+
+// Backlog (Max is 32)
+    for (i=0; i<32; i++)
+    {
+        s->pending_server_endpoints[i] = 0;
+        s->pending_client_endpoints[i] = 0;
+    };
+// The counter
+    s->pending_server_count = 0;
+    s->pending_client_count = 0;
+
+    s->backlog_head = 0;   //sai
+    s->backlog_max = 4;    //default 
+
+// Not yet.
+// listen() will set this flag.
+    s->isAcceptingConnections = FALSE;
+// The socket needs to be initialized 
+// in the disconnected state.
+    s->state = SS_UNCONNECTED;
+// #bugbug
+// It tells us that write() will copy 
+// the data to the connected socket.
+    s->conn_copy = TRUE;  //YES, copy!
+// The server finds a place in the server_process->Objects[i].
+    s->clientfd_on_server = -1;
+
+    // ...
+
+    s->used = TRUE;
+    s->magic = 1234;
+    return (struct socket_d *) s;
+
+fail:
+    return NULL;
+}
 
 /*
  * socket_get_gramado_server_pid:
@@ -248,110 +342,9 @@ struct connection_d *tcp_find_connection_by_endpoints(
     return NULL; // Not found
 }
 
-
-
-
-/*
- * create_socket_object: 
- *     It creates a socket structure.
- *     Every process has its own socket structure.
- *     The status is: NOT CONNECTED.
- */
-// see: socket.h
-struct socket_d *create_socket_object(void)
-{
-    struct socket_d *s;
-    register int i=0;
-
-// Create and clean the structure
-    s = (void *) kmalloc( sizeof(struct socket_d) );
-    if ((void *) s ==  NULL){
-        printk("create_socket_object: s\n");
-        goto fail;
-    }
-    memset( s, 0, sizeof(struct socket_d) );
-
-    //s->kobj._type = 0
-    //s->kobj._class = 0
-
-    s->id = 0;  //#todo
-
-    // Get PID for the current process for a given core.
-    // IN: core id
-
-    s->pid = (pid_t) get_current_process(0);
-    s->uid = (uid_t) current_user;
-    s->gid = (gid_t) current_group;
-
-// #todo
-    //s->addr = 0;
-
-    s->family = 0;
-    s->type = 0;   // (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW ...)
-    s->protocol = 0;
-
-// IP:Port
-    s->ip_ipv6 = (unsigned long) 0;
-    s->ip_ipv4 = (unsigned int) 0;
-    s->port = (unsigned short) 0;
-
-// The buffer.
-// The data goes into the stream.
-    s->private_file = NULL;  //(file *) 0;
-
-// Socket flags
-// The flags that describe the state of this socket.
-    s->flags = 0;
-
-// The flags used in TCP connections,
-// Data Offset (4bits) | Reserved (6bits) | Control bits (6bits).
-    s->tcp__do_res_flags = 0;
-
-// Initializing pointers.
-// We don't want this kinda crash in the real machine.
-
-// It's a pointer to another socket. 
-    s->link = NULL;
-
-// Backlog (Max is 32)
-    for (i=0; i<32; i++)
-    {
-        s->pending_server_endpoints[i] = 0;
-        s->pending_client_endpoints[i] = 0;
-    };
-// The counter
-    s->pending_server_count = 0;
-    s->pending_client_count = 0;
-
-    s->backlog_head = 0;   //sai
-    s->backlog_max = 4;    //default 
-
-// Not yet.
-// listen() will set this flag.
-    s->isAcceptingConnections = FALSE;
-// The socket needs to be initialized 
-// in the disconnected state.
-    s->state = SS_UNCONNECTED;
-// #bugbug
-// It tells us that write() will copy 
-// the data to the connected socket.
-    s->conn_copy = TRUE;  //YES, copy!
-// The server finds a place in the server_process->Objects[i].
-    s->clientfd_on_server = -1;
-
-    // ...
-
-    s->used = TRUE;
-    s->magic = 1234;
-    return (struct socket_d *) s;
-
-fail:
-    return NULL;
-}
-
 // #debug
-// Show the private socket for a process.
-void show_socket_for_a_process (pid_t pid)
+// Show the private socket for a process
+void show_socket_for_a_process(pid_t pid)
 {
     struct te_d  *p;
     struct socket_d  *s;
@@ -383,15 +376,15 @@ void show_socket_for_a_process (pid_t pid)
         printk("s\n");
         goto fail;
     }
-    if ( s->used != TRUE || s->magic != 1234 ){
+    if (s->used != TRUE || s->magic != 1234){
         printk ("s validation\n");
         goto fail;
     }
 
-//done:
+// done:
 // Show sockaddr structure
-    printk ("family %d \n",s->addr.sa_family);
-    printk ("data %s   \n",s->addr.sa_data);
+    printk ("family %d \n", s->addr.sa_family);
+    printk ("data %s   \n", s->addr.sa_data);
     // ...
     return;
 
@@ -399,20 +392,19 @@ fail:
    return;
 }
 
+// Get from the current process.
 // Get the pointer for the socket structure 
 // given the fd.
 // OUT: Returning a pointer for a 
 // ring0 socket structure.
 struct socket_d *get_socket_from_fd(int fd)
 {
-// Get from the current process.
-
     struct te_d *p;
     pid_t current_process = -1;
     file *fp;
 
-// Parameter
-    if (fd<0 || fd>=OPEN_MAX){
+// Parameter:
+    if (fd<0 || fd >= OPEN_MAX){
         goto fail;
     }
 
@@ -452,7 +444,9 @@ fail:
     return NULL;
 }
 
-// Os dois são arquivos no mesmo processo. O processo atual.
+// #ps: 
+// Both are files that belongs to the same process. 
+// The current process.
 int
 sock_socketpair ( 
     int family, 
@@ -492,6 +486,7 @@ sock_socketpair (
     return 0;
 }
 
+// #test: Dialog (procedure) for multiple services.
 // socket_dialog
 // Serviços de soquetes da klibc
 // #todo: rever os números.
@@ -617,14 +612,14 @@ fail:
     return NULL;
 }
 
+// Helper for updating ip:port into a socket
+// Update ipv4 and port info
 int 
 update_socket ( 
     struct socket_d *socket, 
     unsigned int ip_ipv4, 
     unsigned short port )
 {
-// Update ipv4 and port info.
-
     if ((void *) socket == NULL){
         return (int) -1;
     }
@@ -633,7 +628,7 @@ update_socket (
     return 0;
 }
 
-int socket_read ( int fd, char *buf, int count )
+int socket_read(int fd, char *buf, int count)
 {
     debug_print ("socket_read:[TODO]\n");
 
@@ -643,14 +638,14 @@ int socket_read ( int fd, char *buf, int count )
 // #todo:
 // Here we can check if it is really a socket.
 
-    return (int) __read_imp(fd,buf,count);
+    return (int) __read_imp(fd, buf, count);
 }
 
 // IN:
 // fd = The file that handles the socket structure.
 // buf
 // count.
-int socket_write ( int fd, char *buf, int count )
+int socket_write(int fd, char *buf, int count)
 {
     debug_print ("socket_write:[TODO]\n");
 
@@ -660,10 +655,10 @@ int socket_write ( int fd, char *buf, int count )
 // #todo:
 // Here we can check if it is really a socket.
 
-    return (int) __write_imp(fd,buf,count);
+    return (int) __write_imp(fd, buf, count);
 }
 
-int socket_ioctl ( int fd, unsigned long request, unsigned long arg )
+int socket_ioctl(int fd, unsigned long request, unsigned long arg)
 {
     struct te_d *p;
     pid_t current_process = -1;
@@ -1132,6 +1127,7 @@ fail:
 // + SOCK_DGRAM  = udp socket.
 // + SOCK_RAW    = raw socket.
 
+// Called by sys_socket() in socket.c
 int 
 socket_inet ( 
     struct socket_d *sock, 
@@ -1139,11 +1135,9 @@ socket_inet (
     int type, 
     int protocol )
 {
-// Called by sys_socket().
-
     struct te_d *Process;
     pid_t current_process = -1;
-    file *_file;
+    file *fp;
     char *buff;
     register int i=0;
     int __slot = -1;
@@ -1162,9 +1156,11 @@ socket_inet (
         goto fail;
     }
 
-    sock->addr_in.sin_family      = AF_INET;
-    sock->addr_in.sin_addr.s_addr = SYS_SOCKET_IP(127,0,0,1);
-    sock->addr_in.sin_port        = 11369;
+    // family
+    sock->addr_in.sin_family = AF_INET;
+    // ip, port
+    sock->addr_in.sin_addr.s_addr = SYS_SOCKET_IP(0,0,0,0);
+    sock->addr_in.sin_port = 0;
     // #todo:
     // This is a default port number ... we need to pick 
     // a valid one for each process created.
@@ -1183,9 +1179,8 @@ socket_inet (
 // GRAMADO_PROTOCOL is a valid protocol in AF_INET.
 
 // Process
-
-    // Get PID for the current process for a given core.
-    // IN: core id
+// Get PID for the current process for a given core.
+// IN: core id
 
     current_process = (pid_t) get_current_process(0);
 
@@ -1246,87 +1241,90 @@ socket_inet (
 
 // File
 // Create a new file structure and clear the structure.
-    _file = (void *) kmalloc(sizeof(file));
-    if ((void *) _file == NULL){
+    fp = (void *) kmalloc(sizeof(file));
+    if ((void *) fp == NULL){
         //Process->Objects[__slot] = (unsigned long) 0;
-        printk ("socket_inet: _file fail\n");
+        printk ("socket_inet: fp fail\n");
         goto fail;
     }
-    memset( _file, 0, sizeof(struct file_d) );
+    memset( fp, 0, sizeof(struct file_d) );
 
 // Object type
-    _file->____object = ObjectTypeSocket;
+    fp->____object = ObjectTypeSocket;
 // Save it into the socket structure
-    sock->private_file = (file *) _file;
+    sock->private_file = (file *) fp;
 
-// #todo: Use methods to grab these values.
-    _file->pid = (pid_t) current_process;
-    _file->uid = (uid_t) current_user;
-    _file->gid = (gid_t) current_group;
+// #todo: Use methods to grab these values
+    fp->pid = (pid_t) current_process;
+    fp->uid = (uid_t) current_user;
+    fp->gid = (gid_t) current_group;
 
 // sync
 // #todo: Maybe we can use methods for this routine.
-    _file->sync.sender_pid = (pid_t) -1;
-    _file->sync.receiver_pid = (pid_t) -1;
-    _file->sync.action = ACTION_NULL;
-    _file->sync.can_read = TRUE;
-    _file->sync.can_write = TRUE;
-    _file->sync.can_execute = FALSE;
-    _file->sync.can_accept = TRUE;
-    _file->sync.can_connect = TRUE;
+    fp->sync.sender_pid = (pid_t) -1;
+    fp->sync.receiver_pid = (pid_t) -1;
+    fp->sync.action = ACTION_NULL;
+    fp->sync.can_read = TRUE;
+    fp->sync.can_write = TRUE;
+    fp->sync.can_execute = FALSE;
+    fp->sync.can_accept = TRUE;
+    fp->sync.can_connect = TRUE;
 
-    _file->sync.block_on_read = FALSE;
-    _file->sync.block_on_read_empty = TRUE;
+    fp->sync.block_on_read = FALSE;
+    fp->sync.block_on_read_empty = TRUE;
 
-    _file->sync.block_on_write = TRUE;
-    _file->sync.block_on_write_full = TRUE;
+    fp->sync.block_on_write = TRUE;
+    fp->sync.block_on_write_full = TRUE;
 
 // Is it blocked?
-    _file->sync.is_blocked = FALSE;
+    fp->sync.is_blocked = FALSE;
 // flags 
-    _file->_flags = __SWR;  // OK to write.
+    fp->_flags = __SWR;  // OK to write.
 
 // No name for now.
-    _file->_tmpfname = NULL;
-    //_file->_tmpfname = "socket";
+    fp->_tmpfname = NULL;
+    //fp->_tmpfname = "socket";
 
 // Buffer support:
-    _file->_base    = buff;
-    _file->_p       = buff;
-    _file->_lbfsize = BUFSIZ;
+    fp->_base = buff;
+    fp->_p = buff;
+    fp->_lbfsize = BUFSIZ;
 // Quanto falta
-    _file->_cnt = _file->_lbfsize;
-    _file->_r = 0;
-    _file->_w = 0;
-    _file->socket_buffer_full = 0;
+    fp->_cnt = fp->_lbfsize;
+    fp->_r = 0;
+    fp->_w = 0;
+    fp->socket_buffer_full = 0;
 
-// fd
-    _file->_file = __slot;
+    fp->_file = __slot;  // File descriptor. (fd) (id)
+
 // Validation
-    _file->used = TRUE;
-    _file->magic = 1234;
-
+    fp->used = TRUE;
+    fp->magic = 1234;
 
 //
 // Socket
 //
 
-    _file->socket = sock;
+    fp->socket = sock;
 
 // Salvamos o ponteira para estrutura de soquete
 // na estrutura de processo do processo atual.
     Process->priv = (void *) sock;
 
-// Colocando na lista de arquivos abertos no processo.
-    Process->Objects[__slot] = (unsigned long) _file;
+// Inject fp (structure pointer) into the list of open files
+    Process->Objects[__slot] = (unsigned long) fp;
 
-// OK, return the fd
-    return (int) __slot;
+    return (int) __slot;  // OK, return the fd
 
 fail:
     debug_print ("socket_inet: fail\n");
     return (int) (-1);
 }
+
+//
+// #
+// INITIALIZATION
+//
 
 // Initialize socket list
 int socket_init(void)
