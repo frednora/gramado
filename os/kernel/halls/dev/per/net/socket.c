@@ -873,7 +873,7 @@ static int __listen_imp(int sockfd, int backlog)
 
 // Parameter
 // The fd of the server's socket.
-    if ( sockfd < 0 || sockfd >= OPEN_MAX )
+    if (sockfd < 0 || sockfd >= OPEN_MAX)
     {
         debug_print ("__listen_imp: sockfd\n");
         printk      ("__listen_imp: sockfd\n");
@@ -887,8 +887,7 @@ static int __listen_imp(int sockfd, int backlog)
 
     current_process = (pid_t) get_current_process(0);
 
-    if ( current_process < 0 || 
-         current_process >= PROCESS_COUNT_MAX )
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
     {
         printk("__listen_imp: current_process\n");
         goto fail;
@@ -926,7 +925,7 @@ static int __listen_imp(int sockfd, int backlog)
         printk("__listen_imp: server_socket fail\n");
         goto fail;
     }
-    server_socket->isAcceptingConnections = FALSE;
+    server_socket->isAcceptingConnections = FALSE;  // ?
 
     // #todo: Why?
     if (f->socket != p->priv){
@@ -947,6 +946,7 @@ static int __listen_imp(int sockfd, int backlog)
     if (DesiredBacklog < 1) { DesiredBacklog=1; }
     if (DesiredBacklog > 31){ DesiredBacklog=31; }
 
+    // Set backlog value
     server_socket->backlog_max = (int) DesiredBacklog;
  
     // what is this?
@@ -957,13 +957,9 @@ static int __listen_imp(int sockfd, int backlog)
     server_socket->pending_server_count = 0;
     server_socket->pending_client_count = 0;
 
-// This server is ready to accept new connections
+// This server now listening and accepting new connections
     server_socket->state = SS_LISTENING;
-// This server is now accepting new connections
     server_socket->isAcceptingConnections = TRUE;
-
-    // ...
-
     return 0;
 
 fail:

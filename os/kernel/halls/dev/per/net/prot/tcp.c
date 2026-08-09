@@ -541,7 +541,9 @@ fail:
 void 
 network_handle_tcp( 
     const unsigned char *buffer, 
-    ssize_t size )
+    ssize_t size,
+    unsigned int s_ipv4_int,
+    unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
     //register int i=0;
@@ -800,8 +802,7 @@ network_handle_tcp(
 
             // IP/Port
             //client_ep->socket->ip_ipv6 = 0;
-            // or build from tcp->th_sport
-            client_ep->socket->ip_ipv4 = NetworkSaved.caller_ip_int;
+            client_ep->socket->ip_ipv4 = s_ipv4_int;  //NetworkSaved.caller_ip_int;
             client_ep->socket->port = sport;
 
             // Connection state
@@ -890,9 +891,9 @@ network_handle_tcp(
             printk(">> Sending SYN/ACK\n");
 
             network_send_tcp(
-                dhcp_info.your_ipv4,       //my_ip,           // server IP
-                NetworkSaved.caller_ipv4,  //client_ip,       // client IP
-                NetworkSaved.caller_mac,   //client_mac,      // client MAC
+                dhcp_info.your_ipv4,       // server IP
+                NetworkSaved.caller_ipv4,  // client IP (Array)
+                NetworkSaved.caller_mac,   // client MAC
                 11888,           // server port (source=we)
                 sport,           // client port (target)
                 conn->tcp_conn->iss,      // seq = our ISN
@@ -1038,13 +1039,11 @@ network_handle_tcp(
     );
 */
 
-// Getting pointer based on remote ep.
+// Getting pointer based on REMOTE ep. 
+// NetworkSaved.caller_ip_int
     struct connection_d *c_conn = 
-        tcp_find_connection_by_client(
-            NetworkSaved.caller_ip_int, sport );  // remote
-    printk("REMOTE: ip:%x port:%d \n", 
-        NetworkSaved.caller_ip_int, sport
-    );
+        tcp_find_connection_by_client(s_ipv4_int, sport);  
+    printk("REMOTE: ip:%x port:%d \n", d_ipv4_int, sport );
 
 // Switch current connection
     if ((void*)c_conn != NULL) 

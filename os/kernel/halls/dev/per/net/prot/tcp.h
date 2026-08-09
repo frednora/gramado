@@ -177,7 +177,9 @@ network_send_tcp (
 void 
 network_handle_tcp( 
     const unsigned char *buffer, 
-    ssize_t size );
+    ssize_t size,
+    unsigned int s_ipv4_int,
+    unsigned int d_ipv4_int );
 
 #endif    
 

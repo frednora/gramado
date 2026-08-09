@@ -357,7 +357,12 @@ network_handle_ipv4(
 
     switch (Protocol){
     case PROTOCOL_IP_TCP:
-        network_handle_tcp( payload_pointer, payload_size );
+        network_handle_tcp( 
+            payload_pointer, 
+            payload_size,
+            NetworkSaved.caller_ip_int,  // s_ipv4_int
+            NetworkSaved.target_ip_int   // d_ipv4_int
+        );
         return;
         break;
     case PROTOCOL_IP_UDP:
