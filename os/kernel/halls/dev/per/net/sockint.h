@@ -22,14 +22,16 @@ extern unsigned long socketList[SOCKET_COUNT_MAX];
 
 // Socket state
 #define SS_NULL           0
-#define SS_LISTENING      1  // Server
+#define SS_LISTENING      1  // Server.  Waiting for SYN
 #define SS_UNCONNECTED    2  // Client
-#define SS_CONNECTING     3
-#define SS_CONNECTED      4
-#define SS_DISCONNECTING  5
+#define SS_CONNECTING     3  // Handshake in progress
+#define SS_CONNECTED      4  // Established
+#define SS_DISCONNECTING  5  // Tear‑down in progress
+#define SS_CLOSED         6  // Socket is closed, ready for reuse
+// ...
 
 // Ports
-#define PORTS_WS  4040  // Window server (actually: Display Server)
+#define PORTS_DS  4040  // Display Server
 #define PORTS_NS  4041  // Network server
 #define PORTS_FS  4042  // Filesystem server
 #define PORTS_WM  4043  // Window manager service
@@ -39,7 +41,7 @@ extern unsigned long socketList[SOCKET_COUNT_MAX];
 #define PORTS_TN  4046  // Telnet server
 // ...
 // Alias
-#define __PORTS_DISPLAY_SERVER  PORTS_WS
+#define __PORTS_DISPLAY_SERVER  PORTS_DS
 #define __PORTS_NETWORK_SERVER  PORTS_NS
 
 //=====================================================
@@ -52,6 +54,8 @@ extern unsigned long socketList[SOCKET_COUNT_MAX];
 // AF_GRAMADO
 // ... gramado_server_pids[]
 // ...
+
+// #ps: This are indexes in a limited range.
 
 #define GRAMADO_PORT_DS  11  // Display server
 

@@ -231,7 +231,15 @@ struct socket_d
 // Link to the current connection.
     struct socket_d *link;
 
+// See: sockint.h
     int state;
+
+// TRUE = available for reuse, FALSE = occupied.
+    int free;
+
+// FALSE = normal, TRUE = verbose debug.
+// We can set it via ioctl.
+    int debug;
 
 // flag
 // write() copy the data to the connected socket.

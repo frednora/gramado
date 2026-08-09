@@ -178,6 +178,7 @@ void test_sending_tcp(void)
     );
 }
 
+// Low level worker
 int
 network_send_tcp ( 
     uint8_t source_ip[4], 
@@ -279,12 +280,8 @@ network_send_tcp (
     // Don't fragment for now.
     Lipv4.ip_off = ToNetByteOrder16(0x4000);  //DF bit 
 
-    // Time to live (8bits)
-    Lipv4.ip_ttl = 255;  // 64
-
-    // Protocol (8bit)
-    Lipv4.ip_p = 0x06;  // TCP
-
+    Lipv4.ip_ttl = 255;  // Time to live (8bits)
+    Lipv4.ip_p = 0x06;   // Protocol is TCP (8bit)
 
 // Addresses
 
@@ -306,7 +303,7 @@ network_send_tcp (
               0, 
               0,
               (const unsigned char *) &Lipv4, 
-              (const unsigned char *) &Lipv4 + sizeof(struct ip_d));
+              (const unsigned char *) &Lipv4 + sizeof(struct ip_d) );
     // #ps: Change byte order
     Lipv4.ip_sum = (uint16_t) ToNetByteOrder16(Lipv4.ip_sum);
 
@@ -355,8 +352,7 @@ network_send_tcp (
     // We will calculate at the end of the routine.
     Ltcp.checksum = 0;
 
-    // Urgent pointer (16 bits)
-    Ltcp.urgent_pointer = 0;
+    Ltcp.urgent_pointer = 0;  // Urgent pointer (16 bits)
 
 //
 // Checksum
@@ -407,7 +403,7 @@ network_send_tcp (
 
     uint16_t buffer_index = (uint16_t) currentNIC->tx_cur;
 
-// Get the buffer address based on its offset.
+// Get the buffer address based on its offset
     unsigned char *frame = 
         (unsigned char *) currentNIC->tx_buffers_virt[buffer_index];
 
@@ -423,12 +419,10 @@ network_send_tcp (
 // Copy
 //
 
+    // #debug: Actuall we don't need panic here
     if ((void*) frame == NULL)
     {
-        // #debug
-        // We don't need panic here
         panic("network_send_tcp: frame\n");
-
         //printk("network_send_tcp: frame\n");
         //goto fail;
     }
@@ -499,10 +493,9 @@ network_send_tcp (
 // It's because ethernet_send() will put the given data into 
 // the right place.
 
-    int rv = -1;
-
 // Send frame via current NIC
-    rv = (int) ethernet_send( FRAME_SIZE, frame );
+    int rv = -1;
+    rv = (int) ethernet_send(FRAME_SIZE, frame);
     if (rv < 0){
         printk("network_send_tcp: on ethernet_send()\n");
         goto fail;
@@ -519,11 +512,11 @@ network_send_tcp (
     //kfree(udp);
     //kfree(udp);
 
-    printk("Done\n");
+    printk("TCP: Done\n");  // #debug
     return 0;
 
 fail:
-    printk ("Fail\n");
+    printk ("TCP: Fail\n");  // #debug
     return -1;
 }
 
@@ -548,6 +541,7 @@ network_handle_tcp(
     struct tcp_d *tcp;  // The buffer
     //register int i=0;
     uint16_t flags=0;
+    size_t data_len = 0;
 
     // No payload for handshake
     char dummy_payload[2];
@@ -565,10 +559,7 @@ network_handle_tcp(
     //if (size < 0){
     //}
 
-// #warning
-// It's ok to use pointer here.
-// We're not allocating memory, we're using 
-// a pre-allocated buffer.
+    // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
@@ -602,8 +593,6 @@ network_handle_tcp(
 // Create a local copy of the TCP payload.
 // The size is 1024
 
-    size_t data_len = 0;
-
     if (size >= TCP_HEADER_LENGHT){
     //if (size >= header_len){
 
@@ -633,10 +622,13 @@ network_handle_tcp(
 //
 // Flags
 //
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
 
-    //#debug
-    //printk("Flags={%x}\n",flags);
+// FIN  - graceful close,
+// SYN  - start handshake,
+// RST  - abort,
+// PUSH - deliver data now,
+// ACK  - update state,
+// URG  - handle urgent data.
 
 // Control flags (6 bits)
     uint16_t fFIN=0;
@@ -646,13 +638,10 @@ network_handle_tcp(
     uint16_t fACK=0;  // ACK :)
     uint16_t fURG=0;
 
+    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
 
-// FIN  - graceful close,
-// SYN  - start handshake,
-// RST  - abort,
-// PUSH - deliver data now,
-// ACK  - update state,
-// URG  - handle urgent data.
+    //#debug
+    //printk("Flags={%x}\n",flags);
 
 // Receiving a FIN means the peer is done sending; we should acknowledge and
 // eventually close our side gracefully.
@@ -1096,8 +1085,51 @@ network_handle_tcp(
 
 
 // #todo:
-    //if (fRST == 1) 
-       //mark as reusable. do not delete the socket or the conn
+// Right now your network_handle_tcp() always drops down into 
+// the low‑level worker (network_send_tcp) to push a reply. 
+// But in the case of RST flag, we gotta mark the socket 
+// as free to reuse and cancel this ending.
+// + Mark the socket as free/reusable.
+// + Reset its state (SS_CLOSED).
+// + Clear connection pointers.
+// + Leave the structure in the pool for reuse.
+
+    // #debug: Provisory
+    if (fRST == 1)
+    {
+        printk("TCP: RST found. Not sending response\n");
+        return;
+    }
+
+/*
+    // #todo:
+    if (fRST == 1) 
+    {
+        printk("TCP: RST received, closing socket\n");
+
+        // Get the socket from the connection’s endpoint
+        struct socket_d *sk = conn->ep_pair->c_ep->socket;
+        if (sk) {
+            sk->state = SS_DISCONNECTING;
+
+            // Perform cleanup...
+            // Clear buffers, reset flags, detach endpoints
+            sk->flags = 0;
+
+            // After cleanup, mark closed
+            sk->state = SS_CLOSED;
+            sk->free = TRUE;   // mark reusable
+        }
+
+        // Mark connection closed
+        conn->status = CONN_STATUS_CLOSED;
+        conn->tcp_conn->state = TCP_CLOSED;
+
+        // Do not call network_send_tcp() here
+        return;
+    }
+*/
+
 
 // --------------------------------------------------
 // Step 4 — the GET request arrives

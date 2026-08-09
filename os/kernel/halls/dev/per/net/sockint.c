@@ -130,9 +130,14 @@ struct socket_d *create_socket_object(void)
 // Not yet.
 // listen() will set this flag.
     s->isAcceptingConnections = FALSE;
+
 // The socket needs to be initialized 
 // in the disconnected state.
     s->state = SS_UNCONNECTED;
+
+    s->free = FALSE;  // In use at this moment
+    s->debug = FALSE;  // We can set this via ioctl
+
 // #bugbug
 // It tells us that write() will copy 
 // the data to the connected socket.
@@ -1184,6 +1189,24 @@ socket_inet (
         goto fail;
     }
 
+// #ps:
+// For AF_INET (IPv4), the valid socket types are 
+// SOCK_STREAM, SOCK_DGRAM, and SOCK_RAW.
+// #todo:
+// Some client-side application are using AF_INET. 
+// We gotta check the types they are using.
+
+    int IsValidType = FALSE;
+    // #ps: Everything is valid for now
+    switch (type){
+    case SOCK_STREAM: IsValidType = TRUE;  break;
+    case SOCK_DGRAM:  IsValidType = TRUE;  break;
+    case SOCK_RAW:    IsValidType = TRUE;  break;
+    default:
+        IsValidType = TRUE;
+        break;
+    };
+
     // family
     sock->addr_in.sin_family = AF_INET;
     // ip, port
@@ -1212,8 +1235,7 @@ socket_inet (
 
     current_process = (pid_t) get_current_process(0);
 
-    if ( current_process < 0 || 
-         current_process >= PROCESS_COUNT_MAX )
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
     {
         printk ("socket_inet: current_process\n");
         goto fail;
@@ -1245,10 +1267,10 @@ socket_inet (
     //for ( i=3; i< NUMBER_OF_FILES; i++ )
     for ( i=3; i< 31; i++ )
     {
-        if ( Process->Objects[i] == 0 )
-        { 
-            __slot = (int) i; 
-            break; 
+        if (Process->Objects[i] == 0)
+        {
+            __slot = (int) i;
+            break;
         }
     };
 

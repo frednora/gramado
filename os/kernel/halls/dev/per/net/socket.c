@@ -341,7 +341,7 @@ ssize_t sys_sendmsg (int sockfd, const struct msghdr *msg, int flags)
 int sys_socket( int family, int type, int protocol )
 {
     struct endpoint_d *ep;
-    struct socket_d *__socket;
+    struct socket_d *sk;
 
     // Current process
     struct te_d *p;
@@ -440,32 +440,33 @@ int sys_socket( int family, int type, int protocol )
 // it returns the socket structure pointer.
 // Criamos um socket vazio.
 // IN: ip and port.
-    __socket = (struct socket_d *) create_socket_object();
-    if ((void *) __socket == NULL){
-        debug_print ("sys_socket: __socket\n");
-        printk      ("sys_socket: __socket\n");
+    sk = (struct socket_d *) create_socket_object();
+    if ((void *) sk == NULL){
+        debug_print ("sys_socket: sk\n");
+        printk      ("sys_socket: sk\n");
         goto fail;
     }
 
 // family, type and protocol.
-    __socket->family = family;
-    __socket->type = type;
-    __socket->protocol = protocol;
+    sk->family = family;
+    sk->type = type;
+    sk->protocol = protocol;
 
-// Initialize with zeros.
-    __socket->ip_ipv6 = (unsigned long) _ipv6;
+// Initialize with zeros
+    sk->ip_ipv6 = (unsigned long) _ipv6;
 // ip:port
-    __socket->ip_ipv4 = (unsigned int) _ipv4;
-    __socket->port = (unsigned short) _port;
+    sk->ip_ipv4 = (unsigned int) _ipv4;
+    sk->port = (unsigned short) _port;
 
 // pid, uid, gid.
 // #todo: Use methods to grab these informations.
-    __socket->pid = (pid_t) current_process;
-    __socket->uid = (uid_t) current_user;
-    __socket->gid = (gid_t) current_group;
+    sk->pid = (pid_t) current_process;
+    sk->uid = (uid_t) current_user;
+    sk->gid = (gid_t) current_group;
 
-// #bugbug: And if a process creates another socket?
-    p->priv = (struct socket_d *) __socket;
+// #bugbug: 
+// And if a process creates another socket?
+    p->priv = (struct socket_d *) sk;
 
 // Create the ep object
     ep = (struct endpoint_d *) create_endpoint_object();
@@ -473,7 +474,15 @@ int sys_socket( int family, int type, int protocol )
         panic("sys_socket: ep\n");
     if (ep->magic != 1234)
         panic("sys_socket: ep->magic\n");
-    __socket->ep = ep;
+
+    // Save the pointer for the socket in the ep structure.
+    // Valid for local and remote connection;
+    ep->socket = sk;
+
+    ep->is_remote = FALSE;  // default until connect()
+
+    // #ps: Saving the ep pointer for future usage
+    sk->ep = ep;
 
 // The workers here will create a file associated with 
 // this new socket and return the fd for the caller.
@@ -482,42 +491,43 @@ int sys_socket( int family, int type, int protocol )
 
     case AF_GRAMADO:
         debug_print ("sys_socket: AF_GRAMADO\n");
-        ep->is_remote = FALSE;
-        ep->socket = __socket;
-        __socket->connection_type = 1;  // (local connection) (IPC)
-        return (int) socket_gramado ( (struct socket_d *) __socket, 
+        sk->connection_type = 1;  // (local connection) (IPC)
+        return (int) socket_gramado( (struct socket_d *) sk, 
                         AF_GRAMADO, type, protocol );
         break;
 
-    case AF_UNIX:
+    // AF_UNIX (aka AF_LOCAL) → 
+    // Local interprocess communication (IPC) via Unix domain sockets.
     // AF_LOCAL has the same value.
+    case AF_UNIX:
         debug_print ("sys_socket: AF_UNIX\n");
-        ep->is_remote = FALSE;
-        ep->socket = __socket;
-        __socket->connection_type = 1;  // (local connection) (IPC)
-        return (int) socket_unix ( (struct socket_d *) __socket, 
+        sk->connection_type = 1;  // (local connection) (IPC)
+        return (int) socket_unix ( (struct socket_d *) sk, 
                         AF_UNIX, type, protocol );
         break;
 
+    // AF_INET6 → IPv6 networking.
+    // case AF_INET6: break;
+
     //#bugbug: 
     //talvez precisamos rever sockaddr 
-    //para essa função, e usarmos outra estrutura.               
+    //para essa função, e usarmos outra estrutura.
+    // AF_INET → IPv4 networking (TCP/UDP).        
     case AF_INET:
         debug_print ("sys_socket: AF_INET\n");
-        ep->is_remote = FALSE;            // default until connect()
-        ep->socket = __socket;            // Valid for local and remote connection
-        __socket->connection_type = 0;
-        //__socket->connection_type = 1;  // Local connection.
+        sk->connection_type = 0;
+        //sk->connection_type = 1;  // Local connection.
         // (Remote or local connection)
         // It depends on the IP address.
         // If the IP address is Localhost, so it is a local connection.
         // #todo: For now we set it to '0'.
 
         int IsValidProtocol = FALSE;
-        if (type == SOCK_STREAM)
+        //if (type == SOCK_STREAM)
+        if (type == SOCK_STREAM || type == SOCK_SEQPACKET)
         {
             if (protocol == 0)
-                __socket->protocol = IPPROTO_TCP;
+                sk->protocol = IPPROTO_TCP;
 
             if (protocol == IPPROTO_TCP)
             {
@@ -525,12 +535,9 @@ int sys_socket( int family, int type, int protocol )
             }
             if (IsValidProtocol != TRUE)
                 goto fail;
-            return (int) socket_inet( 
-                (struct socket_d *) __socket, 
-                AF_INET, 
-                type, 
-                __socket->protocol  //protocol 
-            );
+
+            return (int) socket_inet( (struct socket_d *) sk, 
+                    AF_INET, type, sk->protocol );
         }
 
         // For now we're only accepting raw sockets
@@ -543,14 +550,22 @@ int sys_socket( int family, int type, int protocol )
 
         if (type == SOCK_RAW)
         {
-            return (int) socket_inet( 
-                (struct socket_d *) __socket, 
-                AF_INET, 
-                type, 
-                protocol 
-            );
+            return (int) socket_inet( (struct socket_d *) sk, 
+                AF_INET, type, protocol );
         }
         break;
+
+    // AF_PACKET → Raw access to Ethernet frames (used by tcpdump, Wireshark).
+    //case AF_PACKET: break;
+
+    // AF_NETLINK → Kernel ↔ user space communication (used by iproute2, netfilter).
+    //case AF_NETLINK: break;
+
+    // AF_BLUETOOTH → Bluetooth communication.
+    // AF_BTH in Windows
+    //case AF_BLUETOOTH: break;
+
+    // AF_IRDA → Infrared sockets (legacy).
 
     // ...
 

@@ -517,10 +517,7 @@ network_handle_udp(
     //    return;
     //}
 
-// #warning
-// It's ok to use pointer here.
-// We're not allocating memory, we're using 
-// a pre-allocated buffer.
+    // Pointer for the UDP header. Pre-allocated.
     udp = (struct udp_d *) buffer;
 
     uint16_t sport = (uint16_t) FromNetByteOrder16(udp->uh_sport);
@@ -562,10 +559,7 @@ network_handle_udp(
 
     if (p_size <= 512)
     {
-        strncpy(
-            udp_payload,
-            p2,
-            p_size );
+        strncpy( udp_payload, p2, p_size );
         udp_payload[p_size] = 0;
         udp_payload[p_size +1] = 0;
     }
@@ -595,7 +589,7 @@ network_handle_udp(
 
     if (dport == 68)
     {
-        printk("UDP: on DHCP port %d\n",dport);
+        printk("UDP: on DHCP port %d\n", dport);
         network_handle_dhcp(
             (buffer + UDP_HEADER_LENGHT),
             (udp->uh_ulen - UDP_HEADER_LENGHT) );
