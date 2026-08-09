@@ -647,30 +647,51 @@ network_handle_tcp(
     uint16_t fURG=0;
 
 
-// The general rule: 
-// Receiving a FIN means "the peer is done sending," not "the connection is dead".
+// FIN  - graceful close,
+// SYN  - start handshake,
+// RST  - abort,
+// PUSH - deliver data now,
+// ACK  - update state,
+// URG  - handle urgent data.
+
+// Receiving a FIN means the peer is done sending; we should acknowledge and
+// eventually close our side gracefully.
     if (flags & TH_FIN){
         fFIN = 1;
     }
+
+// Receiving a SYN means the peer wants to start a new connection; respond
+// with SYN+ACK if we are listening.
     if (flags & TH_SYN){
         fSYN = 1;
     }
+
+// Receiving a RST means the peer wants to abort/reset the connection; tear
+// down state immediately and stop using this socket.
     if (flags & TH_RST){
         fRST = 1;
     }
+
+// Receiving a PUSH means the peer wants the data delivered immediately;
+// pass buffered data up to the application without delay.
     if (flags & TH_PUSH){
         fPUSH = 1;
     }
+
+// Receiving an ACK means the peer is acknowledging our sent data or handshake;
+// update sequence numbers and possibly advance connection state.
     if (flags & TH_ACK){
         fACK = 1;
     }
+
+// Receiving URG means urgent data is present; handle the urgent pointer and
+// notify the application of out‑of‑band data.
     if (flags & TH_URG){
         fURG = 1;
     }
 
     // ex: 5014H
     // 0101 0000 0001 0100
-
 
 // Initializing connection
 // 1) SYN      >>
@@ -682,6 +703,15 @@ network_handle_tcp(
 // 2) ACK <<
 // 3) FIN <<
 // 4) ACK >>
+
+
+//If source IP = 0 → 
+//You don’t know who the peer is. 
+//You cannot establish a connection. Drop the packet or log an error.
+//If destination IP = 0 → 
+//You don’t know which local endpoint this packet is for. Drop it.
+//If both are 0 → 
+//Treat as invalid input. Do not attempt handshake.
 
 //
 // ports
@@ -1058,12 +1088,16 @@ network_handle_tcp(
     }
 // -------------------------
 
-
     // drop
     if ((void*) cur_conn == NULL)
         return;
     if (cur_conn->magic != 1234)
         return;
+
+
+// #todo:
+    //if (fRST == 1) 
+       //mark as reusable. do not delete the socket or the conn
 
 // --------------------------------------------------
 // Step 4 — the GET request arrives

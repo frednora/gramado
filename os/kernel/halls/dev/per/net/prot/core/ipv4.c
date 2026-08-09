@@ -273,6 +273,15 @@ network_handle_ipv4(
     NetworkSaved.caller_ip_int = FromNetByteOrder32(ip->ip_src.s_addr);
     NetworkSaved.target_ip_int = FromNetByteOrder32(ip->ip_dst.s_addr);
 
+//If source IP = 0 → 
+//You don’t know who the peer is. 
+//You cannot establish a connection. Drop the packet or log an error.
+//If destination IP = 0 → 
+//You don’t know which local endpoint this packet is for. Drop it.
+//If both are 0 → 
+//Treat as invalid input. Do not attempt handshake.
+
+
 // #debug: 
 // Catching broadcast
 
