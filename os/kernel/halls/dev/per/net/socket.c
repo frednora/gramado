@@ -1544,6 +1544,9 @@ sys_gramado_accept (
 // + On failure, return -1 or 
 //   an error code (-ECONNREFUSED, -EINVAL, etc.).
 
+// Worker, called by sys_connect().
+// AF_INET domains only.
+
 static int 
 __connect_inet ( 
     int sockfd, 
@@ -1551,36 +1554,30 @@ __connect_inet (
     socklen_t addrlen,
     unsigned long connection_flags )
 {
-// Worker, called by sys_connect().
-// AF_INET domains only.
-
-// #todo
-// O socket do cliente precisa de um arquivo aberto no
-// processo alvo.
-// #bugbug:
-// Se nao fecharmos o arquivo ao fim da conexao, entao
-// a lista de arquivos abertos se esgotara rapidamente.
-
-// Client process and server process.
+    // Client process and server process
     struct te_d *cProcess;
     struct te_d *sProcess;
     pid_t target_pid = (-1);  //fail
-// Client socket and server socket.
+
+    // Client socket and server socket
     struct socket_d *client_socket;
     struct socket_d *server_socket;
     int client_socket_fd = -1;
-// File.
+
+    // File
     struct file_d *f;
-// #importante
-// No caso de endereços no estilo inet
-// vamos precisar de outra estrututura.
-    struct sockaddr_in *addr_in;
-    int Verbose = FALSE;
-    register int i=0;
+
+    struct sockaddr_in *addr_in;  // Address style in the case of AF_INET
+
+    // Target IP: the remote peer you want to connect to.
+    unsigned int target_ip_int = 0;
+    unsigned short target_port_int = 0;
 
     unsigned long Flags = connection_flags;
 
-    unsigned char *given_ip;
+    register int i=0;
+    int Verbose = FALSE;
+
 
     do_credits_by_tid( lapic_info[0].current_tid );
 
@@ -1588,16 +1585,17 @@ __connect_inet (
     // IN: core id
 
     pid_t current_process = (pid_t) get_current_process(0);
-
     if (Verbose == TRUE){
-        printk ("__connect_inet: Client's pid {%d}\n", current_process );
-        printk ("__connect_inet: Client's socket id {%d}\n", sockfd );
+        printk ("__connect_inet: Client's pid {%d}\n", current_process);
     }
 
 // Client fd.
 // client_socket_fd é um soquete de quem quer se conectar.
 // O addr indica o alvo.
     client_socket_fd = sockfd;
+    if (Verbose == TRUE){
+        printk ("__connect_inet: Client's socket id {%d}\n", sockfd );
+    }
     if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX ){
         debug_print ("__connect_inet: client_socket_fd\n");
         printk      ("__connect_inet: client_socket_fd\n");
@@ -1626,23 +1624,11 @@ __connect_inet (
 // >>> sockaddr
 
 // ------------------------------------------
-// Local
 // This routine do not accept local domains.
 // It is only for AF_INET.
-
-// Check for invalid domains.
-    switch (addr->sa_family)
-    {
-        // For pathnames
-        //case AF_LOCAL:
-        case AF_UNIX:
-            goto fail;
-            break;
-
-       // For 2 bytes pathnames
-        case AF_GRAMADO:
-            goto fail;
-            break;
+    switch (addr->sa_family){
+    case AF_UNIX:     goto fail;  break;
+    case AF_GRAMADO:  goto fail;  break;
     };
 
 // ------------------------------------------
@@ -1674,56 +1660,40 @@ __connect_inet (
         //#debug
         //printk("sys_connect: AF_INET port {%d}\n", addr_in->sin_port);
 
-        // Is this the localhost ip address?
-        given_ip = &addr_in->sin_addr.s_addr;
-        // Yes, it is!.
-        // If not, so try to connect to a different machine.
-        if ( given_ip[3] == localhost_ipv4[0] &&
-             given_ip[2] == localhost_ipv4[1] &&
-             given_ip[1] == localhost_ipv4[2] &&
-             given_ip[0] == localhost_ipv4[3] )
-        {
-            in_localhost = TRUE;
-            // #debug
-            //printk("It's the localhost\n");
-            //while(1){}
-        }
-        // No, it's not.
-        // Try to connect to a different machine.
-        if (in_localhost != TRUE){
-            // #todo
-        }
+        // Copy IP:PORT
+        target_ip_int   = ntohl(addr_in->sin_addr.s_addr);  // convert to host order
+        target_port_int = ntohs(addr_in->sin_port);         // convert to host order
 
         // Yes
         // Check the port.
         // This way we know what is the server's pid.
 
         // 21 - FTP
-        if (addr_in->sin_port == 21){
+        if (target_port_int == 21){
             printk("__connect_inet: [21] FTP #todo\n");
             goto fail;
         }
 
         // 23 - Telnet
-        if (addr_in->sin_port == 23){
+        if (target_port_int == 23){
             printk("__connect_inet: [23] Telnet #todo\n");
             goto fail;
         }
 
         // 67 - DHCP
-        if (addr_in->sin_port == 67){
+        if (target_port_int == 67){
             printk("__connect_inet: [67] DHCP #todo\n");
             goto fail;
         }
 
         // 80 - HTTP
-        if (addr_in->sin_port == 80){
+        if (target_port_int == 80){
             printk("__connect_inet: [80] HTTP #todo\n");
             goto fail;
         }
 
         // 443 - HTTPS 
-        if (addr_in->sin_port == 443){
+        if (target_port_int == 443){
             printk("__connect_inet: [443] HTTPS #todo\n");
             goto fail;
         }
@@ -1731,17 +1701,17 @@ __connect_inet (
         // 4040 - Display server
         // If the port is Display Server,
         // let's use the PID associated with this port.
-
-        if (addr_in->sin_port == __PORTS_DISPLAY_SERVER)
+        // #important:
+        // Now we are comparing between two values in HOST byte order.
+        if (target_port_int == __PORTS_DISPLAY_SERVER)
         {
+            // Get target PID!
             target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_DS);
             if (Verbose == TRUE)
             {
-                printk("__connect_inet: [AF_INET] Connecting to the Window Server\n");
-                printk("__connect_inet: IP {%x}\n", 
-                    addr_in->sin_addr.s_addr );
-                printk("__connect_inet: PORT {%d}\n", 
-                    addr_in->sin_port);
+                printk("__connect_inet: [AF_INET] Connecting to the Display Server\n");
+                printk("__connect_inet: IP {%x}\n",   target_ip_int );
+                printk("__connect_inet: PORT {%d}\n", target_port_int );
                 //#debug
                 //while(1){}
             }
@@ -1749,17 +1719,18 @@ __connect_inet (
         }
 
         // 4041 - Network server
-        // Se a porta for , então usaremos o pid do Network server.
-        if (addr_in->sin_port == __PORTS_NETWORK_SERVER)
+        // Se a porta for , então usaremos o pid do Network Server.
+        // #important:
+        // Now we are comparing between two values in HOST byte order.
+        if (target_port_int == __PORTS_NETWORK_SERVER)
         {
+            // Get target PID!
             target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_NS);
             if (Verbose==TRUE)
             {
                 printk("__connect_inet: [AF_INET] Connecting to the Network Server\n");
-                printk("__connect_inet: IP {%x}\n", 
-                    addr_in->sin_addr.s_addr );
-                printk("__connect_inet: PORT {%d}\n", 
-                    addr_in->sin_port);
+                printk("__connect_inet: IP {%x}\n",   target_ip_int );
+                printk("__connect_inet: PORT {%d}\n", target_port_int );
                 //#debug
                 //while(1){}
             }
@@ -1773,7 +1744,7 @@ __connect_inet (
 
         // #debug
         printk("__connect_inet: [FAIL] Port not valid {%d}\n",
-            addr_in->sin_port);
+            target_port_int );
 
         goto fail;
         break;
@@ -1783,7 +1754,7 @@ __connect_inet (
     default:
         debug_print("__connect_inet: domain not supported\n");
         printk("__connect_inet: [FAIL] Family not supported {%d}\n",
-            addr_in->sin_family);
+            addr_in->sin_family );
         goto fail;
         break;
 
@@ -1800,19 +1771,22 @@ __connect_inet (
 // se a intenção do cliente foi conectar-se com um servidor
 // dentro do localhost.
 
+    /*
     // #todo: This is temporary
     if (in_localhost != TRUE)
     {
         printk ("__connect_inet: #todo Trying to connect to another machine\n");
         goto fail;
     }
+    */
 
 //
 // == Client process =============================
 //
 
-// Vamos obter o arquivo do tipo soquete que pertence ao sender.
-    if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
+// Vamos obter o arquivo do tipo soquete que pertence ao sender
+    if (current_process<0 || current_process >= PROCESS_COUNT_MAX)
+    {
         printk ("__connect_inet: current_process\n");
         goto fail;
     }
@@ -1953,6 +1927,44 @@ __OK_new_slot:
 // Sim, porque é o cliente que está tentando se conectar.
 // Dessa forma o alvo é o servidor.
 
+// #important:
+// Rhe socket for the server for now is already valid only for two ports.
+// 4040 and 4041
+
+// --------------------------------------------------
+// #ps
+// In the case the target is not our well know server,
+// we need to connect to a remote server.
+// Here we initialize the 3 step handshake sending a SYN
+// and creating the connection structure.
+
+/*
+    // #todo: This is a work in progress!
+
+    if (target_port_int != __PORTS_DISPLAY_SERVER &&
+        target_port_int != __PORTS_NETWORK_SERVER)
+    {
+        // --- Call the new worker at the end ---
+        // #ps: Using the host order for ip and port.
+        // IN: socket, ip, port.
+        int __rv = tcp_client_connect(s, target_ip_int, target_port_int);
+        if (__rv < 0) {
+            printk("__connect_inet: tcp_client_connect failed\n");
+            return __rv;
+        }
+
+        // Block until handshake completes (to be implemented)
+        // wait_for_socket_state(s, SS_CONNECTED);
+
+        return 0;   // OK for now
+    }
+*/
+
+// --------------------------------------------------
+// #ps
+// Continue in the case we are connectiong with 
+// well known server in localhost.
+
     server_socket = (struct socket_d *) sProcess->priv;
     if ((void *) server_socket == NULL){
         printk ("__connect_inet: [FAIL] server_socket\n");
@@ -2006,6 +2018,11 @@ __OK_new_slot:
 // estamos apenas entrando na fila e implorando para nos conectarmos.
 // Quem realizara a conexão sera o accept(), 
 // pegando o cliente da fila de conexões pendentes.
+
+
+// #important:
+// Rhe socket for the server for now is already valid only for two ports.
+// 4040 and 4041
 
 // Linking:
 // Connecting
@@ -2083,60 +2100,6 @@ __OK_new_slot:
             asm (" hlt ");
         };
     }
-
-
-/*
- * ------------------------------------------------------------
- * Client-side AF_INET connect (final step).
- *
- * At this point all parameters have been validated and the
- * socket structure is ready. Now we hand off to the TCP worker
- * to actually initiate the connection:
- *
- * - tcp_client_connect() will:
- *   * Create the connection_d object and mark SYN_SENT.
- *   * Build the endpoint pair (local + remote).
- *   * Plug the local socket into the local endpoint.
- *   * Create a socket_d for the remote endpoint (ip/port).
- *   * Send the initial SYN packet via network_send_tcp().
- *   * Update the local socket state to SS_CONNECTING.
- *
- * After this call, the process should block until the handshake
- * completes (SYN/ACK + ACK). Once network_handle_tcp() advances
- * the connection state to ESTABLISHED, sys_connect() can unblock
- * and return success.
- *
- * #note: Some earlier if-statements may prevent reaching this
- * section for remote connections. Adjust filters to ensure AF_INET
- * sockets are allowed to send SYN packets.
- */
-
-// ok. good for now. 
-// We are preparing the room to stablish a connection between 
-// the client running on Gramado OS and a remote server.
-// This call here will guide us. 
-// See: tcp.c for the worker.
-
-/*
-//
-// Experiment
-//
-
-// #bugbug
-// Some if statement are stopping the routine to reach this 
-// point here in the case of remote connections. We nee to allow
-// the AF_INET family to send this packet.
-
-    // --- Call the new worker at the end ---
-    int __rv = tcp_client_connect(s, dst_ip_int, dst_port);
-    if (__rv < 0) {
-        printk("__connect_inet: tcp_client_connect failed\n");
-        return __rv;
-    }
-
-    // Block until handshake completes (to be implemented)
-    // wait_for_socket_state(s, SS_CONNECTED);
-*/
 
     return 0;  // OK
 

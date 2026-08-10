@@ -60,7 +60,7 @@ LIBGUIOBJ = ../api/gthouse/libgui/obj
 # Objects
 myObjects = crt0.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
-socket.o \
+socket.o inet.o \
 math.o \
 libgws.o libgui.o \
 main.o    
@@ -88,6 +88,9 @@ all-c:
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
+
+	cp $(LIBCOBJ)/inet.o  .
+
 
 #test
 	cp $(LIBCOBJ)/math.o  .

@@ -56,7 +56,7 @@ LIBGWSOBJ = ../api/gthouse/libgws/obj
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdlib.o stdio.o string.o unistd.o termios.o ioctl.o fcntl.o \
 globals.o lexer.o parser.o tree.o compiler.o \
-socket.o \
+socket.o inet.o \
 libgws.o    
 
 .PHONY: all all-c gramcc-link finalize clean
@@ -82,6 +82,9 @@ all-c:
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
+
+	cp $(LIBCOBJ)/inet.o  .
+
 
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .

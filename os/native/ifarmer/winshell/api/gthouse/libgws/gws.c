@@ -12,6 +12,9 @@
 #include <heap.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h>
+
+#include <arpa/inet.h>
+
 // libgws
 #include "include/gws.h"
 
@@ -4428,10 +4431,26 @@ struct gws_display_d *gws_open_display(const char *display_name)
     int client_fd = -1;
 
 // ---------------------------------
+// For the sockaddr_in structure, the right byte order 
+// is always network byte order (big‑endian) for 
+// both the IP address and the port. 
+
     struct sockaddr_in  addr_in;
     addr_in.sin_family      = AF_INET;
-    addr_in.sin_addr.s_addr = __IP(127,0,0,1);
-    addr_in.sin_port        = __PORTS_DISPLAY_SERVER;
+
+// --------------------
+// ip:
+    // Packs four octets into a single 32‑bit integer in host order.
+    unsigned int ip_host_order = __IP_HOST_BYTE_ORDER(127,0,0,1);  // → 0x7F000001
+    // Converts a 32‑bit integer from host byte order to network byte order (big‑endian).
+    addr_in.sin_addr.s_addr = htonl(ip_host_order);
+
+// --------------------
+// port:
+    // Converting from host order to network order and sending it to the kernel.
+    addr_in.sin_port = htons(__PORTS_DISPLAY_SERVER);  // e.g. 4040
+
+
     int addrlen=0;
     addrlen = sizeof(addr_in);
 // ---------------------------------

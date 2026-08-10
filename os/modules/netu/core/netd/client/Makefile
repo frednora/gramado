@@ -32,7 +32,7 @@ LIBGNSOBJ = ../../libs/libgns/obj
 # Objects
 myObjects = crt0.o main.o globals.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o \
-unistd.o termios.o ioctl.o socket.o gns.o    
+unistd.o termios.o ioctl.o socket.o inet.o gns.o    
 
 .PHONY: all all-c hello-link finalize clean
 
@@ -68,6 +68,8 @@ all-c:
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
+
+	cp $(LIBCOBJ)/inet.o  .
 
 	cp $(LIBGNSOBJ)/gns.o .
 

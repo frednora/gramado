@@ -590,7 +590,7 @@ tcp_client_connect(
     remote_ep->socket->type     = SOCK_STREAM;
     remote_ep->socket->protocol = IPPROTO_TCP;
     remote_ep->socket->ip_ipv4  = dst_ip_ipv4_int;  // already in host order
-    remote_ep->socket->port     = dst_port;
+    remote_ep->socket->port     = dst_port;         // Already in host order
 
     // Plug endpoints into pair
     pair->c_ep = local_ep;
@@ -611,8 +611,8 @@ tcp_client_connect(
 
     // Send SYN
     int rv = network_send_tcp(
-        dhcp_info.your_ipv4,          // source IP (array)
-        (uint8_t*)&dst_ip_ipv4_int,   // target IP (int → array cast)
+        dhcp_info.your_ipv4,           // source IP (array)
+        (uint8_t*) &dst_ip_ipv4_int,   // target IP (int → array cast)
         NetworkSaved.gateway_mac,
         sk->port, dst_port,
         conn->tcp_conn->iss,
@@ -620,7 +620,8 @@ tcp_client_connect(
         TH_SYN,
         NULL, 0
     );
-    if (rv < 0) return rv;
+    if (rv < 0) 
+        return rv;
 
     sk->state = SS_CONNECTING;
     return 0;

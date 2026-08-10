@@ -78,8 +78,25 @@ static int appInitialization(void)
 //========================
     struct sockaddr_in  server_address;
     server_address.sin_family = AF_INET;  // Remote or local connections.
-    server_address.sin_addr.s_addr = IP(127,0,0,1);  //inet_addr("127.0.0.1");
-    server_address.sin_port = PORTS_NS;
+
+    //old implementatio #delete
+    //server_address.sin_addr.s_addr = IP(127,0,0,1);  //inet_addr("127.0.0.1");
+    //server_address.sin_port = PORTS_NS;
+
+// --------------------
+// ip:
+    // Packs four octets into a single 32‑bit integer in host order.
+    //unsigned int ip_host_order = __IP_HOST_BYTE_ORDER(127,0,0,1);  // → 0x7F000001
+    unsigned int ip_host_order = IP(127,0,0,1);  // → 0x7F000001
+    // Converts a 32‑bit integer from host byte order to network byte order (big‑endian).
+    server_address.sin_addr.s_addr = htonl(ip_host_order);
+
+// --------------------
+// port:
+    // Converting from host order to network order and sending it to the kernel.
+    server_address.sin_port = htons(PORTS_NS);  // e.g. 4041
+
+
     int addrlen=0;
     addrlen = sizeof(server_address);
 //========================

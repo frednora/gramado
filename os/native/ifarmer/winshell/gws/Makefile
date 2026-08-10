@@ -57,7 +57,7 @@ LIBGWSOBJ = ../api/gthouse/libgws/obj
 # Objects
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
-socket.o \
+socket.o inet.o \
 libgws.o    
 
 
@@ -82,6 +82,9 @@ all-c:
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
+
+	cp $(LIBCOBJ)/inet.o  .
+
 
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
