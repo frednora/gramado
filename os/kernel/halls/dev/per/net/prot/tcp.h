@@ -168,6 +168,13 @@ network_send_tcp (
     char *data_buffer, 
     size_t data_lenght );
 
+// This will be called by sys_connect() when the family is AF_INET.
+int 
+tcp_client_connect(
+    struct socket_d *sk,
+    unsigned int dst_ip_ipv4_int,
+    unsigned short dst_port);
+
 //
 // $
 // HANDLER

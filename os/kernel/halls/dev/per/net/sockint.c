@@ -800,8 +800,22 @@ socket_gramado (
         goto fail;
     }
 
+/*
+// #todo: Valid types for AF_GRAMADO
+    int IsValidType = FALSE;
+    // #ps: Everything is valid for now
+    switch (type){
+    case SOCK_DGRAM:  IsValidType = TRUE;  break;
+    case SOCK_RAW:    IsValidType = TRUE;  break;
+    default:
+        IsValidType = TRUE;
+        break;
+    };
+*/
+
     sock->addr.sa_family = family;
-    sock->addr.sa_data[0] = 'x';
+    // 2 bytes pathname
+    sock->addr.sa_data[0] = 'x';  // xx are placeholders
     sock->addr.sa_data[1] = 'x';
 
 // #todo
@@ -994,8 +1008,23 @@ socket_unix (
         goto fail;
     }
 
+/*
+// #todo: Valid types for AF_UNIX
+    int IsValidType = FALSE;
+    // #ps: Everything is valid for now
+    switch (type){
+    case SOCK_STREAM: IsValidType = TRUE;  break;
+    case SOCK_DGRAM:  IsValidType = TRUE;  break;
+    case SOCK_RAW:    IsValidType = TRUE;  break;
+    default:
+        IsValidType = TRUE;
+        break;
+    };
+*/
+
     sock->addr.sa_family = family;
-    sock->addr.sa_data[0] = 'x'; 
+    // Pathname
+    sock->addr.sa_data[0] = 'x';  // xx are placeholders
     sock->addr.sa_data[1] = 'x';
 
 // #test
@@ -1196,6 +1225,7 @@ socket_inet (
 // Some client-side application are using AF_INET. 
 // We gotta check the types they are using.
 
+    // #todo: Valid types for AF_INET
     int IsValidType = FALSE;
     // #ps: Everything is valid for now
     switch (type){

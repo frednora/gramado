@@ -432,57 +432,54 @@ int sys_socket( int family, int type, int protocol )
         panic ("sys_socket: p validation\n");
     }
 
-// Socket structure.
-// #todo:
-// Create a helper function to do this job.
-// This functions need to create the object and need to have this switch
-// for different families. create_socket( family, type, protocol)
-// it returns the socket structure pointer.
-// Criamos um socket vazio.
-// IN: ip and port.
+// -----------------------------------
+// socket structure:
+
+    // Allocate memory for a socket structure and 
+    // initialize some basic fields.
     sk = (struct socket_d *) create_socket_object();
     if ((void *) sk == NULL){
         debug_print ("sys_socket: sk\n");
         printk      ("sys_socket: sk\n");
         goto fail;
     }
-
-// family, type and protocol.
+    // family, type and protocol.
     sk->family = family;
     sk->type = type;
     sk->protocol = protocol;
-
-// Initialize with zeros
+    // Initialize with zeros
     sk->ip_ipv6 = (unsigned long) _ipv6;
-// ip:port
+    // ip:port
     sk->ip_ipv4 = (unsigned int) _ipv4;
     sk->port = (unsigned short) _port;
-
-// pid, uid, gid.
-// #todo: Use methods to grab these informations.
+    // pid, uid, gid.
+    // #todo: Use methods to grab these informations.
     sk->pid = (pid_t) current_process;
     sk->uid = (uid_t) current_user;
     sk->gid = (gid_t) current_group;
+// -----------------------------------
 
-// #bugbug: 
-// And if a process creates another socket?
+   // #bugbug: 
+   // And if a process creates another socket?
     p->priv = (struct socket_d *) sk;
 
-// Create the ep object
+// -----------------------------------
+// ep structure:
+
+    // Allocate memory for the ep structure and 
+    // fill some basic fields.
     ep = (struct endpoint_d *) create_endpoint_object();
     if ((void*) ep == NULL)
         panic("sys_socket: ep\n");
     if (ep->magic != 1234)
         panic("sys_socket: ep->magic\n");
-
     // Save the pointer for the socket in the ep structure.
     // Valid for local and remote connection;
     ep->socket = sk;
-
     ep->is_remote = FALSE;  // default until connect()
-
     // #ps: Saving the ep pointer for future usage
     sk->ep = ep;
+// -----------------------------------
 
 // The workers here will create a file associated with 
 // this new socket and return the fd for the caller.
@@ -526,18 +523,18 @@ int sys_socket( int family, int type, int protocol )
         //if (type == SOCK_STREAM)
         if (type == SOCK_STREAM || type == SOCK_SEQPACKET)
         {
-            if (protocol == 0)
+            if (protocol == 0){
                 sk->protocol = IPPROTO_TCP;
-
-            if (protocol == IPPROTO_TCP)
-            {
+            }
+            if (protocol == IPPROTO_TCP){
                 IsValidProtocol = TRUE;
             }
-            if (IsValidProtocol != TRUE)
+            if (IsValidProtocol != TRUE){
                 goto fail;
+            }
 
-            return (int) socket_inet( (struct socket_d *) sk, 
-                    AF_INET, type, sk->protocol );
+            return (int) socket_inet( 
+                (struct socket_d *) sk, AF_INET, type, sk->protocol );
         }
 
         // For now we're only accepting raw sockets
@@ -550,9 +547,10 @@ int sys_socket( int family, int type, int protocol )
 
         if (type == SOCK_RAW)
         {
-            return (int) socket_inet( (struct socket_d *) sk, 
-                AF_INET, type, protocol );
+            return (int) socket_inet( 
+                (struct socket_d *) sk, AF_INET, type, protocol );
         }
+
         break;
 
     // AF_PACKET → Raw access to Ethernet frames (used by tcpdump, Wireshark).
@@ -1435,6 +1433,58 @@ sys_gramado_accept (
  * __connect_inet:
  *     Connecting to a server given an address.
  */
+
+
+/*
+ * __connect_inet:
+ * ------------------------------------------------------------
+ * AF_INET connect worker.
+ *
+ * Responsibilities:
+ * 1) Inject the file pointer into p->Objects[]:
+ *    - Binds the socket fd to the process’s fd table.
+ *
+ * 2) Inject the client’s socket structure pointer into
+ *    sk->pending_client_endpoints[]:
+ *    - Registers the socket in kernel connection tracking.
+ *
+  * This way, anyone reading the function knows immediately:
+ * + p->Objects[] is about the process’s view (fd table).
+ * + sk->pending_client_endpoints[] is about the kernel’s view 
+ *   (connection tracking).
+ *
+ * 3) For remote servers:
+ *    - Extract remote IP/port from sockaddr_in.
+ *    - Save into socket_d (ip_ipv4, port).
+ *    - Initiate protocol handshake:
+ *        * TCP → send SYN via network_send_tcp(), wait for SYN/ACK.
+ *        * UDP → send initial datagram via network_send_udp().
+ *    - Update socket state (SS_CONNECTING → SS_CONNECTED).
+ *
+ * This bridges userland fd tables with kernel socket state,
+ * and, in the remote case, drives the actual network handshake
+ * to establish communication with external servers.
+ */
+
+/*
+ * __connect_inet:
+ * ------------------------------------------------------------
+ * AF_INET connect worker (client side).
+ *
+ * Responsibilities:
+ * 1) Save remote IP/port into socket_d.
+ * 2) Allocate local ephemeral port and update socket_d.
+ * 3) Send initial SYN via network_send_tcp().
+ * 4) Block the calling process until handshake completes.
+ *    - On SYN/ACK: update state, send final ACK.
+ *    - On timeout/RST: fail with error.
+ * 5) Transition socket state to SS_CONNECTED and return success.
+ *
+ * This mirrors the handshake logic already implemented for
+ * server-side connections, but applied to client-side sys_connect().
+ */
+
+
 // connect() is used on the client side, and 
 // assigns a free local port number to a socket. 
 // In case of a TCP socket, it causes an attempt 
@@ -1473,6 +1523,26 @@ sys_gramado_accept (
 // random port number to the client.
 // IN: client fd, address, address len
 // OUT: 0=ok <0=fail
+
+// #todo:
+// ok, this method of connection has been useful when server and client 
+// are running on ring3 of my hobby os. Good. But now we are trying 
+// to expand it to the scenario where the client is a 
+// ring3 process in my hobby os and the server is a remote server.
+// For AF_INET sockets, the connect path has to do more than 
+// just inject pointers; it now has to actually 
+// drive the network handshake out onto the wire.
+
+
+// Validate parameters:
+// + Ensure sockfd is valid.
+// + Ensure addr points to a valid struct sockaddr_in.
+// + Ensure addrlen matches the expected size.
+
+// Return:
+// + On success, return 0.
+// + On failure, return -1 or 
+//   an error code (-ECONNREFUSED, -EINVAL, etc.).
 
 static int 
 __connect_inet ( 
@@ -1563,13 +1633,13 @@ __connect_inet (
 // Check for invalid domains.
     switch (addr->sa_family)
     {
-        // For pathnames.
+        // For pathnames
         //case AF_LOCAL:
         case AF_UNIX:
             goto fail;
             break;
-       
-       // For strings.
+
+       // For 2 bytes pathnames
         case AF_GRAMADO:
             goto fail;
             break;
@@ -1587,8 +1657,8 @@ __connect_inet (
 // in the AF_INET domain.
     int in_localhost = FALSE;
 
-// #bugbug
-// Qual e' o tipo dessa estrutura passada?
+
+// #ps: addr_in is the right structure for AF_INET. 
     //addr_in = (struct sockaddr *) addr;
     addr_in = addr;
 
@@ -1729,7 +1799,10 @@ __connect_inet (
 // Daqui pra frente só faz sentido continuarmos
 // se a intenção do cliente foi conectar-se com um servidor
 // dentro do localhost.
-    if (in_localhost != TRUE){
+
+    // #todo: This is temporary
+    if (in_localhost != TRUE)
+    {
         printk ("__connect_inet: #todo Trying to connect to another machine\n");
         goto fail;
     }
@@ -1803,14 +1876,13 @@ __connect_inet (
         goto fail;
     }
 
-// The client socket needs to be unconnected.
-// #perigo
-// Só podemos conectar se o socket estiver nesse estado.
-// #todo
-// Caso fechar conexão podemos perder esse estado 
-// naõ conseguirmos mais conectar.
+// #ps: 
+// For now this it the only valid state.
+// #todo:
+// We need to handle some other states here too.
 
-    if (client_socket->state != SS_UNCONNECTED) {
+    if (client_socket->state != SS_UNCONNECTED) 
+    {
         printk("__connect_inet: [FAIL] client socket is not SS_UNCONNECTED\n");
         goto fail;
     }
@@ -1905,7 +1977,6 @@ __OK_new_slot:
     //sProcess->Objects[__slot] = (unsigned long) f;
 // :: The standard fd used by the servers in GramadoOS.
     sProcess->Objects[31] = (unsigned long) f;
-
 
 // Connecting!
 // #bugbug
@@ -2012,6 +2083,60 @@ __OK_new_slot:
             asm (" hlt ");
         };
     }
+
+
+/*
+ * ------------------------------------------------------------
+ * Client-side AF_INET connect (final step).
+ *
+ * At this point all parameters have been validated and the
+ * socket structure is ready. Now we hand off to the TCP worker
+ * to actually initiate the connection:
+ *
+ * - tcp_client_connect() will:
+ *   * Create the connection_d object and mark SYN_SENT.
+ *   * Build the endpoint pair (local + remote).
+ *   * Plug the local socket into the local endpoint.
+ *   * Create a socket_d for the remote endpoint (ip/port).
+ *   * Send the initial SYN packet via network_send_tcp().
+ *   * Update the local socket state to SS_CONNECTING.
+ *
+ * After this call, the process should block until the handshake
+ * completes (SYN/ACK + ACK). Once network_handle_tcp() advances
+ * the connection state to ESTABLISHED, sys_connect() can unblock
+ * and return success.
+ *
+ * #note: Some earlier if-statements may prevent reaching this
+ * section for remote connections. Adjust filters to ensure AF_INET
+ * sockets are allowed to send SYN packets.
+ */
+
+// ok. good for now. 
+// We are preparing the room to stablish a connection between 
+// the client running on Gramado OS and a remote server.
+// This call here will guide us. 
+// See: tcp.c for the worker.
+
+/*
+//
+// Experiment
+//
+
+// #bugbug
+// Some if statement are stopping the routine to reach this 
+// point here in the case of remote connections. We nee to allow
+// the AF_INET family to send this packet.
+
+    // --- Call the new worker at the end ---
+    int __rv = tcp_client_connect(s, dst_ip_int, dst_port);
+    if (__rv < 0) {
+        printk("__connect_inet: tcp_client_connect failed\n");
+        return __rv;
+    }
+
+    // Block until handshake completes (to be implemented)
+    // wait_for_socket_state(s, SS_CONNECTED);
+*/
 
     return 0;  // OK
 
@@ -2520,6 +2645,13 @@ fail:
 }
 
 // Service 7001
+// Purpose: 
+// Establishes a connection between a client socket and 
+// a remote server (IP + port).
+// Dispatch: 
+// It checks the socket’s family (AF_INET, AF_UNIX, AF_GRAMADO) and 
+// then calls the appropriate worker (__connect_inet, __connect_local, etc.).
+
 // #warning
 // We can have two types of address.
 // One for local and another one for inet.
@@ -2571,6 +2703,8 @@ sys_connect (
         case AF_GRAMADO:
             IsLocal = TRUE;
             break;
+        // When the family is AF_INET, the worker is __connect_inet():
+        //case AF_INET:
         default:
             IsLocal = FALSE;
             break;

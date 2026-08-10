@@ -521,6 +521,98 @@ fail:
 }
 
 
+/*
+ * tcp_client_connect:
+ * ------------------------------------------------------------
+ * Worker for client-side AF_INET connect.
+ *
+ * Responsibilities:
+ * 1) Create connection_d and mark SYN_SENT.
+ * 2) Create endpoint_pair_d with local + remote endpoints.
+ * 3) Plug the local socket into the local endpoint.
+ * 4) Create a socket_d for the remote endpoint and save ip/port.
+ * 5) Send SYN via network_send_tcp() using ip_ipv4_int.
+ * 6) Update local socket state to SS_CONNECTING.
+ * 7) Block until SYN/ACK → then send final ACK and mark ESTABLISHED.
+ */
+
+// This will be called by sys_connect() when the family is AF_INET.
+int 
+tcp_client_connect(
+    struct socket_d *sk,
+    unsigned int dst_ip_ipv4_int,
+    unsigned short dst_port)
+{
+
+    // #debug
+    // This is a work in progress! Not tested yet!
+
+    printk("tcp_client_connect: #todo Client sends SYN\n");
+
+    if (!sk)
+        return -EINVAL;
+
+    // Create connection object
+    struct connection_d *conn = create_connection(CONN_TYPE_TCP);
+    if (!conn) return -ENOMEM;
+    conn->status = CONN_STATUS_SYN_SENT;
+    conn->tcp_conn->state = TCP_SYN_SENT;
+
+    // Create endpoint pair
+    struct endpoint_pair_d *pair = create_endpoint_pair_object();
+    if (!pair) return -ENOMEM;
+
+    // Local endpoint
+    struct endpoint_d *local_ep = create_endpoint_object();
+    local_ep->is_remote = FALSE;
+    local_ep->socket = sk;
+
+    // Remote endpoint
+    struct endpoint_d *remote_ep = create_endpoint_object();
+    remote_ep->is_remote = TRUE;
+    remote_ep->socket = create_socket_object();
+    if (!remote_ep->socket) return -ENOMEM;
+    remote_ep->socket->family   = AF_INET;
+    remote_ep->socket->type     = SOCK_STREAM;
+    remote_ep->socket->protocol = IPPROTO_TCP;
+    remote_ep->socket->ip_ipv4  = dst_ip_ipv4_int;  // already in host order
+    remote_ep->socket->port     = dst_port;
+
+    // Plug endpoints into pair
+    pair->c_ep = local_ep;
+    pair->s_ep = remote_ep;
+    conn->ep_pair = pair;
+
+    // Initialize sequence numbers
+    conn->tcp_conn->iss     = 1000;  // or random
+    conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1;
+    conn->tcp_conn->snd_una = conn->tcp_conn->iss;
+
+    // #todo:
+    // Allocate ephemeral port for local socket
+    sk->port = 0;
+    //sk->port = __new_client_port_number++;
+    //if (__new_client_port_number > 65000)
+    //    __new_client_port_number = BASE_NEW_CLIENT_PORT_NUMBER;
+
+    // Send SYN
+    int rv = network_send_tcp(
+        dhcp_info.your_ipv4,          // source IP (array)
+        (uint8_t*)&dst_ip_ipv4_int,   // target IP (int → array cast)
+        NetworkSaved.gateway_mac,
+        sk->port, dst_port,
+        conn->tcp_conn->iss,
+        0,
+        TH_SYN,
+        NULL, 0
+    );
+    if (rv < 0) return rv;
+
+    sk->state = SS_CONNECTING;
+    return 0;
+}
+
+
 //
 // $
 // HANDLER
