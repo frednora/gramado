@@ -403,15 +403,17 @@ gramnet_handle_http(
     tcp_seq seq = conn->tcp_conn->snd_nxt;   // 1001 after SYN
     tcp_ack ack = conn->tcp_conn->rcv_nxt;   // client’s ISN + 1
 
-    int rv = network_send_tcp(
+// Send ACK + PUSH + FIN
+    int rv = 
+    network_send_tcp(
         dhcp_info.your_ipv4,
         NetworkSaved.caller_ipv4,
         NetworkSaved.caller_mac,
         11888, sport,
         seq, ack,
         TH_ACK | TH_PUSH | TH_FIN,
-        resp,
-        resp_len);
+        resp, resp_len 
+    );
 
     if (rv < 0) {
         printk("HTTP: send failed, not advancing state\n");
@@ -421,7 +423,7 @@ gramnet_handle_http(
     // Data + FIN
     conn->tcp_conn->snd_nxt += resp_len + 1;
     // #ps: We are waiting for a FIN because we sent a FIN.
-    conn->status = CONN_STATUS_FIN_WAIT;
+    conn->status = CONN_STATUS_FIN_WAIT1;
 
     return 0;
 fail:

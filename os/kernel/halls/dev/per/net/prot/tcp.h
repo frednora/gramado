@@ -17,6 +17,14 @@
 #define TCP_FIN  1
 */
 
+#define TCP_HEADER_FLAG_FIN         0x01
+#define TCP_HEADER_FLAG_SYN         0x02
+#define TCP_HEADER_FLAG_RESET       0x04
+#define TCP_HEADER_FLAG_PUSH        0x08
+#define TCP_HEADER_FLAG_ACKNOWLEDGE 0x10
+#define TCP_HEADER_FLAG_URGENT      0x20
+
+
 //
 // Control bits
 //
@@ -69,7 +77,7 @@
 
 // ------------------
 
-#define TH_NS 0x100
+#define TH_NS   0x100
 
 
 /*
@@ -115,38 +123,32 @@ typedef uint32_t  tcp_ack;
 // tcp header (20 bytes)
 struct tcp_d
 {
+    uint16_t th_sport;  // (16 bit) source port
+    uint16_t th_dport;  // (16 bit) destination port
 
-// Ports:
-// 16,16
-    uint16_t th_sport;  // source port
-    uint16_t th_dport;  // destination port
+    tcp_seq th_seq;  // (32 bit) Sequence number
+    tcp_ack th_ack;  // (32 bit) Acknowledgement number
 
-// 32,32
-// (uint32_t)
-    tcp_seq th_seq;  // Sequence number
-    tcp_ack th_ack;  // Acknowledgement number
-
-// 4,6,6
-// data offset (4) | reserved (6) | control_flags (6)
-// -----------------------------
+// ---------------------------------------------------------------
+// data offset (4 bit) | reserved (6 bit) | control_flags (6 bit)
+//
 // data offset (4): 
 //  + Specifies the size of the TCP header in 32-bit words. 
+//
 // reserved (6): 
 // + ?
+//
 // Control bits (6):  
 //  + We use them to establish connections, 
 //  + send data and 
 //  + terminate connections.
+
     uint16_t do_res_flags;
 
-// 16
     uint16_t window_size;
-
-// 16
     uint16_t checksum;
+    uint16_t urgent_pointer;  // Non urgent offset
 
-// 16
-    uint16_t urgent_pointer;
 // -------------
 // Optional data: 0~40 bytes
 };

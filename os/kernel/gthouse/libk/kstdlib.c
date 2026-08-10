@@ -11,6 +11,30 @@ static void *__kmalloc_impl(size_t size, int clean);
 
 // --------------------------
 
+/*
+// Simple xorshift32 PRNG
+static uint32_t prng_state = 0x12345678;  // seed once at boot
+
+static uint32_t xorshift32(void)
+{
+    uint32_t x = prng_state;
+    x ^= x << 13;
+    x ^= x >> 17;
+    x ^= x << 5;
+    prng_state = x;
+    return x;
+}
+*/
+
+/*
+// Wrapper for ISN salt
+static uint32_t __get_random_32bit(void)
+{
+    return xorshift32();
+}
+*/
+
+
 // ring0 srand:
 // Alimenta a função rand.
 // see: https://linux.die.net/man/3/srand.

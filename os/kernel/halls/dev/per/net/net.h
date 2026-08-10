@@ -119,6 +119,24 @@ At this point, state = TCP_ESTABLISHED.
 #define TCP_LAST_ACK      9
 #define TCP_TIME_WAIT     10
 
+// The TCP states per STD 7 - RFC 793
+/*
+typedef enum __tcp_state {
+	TCP_STATE_CLOSED,
+	TCP_STATE_LISTEN,
+	TCP_STATE_SYN_SENT,
+	TCP_STATE_SYN_RECV,
+	TCP_STATE_ESTAB,
+	TCP_STATE_FIN_WAIT_1,
+	TCP_STATE_FIN_WAIT_2,
+	TCP_STATE_CLOSE_WAIT,
+	TCP_STATE_CLOSING,
+	TCP_STATE_LAST_ACK,
+	TCP_STATE_TIME_WAIT,
+}tcp_state_t;
+*/
+
+
 
 // Holds TCP state machine info 
 // (sequence numbers, windows, timers, congestion control).
@@ -185,12 +203,21 @@ struct tcp_connection_d
 #define CONN_TYPE_LOCAL   3
 #define CONN_TYPE_IPC     4   // optional, for inter-process comm
 
-#define CONN_STATUS_NONE        0
-#define CONN_STATUS_SYN_SENT    1
-#define CONN_STATUS_SYN_RECEIVED 2
-#define CONN_STATUS_ESTABLISHED 3
-#define CONN_STATUS_FIN_WAIT    4
-#define CONN_STATUS_CLOSED      5
+// Connection status (TCP states)
+// Aliases for TCP states
+#define CONN_STATUS_NONE          TCP_CLOSED
+#define CONN_STATUS_CLOSED        TCP_CLOSED
+#define CONN_STATUS_LISTEN        TCP_LISTEN 
+#define CONN_STATUS_SYN_SENT      TCP_SYN_SENT
+#define CONN_STATUS_SYN_RECEIVED  TCP_SYN_RECEIVED
+#define CONN_STATUS_ESTABLISHED   TCP_ESTABLISHED
+#define CONN_STATUS_FIN_WAIT1     TCP_FIN_WAIT_1
+#define CONN_STATUS_FIN_WAIT2     TCP_FIN_WAIT_2
+#define CONN_STATUS_CLOSE_WAIT    TCP_CLOSE_WAIT
+#define CONN_STATUS_CLOSING       TCP_CLOSING
+#define CONN_STATUS_LAST_ACK      TCP_LAST_ACK
+#define CONN_STATUS_TIME_WAIT     TCP_TIME_WAIT
+
 
 // Abstracts a communication link (TCP, UDP, LOCAL, IPC).
 struct connection_d 

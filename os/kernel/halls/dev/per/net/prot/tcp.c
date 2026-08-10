@@ -27,6 +27,9 @@ static struct connection_d *cur_conn = NULL;
 //static char __tcp_payload[1024];
 static char __tcp_payload[1400];   // or 1460
 
+static unsigned int __get_random_32bit(void);
+static unsigned int __generate_ISN(void);
+
 static uint16_t 
 __tcp_checksum(
     uint8_t src_ip[4],
@@ -35,6 +38,36 @@ __tcp_checksum(
     size_t tcp_len );
 
 // ===================================================
+
+
+static unsigned int __get_random_32bit(void)
+{
+    unsigned int rv;
+    unsigned int Seed = (unsigned int) (jiffies & 0xFFFFFFFF);
+    Seed = (Seed + foreground_thread);
+    srand(Seed);
+    rv = (unsigned int) rand();
+
+    return (unsigned int) rv;
+}
+
+// Pseudo‑Random Number Generator.
+// Generate a 32bit random Initial Sequence Number (ISN).
+// RFC 6528-style ISN generation
+static uint32_t __generate_ISN(void)
+{
+    // Monotonic counter (ticks since boot, scaled)
+    static uint32_t isn_counter = 0;
+    isn_counter += 64000;   // ~64k per second, ensures steady growth
+
+    // Random salt (from PRNG or entropy source)
+    uint32_t salt = __get_random_32bit();  // kernel PRNG, not libc rand()
+
+    // Mix counter and salt
+    uint32_t isn = isn_counter ^ salt;
+
+    return isn;
+}
 
 
 /*
@@ -109,24 +142,28 @@ void test_sending_tcp(void)
 {
     unsigned short SourcePort = 11888;
     char payload[4];
-    size_t payload_len = 0;  // 1
     payload[0]=0;
     payload[1]=0;
-    payload[2]=0;
-    payload[3]=0;
-
-    printk("test_sending_tcp: sending SYNs to external targets\n");
+    size_t payload_len = 0;  // 1
 
     // Google Web (HTTP)
     uint8_t google_ip[4] = {142, 250, 190, 46};
+
+
+    printk("test_sending_tcp: sending SYNs to external targets\n");
+
+    // Example sequence/ack numbers
+    tcp_seq seq = __generate_ISN();  //1000; // server initial sequence number
+    tcp_ack ack = 0;  //_seq_number + 1;   // acknowledge client’s ISN
+
     network_send_tcp(
         dhcp_info.your_ipv4,
         google_ip,
         NetworkSaved.gateway_mac,
         SourcePort,   // source port
         80,      // dest port
-        0x1000,  // seq
-        0,       // ack
+        seq,  // seq
+        ack,  // ack
         TH_SYN,  // flags
         payload,    // no payload
         payload_len
@@ -598,7 +635,7 @@ tcp_client_connect(
     conn->ep_pair = pair;
 
     // Initialize sequence numbers
-    conn->tcp_conn->iss     = 1000;  // or random
+    conn->tcp_conn->iss     = 1000;  //__generate_ISN();  //1000;  // or random
     conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1;
     conn->tcp_conn->snd_una = conn->tcp_conn->iss;
 
@@ -856,7 +893,7 @@ network_handle_tcp(
             printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
             // Example sequence/ack numbers
-            tcp_seq seq = 1000;              // server initial sequence number
+            tcp_seq seq = 1000;  //__generate_ISN();  //1000; // server initial sequence number
             tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
 
             // -- connection structure ----
@@ -886,7 +923,7 @@ network_handle_tcp(
             conn->tcp_conn->state   = TCP_SYN_RECEIVED;
             conn->tcp_conn->irs     = _seq_number;      // client's ISN
             conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
-            conn->tcp_conn->iss     = 1000;             // our ISN (or randomize later)
+            conn->tcp_conn->iss     = 1000;  //__generate_ISN();  //1000; // our ISN (or randomize later)
             conn->tcp_conn->snd_una = conn->tcp_conn->iss;
             conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1; // our SYN will consume 1
 
@@ -1007,7 +1044,7 @@ network_handle_tcp(
             // >>> Lets work on this response! <<<
     
             // Example sequence/ack numbers
-            //tcp_seq seq = 1000;              // server initial sequence number
+            //tcp_seq seq = 1000;  //__generate_ISN();  //1000;// server initial sequence number
             //tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
 
             // Flags: SYN + ACK
@@ -1016,6 +1053,7 @@ network_handle_tcp(
             //
             printk(">> Sending SYN/ACK\n");
 
+            // Send SYN + ACK
             network_send_tcp(
                 dhcp_info.your_ipv4,       // server IP
                 NetworkSaved.caller_ipv4,  // client IP (Array)
@@ -1040,7 +1078,7 @@ network_handle_tcp(
         // our syn sent by a process in this machine.
         // #todo: Apply the connection structure that handles this connection.
 
-        if ( fSYN == 1 && fACK == 1 )
+        if (fSYN == 1 && fACK == 1)
         {
             printk("TCP_SYN_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number);
             printk("TCP_SYN_ACK: Sending final ACK\n");
@@ -1051,6 +1089,7 @@ network_handle_tcp(
             tcp_seq final_seq = _ack_number;       // = our ISN + 1, given by the server's ack
             tcp_ack final_ack = _seq_number + 1;   // acknowledge the server's ISN
 
+            // Send ACK?
             network_send_tcp(
                 dhcp_info.your_ipv4,        // our IP
                 NetworkSaved.caller_ipv4,   // remote IP (whoever this packet came from)
@@ -1076,9 +1115,9 @@ network_handle_tcp(
         // Once the matching connection is found in SYN_RECEIVED state,
         // we transition it to ESTABLISHED.
 
-        if ((void*)cur_conn !=NULL){
+        if ((void*)cur_conn != NULL){
         if (cur_conn->magic == 1234 && cur_conn->status == CONN_STATUS_SYN_RECEIVED){
-        if ( fSYN == 0 && fACK == 1 )
+        if (fSYN == 0 && fACK == 1)
         {
             printk("TCP_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
@@ -1101,12 +1140,24 @@ network_handle_tcp(
             }
             if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
             {
-                if (_ack_number != cur_conn->tcp_conn->snd_nxt)
-                {
+                
+                if (_ack_number != cur_conn->tcp_conn->snd_nxt){
                     printk("TCP: step 3 ack mismatch, expected %d got %d\n",
                         cur_conn->tcp_conn->snd_nxt, _ack_number );
                     return; // don't establish on a bad ack  
                 }
+                //if (_ack_number != cur_conn->tcp_conn->snd_una + 1) {
+                //    printk("TCP: step 3 ack mismatch, expected %u got %u\n",
+                //        cur_conn->tcp_conn->snd_una + 1, _ack_number);
+                //    return;
+                //}
+                //if (_ack_number != cur_conn->tcp_conn->iss + 1) {
+                //    printk("Handshake ACK mismatch, expected %u got %u\n",
+                //        cur_conn->tcp_conn->iss + 1, _ack_number);
+                //    return;
+                //}
+
+                //cur_conn->tcp_conn->snd_una = cur_conn->tcp_conn->iss + 1;
                 cur_conn->tcp_conn->snd_una = _ack_number;
                 cur_conn->tcp_conn->state   = TCP_ESTABLISHED;
                 cur_conn->status = CONN_STATUS_ESTABLISHED;
@@ -1253,12 +1304,10 @@ network_handle_tcp(
             cur_conn->tcp_conn->rcv_nxt += data_len;
 
             // #test: Checking for HTTP traffic on port 11888.
+            // #ps: For now, if a GET is found, the routine
+            // will send and Send ACK + PUSH + FIN.
             gramnet_handle_http(
-                cur_conn, 
-                __tcp_payload, 
-                data_len,  //sizeof(__tcp_payload), //#bugbug: always 1024 
-                sport, 
-                dport );
+                cur_conn, __tcp_payload, data_len, sport, dport );
 
             return;
         //}
@@ -1279,19 +1328,28 @@ Retransmissions or duplicate ACKs confuse the state machine
 */
 
 // Step 5 — client's FIN arrives
-    if (cur_conn->status == CONN_STATUS_FIN_WAIT)
+    if (cur_conn->status == CONN_STATUS_FIN_WAIT1)
     {
 
-        // 2. If the peer sent FIN, ACK it and close
+        // ACK reveived with the connection stablished.
+        // No FIN was received here.
+        if (fACK == 1) {
+            printk("FIN_WAIT1: received ACK\n");
+        }
+
+        // 2. If the peer sent FIN, ACK it and close and return.
+        // #ps: Possibly receiving and ACK too.
         if (fFIN == 1)
         {
-            printk("TCP_11888: FIN received in FIN_WAIT, sending ACK\n");
+            printk("FIN_WAIT1: [11888] FIN received in FIN_WAIT1, sending ACK\n");
 
             // #maybe: rcv_nxt is wrong when you send the final ACK
 
             // The FIN consumes one sequence number, same as SYN.
             cur_conn->tcp_conn->rcv_nxt += 1;
 
+            // Send ACK.
+            // Acknoledgind the received data.
             int rv = 
             network_send_tcp(
                 dhcp_info.your_ipv4,
@@ -1302,28 +1360,20 @@ Retransmissions or duplicate ACKs confuse the state machine
                 cur_conn->tcp_conn->snd_nxt,
                 cur_conn->tcp_conn->rcv_nxt,
                 TH_ACK,
-                dummy_payload,
+                dummy_payload, 
                 0
             );
 
             if (rv < 0) {
-                printk("TCP_11888: failed to ACK client FIN\n");
+                printk("FIN_WAIT1: [11888] Failed to ACK client FIN\n");
                 return;  // leave state as-is; a retransmitted FIN can retry
             }
-
-            printk("TCP_11888: FIN acked\n");
+            printk("TCP_11888: FIN was acked\n");
             
             // We can close the connection now
             cur_conn->status = CONN_STATUS_CLOSED;   // adjust to your actual enum
             //cur_conn->tcp_conn->state = TCP_CLOSED;
-
             return;
-        }
-
-        if (fACK == 1) 
-        {
-            // Just an ACK for our data+FIN — normal, do nothing special
-            printk("FIN_WAIT: received ACK\n");
         }
 
         // Step 6 — stray data while in FIN_WAIT
@@ -1333,16 +1383,21 @@ Retransmissions or duplicate ACKs confuse the state machine
         if (data_len > 0) 
         {
             printk("FIN_WAIT: received %u extra bytes (ignored)\n", 
-                (unsigned)data_len );       
+                (unsigned) data_len );       
             cur_conn->tcp_conn->rcv_nxt += data_len;
+
             // #test: Checking for HTTP traffic on port 11888.
+
+            // #todo:
+            // Maybe here we can serve more data, or simply ACK.
             //gramnet_handle_http(
                 //cur_conn, __tcp_payload, data_len, 
                 //sport, dport );
             return;
         }
 
-        return;  // whatever arrived while in FIN_WAIT, we're done with it here
+        // whatever arrived while in FIN_WAIT, we're done with it here
+        return;
     }
 
     if (cur_conn->status == CONN_STATUS_CLOSED)
