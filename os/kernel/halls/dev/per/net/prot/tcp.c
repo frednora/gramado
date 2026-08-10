@@ -555,6 +555,20 @@ tcp_client_connect(
     // Create connection object
     struct connection_d *conn = create_connection(CONN_TYPE_TCP);
     if (!conn) return -ENOMEM;
+
+// #todo:
+// Register the connection
+    int id = connection_register(conn);
+    // #todo: Check id validation
+    if (id < 0 || id >= MAX_CONNECTIONS) 
+    {
+        printk("Failed to register connection\n");
+        // free the object if needed
+        //kfree(conn->tcp_conn);
+        //kfree(conn);
+        return -1; // do not respond
+    }              
+
     conn->status = CONN_STATUS_SYN_SENT;
     conn->tcp_conn->state = TCP_SYN_SENT;
 
@@ -859,7 +873,7 @@ network_handle_tcp(
                 //kfree(conn->tcp_conn);
                 //kfree(conn);
                 return; // do not respond
-            }              
+            }
             conn->type   = CONN_TYPE_TCP;
             conn->status = CONN_STATUS_SYN_RECEIVED;
 
