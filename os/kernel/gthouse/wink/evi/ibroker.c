@@ -2552,6 +2552,22 @@ __ProcessKeyboardInput (
                 // #todo: Podemos criar uma flag que diga se a thread 
                 // é um terminal virtual ou não.
 
+
+            // ^@ [Control + Space]
+            if (ctrl_status == TRUE && long1 == ASCII_NUL)
+            {
+                printk("Control + Space intercepted!\n");
+
+                // Option 1: Treat it as a hotkey
+                //ibroker_post_message_to_fg_thread(
+                    //MSG_??, long1, long2);
+
+                // Option 2: Forward it as ASCII_NUL to stdin
+                ibroker_send_ascii_to_stdin(ASCII_NUL);
+
+                return 0; // handled internally
+            }
+
             // ^a = Start OF Header = 1
             if (ctrl_status == TRUE && long1 == ASCII_SOH)
             {
@@ -2627,7 +2643,7 @@ __ProcessKeyboardInput (
                 return 0;
             }
 
-                // ^v = Synchronous Idle = 22
+            // ^v = Synchronous Idle = 22
             if (ctrl_status == TRUE && long1 == ASCII_SYN)
             {
                 //ibroker_post_message_to_ds( MSG_PASTE, long1, long2 );
@@ -3435,7 +3451,7 @@ wmRawKeyEvent(
             { Event_LongVK = keymap_normal[Keyboard_ScanCode];   goto done; }
             // se pressionamos teclas de sistema como capslock desligado
             if (capslock_status == TRUE || shift_status == TRUE)
-            { Event_LongVK = keymap_shift[Keyboard_ScanCode]; goto done; }
+            { Event_LongVK = keymap_shift[Keyboard_ScanCode];    goto done; }
             // ...
         }
 
@@ -3626,13 +3642,17 @@ done:
 // --
 */
 
-
+/*
+// #test:
+// We got to allow it if we want Control + ASCII_NUL.
+// ^@
 // Unmapped scancode
 // It's ok to simply return
     if (Event_LongVK == 0)
     {
         return 0;
     }
+*/
 
 // ==================================
 // Coloca no arquivo stdin.
@@ -3688,8 +3708,7 @@ done:
 
 // Is it a combination of not?
     int isCombination = FALSE;
-    // It is a combination
-    if ( alt_status == TRUE || ctrl_status == TRUE || shift_status == TRUE )
+    if (alt_status == TRUE || ctrl_status == TRUE || shift_status == TRUE)
     {
         isCombination = TRUE;
     }
@@ -4348,13 +4367,39 @@ int ibroker_initialize(int phase)
         // printk("Setup keymaps\n");
 
         // Setup the keymaps
+
+        // PT-BR: abnt2 keyboards
         ibroker_set_keymap(
             (unsigned char *) map_abnt2,       // Normal
             (unsigned char *) shift_abnt2,     // Shift
             (unsigned char *) ctl_abnt2,       // Control
-            NULL,                              // Altgr
+            NULL,                              // Altgr #todo
             (unsigned char *) extended_abnt2   // Extended
         );
+
+        /*
+        // EN-US: American keyboard
+        // #todo: The code is not integrated yet into the kernel
+        ibroker_set_keymap(
+            (unsigned char *) map_us,
+            (unsigned char *) shift_us,
+            (unsigned char *) ctl_us,
+            (unsigned char *) altgr_us,
+            (unsigned char *) extended_us
+        );
+        */
+
+        /*
+        // ES-LA: Latin america keyboard
+        // #todo: The code is not integrated yet into the kernel
+        ibroker_set_keymap(
+            (unsigned char *) map_latam,
+            (unsigned char *) shift_latam,
+            (unsigned char *) ctl_latam,
+            (unsigned char *) altgr_latam,
+            (unsigned char *) extended_latam
+        );
+        */
 
     } else {
         // return (int) -1;
