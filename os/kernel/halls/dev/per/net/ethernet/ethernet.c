@@ -122,6 +122,9 @@ network_handle_ethernet (
 {
     struct ether_header *eth = (struct ether_header *) frame;
     uint16_t Type=0;
+    // #test:
+    unsigned char *payload_base;
+    ssize_t PayloadSize;
 
     // Drop it!
     // Set this flag using the command "net-on" on terminal.bin.
@@ -221,6 +224,9 @@ network_handle_ethernet (
 // Here we can check if the destination is us,
 // if the packet is not for us, we simply drop it.
 
+    payload_base = (frame + ETHERNET_HEADER_LENGHT);
+    PayloadSize = (frame_size - ETHERNET_HEADER_LENGHT);
+
 // Get ethernet type
 // Handle the rthernet type
 // See: ipv6.c, ipv4.c, arp.c.
@@ -230,23 +236,19 @@ network_handle_ethernet (
 
     // #todo
     case ETHERTYPE_IPV6:
-        // #todo
-        //network_handle_ipv6( 
-            //(frame + ETHERNET_HEADER_LENGHT), 
-            //(frame_size - ETHERNET_HEADER_LENGHT) );
-        goto fail;  // Drop it
+        // network_handle_ipv6(payload_base, PayloadSize); 
+        return (int) -1;
+        // goto fail;  // Drop it
         break;
 
     case ETHERTYPE_IPV4:
-        network_handle_ipv4( 
-            (frame + ETHERNET_HEADER_LENGHT), 
-            (frame_size - ETHERNET_HEADER_LENGHT) );
+        network_handle_ipv4(payload_base, PayloadSize);
+        return 0;  // OK
         break;
 
     case ETHERTYPE_ARP:
-        network_handle_arp( 
-            (frame + ETHERNET_HEADER_LENGHT), 
-            (frame_size - ETHERNET_HEADER_LENGHT) );
+        network_handle_arp(payload_base, PayloadSize);
+        return 0;  // OK
         break;
 
     // ...

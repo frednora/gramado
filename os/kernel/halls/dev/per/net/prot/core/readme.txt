@@ -2,7 +2,6 @@
  net/prot/core/
 
 Contains the foundational protocols that everything else depends on:
- + Ethernet (link layer)
  + IP (network layer)
  + ARP (address resolution)
 

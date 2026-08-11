@@ -300,13 +300,17 @@
 // Protocols
 //
 
+
+// Ethernet
+#include "../halls/dev/per/net/ethernet/ethernet.h"
+
 // =================================
 // prot/
 
-// Core protocols
-#include "../halls/dev/per/net/prot/core/ethernet.h"
+// Core protocols: arp, ipv4, ipv6
 #include "../halls/dev/per/net/prot/core/arp.h"
 #include "../halls/dev/per/net/prot/core/ip.h"
+
 // Commom protocols
 #include "../halls/dev/per/net/prot/tcp.h"
 #include "../halls/dev/per/net/prot/udp.h"

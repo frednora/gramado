@@ -92,11 +92,15 @@ all:
 # Network inteface support
 	$(CC) -c ifconfig/netif.c  $(KERNEL_INCLUDE) $(CFLAGS) -o netif.o
 
+# ethernet
+	$(CC) -c ethernet/ethernet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
+
 # core protocols
-	$(CC) -c prot/core/ethernet.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
+# arp, ipv4, ipv6
+
 	$(CC) -c prot/core/arp.c  \
 $(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
+
 	$(CC) -c prot/core/ipv4.c  \
 $(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
 
