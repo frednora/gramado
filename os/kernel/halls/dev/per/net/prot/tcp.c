@@ -394,7 +394,7 @@ network_send_tcp (
         Ltcp.window_size = ToNetByteOrder16(0);
     } else {
         Ltcp.window_size = ToNetByteOrder16(TCP_WINDOW_SIZE);  // max window
-        //Ltcp.window_size = ToNetByteOrder16(conn->tcp_conn->rcv_wnd);
+        //Ltcp.window_size = ToNetByteOrder16(cur_conn->tcp_conn->rcv_wnd);
     }
 
     // Checksum (16 bits)
@@ -958,8 +958,8 @@ network_handle_tcp(
             conn->tcp_conn->snd_una = conn->tcp_conn->iss;
             conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1; // our SYN will consume 1
 
-            conn->tcp_conn->snd_wnd = peer_window;  // Window
-
+            conn->tcp_conn->snd_wnd = peer_window;  // Client's window size?
+            //conn->tcp_conn->rcv_wnd -= 1;         // Maybe
             printk("Connection %d created, state=SYN_RECEIVED\n", id);                 
 
             // -- ep pair -----------
@@ -1293,7 +1293,6 @@ network_handle_tcp(
     if (cur_conn->magic != 1234)
         return;
 
-
 // #todo:
 // Right now your network_handle_tcp() always drops down into 
 // the low‑level worker (network_send_tcp) to push a reply. 
@@ -1340,7 +1339,6 @@ network_handle_tcp(
     }
 */
 
-
 // --------------------------------------------------
 // Step 4 — the GET request arrives
     if (cur_conn->status == CONN_STATUS_ESTABLISHED)
@@ -1354,6 +1352,10 @@ network_handle_tcp(
             // before responding, or the client's TCP will think this data
             // was never ACKed and will retransmit it.
             cur_conn->tcp_conn->rcv_nxt += data_len;
+
+            // Decrease our own window size.
+            cur_conn->tcp_conn->rcv_wnd -= data_len;
+
 
             // #test: Checking for HTTP traffic on port 11888.
             // #ps: For now, if a GET is found, the routine
