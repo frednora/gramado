@@ -778,6 +778,9 @@ network_handle_tcp(
     // Window: The client can only accept this n bytes
     uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
 
+    //if (peer_window == 0)
+        //return;
+
 //
 // Flags
 //

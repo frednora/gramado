@@ -225,8 +225,9 @@ network_handle_ipv4(
 {
     struct ip_d *ip;     // The buffer
     uint8_t Protocol=0;  // The protocol for the payload
-    unsigned char *payload_pointer;
-    ssize_t payload_size;
+    // Payload
+    unsigned char *payload_base;
+    ssize_t PayloadSize;
 
     //printk ("IP: received\n");
 
@@ -265,10 +266,12 @@ network_handle_ipv4(
     unsigned char *src_ipv4 = (unsigned char *) &ip->ip_src.s_addr;
     unsigned char *dst_ipv4 = (unsigned char *) &ip->ip_dst.s_addr;
 
+    // Array
     // Save the IP of the caller.
     // For fast response.
     network_fill_ipv4( NetworkSaved.caller_ipv4, src_ipv4 );
 
+    // Integer
     // Grab client IP directly
     NetworkSaved.caller_ip_int = FromNetByteOrder32(ip->ip_src.s_addr);
     NetworkSaved.target_ip_int = FromNetByteOrder32(ip->ip_dst.s_addr);
@@ -325,13 +328,13 @@ network_handle_ipv4(
 // ip header + ip payload.
 // (IP + (TCP + data)) given in bytes.
 // 20~65535
-    //printk("Total lenght: {%d}\n",ip->ip_len);
-
 // #bugbug
 // What is the style of this information?
 // little endian?
+
     uint16_t ip_lenght = (uint16_t) FromNetByteOrder16(ip->ip_len);
-    if ( ip_lenght < 20 || ip_lenght > 65535 )
+    //printk("Total lenght: {%d}\n", ip_lenght);
+    if (ip_lenght < 20 || ip_lenght > 65535)
     {
         //#debug
         printk("IP: size={%d}\n",size);
@@ -342,8 +345,8 @@ network_handle_ipv4(
     }
 
 // Payload
-    payload_pointer = (buffer + IP_HEADER_LENGHT);
-    payload_size = (ip_lenght - IP_HEADER_LENGHT);
+    payload_base = (buffer + IP_HEADER_LENGHT);
+    PayloadSize = (ip_lenght - IP_HEADER_LENGHT);
 
     //printk ("target: %d.%d.%d.%d \n",
     //    dst_ipv4[0],dst_ipv4[1],dst_ipv4[2],dst_ipv4[3]);
@@ -367,15 +370,15 @@ network_handle_ipv4(
     switch (Protocol){
     case PROTOCOL_IP_TCP:
         network_handle_tcp( 
-            payload_pointer, 
-            payload_size,
+            payload_base, 
+            PayloadSize,
             NetworkSaved.caller_ip_int,  // s_ipv4_int
             NetworkSaved.target_ip_int   // d_ipv4_int
         );
         return;
         break;
     case PROTOCOL_IP_UDP:
-        network_handle_udp( payload_pointer, payload_size );
+        network_handle_udp(payload_base, PayloadSize);
         return;
         break;
     // Not supported ipv4 protocol.
