@@ -152,9 +152,11 @@ gramnet_handle_http(
     struct connection_d *conn,
     const char *payload,
     size_t len,
-    uint16_t sport, uint16_t dport)
+    uint16_t sport, uint16_t dport )
 {
-    if (!conn || !conn->tcp_conn || len < 4)
+    if (!conn)
+        return -1;
+    if ( (void*)conn->tcp_conn == NULL || len < 4 )
         return -1;
 
     // The client only accepts this many bytes right now.
@@ -197,79 +199,19 @@ gramnet_handle_http(
     //    goto fail;
     //}
 
+//
+// Web page
+//
 
-    //static const char notfound_body[] =
-        //"<html><body><h1>404 Not Found</h1></body></html>\n";
-
-
-    // ============================================================
-    //  Beautiful response for bragging rights
-    // ============================================================
-    // The body is its own string, so its length is always known
-    // exactly via sizeof(). Content-Length is derived from it below,
-    // instead of being a hand-typed number that can drift out of sync.
-
-/*
-    static const char body[] =
-        "<!DOCTYPE html>\n"
-        "<html lang=\"en\">\n"
-        "<head>\n"
-        "<meta charset=\"utf-8\">\n"
-        "<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">\n"
-        "<title>Gramado OS</title>\n"
-        "<style>\n"
-        "*{margin:0;padding:0;box-sizing:border-box}\n"
-        "body{font-family:system-ui,sans-serif;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);color:#e0e0ff;min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center}\n"
-        ".card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:48px 36px;max-width:480px;box-shadow:0 25px 50px rgba(0,0,0,.4)}\n"
-        "h1{font-size:2.3rem;background:linear-gradient(90deg,#00d4ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}\n"
-        ".badge{display:inline-block;background:#00d4ff18;color:#00d4ff;padding:5px 16px;border-radius:20px;font-size:.8rem;margin-bottom:22px;border:1px solid #00d4ff33;letter-spacing:.5px}\n"
-        "p{line-height:1.65;opacity:.9;margin-bottom:14px;font-size:1.05rem}\n"
-        ".footer{margin-top:28px;font-size:.78rem;opacity:.45}\n"
-        ".k{color:#a855f7;font-weight:600}\n"
-        "</style>\n"
-        "</head>\n"
-        "<body>\n"
-        "<div class=\"card\">\n"
-        "<div class=\"badge\">KERNEL HTTP SERVER</div>\n"
-        "<h1>Gramado OS</h1>\n"
-        "<p>This page was served directly from the <span class=\"k\">kernel</span> using a pure TCP/IP stack written from scratch.</p>\n"
-        "<p>No userspace server. No nginx. Just pure hobby OS magic.</p>\n"
-        "<div class=\"footer\">Port 11888 &bull; Built with love by Fred Nora</div>\n"
-        "</div>\n"
-        "</body>\n"
-        "</html>";
-    size_t body_len = sizeof(body) - 1;  // exclude null terminator
-*/
-
-
-/*
-    // -------------------------------------------------
-    // Small but complete HTML (full DOM)
-    // -------------------------------------------------
-    static const char body[] =
-        "<!DOCTYPE html>\n"
-        "<html lang=\"en\">\n"
-        "<head>\n"
-        "<meta charset=\"utf-8\">\n"
-        "<title>Gramado OS</title>\n"
-        "</head>\n"
-        "<body>\n"
-        "<h1>Hello from Gramado OS!</h1>\n"
-        "<p>This page was served directly from the <b>kernel</b>.</p>\n"
-        "<p>Pure TCP/IP stack written from scratch.</p>\n"
-        "<p>No userspace web server.</p>\n"
-        "<hr>\n"
-        "<p>Port 11888 &mdash; Built by <a href=\"https://github.com/frednora\">Fred Nora</a></p>\n"
-        "</body>\n"
-        "</html>\n";
-*/
-
+    /*
+    // #ps: Simple and good
     static const char body[] =
     "<!DOCTYPE html>\n"
     "<html lang=\"en\">\n"
     "<head><meta charset=\"utf-8\"><title>Gramado OS</title></head>\n"
     "<body>\n"
     "<h1>Hello from Gramado OS!</h1>\n"
+    "<hr>\n"
     "<p>This page was served directly from the <b>kernel</b>.</p>\n"
     "<p>Try exploring:</p>\n"
     "<ul>\n"
@@ -279,6 +221,48 @@ gramnet_handle_http(
     "</ul>\n"
     "<hr>\n"
     "<p>Port 11888 &mdash; Built by Fred Nora</p>\n"
+    "</body>\n"
+    "</html>\n";
+    */
+
+    static const char body[] =
+    "<!DOCTYPE html>\n"
+    "<html lang=\"en\">\n"
+    "<head>\n"
+    "<meta charset=\"utf-8\">\n"
+    "<title>Gramado OS</title>\n"
+    "<style>\n"
+    "  body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }\n"
+    "  .container {\n"
+    "    max-width: 640px;\n"
+    "    margin: 40px auto;\n"
+    "    padding: 24px;\n"
+    "    background: #fff;\n"
+    "    border-radius: 8px;\n"
+    "    box-shadow: 0 2px 8px rgba(0,0,0,0.08);\n"
+    "    text-align: center;\n"
+    "  }\n"
+    "  hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }\n"
+    "  ul { list-style: none; padding: 0; }\n"
+    "  li { margin: 8px 0; }\n"
+    "  a { color: #0066cc; text-decoration: none; }\n"
+    "  a:hover { text-decoration: underline; }\n"
+    "</style>\n"
+    "</head>\n"
+    "<body>\n"
+    "<div class=\"container\">\n"
+    "<h1>Hello from Gramado OS!</h1>\n"
+    "<hr>\n"
+    "<p>This page was served directly from the <b>kernel</b>.</p>\n"
+    "<p>Try exploring:</p>\n"
+    "<ul>\n"
+    "  <li><a href=\"/index.html\">Home</a></li>\n"
+    "  <li><a href=\"/about\">About Gramado</a></li>\n"
+    "  <li><a href=\"/id=1\">Special ID=1 page</a></li>\n"
+    "</ul>\n"
+    "<hr>\n"
+    "<p>Port 11888 &mdash; Built by Fred Nora</p>\n"
+    "</div>\n"
     "</body>\n"
     "</html>\n";
 
@@ -422,6 +406,9 @@ gramnet_handle_http(
 
     // Data + FIN
     conn->tcp_conn->snd_nxt += resp_len + 1;
+
+    conn->packets_sent++;
+
     // #ps: We are waiting for a FIN because we sent a FIN.
     conn->status = CONN_STATUS_FIN_WAIT1;
 

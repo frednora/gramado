@@ -259,13 +259,18 @@ struct connection_d
     //int protocol;
     int status;   // NEW: generic connection status
 
+// ep pair
+    struct endpoint_pair_d *ep_pair;
+
+// tcp connection
     struct tcp_connection_d *tcp_conn;
+// udp connection
     // future: struct udp_connection_d *udp_conn;
     // #test
     //struct network_buffer_d  *n_buf;
 
-// ep pair
-    struct endpoint_pair_d *ep_pair;
+    unsigned int packets_sent;
+    unsigned int packets_received;
 };
 
 

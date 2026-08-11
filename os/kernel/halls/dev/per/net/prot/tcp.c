@@ -23,6 +23,8 @@
 // Later this will be replaced with endpoint-based lookup.
 static struct connection_d *cur_conn = NULL;
 
+const unsigned short __first_ephemeral_port = 32768;
+const unsigned short __last_ephemeral_port = 39999;
 
 //static char __tcp_payload[1024];
 static char __tcp_payload[1400];   // or 1460
@@ -952,6 +954,7 @@ network_handle_tcp(
                 return; // do not respond
             }
             conn->tcp_conn->state = TCP_SYN_RECEIVED;
+            conn->packets_received++;
             conn->tcp_conn->irs     = _seq_number;      // client's ISN
             conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
             conn->tcp_conn->iss     = 1000;  //__generate_ISN();  //1000; // our ISN (or randomize later)
@@ -1098,6 +1101,8 @@ network_handle_tcp(
                 0               // No tcp payload lenght char=0x00
             );
 
+            conn->packets_sent++;
+
             // Waiting for the ACK:
             return;
         }
@@ -1119,6 +1124,17 @@ network_handle_tcp(
             tcp_seq final_seq = _ack_number;       // = our ISN + 1, given by the server's ack
             tcp_ack final_ack = _seq_number + 1;   // acknowledge the server's ISN
 
+            // #test
+            //struct connection_d *c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
+            //if (c_conn){
+            //    cur_conn = c_conn;
+            //}
+            //if ((void*)cur_conn != NULL)
+            //{
+                // #todo: ...
+                // cur_conn->packets_received++;
+            //}
+
             // Send ACK?
             network_send_tcp(
                 dhcp_info.your_ipv4,        // our IP
@@ -1132,6 +1148,8 @@ network_handle_tcp(
                 dummy_payload,              // No payload
                 0                           // no payload — pure ACK doesn't consume a seq number
             );
+
+            // cur_conn->packets_sent++;
 
             return;
         }
@@ -1211,6 +1229,7 @@ network_handle_tcp(
 
                 //cur_conn->tcp_conn->snd_una = cur_conn->tcp_conn->iss + 1;
                 cur_conn->tcp_conn->snd_una = _ack_number;
+                cur_conn->packets_received++;
                 cur_conn->tcp_conn->state = TCP_ESTABLISHED;
                 cur_conn->status = CONN_STATUS_ESTABLISHED;
                 printk("TCP_ACK: Connection ESTABLISHED for id={%d} :)\n", 
@@ -1356,6 +1375,7 @@ network_handle_tcp(
             // Decrease our own window size.
             cur_conn->tcp_conn->rcv_wnd -= data_len;
 
+            cur_conn->packets_received++;
 
             // #test: Checking for HTTP traffic on port 11888.
             // #ps: For now, if a GET is found, the routine
@@ -1402,6 +1422,8 @@ Retransmissions or duplicate ACKs confuse the state machine
             // The FIN consumes one sequence number, same as SYN.
             cur_conn->tcp_conn->rcv_nxt += 1;
 
+            cur_conn->packets_received++;
+
             // Send ACK.
             // Acknoledgind the received data.
             int rv = 
@@ -1423,6 +1445,8 @@ Retransmissions or duplicate ACKs confuse the state machine
                 return;  // leave state as-is; a retransmitted FIN can retry
             }
             printk("TCP_11888: FIN was acked\n");
+
+            cur_conn->packets_sent++;
             
             // We can close the connection now
             cur_conn->status = CONN_STATUS_CLOSED;   // adjust to your actual enum
@@ -1439,6 +1463,8 @@ Retransmissions or duplicate ACKs confuse the state machine
             printk("FIN_WAIT: received %u extra bytes (ignored)\n", 
                 (unsigned) data_len );       
             cur_conn->tcp_conn->rcv_nxt += data_len;
+
+            cur_conn->packets_received++;
 
             // #test: Checking for HTTP traffic on port 11888.
 

@@ -191,6 +191,9 @@ struct connection_d *create_connection(int type)
         printk("create_connection: type %d not fully supported yet\n", type);
     };
 
+    new_conn->packets_sent = 0;
+    new_conn->packets_received = 0;
+
     // Validation
     new_conn->used = TRUE;
     new_conn->magic = 1234;
@@ -266,13 +269,13 @@ void network_show_connections(void)
     for (i=0; i < MAX_CONNECTIONS; i++) 
     {
         struct connection_d *conn = (struct connection_d *) connectionList[i];
-        if (!conn) continue;
-
-        if ( conn->used == TRUE && 
-             conn->magic == 1234) 
+        if (!conn) 
+            continue;
+        if ( conn->used == TRUE && conn->magic == 1234) 
         {
-            printk("ID=%d | type=%d | status=%d\n",
-                conn->id, conn->type, conn->status);
+            printk("%d: type=%d | status=%d sent=%d received=%d\n",
+                conn->id, conn->type, conn->status, 
+                conn->packets_sent, conn->packets_received );
 
             count++;
         }
