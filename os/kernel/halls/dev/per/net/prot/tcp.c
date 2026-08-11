@@ -382,8 +382,20 @@ network_send_tcp (
     Ltcp.do_res_flags = (5 << 12) | flags;   // data offset = 5 (20 bytes), no options
     Ltcp.do_res_flags = ToNetByteOrder16(Ltcp.do_res_flags);
 
-    // Window size (16 bits)
-    Ltcp.window_size = ToNetByteOrder16(TCP_WINDOW_SIZE);  // max window
+// Window size (16 bits)
+// Telling the peer: 
+// “I have this much buffer space available for incoming data.”
+// FIN flag → “I’m done sending data from my side.”
+// Window size = 0 → “I have no buffer space left, don’t send me more data.”
+
+    //Ltcp.window_size = ToNetByteOrder16(TCP_WINDOW_SIZE);  // max window
+
+    if (flags & TH_FIN) {
+        Ltcp.window_size = ToNetByteOrder16(0);
+    } else {
+        Ltcp.window_size = ToNetByteOrder16(TCP_WINDOW_SIZE);  // max window
+        //Ltcp.window_size = ToNetByteOrder16(conn->tcp_conn->rcv_wnd);
+    }
 
     // Checksum (16 bits)
     // We will calculate at the end of the routine.
@@ -778,6 +790,7 @@ network_handle_tcp(
     // Window: The client can only accept this n bytes
     uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
 
+    // #test:
     //if (peer_window == 0)
         //return;
 
@@ -1269,7 +1282,7 @@ network_handle_tcp(
         {
             cur_conn = c_conn;
             // #debug
-            printk("TCP: Reusing conn structure   <<<<<<<< \n");
+            // printk("TCP: Reusing conn structure   <<<<<<<< \n");
         }
     }
 // -------------------------
