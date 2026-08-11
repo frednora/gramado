@@ -150,18 +150,47 @@ struct tcp_connection_d
 
 // Sequence Numbers
 
-    uint32_t snd_una;   // oldest unacknowledged sequence
-    uint32_t snd_nxt;   // next sequence to send
-    uint32_t snd_wnd;   // send window
-    uint32_t iss;       // initial send sequence
+// -- Send --------
+    // Oldest unacknowledged sequence number.
+    // Tracks the first byte of data that has been sent but not yet acknowledged.
+    // Everything before snd_una is confirmed as received by the peer.
+    uint32_t snd_una;
+    // Next sequence number to send.
+    // Points to the next byte of data that will be transmitted.
+    // Moves forward as you send payloads or 
+    // control flags (SYN/FIN also consume sequence numbers).
+    uint32_t snd_nxt;
+    // send window
+    // limits how much you can send before waiting for ACKs.
+    uint32_t snd_wnd;
+    // Initial send sequence number.
+    // Chosen during the handshake when you send the first SYN.
+    // Ensures uniqueness and protects against old duplicate segments.
+    uint32_t iss;
 
-    uint32_t rcv_nxt;   // next expected sequence
-    uint32_t rcv_wnd;   // receive window
-    uint32_t irs;       // initial receive sequence
+// -- Receive --------
+    // Next expected sequence number from the peer.
+    // If you receive data with exactly this sequence number, 
+    // you accept it and increment rcv_nxt.
+    // If data arrives out of order, 
+    // you buffer until the missing piece arrives.
+    uint32_t rcv_nxt;
+    // receive window
+    // tells the peer how much buffer space you have available.
+    uint32_t rcv_wnd; 
+    // Initial receive sequence number.
+    // Set when you accept the peer’s SYN
+    // Defines the starting point of the peer’s sequence space.
+    uint32_t irs;
 
+//
 // Buffers
+//
+
+// -- Send --------
     void *send_buffer;
     size_t send_buffer_len;
+// -- Receive --------
     void *recv_buffer;
     size_t recv_buffer_len;
 

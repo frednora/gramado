@@ -720,6 +720,21 @@ network_handle_tcp(
     if (dport == 443)
         return;
 
+// These are extracting the sequence number and 
+// acknowledgment number from the TCP header of an incoming packet.
+
+// Sequence Number (th_seq):
+// It marks the position of the first byte of data in this segment 
+// within the sender’s byte stream.
+// Ex: If the packet carries 100 bytes and th_seq = 5000, 
+//     then the bytes are numbered 5000–5099.
+
+// Acknowledgment Number (th_ack):
+// It tells the sender: 
+// “I have successfully received everything up to this byte number minus one.”
+// Ex: If _ack_number = 5099, it means the receiver has received 
+// all bytes up to 5098 and is expecting 5099 next.
+
     tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
     tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
@@ -912,7 +927,7 @@ network_handle_tcp(
                 //kfree(conn);
                 return; // do not respond
             }
-            conn->type   = CONN_TYPE_TCP;
+            conn->type = CONN_TYPE_TCP;
             conn->status = CONN_STATUS_SYN_RECEIVED;
 
             // tcp connection structure
@@ -920,7 +935,7 @@ network_handle_tcp(
                 printk("Failed to create TCP connection structure\n");
                 return; // do not respond
             }
-            conn->tcp_conn->state   = TCP_SYN_RECEIVED;
+            conn->tcp_conn->state = TCP_SYN_RECEIVED;
             conn->tcp_conn->irs     = _seq_number;      // client's ISN
             conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
             conn->tcp_conn->iss     = 1000;  //__generate_ISN();  //1000; // our ISN (or randomize later)
@@ -1068,7 +1083,6 @@ network_handle_tcp(
             );
 
             // Waiting for the ACK:
-
             return;
         }
 
@@ -1115,6 +1129,13 @@ network_handle_tcp(
         // Once the matching connection is found in SYN_RECEIVED state,
         // we transition it to ESTABLISHED.
 
+        // #test
+        struct connection_d *c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
+        if (c_conn){
+            cur_conn = c_conn;
+        }
+        // Normally, the client sends just an ACK (no payload).
+        // But if the client adds data ...       
         if ((void*)cur_conn != NULL){
         if (cur_conn->magic == 1234 && cur_conn->status == CONN_STATUS_SYN_RECEIVED){
         if (fSYN == 0 && fACK == 1)
@@ -1140,8 +1161,23 @@ network_handle_tcp(
             }
             if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
             {
-                
-                if (_ack_number != cur_conn->tcp_conn->snd_nxt){
+                // by the book, the third ACK in the handshake normally carries no payload. 
+                // But in TCP, you must expect that it can carry data, 
+                // because the protocol allows it
+                cur_conn->tcp_conn->rcv_nxt = _seq_number + data_len;
+
+                // _ack_number → comes from the peer’s TCP header. 
+                // It says: “I have received everything up to 
+                // this sequence number minus one, and I expect this next byte.”
+
+                // cur_conn->tcp_conn->snd_nxt → your local TCP state. 
+                // It tracks the next sequence number you intend to send. 
+                // After sending SYN, you set:
+
+                // #ps: If the wrong connection is being checked, 
+                // the mismatch is inevitable 
+                if (_ack_number != cur_conn->tcp_conn->snd_nxt)
+                {
                     printk("TCP: step 3 ack mismatch, expected %d got %d\n",
                         cur_conn->tcp_conn->snd_nxt, _ack_number );
                     return; // don't establish on a bad ack  
@@ -1159,7 +1195,7 @@ network_handle_tcp(
 
                 //cur_conn->tcp_conn->snd_una = cur_conn->tcp_conn->iss + 1;
                 cur_conn->tcp_conn->snd_una = _ack_number;
-                cur_conn->tcp_conn->state   = TCP_ESTABLISHED;
+                cur_conn->tcp_conn->state = TCP_ESTABLISHED;
                 cur_conn->status = CONN_STATUS_ESTABLISHED;
                 printk("TCP_ACK: Connection ESTABLISHED for id={%d} :)\n", 
                     cur_conn->id );
