@@ -465,6 +465,11 @@ struct connection_d *tcp_find_connection_by_endpoints(
     unsigned int remote_ip,
     unsigned short remote_port);
 
+struct connection_d *
+tcp_find_connection_by_remote_peer(
+    unsigned int remote_ip, 
+    unsigned short remote_port);
+
 struct connection_d *tcp_find_connection_by_client(
     unsigned int remote_ip,
     unsigned short remote_port);

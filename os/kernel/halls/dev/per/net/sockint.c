@@ -347,6 +347,41 @@ struct connection_d *tcp_find_connection_by_endpoints(
     return NULL; // Not found
 }
 
+
+// tcp_find_connection_by_remote_peer:
+// Client-side lookup. Finds the connection whose REMOTE endpoint
+// (the peer we sent a SYN to) matches the given ip:port.
+// Used when a SYN-ACK arrives, to locate the connection object
+// that tcp_client_connect() created for the matching SYN.
+struct connection_d *
+tcp_find_connection_by_remote_peer(unsigned int remote_ip, unsigned short remote_port)
+{
+    register int i=0;
+    struct connection_d *c;
+
+    for (i=0; i<MAX_CONNECTIONS; i++)
+    {
+        //c = (struct connection_d *) connection_get_by_id(i);  // #confirm: real accessor name?
+        struct connection_d *conn = connectionList[i];
+        if ((void*) c == NULL)          continue;
+        if (c->magic != 1234)           continue;
+        if (c->type != CONN_TYPE_TCP)   continue;
+        if ((void*) c->ep_pair == NULL) continue;
+
+        // The remote peer is stored in s_ep for connections created
+        // by tcp_client_connect() (c_ep = local socket, s_ep = remote peer).
+        if ((void*) c->ep_pair->s_ep == NULL)         continue;
+        if ((void*) c->ep_pair->s_ep->socket == NULL) continue;
+
+        if (c->ep_pair->s_ep->socket->ip_ipv4 == remote_ip &&
+            c->ep_pair->s_ep->socket->port    == remote_port)
+        {
+            return c;
+        }
+    }
+    return NULL;
+}
+
 struct connection_d *tcp_find_connection_by_client(
     unsigned int remote_ip,
     unsigned short remote_port)
@@ -373,6 +408,8 @@ struct connection_d *tcp_find_connection_by_client(
     }
     return NULL; // Not found
 }
+
+
 
 
 // #debug

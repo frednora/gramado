@@ -5,7 +5,9 @@
 #ifndef __NET_IN_H
 #define __NET_IN_H    1
 
-#define  _NETINET_IN_H_
+// #delete
+// #define  _NETINET_IN_H_
+
 
 // TCP and UDP
 #define  __IPPROTO_TCP     6    // Transmission control protocol.
@@ -169,8 +171,10 @@ struct sockaddr_in {
 #define IN_CLASSC_NSHIFT     8
 #define IN_CLASSC_HOST       0x000000ff
 
-#define INADDR_ANY           0x00000000
-#define INADDR_BROADCAST     0xffffffff
+#define INADDR_ANY        0x00000000
+#define INADDR_BROADCAST  0xffffffff
+#define INADDR_LOOPBACK   0x7F000001  // 127.0.0.1 in network byte order
+
 
 #endif    
 

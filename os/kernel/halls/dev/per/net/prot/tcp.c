@@ -571,34 +571,19 @@ fail:
     return -1;
 }
 
-
-/*
- * tcp_client_connect:
- * ------------------------------------------------------------
- * Worker for client-side AF_INET connect.
- *
- * Responsibilities:
- * 1) Create connection_d and mark SYN_SENT.
- * 2) Create endpoint_pair_d with local + remote endpoints.
- * 3) Plug the local socket into the local endpoint.
- * 4) Create a socket_d for the remote endpoint and save ip/port.
- * 5) Send SYN via network_send_tcp() using ip_ipv4_int.
- * 6) Update local socket state to SS_CONNECTING.
- * 7) Block until SYN/ACK → then send final ACK and mark ESTABLISHED.
- */
-
 // This will be called by sys_connect() when the family is AF_INET.
+// IN:
+//   sk              = local client socket structure.
+//   dst_ip_ipv4_int = destination IPv4, HOST byte order (already ntohl'd by the caller).
+//   dst_port        = destination port, HOST byte order (already ntohs'd by the caller).
 int 
 tcp_client_connect(
     struct socket_d *sk,
     unsigned int dst_ip_ipv4_int,
     unsigned short dst_port)
 {
-
-    // #debug
-    // This is a work in progress! Not tested yet!
-
-    printk("tcp_client_connect: #todo Client sends SYN\n");
+// WAN
+    printk("tcp_client_connect: Client sends SYN\n");
 
     if (!sk)
         return -EINVAL;
@@ -607,41 +592,42 @@ tcp_client_connect(
     struct connection_d *conn = create_connection(CONN_TYPE_TCP);
     if (!conn) return -ENOMEM;
 
-// #todo:
-// Register the connection
     int id = connection_register(conn);
-    // #todo: Check id validation
     if (id < 0 || id >= MAX_CONNECTIONS) 
     {
-        printk("Failed to register connection\n");
-        // free the object if needed
-        //kfree(conn->tcp_conn);
-        //kfree(conn);
-        return -1; // do not respond
+        printk("tcp_client_connect: Failed to register connection\n");
+        return -1;
     }              
 
-    conn->status = CONN_STATUS_SYN_SENT;
-    conn->tcp_conn->state = TCP_SYN_SENT;
+
+    //conn->status = CONN_STATUS_SYN_SENT;
+    //conn->tcp_conn->state = TCP_SYN_SENT;
+    conn->status = CONN_STATUS_NONE;
+    conn->tcp_conn->state = TCP_CLOSED;
 
     // Create endpoint pair
     struct endpoint_pair_d *pair = create_endpoint_pair_object();
     if (!pair) return -ENOMEM;
 
     // Local endpoint
+    // #ps: plugging the socket we already have.
     struct endpoint_d *local_ep = create_endpoint_object();
     local_ep->is_remote = FALSE;
     local_ep->socket = sk;
 
     // Remote endpoint
+    // Creating the socket for the remote ep.
     struct endpoint_d *remote_ep = create_endpoint_object();
     remote_ep->is_remote = TRUE;
     remote_ep->socket = create_socket_object();
-    if (!remote_ep->socket) return -ENOMEM;
+    if (!remote_ep->socket){
+        return -ENOMEM;
+    }
     remote_ep->socket->family   = AF_INET;
     remote_ep->socket->type     = SOCK_STREAM;
     remote_ep->socket->protocol = IPPROTO_TCP;
-    remote_ep->socket->ip_ipv4  = dst_ip_ipv4_int;  // already in host order
-    remote_ep->socket->port     = dst_port;         // Already in host order
+    remote_ep->socket->ip_ipv4  = dst_ip_ipv4_int;  // host order, consistent with rest of socket_d usage
+    remote_ep->socket->port     = dst_port;         // host order
 
     // Plug endpoints into pair
     pair->c_ep = local_ep;
@@ -649,32 +635,88 @@ tcp_client_connect(
     conn->ep_pair = pair;
 
     // Initialize sequence numbers
-    conn->tcp_conn->iss     = 1000;  //__generate_ISN();  //1000;  // or random
+    conn->tcp_conn->iss     = 1000;  // #todo: __generate_ISN();
     conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1;
     conn->tcp_conn->snd_una = conn->tcp_conn->iss;
 
+/*
     // #todo:
-    // Allocate ephemeral port for local socket
-    sk->port = 0;
-    //sk->port = __new_client_port_number++;
-    //if (__new_client_port_number > 65000)
-    //    __new_client_port_number = BASE_NEW_CLIENT_PORT_NUMBER;
+    // ------------------------------------------------
+    // Allocate an ephemeral local port for this client socket.
+    // #todo: check for collisions against a real in-use table;
+    // for now this is a simple wrap-around counter.
+    __new_client_port_number++;
+    if (__new_client_port_number < __first_ephemeral_port ||
+        __new_client_port_number > __last_ephemeral_port)
+    {
+        __new_client_port_number = __first_ephemeral_port;
+    }
+    sk->port = __new_client_port_number;
+    // ------------------------------------------------
+*/
 
-    // Send SYN
-    int rv = network_send_tcp(
-        dhcp_info.your_ipv4,           // source IP (array)
-        (uint8_t*) &dst_ip_ipv4_int,   // target IP (int → array cast)
+    // #test: Provisory
+    //sk->port = __first_ephemeral_port;  // Host bytes order
+    sk->port = 11888;  // Host bytes order
+
+
+    // ------------------------------------------------
+    // A bare SYN carries no application data, but
+    // network_send_tcp() rejects data_buffer == NULL
+    // outright, even when data_lenght is 0.
+    // So we pass a zero-length dummy buffer instead of NULL,
+    // matching the convention used for SYN/ACK and ACK sends
+    // elsewhere in this file.
+    char syn_payload[2];
+    syn_payload[0] = 0;
+    syn_payload[1] = 0;
+    size_t syn_payload_len = 0;   // Pure SYN: no data.
+    // ------------------------------------------------
+  
+  
+    // Convert the destination IP (host order int) into the
+    // dotted-octet array network_send_tcp() expects.
+    // #important: do NOT cast the int's address to uint8_t* —
+    // that reads the machine's native byte layout, not the
+    // network octet order. Build the array explicitly instead.
+    uint8_t target_ip[4];
+    target_ip[0] = (uint8_t) ((dst_ip_ipv4_int >> 24) & 0xFF);
+    target_ip[1] = (uint8_t) ((dst_ip_ipv4_int >> 16) & 0xFF);
+    target_ip[2] = (uint8_t) ((dst_ip_ipv4_int >> 8)  & 0xFF);
+    target_ip[3] = (uint8_t) ( dst_ip_ipv4_int        & 0xFF);
+
+
+// Send SYN:
+// (1st step)
+
+    int rv = 
+    network_send_tcp(
+        dhcp_info.your_ipv4,   // source IP (array)
+        target_ip,             // target IP (array, correctly ordered)
         NetworkSaved.gateway_mac,
-        sk->port, dst_port,
+        sk->port, 
+        dst_port,
         conn->tcp_conn->iss,
         0,
         TH_SYN,
-        NULL, 0
+        syn_payload,
+        syn_payload_len
     );
-    if (rv < 0) 
+
+    if (rv < 0){
         return rv;
+    }
+
+    conn->status = CONN_STATUS_SYN_SENT;
+    conn->tcp_conn->state = TCP_SYN_SENT;
+
+// #test
+// Remember this connection for the SYN-ACK handler to find.
+    cur_conn = conn;
 
     sk->state = SS_CONNECTING;
+
+    printk("Done :)\n");
     return 0;
 }
 
@@ -722,6 +764,9 @@ network_handle_tcp(
 
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+
+    //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", tcp->th_sport, tcp->th_dport);
+    //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", sport, dport);
 
 //
 // Super drop
@@ -910,6 +955,9 @@ network_handle_tcp(
 // SYN=1, ACK=0
 // >> Reply: 
 // SYN=1, ACK=1
+
+     printk("TCP: dport=%d SYN={%d} ACK={%d} FIN={%d}\n", 
+        dport, fSYN, fACK, fFIN);
 
     if (dport == 11888)
     {
@@ -1125,14 +1173,22 @@ network_handle_tcp(
             tcp_ack final_ack = _seq_number + 1;   // acknowledge the server's ISN
 
             // #test
+            struct connection_d *c_conn =
+                tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
             //struct connection_d *c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
-            //if (c_conn){
-            //    cur_conn = c_conn;
-            //}
+            if (!c_conn){ printk("step2: syn_ak fail\n");return; }
+            if (c_conn)
+            {
+                if (c_conn->magic != 1234) {
+                    printk("TCP_SYN_ACK: [FAIL] connection validation\n");
+                    return;
+                }
+                cur_conn = c_conn;
+            }
             //if ((void*)cur_conn != NULL)
             //{
                 // #todo: ...
-                // cur_conn->packets_received++;
+                //cur_conn->packets_received++;
             //}
 
             // Send ACK?

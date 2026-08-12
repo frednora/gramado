@@ -31,31 +31,19 @@ __accept_imp (
     unsigned long flags );
 
 static int 
-__connect_af_gramado ( 
+__connect_local ( 
     int sockfd, 
     const struct sockaddr *addr,
     socklen_t addrlen,
     unsigned long connection_flags );
 
 static int 
-__connect_inet_local ( 
+__connect_inet ( 
     int sockfd, 
     const struct sockaddr *addr,
     socklen_t addrlen,
     unsigned long connection_flags );
 
-static int 
-__connect_inet_remote ( 
-    int sockfd, 
-    const struct sockaddr *addr,
-    socklen_t addrlen,
-    unsigned long connection_flags );
-
-static int __connect_inet(
-    int sockfd,
-    const struct sockaddr *addr,
-    socklen_t addrlen,
-    unsigned long connection_flags);
 
 // ====================
 
@@ -1442,16 +1430,8 @@ sys_gramado_accept (
 }
 
 
-// ============================================================
-// __connect_af_gramado()
-// Handle connections for AF_GRAMADO sockets.
-// This worker is used when the socket family is Gramado native IPC.
-// It bypasses TCP/IP and connects directly to local Gramado services.
-// Called by sys_connect() when addr->sa_family == AF_GRAMADO.
-// ============================================================
-
 /*
- * __connect_af_gramado:
+ * __connect_local:
  *     Connecting to a server given an address.
  */
 // connect() is used on the client side, and 
@@ -1494,7 +1474,7 @@ sys_gramado_accept (
 // OUT: 0=ok <0=fail
 
 static int 
-__connect_af_gramado ( 
+__connect_local ( 
     int sockfd, 
     const struct sockaddr *addr,
     socklen_t addrlen,
@@ -1542,8 +1522,8 @@ __connect_af_gramado (
     pid_t current_process = (pid_t) get_current_process(0);
 
     if (Verbose == TRUE){
-        printk ("__connect_af_gramado: Client's pid {%d}\n", current_process );
-        printk ("__connect_af_gramado: Client's socket id {%d}\n", sockfd );
+        printk ("__connect_local: Client's pid {%d}\n", current_process );
+        printk ("__connect_local: Client's socket id {%d}\n", sockfd );
     }
 
 // Client fd.
@@ -1552,8 +1532,8 @@ __connect_af_gramado (
     client_socket_fd = sockfd;
     if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX )
     {
-        debug_print ("__connect_af_gramado: client_socket_fd\n");
-        printk      ("__connect_af_gramado: client_socket_fd\n");
+        debug_print ("__connect_local: client_socket_fd\n");
+        printk      ("__connect_local: client_socket_fd\n");
         return (int) (-EINVAL);
     }
 
@@ -1561,7 +1541,7 @@ __connect_af_gramado (
 // Usando a estrutura que nos foi passada.
     if ((void *) addr == NULL)
     {
-        printk ("__connect_af_gramado: addr\n");
+        printk ("__connect_local: addr\n");
         return (int) (-EINVAL);
     }
 
@@ -1596,8 +1576,8 @@ __connect_af_gramado (
     //case AF_LOCAL:
     case AF_UNIX:
         // Trabalhando com pathname.
-        debug_print ("__connect_af_gramado: AF_UNIX\n");
-        printk      ("__connect_af_gramado: AF_UNIX\n");        
+        debug_print ("__connect_local: AF_UNIX\n");
+        printk      ("__connect_local: AF_UNIX\n");        
         goto fail;
         break;
 
@@ -1607,7 +1587,7 @@ __connect_af_gramado (
     case AF_GRAMADO:
         // Trabalhando com string.
 
-        debug_print ("__connect_af_gramado: AF_GRAMADO ok\n");
+        debug_print ("__connect_local: AF_GRAMADO ok\n");
 
         // ds: Display server
         if ( addr->sa_data[0] == 'd' && addr->sa_data[1] == 's' ){
@@ -1636,17 +1616,17 @@ __connect_af_gramado (
         //}
 
         if ( target_pid<0 || target_pid >= PROCESS_COUNT_MAX ){
-            printk ("__connect_af_gramado: AF_GRAMADO target_pid\n");
+            printk ("__connect_local: AF_GRAMADO target_pid\n");
             goto fail;
         }
         if (Verbose == TRUE){
-            printk ("__connect_af_gramado: target pid %d \n", target_pid);
+            printk ("__connect_local: target pid %d \n", target_pid);
         }
         break;
 
         // Not a local domains
         default:
-            printk("__connect_af_gramado: This is not a valid local domain\n");
+            printk("__connect_local: This is not a valid local domain\n");
             goto fail;
             break;
     };
@@ -1666,7 +1646,7 @@ __connect_af_gramado (
 // Vamos obter o arquivo do tipo soquete que pertence ao sender.
 
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX){
-        printk ("__connect_af_gramado: current_process\n");
+        printk ("__connect_local: current_process\n");
         goto fail;
     }
 
@@ -1674,8 +1654,8 @@ __connect_af_gramado (
 // sender's process structure.
     cProcess = (struct te_d *) teList[current_process];
     if ((void *) cProcess == NULL){
-        debug_print("__connect_af_gramado: cProcess fail\n");
-        printk     ("__connect_af_gramado: cProcess fail\n");
+        debug_print("__connect_local: cProcess fail\n");
+        printk     ("__connect_local: cProcess fail\n");
         goto fail;
     }
 
@@ -1700,7 +1680,7 @@ __connect_af_gramado (
 
     f = (file *) cProcess->Objects[client_socket_fd];
     if ((void *) f == NULL){
-        printk("__connect_af_gramado: [FAIL] f. The client's socket\n");
+        printk("__connect_local: [FAIL] f. The client's socket\n");
         goto fail;
     }
 
@@ -1716,7 +1696,7 @@ __connect_af_gramado (
 // This way we can reject connections before the server binds with an address.
 
     if (f->sync.can_connect != TRUE){
-        printk("__connect_af_gramado: [PERMISSION FAIL] Client doesn't accept connections.\n");
+        printk("__connect_local: [PERMISSION FAIL] Client doesn't accept connections.\n");
         goto fail;
     }
 
@@ -1726,7 +1706,7 @@ __connect_af_gramado (
 
     client_socket = (struct socket_d *) f->socket;
     if ((void *) client_socket == NULL){
-        printk("__connect_af_gramado: [FAIL] client_socket\n");
+        printk("__connect_local: [FAIL] client_socket\n");
         goto fail;
     }
 
@@ -1738,7 +1718,7 @@ __connect_af_gramado (
 // naõ conseguirmos mais conectar.
 
     if (client_socket->state != SS_UNCONNECTED) {
-        printk("__connect_af_gramado: [FAIL] client socket is not SS_UNCONNECTED\n");
+        printk("__connect_local: [FAIL] client socket is not SS_UNCONNECTED\n");
         goto fail;
     }
 
@@ -1759,8 +1739,8 @@ __connect_af_gramado (
 
     if (target_pid<0 || target_pid >= PROCESS_COUNT_MAX)
     {
-        debug_print("__connect_af_gramado: target_pid\n");
-        printk     ("__connect_af_gramado: target_pid\n");
+        debug_print("__connect_local: target_pid\n");
+        printk     ("__connect_local: target_pid\n");
         goto fail;
     }
 
@@ -1771,8 +1751,8 @@ __connect_af_gramado (
 
     sProcess = (struct te_d *) teList[target_pid];
     if ((void *) sProcess == NULL){
-        debug_print("__connect_af_gramado: sProcess fail\n");
-        printk     ("__connect_af_gramado: sProcess fail\n");
+        debug_print("__connect_local: sProcess fail\n");
+        printk     ("__connect_local: sProcess fail\n");
         goto fail;
     }
 
@@ -1795,13 +1775,13 @@ __connect_af_gramado (
 
 // #fail: 
 // No more slots.
-    panic("__connect_af_gramado: [FIXME] We need a slot in the server\n");
+    panic("__connect_local: [FIXME] We need a slot in the server\n");
 
 // ok
 __OK_new_slot:
 
     if (__slot == -1){
-        printk("__connect_af_gramado: No empty slot\n");
+        printk("__connect_local: No empty slot\n");
         goto fail;
     }
 
@@ -1811,7 +1791,7 @@ __OK_new_slot:
 
     server_socket = (struct socket_d *) sProcess->priv;
     if ((void *) server_socket == NULL){
-        printk ("__connect_af_gramado: [FAIL] server_socket\n");
+        printk ("__connect_local: [FAIL] server_socket\n");
         goto fail;
     }
 
@@ -1932,7 +1912,7 @@ __OK_new_slot:
     // #debug breakpoint
     if (Verbose == TRUE)
     {
-        printk("__connect_af_gramado: Breakpoint\n");
+        printk("__connect_local: Breakpoint\n");
         //die();
         while (1){
             asm (" cli ");
@@ -1943,620 +1923,13 @@ __OK_new_slot:
     return 0;  // OK
 
 fail:
-    debug_print("__connect_af_gramado: fail\n");
-    printk     ("__connect_af_gramado: fail\n");
+    debug_print("__connect_local: fail\n");
+    printk     ("__connect_local: fail\n");
     return (int) -1;
 }
 
-
-// ============================================================
-// __connect_inet_local()
-// Handle AF_INET connections to local servers.
-// This worker is used when the destination IP is loopback (127.0.0.1)
-// AND the destination port is one of the canonical local service ports
-// (__PORTS_DISPLAY_SERVER, __PORTS_NETWORK_SERVER).
-// Called by sys_connect() via __connect_inet().
-// ============================================================
-// Client connects using AF_INET, but inside local
-// probably localhost and LAN.
-static int 
-__connect_inet_local ( 
-    int sockfd, 
-    const struct sockaddr *addr,
-    socklen_t addrlen,
-    unsigned long connection_flags )
-{
-    // Client process and server process
-    struct te_d *cProcess;
-    struct te_d *sProcess;
-    pid_t target_pid = (-1);  //fail
-
-    // Client socket and server socket
-    struct socket_d *client_socket;
-    struct socket_d *server_socket;
-    int client_socket_fd = -1;
-
-    // File
-    struct file_d *f;
-
-    struct sockaddr_in *addr_in;  // Address style in the case of AF_INET
-
-    // Target IP: the remote peer you want to connect to.
-    unsigned int target_ip_int = 0;
-    unsigned short target_port_short = 0;
-
-    unsigned long Flags = connection_flags;
-
-    register int i=0;
-    int Verbose = FALSE;
-
-    do_credits_by_tid( lapic_info[0].current_tid );
-
-    // Get PID for the current process for a given core.
-    // IN: core id
-
-    pid_t current_process = (pid_t) get_current_process(0);
-    if (Verbose == TRUE){
-        printk ("__connect_inet_remote: Client's pid {%d}\n", current_process);
-    }
-
-// Client fd.
-// client_socket_fd é um soquete de quem quer se conectar.
-// O addr indica o alvo.
-    client_socket_fd = sockfd;
-    if (Verbose == TRUE){
-        printk ("__connect_inet_remote: Client's socket id {%d}\n", sockfd );
-    }
-    if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX ){
-        debug_print ("__connect_inet_remote: client_socket_fd\n");
-        printk      ("__connect_inet_remote: client_socket_fd\n");
-        return (int) (-EINVAL);
-    }
-
-// addr
-// Usando a estrutura que nos foi passada.
-    if ((void *) addr == NULL){
-        printk ("__connect_inet_remote: addr\n");
-        return (int) (-EINVAL);
-    }
-
-//  ==============
-
-// Getting the target PID.
-// #todo:
-// Devemos obter o número do processo alvo dado um endereço.
-// O tipo de endereço depende do tipo de domínio (família).
-
-// Tente inet, ao menos que mudemos de planos por 
-// encontrarmos af_gramado, af_unix ou af_local.
-
-// #importante
-// opções de domínio se o endereço é no estilo unix. 
-// >>> sockaddr
-
-// ------------------------------------------
-// This routine do not accept local domains.
-// It is only for AF_INET.
-    switch (addr->sa_family){
-    case AF_UNIX:     goto fail;  break;
-    case AF_GRAMADO:  goto fail;  break;
-    };
-
-// ------------------------------------------
-// Not Local
-// Tentaremos com outro formato de endereço, o sockaddr_in.
-// Agora trabalharemos com IP e PORTA. Não mais com string
-// ou pathname.
-// Vamos pegar o pid do processo associado a determinada porta.
-// Para a família AF_INET.
-
-// The client is trying to cennect to the localhost
-// in the AF_INET domain.
-    int in_localhost = FALSE;
-
-
-// #ps: addr_in is the right structure for AF_INET. 
-    //addr_in = (struct sockaddr *) addr;
-    addr_in = addr;
-
-    // Opções de domínio se o endereço é no estilo internet.
-    switch (addr_in->sin_family){
-
-    case AF_INET:
-    // Trabalhando com ip e porta.
-    // Estamos usando inet em conexão local.
-    // Então precisamos usar localhost como ip.
-
-        debug_print("__connect_inet_remote: AF_INET\n");
-        //#debug
-        //printk("sys_connect: AF_INET port {%d}\n", addr_in->sin_port);
-
-        // Copy IP:PORT
-        target_ip_int     = ntohl(addr_in->sin_addr.s_addr);  // convert to host order
-        target_port_short = ntohs(addr_in->sin_port);         // convert to host order
-
-        // Yes
-        // Check the port.
-        // This way we know what is the server's pid.
-
-        // 21 - FTP
-        if (target_port_short == 21){
-            printk("__connect_inet_remote: [21] FTP #todo\n");
-            goto fail;
-        }
-
-        // 23 - Telnet
-        if (target_port_short == 23){
-            printk("__connect_inet_remote: [23] Telnet #todo\n");
-            goto fail;
-        }
-
-        // 67 - DHCP
-        if (target_port_short == 67){
-            printk("__connect_inet_remote: [67] DHCP #todo\n");
-            goto fail;
-        }
-
-        // 80 - HTTP ;; Not allowed for now
-        if (target_port_short == 80){
-            printk("__connect_inet_remote: [80] HTTP #test\n");
-            //break;
-            goto fail;
-        }
-
-        // 443 - HTTPS 
-        if (target_port_short == 443){
-            printk("__connect_inet_remote: [443] HTTPS #todo\n");
-            goto fail;
-        }
-
-        // 4040 - Display server
-        // If the port is Display Server,
-        // let's use the PID associated with this port.
-        // #important:
-        // Now we are comparing between two values in HOST byte order.
-        if (target_port_short == __PORTS_DISPLAY_SERVER)
-        {
-            // Get target PID!
-            target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_DS);
-            if (Verbose == TRUE)
-            {
-                printk("__connect_inet_remote: [AF_INET] Connecting to the Display Server\n");
-                printk("__connect_inet_remote: IP {%x}\n",   target_ip_int );
-                printk("__connect_inet_remote: PORT {%d}\n", target_port_short );
-                //#debug
-                //while(1){}
-            }
-            break;
-        }
-
-        // 4041 - Network server
-        // Se a porta for , então usaremos o pid do Network Server.
-        // #important:
-        // Now we are comparing between two values in HOST byte order.
-        if (target_port_short == __PORTS_NETWORK_SERVER)
-        {
-            // Get target PID!
-            target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_NS);
-            if (Verbose==TRUE)
-            {
-                printk("__connect_inet_remote: [AF_INET] Connecting to the Network Server\n");
-                printk("__connect_inet_remote: IP {%x}\n",   target_ip_int );
-                printk("__connect_inet_remote: PORT {%d}\n", target_port_short );
-                //#debug
-                //while(1){}
-            }
-            break;
-        }
-
-        // 4042 - PORTS_FS #todo
-        // Web server #todo
-        // FTP server #todo
-        // Telnet server #todo
-
-        // #debug
-        printk("__connect_inet_remote: [FAIL] Port not valid {%d}\n",
-            target_port_short );
-
-        goto fail;
-        break;
-
-        //...
-
-    default:
-        debug_print("__connect_inet_remote: domain not supported\n");
-        printk("__connect_inet_remote: [FAIL] Family not supported {%d}\n",
-            addr_in->sin_family );
-        goto fail;
-        break;
-
-    };  // switch
-
-// ====================================================================
-// Check
-// Have a valid target_pid ?
-
-//__go:
-
-// #bugbug
-// Daqui pra frente só faz sentido continuarmos
-// se a intenção do cliente foi conectar-se com um servidor
-// dentro do localhost.
-
-    /*
-    // #todo: This is temporary
-    if (in_localhost != TRUE)
-    {
-        printk ("__connect_inet_remote: #todo Trying to connect to another machine\n");
-        goto fail;
-    }
-    */
-
-//
-// == Client process =============================
-//
-
-// Vamos obter o arquivo do tipo soquete que pertence ao sender
-    if (current_process<0 || current_process >= PROCESS_COUNT_MAX)
-    {
-        printk ("__connect_inet_remote: current_process\n");
-        goto fail;
-    }
-// Client process.
-// sender's process structure.
-    cProcess = (struct te_d *) teList[current_process];
-    if ((void *) cProcess == NULL){
-        debug_print("__connect_inet_remote: cProcess fail\n");
-        printk     ("__connect_inet_remote: cProcess fail\n");
-        goto fail;
-    }
-
-// #todo
-// Check structure validation
-    // if (cProcess->magic ...
-
-// The client's socket file.
-// #bugbug
-// Estamos pegando o arquivo de socket do cliente
-// Então estamos presumindo que é uma conexão local.
-// Se o servidor fechar esse arquivo, então
-// o cliente será incapaz de enviar mensagens?
-// Por isso no momento do accept devemos
-// criar um arquivo para o cliente. Que poderá ser fechado
-// pelo sevidor para encessar a conexão ... até que
-// o cliente se conecte novamente.
-// #importante: Mas para isso o cliente precisa
-// possuir um arquivo de socket ainda válido.
-// O servidor não pode fechar o arquivo de socket do cliente remoto.
-// E também não devemos permitir que isso aconteça na conexão local.
-
-    f = (file *) cProcess->Objects[client_socket_fd];
-    if ((void *) f == NULL){
-        printk("__connect_inet_remote: [FAIL] f. The client's socket\n");
-        goto fail;
-    }
-
-// Is this file a socket object?
-    int IsSocketObject = -1;
-    IsSocketObject = (int) is_socket((file *) f);
-    if (IsSocketObject != TRUE){
-        return (int) (-ENOTSOCK);
-    }
-
-// This file doesn't accept connections.
-// #todo:
-// This way we can reject connections before the server binds with an address.
-
-    if (f->sync.can_connect != TRUE){
-        printk("__connect_inet_remote: [PERMISSION FAIL] Client doesn't accept connections.\n");
-        goto fail;
-    }
-
-// Client socket structure
-// Socket structure in the sender's file.
-// Pega a estrutura de socket associada ao arquivo.
-
-    client_socket = (struct socket_d *) f->socket;
-    if ((void *) client_socket == NULL){
-        printk("__connect_inet_remote: [FAIL] client_socket\n");
-        goto fail;
-    }
-
-// #ps: 
-// For now this it the only valid state.
-// #todo:
-// We need to handle some other states here too.
-
-    if (client_socket->state != SS_UNCONNECTED) 
-    {
-        printk("__connect_inet_remote: [FAIL] client socket is not SS_UNCONNECTED\n");
-        goto fail;
-    }
-
-
-// #test
-// Assign a port number to the client socket.
-// #todo #bugbug We gotta work on this routine.
-    __new_client_port_number++;
-    client_socket->port = (unsigned short) __new_client_port_number;
-
-
-//
-// Is it remote
-//
-
-
-// In this case we do not handle the server process
-// Not allowed for now
-    //if (target_port_short == 80)
-        //goto remote_go;
-
-// ---------------------------------------------------    
-// Server process
-// #todo
-// O arquivo de socket do cliente 
-// precisa ter um fd no processo servidor.
-// target pid.
-// O pid do processo servidor.
-// Pegamos o target_pid logo acima na porta solicitada.
-
-    if (target_pid<0 || target_pid >= PROCESS_COUNT_MAX)
-    {
-        debug_print("__connect_inet_remote: target_pid\n");
-        printk     ("__connect_inet_remote: target_pid\n");
-        goto fail;
-    }
-
-// The server's process structure.
-// O processo cliente chamou essa função e
-// então pegaremos agora o processo alvo, que é um servidor.
-
-    sProcess = (struct te_d *) teList[target_pid];
-    if ((void *) sProcess == NULL){
-        debug_print("__connect_inet_remote: sProcess fail\n");
-        printk     ("__connect_inet_remote: sProcess fail\n");
-        goto fail;
-    }
-
-// #todo
-// Checar a validade da estrutura de processo.
-    // if ( sProcess->magic != ...
-
-// Procurando um slot livre na lista de objetos abertos
-// presente na estrutura do processo servidor.
-
-    register int __slot = -1;  // Default is fail.
-    for (i=3; i<31; i++)
-    {
-        if (sProcess->Objects[i] == 0)
-        {
-            __slot = (int) i;
-            goto __OK_new_slot;
-        }
-    };
-
-// #fail: 
-// No more slots.
-    panic("__connect_inet_remote: [FIXME] We need a slot in the server\n");
-
-// ok
-__OK_new_slot:
-
-    if (__slot == -1){
-        printk("__connect_inet_remote: No empty slot\n");
-        goto fail;
-    }
-
-// Esse é o socket do processo servidor.
-// Sim, porque é o cliente que está tentando se conectar.
-// Dessa forma o alvo é o servidor.
-
-// #important:
-// Rhe socket for the server for now is already valid only for two ports.
-// 4040 and 4041
-
-// --------------------------------------------------
-// #ps
-// In the case the target is not our well know server,
-// we need to connect to a remote server.
-// Here we initialize the 3 step handshake sending a SYN
-// and creating the connection structure.
-
-
-    // #todo: This is a work in progress!
-
 /*
-// #ps: No remote peer for __connect_inet_local
-remote_go:
-    if (target_port_short != __PORTS_DISPLAY_SERVER &&
-        target_port_short != __PORTS_NETWORK_SERVER)
-    {
-        // --- Call the new worker at the end ---
-        // #ps: Using the host order for ip and port.
-        // IN: socket, ip, port.
-        int __rv = 
-        tcp_client_connect(
-            client_socket, 
-            target_ip_int, 
-            target_port_short 
-        );
-        if (__rv < 0) {
-            printk("__connect_inet_remote: tcp_client_connect failed\n");
-            return __rv;
-        }
-
-        // Block until handshake completes (to be implemented)
-        // wait_for_socket_state(s, SS_CONNECTED);
-
-        return 0;   // OK for now
-    }
-*/
-
-// --------------------------------------------------
-// #ps
-// Continue in the case we are connectiong with 
-// well known server in localhost.
-
-    server_socket = (struct socket_d *) sProcess->priv;
-    if ((void *) server_socket == NULL){
-        printk ("__connect_inet_remote: [FAIL] server_socket\n");
-        goto fail;
-    }
-
-// Salvando o fd do socket do cliente.
-    server_socket->clientfd_on_server = __slot;
-    client_socket->clientfd_on_server = __slot;
-
-// #todo
-// Temos que rever as coisas por aqui. kkk
-// incluimos como objeto do servidor o ponteiro para 
-// o arquivo que representa o socket do cliente.
-// O arquivo de socket do cliente agora tem um fd
-// no processo servidor.
-// Nossa intenção aqui é usar um dos slots livres
-// encontrado em p->Objects[], mas por enquanto estamos usando 
-// apenas o slot número 31.
-
-// :: The free slot we found before.
-    //sProcess->Objects[__slot] = (unsigned long) f;
-// :: The standard fd used by the servers in GramadoOS.
-    sProcess->Objects[31] = (unsigned long) f;
-
-// Connecting!
-// #bugbug
-// connect() eh chamado somente uma vez pelo cliente.
-// A conexao deve ficar pendente numa lista e o accept
-// seleciona uma delas.
-// #test: 
-// Pra começar, vamos deixar apenas uma pendente
-// e o accept() selecionara ela.
-// #todo
-// Temos que colocar os pedidos de conexão em uma fila.
-// O tamanho dessa fila foi determinado pelo servidor
-// com a chamada listen(). Mas podemos ter um tamanho padrão.
-// Talvez tamanho 1 para começar.
-// Link:
-// Conectando o socket do processo alvo ao ponto de
-// conexão do processo cliente.
-// Conectando o socket do cliente ao ponto de conecção do
-// processo servidor.
-// Flags:
-// State:
-// Acionando as flags que indicam a conecção.
-// Nesse momento poderíamos usar a flag SS_CONNECTING
-// e a rotina accept() mudaria para SS_CONNECTED. 
-// #bugbug
-// Nao podemos mudar o estado do servidor,
-// estamos apenas entrando na fila e implorando para nos conectarmos.
-// Quem realizara a conexão sera o accept(), 
-// pegando o cliente da fila de conexões pendentes.
-
-
-// #important:
-// Rhe socket for the server for now is already valid only for two ports.
-// 4040 and 4041
-
-// Linking:
-// Connecting
-    client_socket->link = (struct socket_d *) server_socket;
-    server_socket->link = (struct socket_d *) client_socket;
-// Flags:
-// State
-    client_socket->state = SS_CONNECTING;
-    server_socket->state = SS_CONNECTING;
-// Magic signature
-    client_socket->magic_string[0] = 'C';
-    client_socket->magic_string[1] = 0; 
-
-//
-// Backlog
-//
-
-// #todo
-// Precisamos de uma lista de conexões pendentes.
-// O cliente invocou a conexão apenas uma vez
-// e precisa usar o servidor varias vezes
-// #obs: 
-// Isso funcionou. Vamos tentar com lista.
-// #obs: 
-// Algumas implementacões usam lista encadeada de conexões pendentes. 
-// 'server_socket->iconn'
-// #bugbug: 
-// Essa lista fica na estrutura de socket so servidor, 
-// dessa forma o servidor pode ter mais de uma socket?
-
-    //server_socket->pending_client_count++;
-    //if(server_socket->pending_client_count >= server_socket->backlog_max )
-    //    return ECONNREFUSED;
-
-// Circula
-// #bugbug:
-// Actually we're gonna reject the new connections when the queue is full.
-
-// The insertion index
-    int BacklogTail = 0;
-
-    server_socket->pending_client_count++;
-    if (server_socket->pending_client_count >= server_socket->backlog_max)
-    {
-        server_socket->pending_client_count = 0;
-    }
-    BacklogTail = server_socket->pending_client_count;
-
-// coloca na fila.
-// Coloca o ponteiro para estrutura de socket
-// na fila de conexões pendentes na estrutura do servidor.
-// Isso será usado pelo accept() para encontrar
-// a estrutura do socket do cliente.
-    server_socket->pending_client_endpoints[BacklogTail] = 
-        (unsigned long) client_socket;
-
-// #
-// O cliente está esperando que sua conexão seja aceita pelo servidor.
-
-    // #debug
-    //debug_print("sys_connect: Pending connection\n");
-
-    // #debug
-    //if (Verbose==TRUE){
-    //    printk("sys_connect: Pending connection\n");
-    //}
-
-    // #debug breakpoint
-    if (Verbose == TRUE)
-    {
-        printk("__connect_inet_remote: Breakpoint\n");
-        // die();
-        while (1){
-            asm (" cli ");
-            asm (" hlt ");
-        };
-    }
-
-    return 0;  // OK
-
-fail:
-    debug_print("__connect_inet_remote: fail\n");
-    printk     ("__connect_inet_remote: fail\n");
-    return (int) -1;
-}
-
-
-
-
-
-
-// ============================================================
-// __connect_inet_remote()
-// Handle AF_INET connections to remote servers.
-// This worker is used when the destination IP/port does not match
-// the local loopback + canonical ports.
-// It allocates an ephemeral client port, builds a TCP SYN,
-// and initiates the handshake with the remote host.
-// Called by sys_connect() via __connect_inet().
-
-/*
- * __connect_inet_remote:
+ * __connect_inet:
  * ------------------------------------------------------------
  * AF_INET connect worker.
  *
@@ -2587,7 +1960,7 @@ fail:
  */
 
 /*
- * __connect_inet_remote:
+ * __connect_inet:
  * ------------------------------------------------------------
  * AF_INET connect worker (client side).
  *
@@ -2668,7 +2041,7 @@ fail:
 // AF_INET domains only.
 
 static int 
-__connect_inet_remote ( 
+__connect_inet ( 
     int sockfd, 
     const struct sockaddr *addr,
     socklen_t addrlen,
@@ -2698,7 +2071,6 @@ __connect_inet_remote (
     register int i=0;
     int Verbose = FALSE;
 
-    int IsValidPort = FALSE;
 
     do_credits_by_tid( lapic_info[0].current_tid );
 
@@ -2707,7 +2079,7 @@ __connect_inet_remote (
 
     pid_t current_process = (pid_t) get_current_process(0);
     if (Verbose == TRUE){
-        printk ("__connect_inet_remote: Client's pid {%d}\n", current_process);
+        printk ("__connect_inet: Client's pid {%d}\n", current_process);
     }
 
 // Client fd.
@@ -2715,18 +2087,18 @@ __connect_inet_remote (
 // O addr indica o alvo.
     client_socket_fd = sockfd;
     if (Verbose == TRUE){
-        printk ("__connect_inet_remote: Client's socket id {%d}\n", sockfd );
+        printk ("__connect_inet: Client's socket id {%d}\n", sockfd );
     }
     if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX ){
-        debug_print ("__connect_inet_remote: client_socket_fd\n");
-        printk      ("__connect_inet_remote: client_socket_fd\n");
+        debug_print ("__connect_inet: client_socket_fd\n");
+        printk      ("__connect_inet: client_socket_fd\n");
         return (int) (-EINVAL);
     }
 
 // addr
 // Usando a estrutura que nos foi passada.
     if ((void *) addr == NULL){
-        printk ("__connect_inet_remote: addr\n");
+        printk ("__connect_inet: addr\n");
         return (int) (-EINVAL);
     }
 
@@ -2777,7 +2149,7 @@ __connect_inet_remote (
     // Estamos usando inet em conexão local.
     // Então precisamos usar localhost como ip.
 
-        debug_print("__connect_inet_remote: AF_INET\n");
+        debug_print("__connect_inet: AF_INET\n");
         //#debug
         //printk("sys_connect: AF_INET port {%d}\n", addr_in->sin_port);
 
@@ -2791,37 +2163,33 @@ __connect_inet_remote (
 
         // 21 - FTP
         if (target_port_short == 21){
-            printk("__connect_inet_remote: [21] FTP #todo\n");
-            IsValidPort = TRUE;
-            break;
+            printk("__connect_inet: [21] FTP #todo\n");
+            goto fail;
         }
 
         // 23 - Telnet
         if (target_port_short == 23){
-            printk("__connect_inet_remote: [23] Telnet #todo\n");
-            IsValidPort = TRUE;
-            break;
+            printk("__connect_inet: [23] Telnet #todo\n");
+            goto fail;
         }
 
         // 67 - DHCP
         if (target_port_short == 67){
-            printk("__connect_inet_remote: [67] DHCP #todo\n");
-            IsValidPort = TRUE;
-            break;
+            printk("__connect_inet: [67] DHCP #todo\n");
+            goto fail;
         }
 
         // 80 - HTTP
         if (target_port_short == 80){
-            printk("__connect_inet_remote: [80] HTTP #test\n");
-            IsValidPort = TRUE;
+            printk("__connect_inet: [80] HTTP #test\n");
             break;
+            //goto fail;
         }
 
         // 443 - HTTPS 
         if (target_port_short == 443){
-            printk("__connect_inet_remote: [443] HTTPS #todo\n");
-            IsValidPort = TRUE;
-            break;
+            printk("__connect_inet: [443] HTTPS #todo\n");
+            goto fail;
         }
 
         // 4040 - Display server
@@ -2831,20 +2199,16 @@ __connect_inet_remote (
         // Now we are comparing between two values in HOST byte order.
         if (target_port_short == __PORTS_DISPLAY_SERVER)
         {
-            /*
             // Get target PID!
             target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_DS);
             if (Verbose == TRUE)
             {
-                printk("__connect_inet_remote: [AF_INET] Connecting to the Display Server\n");
-                printk("__connect_inet_remote: IP {%x}\n",   target_ip_int );
-                printk("__connect_inet_remote: PORT {%d}\n", target_port_short );
+                printk("__connect_inet: [AF_INET] Connecting to the Display Server\n");
+                printk("__connect_inet: IP {%x}\n",   target_ip_int );
+                printk("__connect_inet: PORT {%d}\n", target_port_short );
                 //#debug
                 //while(1){}
             }
-            break;
-            */
-            IsValidPort = TRUE;
             break;
         }
 
@@ -2854,20 +2218,16 @@ __connect_inet_remote (
         // Now we are comparing between two values in HOST byte order.
         if (target_port_short == __PORTS_NETWORK_SERVER)
         {
-            /*
             // Get target PID!
             target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_NS);
             if (Verbose==TRUE)
             {
-                printk("__connect_inet_remote: [AF_INET] Connecting to the Network Server\n");
-                printk("__connect_inet_remote: IP {%x}\n",   target_ip_int );
-                printk("__connect_inet_remote: PORT {%d}\n", target_port_short );
+                printk("__connect_inet: [AF_INET] Connecting to the Network Server\n");
+                printk("__connect_inet: IP {%x}\n",   target_ip_int );
+                printk("__connect_inet: PORT {%d}\n", target_port_short );
                 //#debug
                 //while(1){}
             }
-            break;
-            */
-            IsValidPort = TRUE;
             break;
         }
 
@@ -2877,19 +2237,17 @@ __connect_inet_remote (
         // Telnet server #todo
 
         // #debug
-        printk("__connect_inet_remote: Other ports {%d}\n",
+        printk("__connect_inet: [FAIL] Port not valid {%d}\n",
             target_port_short );
 
-        IsValidPort = TRUE;
+        goto fail;
         break;
-        //goto fail;
-        //break;
 
         //...
 
     default:
-        debug_print("__connect_inet_remote: domain not supported\n");
-        printk("__connect_inet_remote: [FAIL] Family not supported {%d}\n",
+        debug_print("__connect_inet: domain not supported\n");
+        printk("__connect_inet: [FAIL] Family not supported {%d}\n",
             addr_in->sin_family );
         goto fail;
         break;
@@ -2911,7 +2269,7 @@ __connect_inet_remote (
     // #todo: This is temporary
     if (in_localhost != TRUE)
     {
-        printk ("__connect_inet_remote: #todo Trying to connect to another machine\n");
+        printk ("__connect_inet: #todo Trying to connect to another machine\n");
         goto fail;
     }
     */
@@ -2923,15 +2281,15 @@ __connect_inet_remote (
 // Vamos obter o arquivo do tipo soquete que pertence ao sender
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX)
     {
-        printk ("__connect_inet_remote: current_process\n");
+        printk ("__connect_inet: current_process\n");
         goto fail;
     }
 // Client process.
 // sender's process structure.
     cProcess = (struct te_d *) teList[current_process];
     if ((void *) cProcess == NULL){
-        debug_print("__connect_inet_remote: cProcess fail\n");
-        printk     ("__connect_inet_remote: cProcess fail\n");
+        debug_print("__connect_inet: cProcess fail\n");
+        printk     ("__connect_inet: cProcess fail\n");
         goto fail;
     }
 
@@ -2956,7 +2314,7 @@ __connect_inet_remote (
 
     f = (file *) cProcess->Objects[client_socket_fd];
     if ((void *) f == NULL){
-        printk("__connect_inet_remote: [FAIL] f. The client's socket\n");
+        printk("__connect_inet: [FAIL] f. The client's socket\n");
         goto fail;
     }
 
@@ -2972,7 +2330,7 @@ __connect_inet_remote (
 // This way we can reject connections before the server binds with an address.
 
     if (f->sync.can_connect != TRUE){
-        printk("__connect_inet_remote: [PERMISSION FAIL] Client doesn't accept connections.\n");
+        printk("__connect_inet: [PERMISSION FAIL] Client doesn't accept connections.\n");
         goto fail;
     }
 
@@ -2982,7 +2340,7 @@ __connect_inet_remote (
 
     client_socket = (struct socket_d *) f->socket;
     if ((void *) client_socket == NULL){
-        printk("__connect_inet_remote: [FAIL] client_socket\n");
+        printk("__connect_inet: [FAIL] client_socket\n");
         goto fail;
     }
 
@@ -2993,7 +2351,7 @@ __connect_inet_remote (
 
     if (client_socket->state != SS_UNCONNECTED) 
     {
-        printk("__connect_inet_remote: [FAIL] client socket is not SS_UNCONNECTED\n");
+        printk("__connect_inet: [FAIL] client socket is not SS_UNCONNECTED\n");
         goto fail;
     }
 
@@ -3010,10 +2368,8 @@ __connect_inet_remote (
 //
 
 // In this case we do not handle the server process
-    if (IsValidPort == TRUE)
-       goto remote_go;
-    //if (target_port_short == 80)
-        //goto remote_go;
+    if (target_port_short == 80)
+        goto remote_go;
 
 // ---------------------------------------------------    
 // Server process
@@ -3026,8 +2382,8 @@ __connect_inet_remote (
 
     if (target_pid<0 || target_pid >= PROCESS_COUNT_MAX)
     {
-        debug_print("__connect_inet_remote: target_pid\n");
-        printk     ("__connect_inet_remote: target_pid\n");
+        debug_print("__connect_inet: target_pid\n");
+        printk     ("__connect_inet: target_pid\n");
         goto fail;
     }
 
@@ -3037,8 +2393,8 @@ __connect_inet_remote (
 
     sProcess = (struct te_d *) teList[target_pid];
     if ((void *) sProcess == NULL){
-        debug_print("__connect_inet_remote: sProcess fail\n");
-        printk     ("__connect_inet_remote: sProcess fail\n");
+        debug_print("__connect_inet: sProcess fail\n");
+        printk     ("__connect_inet: sProcess fail\n");
         goto fail;
     }
 
@@ -3061,13 +2417,13 @@ __connect_inet_remote (
 
 // #fail: 
 // No more slots.
-    panic("__connect_inet_remote: [FIXME] We need a slot in the server\n");
+    panic("__connect_inet: [FIXME] We need a slot in the server\n");
 
 // ok
 __OK_new_slot:
 
     if (__slot == -1){
-        printk("__connect_inet_remote: No empty slot\n");
+        printk("__connect_inet: No empty slot\n");
         goto fail;
     }
 
@@ -3103,7 +2459,7 @@ remote_go:
             target_port_short 
         );
         if (__rv < 0) {
-            printk("__connect_inet_remote: tcp_client_connect failed\n");
+            printk("__connect_inet: tcp_client_connect failed\n");
             return __rv;
         }
 
@@ -3121,7 +2477,7 @@ remote_go:
 
     server_socket = (struct socket_d *) sProcess->priv;
     if ((void *) server_socket == NULL){
-        printk ("__connect_inet_remote: [FAIL] server_socket\n");
+        printk ("__connect_inet: [FAIL] server_socket\n");
         goto fail;
     }
 
@@ -3247,7 +2603,7 @@ remote_go:
     // #debug breakpoint
     if (Verbose == TRUE)
     {
-        printk("__connect_inet_remote: Breakpoint\n");
+        printk("__connect_inet: Breakpoint\n");
         // die();
         while (1){
             asm (" cli ");
@@ -3258,60 +2614,10 @@ remote_go:
     return 0;  // OK
 
 fail:
-    debug_print("__connect_inet_remote: fail\n");
-    printk     ("__connect_inet_remote: fail\n");
+    debug_print("__connect_inet: fail\n");
+    printk     ("__connect_inet: fail\n");
     return (int) -1;
 }
-
-// ============================================================
-// __connect_inet()
-// Dispatcher for AF_INET connections.
-// Decides whether to route the connection to __connect_inet_local()
-// or __connect_inet_remote() based on the destination IP and port.
-// Called directly by sys_connect() when addr->sa_family == AF_INET.
-// ============================================================
-// Connect using AF_INET.
-// We have two options. One for local server and another one for remote servers.
-static int __connect_inet(
-    int sockfd,
-    const struct sockaddr *addr,
-    socklen_t addrlen,
-    unsigned long connection_flags)
-{
-    struct sockaddr_in *in_addr = (struct sockaddr_in *) addr;
-
-    printk("__connect_inet:\n");
-
-    // Sanity check
-    if (!in_addr)
-        return -EINVAL;
-    if (in_addr->sin_family != AF_INET)
-        return -EINVAL;
-
-    unsigned int   target_ip_int     = ntohl(in_addr->sin_addr.s_addr);  // convert to host order
-    unsigned short target_port_short = ntohs(in_addr->sin_port);         // convert to host order
-
-    int IsCanonicalLocalPort = FALSE;
-    if (target_port_short == __PORTS_DISPLAY_SERVER){
-        IsCanonicalLocalPort = TRUE;
-    }
-    if (target_port_short == __PORTS_NETWORK_SERVER){
-        IsCanonicalLocalPort = TRUE;
-    }
-
-// LOCAL: loopback ip and canonical ports
-    if (IsCanonicalLocalPort == TRUE)
-    {
-        unsigned int loopbackip_hostorder = (unsigned int) ntohl(INADDR_LOOPBACK);
-        if (target_ip_int == loopbackip_hostorder){
-            return __connect_inet_local(sockfd, addr, addrlen, connection_flags);
-        }
-    }
-
-// REMOTE: remote peers
-    return __connect_inet_remote(sockfd, addr, addrlen, connection_flags);
-}
-
 
 // Service 7001
 // Purpose: 
@@ -3319,7 +2625,7 @@ static int __connect_inet(
 // a remote server (IP + port).
 // Dispatch: 
 // It checks the socket’s family (AF_INET, AF_UNIX, AF_GRAMADO) and 
-// then calls the appropriate worker (__connect_inet_remote, __connect_af_gramado, etc.).
+// then calls the appropriate worker (__connect_inet, __connect_local, etc.).
 
 // #warning
 // We can have two types of address.
@@ -3363,19 +2669,19 @@ sys_connect (
 // -----------------------------
 // Testing for local domains.
 // If ti fails, try the inet domains.
-    int IsAFGRAMADO = FALSE;
+    int IsLocal = FALSE;
 
     switch (addr->sa_family)
     {
         //case AF_LOCAL:
         case AF_UNIX:
         case AF_GRAMADO:
-            IsAFGRAMADO = TRUE;
+            IsLocal = TRUE;
             break;
-        // When the family is AF_INET, the worker is __connect_inet_remote():
+        // When the family is AF_INET, the worker is __connect_inet():
         //case AF_INET:
         default:
-            IsAFGRAMADO = FALSE;
+            IsLocal = FALSE;
             break;
     };
 
@@ -3391,15 +2697,10 @@ sys_connect (
     // #todo: This is a test yet
     unsigned long ConnectionFlags = 0;
 
-    // It is AF_GRAMADO family
-    if (IsAFGRAMADO == TRUE){
-        return (int) __connect_af_gramado( sockfd, addr, addrlen, ConnectionFlags );
-
-    // It is NOT AF_GRAMADO family
-    } else if (IsAFGRAMADO == FALSE){
-
-        // if AF_INET
-        return (int) __connect_inet ( sockfd, addr, addrlen, ConnectionFlags );
+    if (IsLocal == TRUE){
+        return (int) __connect_local( sockfd, addr, addrlen, ConnectionFlags );
+    } else if (IsLocal == FALSE){
+        return (int) __connect_inet( sockfd, addr, addrlen, ConnectionFlags );
     }; 
 
 // Unexpected error
