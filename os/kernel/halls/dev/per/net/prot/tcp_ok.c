@@ -25,7 +25,6 @@ static struct connection_d *cur_conn = NULL;
 
 const unsigned short __first_ephemeral_port = 32768;
 const unsigned short __last_ephemeral_port = 39999;
-static unsigned short __new_client_port_number = 32768; // Inicial
 
 //static char __tcp_payload[1024];
 static char __tcp_payload[1400];   // or 1460
@@ -39,13 +38,6 @@ __tcp_checksum(
     uint8_t dst_ip[4],
     const uint8_t *tcp_segment,
     size_t tcp_len );
-
-static void 
-__kd_handle_tcp( 
-    const unsigned char *buffer, 
-    ssize_t size,
-    unsigned int s_ipv4_int,
-    unsigned int d_ipv4_int );
 
 // ===================================================
 
@@ -590,7 +582,6 @@ fail:
  */
 // Send data to a REMOTE peer.
 // We get the connection information based on the client's socket.
-
 int 
 tcp_socket_send(
     struct socket_d *sk, 
@@ -652,9 +643,6 @@ tcp_socket_send(
     seq = conn->tcp_conn->snd_nxt;
     ack = conn->tcp_conn->rcv_nxt;
 
-    printk("tcp_socket_send: %d sends to %d", 
-        sk->port, remote_sk->port );
-
     rv = 
     network_send_tcp(
         dhcp_info.your_ipv4,          // source IP
@@ -678,40 +666,6 @@ tcp_socket_send(
 
     return (int) len;
 }
-
-// #test: Getting the last payload available...
-// allowing the ring 3 process to read it.
-int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
-{
-    if (!sk || sk->magic != 1234) return -EINVAL;
-    if (sk->state != SS_CONNECTED) return -ENOTCONN;
-
-    file *fp = sk->private_file;
-    if (!fp) return -ENOTCONN;
-
-    // How many bytes are available?
-    size_t available = (fp->_w - fp->_r);
-    if (available == 0) {
-        return 0; // nothing to read yet
-    }
-
-    // Limit to user buffer size
-    size_t to_copy = (len < available) ? len : available;
-
-    memcpy(buf, fp->_base + fp->_r, to_copy);
-
-    // Advance read offset
-    fp->_r += to_copy;
-
-    // If we consumed everything, reset flags
-    if (fp->_r >= fp->_w) {
-        fp->_r = fp->_w;
-        fp->sync.can_read = FALSE;
-    }
-
-    return (int) to_copy;
-}
-
 
 // This will be called by sys_connect() when the family is AF_INET.
 // IN:
@@ -741,6 +695,9 @@ tcp_client_connect(
         return -1;
     }              
 
+
+    //conn->status = CONN_STATUS_SYN_SENT;
+    //conn->tcp_conn->state = TCP_SYN_SENT;
     conn->status = CONN_STATUS_NONE;
     conn->tcp_conn->state = TCP_CLOSED;
 
@@ -778,20 +735,26 @@ tcp_client_connect(
     conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1;
     conn->tcp_conn->snd_una = conn->tcp_conn->iss;
 
-
+/*
+    // #todo:
     // ------------------------------------------------
     // Allocate an ephemeral local port for this client socket.
     // #todo: check for collisions against a real in-use table;
     // for now this is a simple wrap-around counter.
-    if (__new_client_port_number < __first_ephemeral_port)
-        panic ("__new_client_port_number <");
-    if (__new_client_port_number > __last_ephemeral_port)
-        panic("__new_client_port_number >");
-
-    // Set
+    __new_client_port_number++;
+    if (__new_client_port_number < __first_ephemeral_port ||
+        __new_client_port_number > __last_ephemeral_port)
+    {
+        __new_client_port_number = __first_ephemeral_port;
+    }
     sk->port = __new_client_port_number;
-    // sk->port = 11888;  // Host bytes order
     // ------------------------------------------------
+*/
+
+    // #test: Provisory
+    //sk->port = __first_ephemeral_port;  // Host bytes order
+    sk->port = 11888;  // Host bytes order
+
 
     // ------------------------------------------------
     // A bare SYN carries no application data, but
@@ -851,10 +814,6 @@ tcp_client_connect(
 // Remember this connection for the SYN-ACK handler to find.
     cur_conn = conn;
 
-//
-// Socket
-//
-
     sk->state = SS_CONNECTING;
 
     printk("Done :)\n");
@@ -872,9 +831,8 @@ tcp_client_connect(
 // The TCP header tracks the state of 
 // communication between two TCP endpoints.
 
-// Kernel debugger 11888
-static void 
-__kd_handle_tcp( 
+void 
+network_handle_tcp( 
     const unsigned char *buffer, 
     ssize_t size,
     unsigned int s_ipv4_int,
@@ -891,11 +849,11 @@ __kd_handle_tcp(
     dummy_payload[1] = 0;
 
     // #debug
-    //printk("__kd_handle_tcp: #todo\n");
+    //printk("network_handle_tcp: #todo\n");
 
 // Parameters
     if ((void*) buffer == NULL){
-        printk("__kd_handle_tcp: buffer\n");
+        printk("network_handle_tcp: buffer\n");
         return;
     }
     //if (size < 0){
@@ -1212,7 +1170,7 @@ __kd_handle_tcp(
             struct endpoint_d *server_ep = create_endpoint_object();
             server_ep->is_remote = FALSE;  // NOT REMOTE EP (LOCAL)
             if (!server_ep) {
-                printk("__kd_handle_tcp: Failed to create local endpoint\n");
+                printk("Failed to create local endpoint\n");
                 return; // do not respond
             }
             // #todo:
@@ -1276,7 +1234,7 @@ __kd_handle_tcp(
             uint16_t flags = TH_SYN | TH_ACK;
 
             //
-            printk("__kd_handle_tcp: Sending SYN/ACK >>\n");
+            printk(">> Sending SYN/ACK\n");
 
             // Send SYN + ACK
             network_send_tcp(
@@ -1422,11 +1380,11 @@ __kd_handle_tcp(
             // No response is sent now.
 
             if ((void*) cur_conn == NULL){
-                printk("__kd_handle_tcp: [step 3] cur_conn\n");
+                printk("network_handle_tcp: [step 3] cur_conn\n");
                 return;
             }
             if (cur_conn->magic != 1234){
-                printk("__kd_handle_tcp: [step 3] cur_conn validation\n");
+                printk("network_handle_tcp: [step 3] cur_conn validation\n");
                 return;
             }
             if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
@@ -1721,469 +1679,13 @@ Retransmissions or duplicate ACKs confuse the state machine
     if (cur_conn->status == CONN_STATUS_CLOSED)
     {
         if (fFIN == 1){
-            printk("__kd_handle_tcp: FIN on closed connection\n");
+            printk("FIN on closed connection\n");
             return;
         }
     }
 
     //
-    // Drop
+    // Drop!
     //
 }
 
-void 
-network_handle_tcp ( 
-    const unsigned char *buffer, 
-    ssize_t size,
-    unsigned int s_ipv4_int,
-    unsigned int d_ipv4_int )
-{
-    struct tcp_d *tcp;  // The buffer
-    //register int i=0;
-    uint16_t flags=0;
-    size_t data_len = 0;
-
-    // No payload for handshake
-    char dummy_payload[2];
-    dummy_payload[0] = 0x00;
-    dummy_payload[1] = 0;
-
-    // #debug
-    //printk("network_handle_tcp: #todo\n");
-
-// Parameters
-    if ((void*) buffer == NULL){
-        printk("network_handle_tcp: buffer\n");
-        return;
-    }
-    //if (size < 0){
-    //}
-
-    // Pointer for the TCP header. Pre-allocated.
-    tcp = (struct tcp_d *) buffer;
-
-    uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
-    uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
-
-    //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", tcp->th_sport, tcp->th_dport);
-    printk("TCP Packet: [receiving] remote=%u (sport), local=%u (dport) :)\n", 
-        sport, dport);
-
-// Target is kernel debugger
-    if (dport == 11888){
-        __kd_handle_tcp(buffer, size, s_ipv4_int, d_ipv4_int);
-        return;
-    }
-
-//
-// Drop these for now
-//
-
-    // #debug:
-    // Not listening to these ports for now. Too much noise.
-    if (dport == 80)
-        return;
-    if (dport == 443)
-        return;
-
-
-// Not for kernel debugger
-
-    // #todo: We will handle the connection for the cases
-    // where the port is not the kernel debugger in a different way.
-    // handling the connection structure at the beginning of this routine.
-
-    // #debug: Provisory drop.
-    printk("network_handle_tcp: [TEST TEST TEST] Not 11888\n");
-    //return;
-    
-// -------- normal TCP --------
-
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
-
-    // Clear the payload local buffer
-    memset(__tcp_payload, 0, sizeof(__tcp_payload));
-
-    if (size >= TCP_HEADER_LENGHT){
-    //if (size >= header_len){
-
-        data_len = (size - TCP_HEADER_LENGHT);
-        //data_len = (size - header_len);
-        if (data_len >= 1400)
-            data_len = 1400 -2;
-        strncpy( __tcp_payload, (buffer + TCP_HEADER_LENGHT), data_len );
-        //strncpy( __tcp_payload, (buffer + header_len), data_len );
-        __tcp_payload[data_len + 1] = 0;
-        //__tcp_payload[1400 -1] = 0;
-        __tcp_payload[1400 -1] = 0;
-    } 
-    //if (size < header_len)
-    if (size < TCP_HEADER_LENGHT)
-    {
-        //data_len = 0;
-        //__tcp_payload[data_len + 1] = 0;
-        // #bugbug: Drop it
-        printk("TCP: Invalid buffer size %d\n", size);
-        return;
-    }
-
-    // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
-
-    // #test:
-    //if (peer_window == 0)
-        //return;
-
-//
-// Flags
-//
-
-// FIN  - graceful close,
-// SYN  - start handshake,
-// RST  - abort,
-// PUSH - deliver data now,
-// ACK  - update state,
-// URG  - handle urgent data.
-
-// Control flags (6 bits)
-    uint16_t fFIN=0;
-    uint16_t fSYN=0;  // SYN :)
-    uint16_t fRST=0;
-    uint16_t fPUSH=0;
-    uint16_t fACK=0;  // ACK :)
-    uint16_t fURG=0;
-
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
-
-    //#debug
-    //printk("Flags={%x}\n",flags);
-
-// Receiving a FIN means the peer is done sending; we should acknowledge and
-// eventually close our side gracefully.
-    if (flags & TH_FIN){
-        fFIN = 1;
-    }
-
-// Receiving a SYN means the peer wants to start a new connection; respond
-// with SYN+ACK if we are listening.
-    if (flags & TH_SYN){
-        fSYN = 1;
-    }
-
-// Receiving a RST means the peer wants to abort/reset the connection; tear
-// down state immediately and stop using this socket.
-    if (flags & TH_RST){
-        fRST = 1;
-    }
-
-// Receiving a PUSH means the peer wants the data delivered immediately;
-// pass buffered data up to the application without delay.
-    if (flags & TH_PUSH){
-        fPUSH = 1;
-    }
-
-// Receiving an ACK means the peer is acknowledging our sent data or handshake;
-// update sequence numbers and possibly advance connection state.
-    if (flags & TH_ACK){
-        fACK = 1;
-    }
-
-// Receiving URG means urgent data is present; handle the urgent pointer and
-// notify the application of out‑of‑band data.
-    if (flags & TH_URG){
-        fURG = 1;
-    }
-
-    // ex: 5014H
-    // 0101 0000 0001 0100
-
-// Initializing connection
-// 1) SYN      >>
-// 2) SYN/ACK  <<
-// 3) ACK      >>
-
-// Finalizing connection
-// 1) FIN >>
-// 2) ACK <<
-// 3) FIN <<
-// 4) ACK >>
-
-
-//If source IP = 0 → 
-//You don’t know who the peer is. 
-//You cannot establish a connection. Drop the packet or log an error.
-//If destination IP = 0 → 
-//You don’t know which local endpoint this packet is for. Drop it.
-//If both are 0 → 
-//Treat as invalid input. Do not attempt handshake.
-
-    printk("TCP: dport=%d SYN={%d} ACK={%d} FIN={%d}\n", 
-        dport, fSYN, fACK, fFIN);
-
-
-//
-// Step 1: No servers for now. (No pure SYN)
-//
-
-    if (fSYN && !fACK) 
-    {
-        // No servers yet (except kd on 11888)
-        printk("x: Pure SYN\n");
-        return;  // drop pure SYN
-    }
-
-//
-// Step 2: SYN/ACK  
-//
-
-// We received a SYN/ACK because we sent a syn to a remote server.
-
-    // (2) SYN/ACK
-    // A server accepted the connection.
-    // We received a syn/ack as a response to
-    // our syn sent by a process in this machine.
-    // #todo: Apply the connection structure that handles this connection.
-    // host   → remote : SYN
-    // Remote → host   : SYN-ACK
-    // host   → remote : ACK
-    if (fSYN == 1 && fACK == 1)
-    {
-        printk("TCP_SYN_ACK: SEQ={%d} | ACK={%d}\n", 
-            _seq_number, _ack_number );
-
-        printk("TCP_SYN_ACK: Sending final ACK\n");
-
-        // We're the client here — the remote side acked our SYN and sent
-        // its own SYN. Complete the handshake with the final ACK.
-
-        tcp_seq final_seq = _ack_number;       // = our ISN + 1, given by the server's ack
-        tcp_ack final_ack = _seq_number + 1;   // acknowledge the server's ISN
-
-        // #test
-        struct connection_d *c_conn =
-            tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
-        //struct connection_d *c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
-        if (!c_conn){ 
-            printk("step2: syn_ack fail\n");
-            return; 
-        }
-        if (c_conn)
-        {
-            if (c_conn->magic != 1234) {
-                printk("TCP_SYN_ACK: [FAIL] connection validation\n");
-                return;
-            }
-            cur_conn = c_conn;
-        }
-
-        /*
-        // port?
-        // unsigned short client_port = cur_conn->ep_pair->c_ep->socket->port;
-        unsigned short client_port=0;
-        if ( cur_conn->ep_pair && 
-             cur_conn->ep_pair->c_ep ) 
-        {
-            struct socket_d *c_sock = cur_conn->ep_pair->c_ep->socket;
-            if ( c_sock && c_sock->magic == 1234)
-            {
-                client_port = (unsigned short) c_sock->port;
-            }
-        }
-        */
-
-        // #debug
-        //if (client_port == dport)
-            //printk("client_port and dport are equal\n");
-
-        // Send ACK?
-        network_send_tcp(
-            dhcp_info.your_ipv4,        // our IP
-            NetworkSaved.caller_ipv4,   // remote IP (whoever this packet came from)
-            NetworkSaved.caller_mac,    // remote MAC
-            dport,                      // our local port (source) 
-            sport,                      // remote port (target) — 80 or 443
-            final_seq,
-            final_ack,
-            TH_ACK,                     // ACK only, no SYN
-            dummy_payload,              // No payload
-            0                           // no payload — pure ACK doesn't consume a seq number
-        );
-
-        //cur_conn = c_conn;
-        cur_conn->packets_sent++;
-
-        printk("TCP_SYN_ACK: ACK Sent\n");
-
-        // #test: Update sequence numbers
-        cur_conn->tcp_conn->snd_una = final_seq;  // or _ack_number from the peer
-        cur_conn->tcp_conn->snd_nxt = final_seq;  // next byte we will send
-        cur_conn->tcp_conn->rcv_nxt = final_ack;  // next byte we expect from peer
-
-        // Optional but useful
-        // cur_conn->ep_pair->c_ep->socket->state = SS_CONNECTED;
-        // cur_conn->ep_pair->s_ep->socket->state = SS_CONNECTED;
-
-        if ( cur_conn->ep_pair && 
-             cur_conn->ep_pair->c_ep && 
-             cur_conn->ep_pair->s_ep ) 
-        {
-            struct socket_d *c_sock = cur_conn->ep_pair->c_ep->socket;
-            struct socket_d *s_sock = cur_conn->ep_pair->s_ep->socket;
-
-            if ( c_sock && 
-                 c_sock->magic == 1234 &&
-                 s_sock && 
-                 s_sock->magic == 1234 )
-            {
-                c_sock->state = SS_CONNECTED;
-                s_sock->state = SS_CONNECTED;
-            }
-        }
-
-        // Connection
-        cur_conn->status = CONN_STATUS_ESTABLISHED;
-        // TCP connection
-        cur_conn->tcp_conn->state = TCP_ESTABLISHED;
-
-        printk("TCP_SYN_ACK: ACK Sent ESTABLISHED    :)\n");
-
-        return;  // Established
-    }
-
-//-------------------------------------------
-
-// the host is the client ... 
-// lets get the connection based on the client information.
-// Getting pointer based on REMOTE ep. 
-// NetworkSaved.caller_ip_int
-    //struct connection_d *c_conn = 
-        //tcp_find_connection_by_client(s_ipv4_int, dport);
-    struct connection_d *c_conn = 
-        tcp_find_connection_by_remote_peer(s_ipv4_int, dport);
-   
-
-    printk("REMOTE: ip:%x port:%d \n", d_ipv4_int, dport );
-
-// Switch current connection
-    if ((void*)c_conn != NULL) 
-    {
-        // Update state, window, sequence numbers, deliver payload
-        if (c_conn->magic == 1234)
-        {
-            cur_conn = c_conn;
-            // #debug
-            // printk("TCP: Reusing conn structure   <<<<<<<< \n");
-        }
-    }
-// -------------------------
-
-    // drop
-    if ((void*) cur_conn == NULL)
-        return;
-    if (cur_conn->magic != 1234)
-        return;
-
-
-    if ( dport < __first_ephemeral_port || 
-         dport > __last_ephemeral_port )
-    {
-        //drop
-        return;
-    }
-
-// #todo:
-    // continue handling operation between the remote server
-    // and the local client.
-
-    // #ps: the connection was stablished in the step2.
-    // remember we are the client now ... no other servers, only the 11888 for now.
-
-    if (cur_conn->status == CONN_STATUS_ESTABLISHED)
-    {
-        printk("TCP: Clent received something with the connection already established\n");
-
-        // ...
-
-        if ((void*) cur_conn->tcp_conn == NULL)
-        {
-            //fail
-            return;
-        }
-
-        cur_conn->packets_received++;
-
-        // data++
-        cur_conn->tcp_conn->rcv_nxt = _seq_number + data_len; // advance receive pointer
-
-        // #debug
-        // Display payload
-        if (data_len > 0) {
-            printk("TCP Payload (%d bytes):\n%s\n", 
-                (int)data_len, __tcp_payload );
-        }
-
-        // ---------------------------------------
-        if (cur_conn->ep_pair && cur_conn->ep_pair->c_ep)
-        {
-            if (cur_conn->ep_pair->c_ep) 
-            {
-                struct socket_d *sk = cur_conn->ep_pair->c_ep->socket;
-                if (sk && sk->magic == 1234) 
-                {
-                    if (sk->private_file && data_len > 0){
-                    printk("Saving payload into the file\n");
-                    file *fp = sk->private_file;
-                    size_t to_copy = 
-                        (data_len < fp->_lbfsize) ? data_len : fp->_lbfsize;
-                    memcpy(fp->_base, buffer + TCP_HEADER_LENGHT, to_copy);
-                    fp->_w = to_copy;
-                    fp->_r = 0;
-                    // Permissions
-                    fp->sync.can_read = TRUE;   // allow read
-                    fp->_flags |= __SRD;        // mark readable
-                    //fp->_flags &= ~__SWR;       // optional: clear write-only
-                    fp->sync.action = ACTION_REPLY; // signal to client that data is ready
-                    }
-                }
-            }
-        }
-
-        // -------------------------------------------
-        unsigned int Flags = TH_ACK;
-        if (fFIN == 1){
-            cur_conn->tcp_conn->rcv_nxt += 1;
-            Flags = TH_ACK | TH_FIN;
-        }
-
-        // Send ACK.
-        // Acknoledgind the received data.
-        int rv = 
-            network_send_tcp(
-                dhcp_info.your_ipv4,
-                NetworkSaved.caller_ipv4,
-                NetworkSaved.caller_mac,
-                dport,
-                sport,
-                cur_conn->tcp_conn->snd_nxt,
-                cur_conn->tcp_conn->rcv_nxt,
-                Flags,
-                dummy_payload, 
-                0
-            );
-
-        if (rv < 0) {
-            printk(": [] Failed to ACK client FIN\n");
-            return;  // leave state as-is; a retransmitted FIN can retry
-        }
-        printk(": acked\n");
-
-        cur_conn->packets_sent++;
-
-        if (fFIN == 1)
-            cur_conn->status = CONN_STATUS_CLOSED;
-    }
-
-    printk("TCP: drop :)\n");
-    return;
-}

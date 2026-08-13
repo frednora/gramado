@@ -171,8 +171,15 @@ network_send_tcp (
     size_t data_lenght );
 
 
+// Send data to a REMOTE peer.
+// We get the connection information based on the client's socket.
 int
-tcp_socket_send(struct socket_d *sk, const char *buf, size_t len);
+tcp_socket_send(
+    struct socket_d *sk, 
+    const char *buf, 
+    size_t len );
+
+int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len);
 
 // This will be called by sys_connect() when the family is AF_INET.
 int 

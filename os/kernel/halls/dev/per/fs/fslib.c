@@ -942,6 +942,27 @@ __read_imp (
         // debug_print("__read_imp: [DEBUG] Trying to read a socket object\n");
         do_credits_by_tid( lapic_info[0].current_tid );
 
+        // -- Below is for remote connections ------------
+        // Check the socket validation and state
+        // Receive data to a REMOTE peer.
+        // We get the connection information based on the client's socket.
+        // Established AF_INET → real TCP recv.
+        struct socket_d *sk = fp->socket;
+        if ((void*)sk != NULL)
+        {
+            if ( sk->magic == 1234 && 
+                 sk->family == AF_INET && 
+                 sk->state == SS_CONNECTED )
+            {
+                //return -1;  // #todo
+                int n = tcp_socket_recv(sk, ubuf, count);
+                if (n < 0){
+                    return (int) -1;
+                }
+                return (int) n;  // 0 = no data yet (non-blocking style)
+            }
+        }
+
         // not reading yet
         if ((fp->_flags & __SRD) == 0) 
         {
@@ -1659,22 +1680,27 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         do_credits_by_tid(lapic_info[0].current_tid);
         
         // -- Below is for remote connections ------------
+        // Check the socket validation and state
+        // Send data to a REMOTE peer.
+        // We get the connection information based on the client's socket.
+        // Established AF_INET → real TCP send.
         struct socket_d *sk = fp->socket;
         if ((void*)sk != NULL)
         {
-            // Established AF_INET → real TCP send
             if ( sk->magic == 1234 && 
                  sk->family == AF_INET && 
                  sk->state == SS_CONNECTED )
             {
-                int sent = tcp_socket_send(sk, ubuf, count);
-                if (sent < 0)
-                    return -1;          // or return sent if you propagate errno
+                int sent = (int) tcp_socket_send(sk, ubuf, count);
+                if (sent < 0){
+                    return (int) -1;
+                }
                 return (int) sent;
             }
         }
 
-        // Fallback: old local IPC behaviour
+        // Fallback: 
+        // Old local IPC behaviour for socket file.
         
         // -- Below is for local connections ------------
 

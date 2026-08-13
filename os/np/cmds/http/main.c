@@ -47,16 +47,18 @@ static void do_request(int sockfd)
         "Connection: close\r\n"
         "\r\n";
 
+
     // Send the request
     n = (int) write(sockfd, request, strlen(request));
     if (n < 0) {
-        perror("write failed");
+        perror(":: write failed");
         return;
     }
+
     printf("HTTP_CLIENT.BIN: Sent %d bytes\n", n);
 
     //#provisory
-    return;
+    //return;
 
     // Clear buffer
     bzero(buffer, sizeof(buffer));
@@ -66,7 +68,7 @@ static void do_request(int sockfd)
 // #test
     int Value=0;
 
-    rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
+    //rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
 
 // Response
 // Waiting to read the response.
@@ -74,7 +76,7 @@ static void do_request(int sockfd)
     while (1){
         Value = rtl_get_file_sync( sockfd, SYNC_REQUEST_GET_ACTION );
         //if (Value == ACTION_REQUEST){}
-        //if (Value == ACTION_REPLY ) { break; }
+        if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { goto done; }
         if (Value == ACTION_NULL )  { goto done; }  // No reponse
     };
