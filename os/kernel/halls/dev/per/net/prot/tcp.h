@@ -170,6 +170,10 @@ network_send_tcp (
     char *data_buffer, 
     size_t data_lenght );
 
+
+int
+tcp_socket_send(struct socket_d *sk, const char *buf, size_t len);
+
 // This will be called by sys_connect() when the family is AF_INET.
 int 
 tcp_client_connect(

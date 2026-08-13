@@ -18,6 +18,8 @@
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 
+#include <rtl/gramado.h>
+
 
 //#define HTTP_PORT     11888
 #define HTTP_PORT 80
@@ -26,9 +28,9 @@
 //#define TARGET_IP     "127.0.0.1"
 // Google
 //#define TARGET_IP     "8.8.8.8"
-#define TARGET_IP     "142.250.190.46"
-
-
+//#define TARGET_IP     "142.250.190.46"
+#define TARGET_IP     "1.1.1.1"
+// 93.184.216.34
 
 static void do_request(int sockfd);
 
@@ -53,8 +55,30 @@ static void do_request(int sockfd)
     }
     printf("HTTP_CLIENT.BIN: Sent %d bytes\n", n);
 
+    //#provisory
+    return;
+
     // Clear buffer
     bzero(buffer, sizeof(buffer));
+
+
+    
+// #test
+    int Value=0;
+
+    rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
+
+// Response
+// Waiting to read the response.
+    //gws_debug_print("gws_draw_char: response\n");
+    while (1){
+        Value = rtl_get_file_sync( sockfd, SYNC_REQUEST_GET_ACTION );
+        //if (Value == ACTION_REQUEST){}
+        //if (Value == ACTION_REPLY ) { break; }
+        if (Value == ACTION_ERROR ) { goto done; }
+        if (Value == ACTION_NULL )  { goto done; }  // No reponse
+    };
+
 
     // Read the response
     n = (int) read(sockfd, buffer, sizeof(buffer)-1);
@@ -66,6 +90,13 @@ static void do_request(int sockfd)
     // Null-terminate and print
     buffer[n] = '\0';
     printf("HTTP_CLIENT.BIN: Received response:\n%s\n", buffer);
+
+done:
+    rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    return;
+fail:
+    rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    return;
 }
 
 
@@ -113,9 +144,15 @@ int main(int argc, char *argv[])
     printf("HTTP_CLIENT.BIN: Connected! fd={%d}\n", sockfd);
 
 // Wait for ever
-    while(1){}
+    // while(1){}
 
-    // do_request(sockfd);
+    int i=0;
+    while (1){
+    for (i=0; i<100; i++)
+        rtl_yield;
+    rtl_sleep(5*1000);  // #bubug: Not working
+    do_request(sockfd);
+    }
 
     // close(sockfd);
 

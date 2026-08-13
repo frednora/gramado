@@ -474,6 +474,9 @@ struct connection_d *tcp_find_connection_by_client(
     unsigned int remote_ip,
     unsigned short remote_port);
 
+struct connection_d *
+tcp_find_connection_by_local_socket(struct socket_d *sk);
+
 void show_socket_for_a_process(pid_t pid);
 
 struct socket_d *get_socket_from_fd(int fd);

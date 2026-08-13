@@ -1332,9 +1332,8 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     p->write_counter++;
 //-----------------------------
 
-
 // fd
-    if ( fd < 0 || fd >= OPEN_MAX ){
+    if (fd < 0 || fd >= OPEN_MAX){
         return (ssize_t) (-EBADF);
     }
 // ubuf
@@ -1466,7 +1465,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
             if (fp->tty != NULL) 
             {
                 //printk("0:: tty not null\n");
-                nbytes = (ssize_t) __tty_write(fp->tty,ubuf,count);
+                nbytes = (ssize_t) __tty_write(fp->tty, ubuf, count);
                 return (ssize_t) nbytes;
             }
             if (fp->tty == NULL){
@@ -1534,7 +1533,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                         //(const void *) ubuf, 
                         //(size_t) count );
                 //} else {
-                    nbytes = (ssize_t) __tty_write2(fp->tty,ubuf,count);
+                    nbytes = (ssize_t) __tty_write2(fp->tty, ubuf, count);
                     fp->tty->output_worker_number = TTY_OUTPUT_WORKER_FGCONSOLE;
                     tty_flush_output_queue_ex(fp->tty);
                     return (ssize_t) nbytes;  
@@ -1659,6 +1658,26 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     {
         do_credits_by_tid(lapic_info[0].current_tid);
         
+        // -- Below is for remote connections ------------
+        struct socket_d *sk = fp->socket;
+        if ((void*)sk != NULL)
+        {
+            // Established AF_INET → real TCP send
+            if ( sk->magic == 1234 && 
+                 sk->family == AF_INET && 
+                 sk->state == SS_CONNECTED )
+            {
+                int sent = tcp_socket_send(sk, ubuf, count);
+                if (sent < 0)
+                    return -1;          // or return sent if you propagate errno
+                return (int) sent;
+            }
+        }
+
+        // Fallback: old local IPC behaviour
+        
+        // -- Below is for local connections ------------
+
         // Can't write.
         if ((fp->_flags & __SWR) == 0){
             //debug_print("__write_imp: [FAIL] flag __SWR \n");

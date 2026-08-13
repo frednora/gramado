@@ -571,6 +571,97 @@ fail:
     return -1;
 }
 
+
+/*
+ * tcp_socket_send:
+ *   Send application data over an established AF_INET TCP socket.
+ *   IN:  sk   - local client socket (must be SS_CONNECTED)
+ *        buf  - user payload
+ *        len  - payload length
+ *   OUT: bytes sent (>=0) or negative errno
+ */
+int
+tcp_socket_send(struct socket_d *sk, const char *buf, size_t len)
+{
+    struct connection_d *conn;
+    struct socket_d *remote_sk;
+    uint8_t target_ip[4];
+    tcp_seq seq;
+    tcp_ack ack;
+    int rv;
+
+    if ((void *) sk == NULL)
+        return -EINVAL;
+    if (sk->magic != 1234)
+        return -EINVAL;
+    if ((void *) buf == NULL)
+        return -EINVAL;
+    if (len == 0)
+        return 0;
+
+    // Only AF_INET stream sockets that finished the handshake
+    if (sk->family != AF_INET)
+        return -EAFNOSUPPORT;
+    if (sk->state != SS_CONNECTED)
+        return -ENOTCONN;
+
+// Connection:
+// Find the connection that owns this local socket
+    conn = tcp_find_connection_by_local_socket(sk);
+
+    if ((void *) conn == NULL)
+        return -ENOTCONN;
+    if (conn->magic != 1234)
+        return -ENOTCONN;
+    if (conn->status != CONN_STATUS_ESTABLISHED)
+        return -ENOTCONN;
+    if ((void *) conn->tcp_conn == NULL)
+        return -ENOTCONN;
+    if ((void *) conn->ep_pair == NULL)
+        return -ENOTCONN;
+    if ((void *) conn->ep_pair->s_ep == NULL)
+        return -ENOTCONN;
+
+    remote_sk = conn->ep_pair->s_ep->socket;
+    if ((void *) remote_sk == NULL)
+        return -ENOTCONN;
+    if (remote_sk->magic != 1234)
+        return -ENOTCONN;
+
+// Target ip (array)
+// Host-order IP → dotted octets
+    target_ip[0] = (uint8_t) ((remote_sk->ip_ipv4 >> 24) & 0xFF);
+    target_ip[1] = (uint8_t) ((remote_sk->ip_ipv4 >> 16) & 0xFF);
+    target_ip[2] = (uint8_t) ((remote_sk->ip_ipv4 >>  8) & 0xFF);
+    target_ip[3] = (uint8_t) ( remote_sk->ip_ipv4        & 0xFF);
+
+    seq = conn->tcp_conn->snd_nxt;
+    ack = conn->tcp_conn->rcv_nxt;
+
+    rv = 
+    network_send_tcp(
+        dhcp_info.your_ipv4,          // source IP
+        target_ip,                    // destination IP
+        NetworkSaved.gateway_mac,     // next-hop MAC (gateway for WAN)
+        sk->port,                     // local port
+        remote_sk->port,              // remote port
+        seq,
+        ack,
+        (uint16_t) (TH_ACK | TH_PUSH),
+        (char *) buf,
+        len
+    );
+
+    if (rv < 0)
+        return rv;
+
+    // Data consumes sequence space
+    conn->tcp_conn->snd_nxt += (tcp_seq) len;
+    conn->packets_sent++;
+
+    return (int) len;
+}
+
 // This will be called by sys_connect() when the family is AF_INET.
 // IN:
 //   sk              = local client socket structure.
@@ -689,13 +780,17 @@ tcp_client_connect(
 // Send SYN:
 // (1st step)
 
+    // #debug
+    printk("TCP Packet: [sending] remote=%u (sport), local=%u (dport)\n", 
+        sk->port, dst_port );
+
     int rv = 
     network_send_tcp(
         dhcp_info.your_ipv4,   // source IP (array)
         target_ip,             // target IP (array, correctly ordered)
         NetworkSaved.gateway_mac,
-        sk->port, 
-        dst_port,
+        sk->port,  // 11888 (host order) 
+        dst_port,  // host order
         conn->tcp_conn->iss,
         0,
         TH_SYN,
@@ -766,7 +861,8 @@ network_handle_tcp(
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
 
     //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", tcp->th_sport, tcp->th_dport);
-    //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", sport, dport);
+    printk("TCP Packet: [receiving] remote=%u (sport), local=%u (dport) :)\n", 
+        sport, dport);
 
 //
 // Super drop
@@ -1160,7 +1256,9 @@ network_handle_tcp(
         // We received a syn/ack as a response to
         // our syn sent by a process in this machine.
         // #todo: Apply the connection structure that handles this connection.
-
+        // host   → remote : SYN
+        // Remote → host   : SYN-ACK
+        // host   → remote : ACK
         if (fSYN == 1 && fACK == 1)
         {
             printk("TCP_SYN_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number);
@@ -1176,7 +1274,10 @@ network_handle_tcp(
             struct connection_d *c_conn =
                 tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
             //struct connection_d *c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
-            if (!c_conn){ printk("step2: syn_ak fail\n");return; }
+            if (!c_conn){ 
+                printk("step2: syn_ack fail\n");
+                return; 
+            }
             if (c_conn)
             {
                 if (c_conn->magic != 1234) {
@@ -1205,7 +1306,39 @@ network_handle_tcp(
                 0                           // no payload — pure ACK doesn't consume a seq number
             );
 
-            // cur_conn->packets_sent++;
+            //cur_conn = c_conn;
+
+            cur_conn->packets_sent++;
+            printk("TCP_SYN_ACK: ACK Sent\n");
+
+            // #test: Update sequence numbers
+            cur_conn->tcp_conn->snd_una = final_seq;  // or _ack_number from the peer
+            cur_conn->tcp_conn->snd_nxt = final_seq;  // next byte we will send
+            cur_conn->tcp_conn->rcv_nxt = final_ack;  // next byte we expect from peer
+
+            // Optional but useful
+            // cur_conn->ep_pair->c_ep->socket->state = SS_CONNECTED;
+            // cur_conn->ep_pair->s_ep->socket->state = SS_CONNECTED;
+
+            if ( cur_conn->ep_pair && 
+                 cur_conn->ep_pair->c_ep && 
+                 cur_conn->ep_pair->s_ep ) 
+            {
+                struct socket_d *c_sock = cur_conn->ep_pair->c_ep->socket;
+                struct socket_d *s_sock = cur_conn->ep_pair->s_ep->socket;
+
+                if ( c_sock && 
+                     c_sock->magic == 1234 &&
+                     s_sock && 
+                     s_sock->magic == 1234 )
+                {
+                    c_sock->state = SS_CONNECTED;
+                    s_sock->state = SS_CONNECTED;
+                }
+            }
+
+            cur_conn->status          = CONN_STATUS_ESTABLISHED;
+            cur_conn->tcp_conn->state = TCP_ESTABLISHED;
 
             return;
         }

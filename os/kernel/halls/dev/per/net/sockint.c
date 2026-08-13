@@ -353,32 +353,45 @@ struct connection_d *tcp_find_connection_by_endpoints(
 // (the peer we sent a SYN to) matches the given ip:port.
 // Used when a SYN-ACK arrives, to locate the connection object
 // that tcp_client_connect() created for the matching SYN.
+// Client-side lookup: find the connection we created in tcp_client_connect()
+// by matching the REMOTE peer (s_ep).
 struct connection_d *
 tcp_find_connection_by_remote_peer(unsigned int remote_ip, unsigned short remote_port)
 {
-    register int i=0;
-    struct connection_d *c;
+    register int i;
+    struct connection_d *conn;
+    struct socket_d *remote_sock;
 
-    for (i=0; i<MAX_CONNECTIONS; i++)
+    for (i = 0; i < MAX_CONNECTIONS; i++)
     {
-        //c = (struct connection_d *) connection_get_by_id(i);  // #confirm: real accessor name?
-        struct connection_d *conn = connectionList[i];
-        if ((void*) c == NULL)          continue;
-        if (c->magic != 1234)           continue;
-        if (c->type != CONN_TYPE_TCP)   continue;
-        if ((void*) c->ep_pair == NULL) continue;
+        conn = (struct connection_d *) connectionList[i];
+        if ((void *) conn == NULL)
+            continue;
+        if (conn->magic != 1234)
+            continue;
+        if (conn->type != CONN_TYPE_TCP)
+            continue;
+        if ((void *) conn->ep_pair == NULL)
+            continue;
+        if ((void *) conn->ep_pair->s_ep == NULL)
+            continue;
 
-        // The remote peer is stored in s_ep for connections created
-        // by tcp_client_connect() (c_ep = local socket, s_ep = remote peer).
-        if ((void*) c->ep_pair->s_ep == NULL)         continue;
-        if ((void*) c->ep_pair->s_ep->socket == NULL) continue;
+        remote_sock = conn->ep_pair->s_ep->socket;
+        if ((void *) remote_sock == NULL)
+            continue;
+        if (remote_sock->magic != 1234)
+            continue;
 
-        if (c->ep_pair->s_ep->socket->ip_ipv4 == remote_ip &&
-            c->ep_pair->s_ep->socket->port    == remote_port)
+        // In tcp_client_connect():
+        //   pair->c_ep = local client
+        //   pair->s_ep = remote server
+        if (remote_sock->ip_ipv4 == remote_ip &&
+            remote_sock->port    == remote_port)
         {
-            return c;
+            return conn;
         }
     }
+
     return NULL;
 }
 
@@ -410,7 +423,38 @@ struct connection_d *tcp_find_connection_by_client(
 }
 
 
+struct connection_d *
+tcp_find_connection_by_local_socket(struct socket_d *sk)
+{
+    register int i;
+    struct connection_d *conn;
+    struct socket_d *sk00;
 
+    if ((void *) sk == NULL)
+        return NULL;
+    if (sk->magic != 1234)
+        return NULL;
+
+    for (i = 0; i < MAX_CONNECTIONS; i++)
+    {
+        conn = (struct connection_d *) connectionList[i];
+        if ((void *) conn == NULL)
+            continue;
+        if (conn->magic != 1234)
+            continue;
+        if (conn->type != CONN_TYPE_TCP)
+            continue;
+        if ((void *) conn->ep_pair == NULL)
+            continue;
+        if ((void *) conn->ep_pair->c_ep == NULL)
+            continue;
+        sk00 = (struct socket_d *) conn->ep_pair->c_ep->socket;
+        if (sk00 == sk)
+            return conn;
+    }
+
+    return NULL;
+}
 
 // #debug
 // Show the private socket for a process
