@@ -216,6 +216,7 @@ build-extras:
 	@-cp $(LZ_CMDS)/bin/ED00.BIN       $(BUILD)/
 
 	@-cp $(LZ_CMDS)/bin/HTTP.BIN       $(BUILD)/
+	@-cp $(LZ_CMDS)/bin/HTTPSRV.BIN    $(BUILD)/
 
 #	@-cp $(LZ_CMDS)/bin/HEXDUMP.BIN    $(BUILD)/
 

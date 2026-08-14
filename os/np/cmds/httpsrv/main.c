@@ -18,8 +18,7 @@
 
 
 
-
-#define HTTP_PORT    11888
+#define HTTP_PORT    22888
 static void handle_connection(int connfd);
 
 // ===============================================
@@ -63,6 +62,9 @@ int main( int argc, char *argv[])
     socklen_t addrlen=0;
     int sockfd;
 
+    printf("HTTPSRV: Hello from Gramado OS ring 3 server. Port%d\n", 
+        HTTP_PORT );
+
 // Setup structure
     bzero(&addr, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
@@ -94,6 +96,7 @@ int main( int argc, char *argv[])
     listen(sockfd, 1);
 
 // Accept
+    printf("HTTPSRV: accepting ...\n");
     int IsTimeToQuit = FALSE;
     int newconn = -1;
     while (1){

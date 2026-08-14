@@ -60,7 +60,7 @@ all:
 
 #test
 	make -C http/
-
+	make -C httpsrv/
 
 clean:
 	-rm -f *.o 
