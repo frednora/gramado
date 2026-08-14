@@ -222,7 +222,6 @@ extern struct display_server_d  *display_server;
 int server_is_accepting_input(void);
 void server_set_input_status(int is_accepting);
 void server_debug_print(char *string);
-unsigned long server_get_system_metrics(int index);
 void server_enter_critical_section(void);
 void server_exit_critical_section(void);
 void server_quit(void);

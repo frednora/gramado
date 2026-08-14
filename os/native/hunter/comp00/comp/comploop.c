@@ -4640,7 +4640,9 @@ static int ServerLoop(int client_index)
             // Dispatch service.
             // In Gramado OS, sys_accept get one connected socket 
             // in the queue and put it in fd=31.
-            if (newconn_fd == 31){
+            if (newconn_fd == 31)
+            {
+                // printf("accepted\n");
                 dispacher(newconn_fd);
             }
 

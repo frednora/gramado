@@ -24,6 +24,8 @@
 #include "include/libgui.h"
 
 
+static int __fPaintStarted = FALSE;
+
 // List of canvases
 unsigned long libgui_canvasList[CANVAS_COUNT_MAX];
 
@@ -96,6 +98,27 @@ __draw_rectangle_via_kgws (
     unsigned long rop_flags );
 
 // ===================================================
+
+
+int libgui_start_paint(void)
+{
+    if (__fPaintStarted == TRUE)
+        return 0;
+    __fPaintStarted = TRUE;
+
+    return 0;
+}
+
+// #maybe: It performs the final bitblt if we implement the
+// double buffer in client-side too. And the final flush in this case.
+int libgui_end_paint(void)
+{
+    // ...
+
+    __fPaintStarted = FALSE;
+
+    return 0;
+}
 
 //
 // Create a new device context for a given buffer.

@@ -942,6 +942,7 @@ __read_imp (
         // debug_print("__read_imp: [DEBUG] Trying to read a socket object\n");
         do_credits_by_tid( lapic_info[0].current_tid );
 
+
         // -- Below is for remote connections ------------
         // Check the socket validation and state
         // Receive data to a REMOTE peer.
@@ -954,14 +955,17 @@ __read_imp (
                  sk->family == AF_INET && 
                  sk->state == SS_CONNECTED )
             {
-                //return -1;  // #todo
-                int n = tcp_socket_recv(sk, ubuf, count);
-                if (n < 0){
-                    return (int) -1;
+                if (sk->is_client_connecting_with_remote_server == TRUE)
+                {
+                    int n = tcp_socket_recv(sk, ubuf, count);
+                    if (n < 0){
+                        return (int) -1;
+                    }
+                    return (int) n;  // 0 = no data yet (non-blocking style)
                 }
-                return (int) n;  // 0 = no data yet (non-blocking style)
             }
         }
+
 
         // not reading yet
         if ((fp->_flags & __SRD) == 0) 
@@ -1679,6 +1683,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     {
         do_credits_by_tid(lapic_info[0].current_tid);
         
+
         // -- Below is for remote connections ------------
         // Check the socket validation and state
         // Send data to a REMOTE peer.
@@ -1691,12 +1696,15 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                  sk->family == AF_INET && 
                  sk->state == SS_CONNECTED )
             {
-                int sent = (int) tcp_socket_send(sk, ubuf, count);
-                if (sent < 0){
-                    return (int) -1;
+                if (sk->is_client_connecting_with_remote_server == TRUE)
+                {
+                    int sent = (int) tcp_socket_send(sk, ubuf, count);
+                    if (sent < 0){
+                        return (int) -1;
+                    }
+                    return (int) sent;
                 }
-                return (int) sent;
-            }
+            } 
         }
 
         // Fallback: 

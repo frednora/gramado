@@ -4436,7 +4436,7 @@ struct gws_display_d *gws_open_display(const char *display_name)
 // both the IP address and the port. 
 
     struct sockaddr_in  addr_in;
-    addr_in.sin_family      = AF_INET;
+    addr_in.sin_family = AF_INET;
 
 // --------------------
 // ip:
@@ -4494,12 +4494,15 @@ struct gws_display_d *gws_open_display(const char *display_name)
     Display->lock      = FALSE;
     // ...
 
-// (3) Connect to the window server
-    while (TRUE){
+// (3) Connect to the display server
+    while (TRUE)
+    {
         if (connect (client_fd, (void *) &addr_in, addrlen ) < 0){
             gws_debug_print("gws_open_display: Connection Failed\n");
             printf         ("gws_open_display: Connection Failed\n");
+
         } else {
+            // printf ("gws_open_display: Connected\n");
             break;  // Connected
         };
     };
@@ -4533,6 +4536,8 @@ struct gws_display_d *gws_open_display(const char *display_name)
 
     __gws_clear_msg_buff();
     //rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+
+    // printf("gws_open_display: done\n");
 
 // Return the display structure pointer
     return (struct gws_display_d *) Display;

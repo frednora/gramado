@@ -783,6 +783,8 @@ void wmReactToPaintEvents(void)
     // ...
 }
 
+// This is the function called by the main loop in comploop.c
+// when the composition is NOT active.
 // Flush
 // Display the desktop components without using the compositor.
 // Called by ServerLoop() in main.c.
@@ -831,9 +833,20 @@ void comp_display_desktop_components(void)
     //__update_fps();
 }
 
+// This is the function called by the main loop in comploop.c
+// when the composition is active.
 // The worker that compose the desktop scene
 void compComposeDesktop(void)
 {
+    struct canvas_information_d *ci;
+    struct canvas_information_d *ci_src;
+    struct canvas_information_d *ci_dst;
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
     register int i=0;
 
 // The component.
@@ -859,195 +872,154 @@ void compComposeDesktop(void)
     //refresh_window(__root_window);
 
 // Walk the list of canvas
-    struct canvas_information_d *ci;
-    struct canvas_information_d *ci_src;
-    struct canvas_information_d *ci_dst;
-    unsigned long left;
-    unsigned long top;
-    unsigned long width;
-    unsigned long height;
-
-// #test
-// #important
 // We only have frame canvas into the linked list.
 // Its own client area canvas is linked to it.
 // This way: frame_canvas->client_canvas
 
+    int Counter=0;
+
     ci = (struct canvas_information_d *) canvas_head;
 
+    while (1){
 
-/*
-    ci_src = ci;
-    ci_dst = canvas_backbuffer;
-    // Values for destination (backbuffer)
-    left = 0;
-    top = 0;
-    width  = 40;
-    height = 40;
-
-    // Copy the canvas into the baclbuffer
-    comp_blit_canvas_to_canvas_imp (
-        ci_src,
-        ci_dst,
-        left,
-        top,
-        width,
-        height
-    );
-*/
-
-    int Counter=0;
-    while (1)
-    {
         // End of list
         if ((void*) ci == NULL)
             break;
-        
-        //if ((void*) ci != NULL)
-        //{
-            if (ci->initialized == TRUE)
+
+        if (ci->initialized == TRUE)
+        {
+            // If dirty, flush it into the backbuffer.
+            if (ci->dirty == TRUE)
             {
-                // If dirty, flush it into the backbuffer.
-                if (ci->dirty == TRUE)
+                //printf ("dirty\n");
+                //ci_src = ci;
+                ci_dst = canvas_backbuffer;  // Destination
+
+                // Values for destination (backbuffer)
+                left = 0;
+                top = 0;
+                width = 0;
+                height = 0;
+
+                // It has a dc
+                if ((void*) ci->dc != NULL)
                 {
-                    //printf ("dirty\n");
-                    //ci_src = ci;
-                    ci_dst = canvas_backbuffer;  // Destination
-
-                    // Values for destination (backbuffer)
-                    left = 0;
-                    top = 0;
-                    width = 0;
-                    height = 0;
-
-                    // It has a dc
-                    if ((void*) ci->dc != NULL)
-                    {
-                        width = 4;
-                        height = 4; 
-                        if (ci->is_frame == TRUE){
-                            width  = ci->dc->device_width;
-                            height = ci->dc->device_height;
-                        }
+                    width = 4;
+                    height = 4;
+                    if (ci->is_frame == TRUE){
+                        width  = ci->dc->device_width;
+                        height = ci->dc->device_height;
                     }
-                    // Now it belongs to a window, let's respect 
-                    // the window dimensions.
-                    if ((void*) ci->owner_window != NULL)
-                    {
-                        // Not a frame (it's a client area)
-                        //if (ci->is_frame == FALSE){
-                        //    left = (ci->owner_window->absolute_x + ci->owner_window->rcClient.left);
-                        //    top  = (ci->owner_window->absolute_y + ci->owner_window->rcClient.top);
-                        //}
-                        // It's a frame
-                        if (ci->is_frame == TRUE){
-                            left = ci->owner_window->absolute_x;
-                            top = ci->owner_window->absolute_y;
-                        }
+                }
+                // Now it belongs to a window, 
+                // let's respect the window's dimensions.
+                if ((void*) ci->owner_window != NULL)
+                {
+                    // Not a frame (it's a client area)
+                    //if (ci->is_frame == FALSE){
+                    //    left = (ci->owner_window->absolute_x + ci->owner_window->rcClient.left);
+                    //    top  = (ci->owner_window->absolute_y + ci->owner_window->rcClient.top);
+                    //}
+                    // It's a frame
+                    if (ci->is_frame == TRUE){
+                        left = ci->owner_window->absolute_x;
+                        top  = ci->owner_window->absolute_y;
+                    }
     
-                        // We gotta clip is into the screen now.
+                    // We gotta clip is into the screen now.
 
-                        // the window is larger than the buffer we have
-                        //if (ci->owner_window->width > 
-                        //    (ci->dc->device_width - ci->owner_window->absolute_x) )
-                        //{
-                            //width = (ci->dc->device_width - ci->owner_window->absolute_x);  
-                        //}
-                        //if (ci->is_frame == FALSE)
-                            //width = ci->owner_window->rcClient.width;
-                        if (ci->is_frame == TRUE)
-                            width = ci->owner_window->width;
+                    // the window is larger than the buffer we have
+                    //if (ci->owner_window->width > 
+                    //   (ci->dc->device_width - ci->owner_window->absolute_x) )
+                    //{
+                          //width = (ci->dc->device_width - ci->owner_window->absolute_x);  
+                    //}
+                    //if (ci->is_frame == FALSE)
+                        //width = ci->owner_window->rcClient.width;
+                    if (ci->is_frame == TRUE)
+                        width = ci->owner_window->width;
 
-                        //if (ci->owner_window->height > 
-                        //    (ci->dc->device_height - ci->owner_window->absolute_y) )
-                        //{
-                        //    height = (ci->dc->device_height - ci->owner_window->absolute_y);  
-                        //}
-                        // #ps: Here we need a valid dc
+                    //if (ci->owner_window->height > 
+                    //    (ci->dc->device_height - ci->owner_window->absolute_y) )
+                    //{
+                    //    height = (ci->dc->device_height - ci->owner_window->absolute_y);  
+                    //}
+                    // #ps: Here we need a valid dc
 
-                        // Not a frame
-                        //if (ci->is_frame == FALSE)
-                            //height = 20;  //ci->owner_window->rcClient.height;
-                        // it's a frame
-                        if (ci->is_frame == TRUE)
-                        {
-
-                            // #danger: 
-                            // Its sensitive. It needs to be smaller than 
-                            // the number of lines in the buffer
-                            //height = 20;
-                            height = ci->owner_window->height;
-                            //if (ci->dc->device_height)
-                                //height = 10;
-                        }
-                        //if (ci->owner_window->height > ci->dc->device_height)
-                            //height = ci->dc->device_height;
-
-                        //if (ci->owner_window->type == WT_POPUP)
-                            //height = 2;
-                    }
-
-
-                    /*
-                    // #test It's working
-                    // But its dangeours.
-                    // Sending a flag
-                    if ((void*) ci->owner_window->shflags_p != NULL)
+                    // Not a frame
+                    //if (ci->is_frame == FALSE)
+                        //height = 20;  //ci->owner_window->rcClient.height;
+                    // it's a frame
+                    if (ci->is_frame == TRUE)
                     {
-                        char *p = (char *) ci->owner_window->shflags_p;
-                        *p = 1;
-                    }
-                    */
-                    
-
-                    // Copy the canvases for the frame into the backbuffer
-
-                    // ----------------------------------
-                    // 1) chrome/frame canvas
-                    ci_src = ci;
-                    comp_blit_canvas_to_canvas_imp (
-                        ci_src,
-                        ci_dst,
-                        left, top, width, height
-                    );
-
-                    // Prepering the parameters for the client area
-                    if ((void*) ci->owner_window != NULL)
-                    {
-                        left = (ci->owner_window->absolute_x + ci->owner_window->rcClient.left);
-                        top  = (ci->owner_window->absolute_y + ci->owner_window->rcClient.top);
-                        
-                        width  = ci->owner_window->rcClient.width;
                         // #danger: 
                         // Its sensitive. It needs to be smaller than 
                         // the number of lines in the buffer
-                        height = ci->owner_window->rcClient.height;
+                        //height = 20;
+                        height = ci->owner_window->height;
+                        //if (ci->dc->device_height)
+                            //height = 10;
                     }
-                    //width = 20;
-                    //height = 20;
+                    //if (ci->owner_window->height > ci->dc->device_height)
+                        //height = ci->dc->device_height;
 
-                    // ----------------------------------
-                    // 2) client area canvas
-                    ci_src = ci->clientarea_canvas;
-                    comp_blit_canvas_to_canvas_imp (
-                        ci_src,
-                        ci_dst,
-                        left, top, width, height
-                    );
+                    //if (ci->owner_window->type == WT_POPUP)
+                        //height = 2;
                 }
+
+                /*
+                // #test It's working
+                // But its dangeours.
+                // Sending a flag
+                if ((void*) ci->owner_window->shflags_p != NULL)
+                {
+                    char *p = (char *) ci->owner_window->shflags_p;
+                    *p = 1;
+                }
+                */
+
+                // Copy the canvases for the frame into the backbuffer
+
+                // ----------------------------------
+                // 1) chrome/frame canvas
+                ci_src = ci;
+                comp_blit_canvas_to_canvas_imp (
+                    ci_src, ci_dst, left, top, width, height );
+
+                // Prepering the parameters for the client area
+                if ((void*) ci->owner_window != NULL)
+                {
+                    left = (ci->owner_window->absolute_x + ci->owner_window->rcClient.left);
+                    top  = (ci->owner_window->absolute_y + ci->owner_window->rcClient.top);
+                        
+                    width  = ci->owner_window->rcClient.width;
+                    // #danger: Its sensitive. It needs to be 
+                    // smaller than the number of lines in the buffer.
+                    height = ci->owner_window->rcClient.height;
+                }
+                //width = 20;
+                //height = 20;
+
+                // ----------------------------------
+                // 2) client area canvas
+                ci_src = ci->clientarea_canvas;
+                comp_blit_canvas_to_canvas_imp (
+                    ci_src, ci_dst, left, top, width, height );
             }
-        //}
+        }
 
         Counter++;
-        
         ci = ci->next;  // Get next in the list
     };
 
-// Flush:
-// #todo:
-// #bugbug
-// It's hardcoded for now. 
-// We need variables or its gonna fail for other resolutions
+// Flush
+// #todo: Where this values came from?
+// We can't do syscalls to get these values,
+// we need a local cache.
+// #bugbug:
+// De facto. We are doing syscalls.
+// #todo: We need use the cashed values,
+// and update the cached values if the resolution changes.
 
     unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
     unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
@@ -1056,7 +1028,8 @@ void compComposeDesktop(void)
         CANVAS_BACKBUFFER,    // source >>>
         CANVAS_FRONTBUFFER,   // >>> destination
         0, 0,                 // destination position
-        DeviceWidth, DeviceHeight );                 
+        DeviceWidth, DeviceHeight 
+    );                
 }
 
 // wmCompose:

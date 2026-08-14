@@ -71,6 +71,9 @@ extern unsigned long libgui_canvasList[CANVAS_COUNT_MAX];
 
 // ===================================================
 
+int libgui_start_paint(void);
+int libgui_end_paint(void);
+
 // Create a new device context for a given buffer.
 // Parameters:
 //   base   - pointer to buffer memory

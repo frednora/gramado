@@ -524,6 +524,8 @@ int sys_socket( int family, int type, int protocol )
     // AF_INET → IPv4 networking (TCP/UDP).        
     case AF_INET:
         debug_print ("sys_socket: AF_INET\n");
+        // #bugbug: We dont know if the client will
+        // connecth with local or remote using inet.
         sk->connection_type = 0;
         //sk->connection_type = 1;  // Local connection.
         // (Remote or local connection)
@@ -1988,7 +1990,7 @@ __connect_inet_local (
     unsigned long Flags = connection_flags;
 
     register int i=0;
-    int Verbose = FALSE;
+    int Verbose = FALSE;  //TRUE;
 
     do_credits_by_tid( lapic_info[0].current_tid );
 
@@ -1997,7 +1999,7 @@ __connect_inet_local (
 
     pid_t current_process = (pid_t) get_current_process(0);
     if (Verbose == TRUE){
-        printk ("__connect_inet_remote: Client's pid {%d}\n", current_process);
+        printk ("__connect_inet_local: Client's pid {%d}\n", current_process);
     }
 
 // Client fd.
@@ -2005,18 +2007,18 @@ __connect_inet_local (
 // O addr indica o alvo.
     client_socket_fd = sockfd;
     if (Verbose == TRUE){
-        printk ("__connect_inet_remote: Client's socket id {%d}\n", sockfd );
+        printk ("__connect_inet_local: Client's socket id {%d}\n", sockfd );
     }
     if ( client_socket_fd < 0 || client_socket_fd >= OPEN_MAX ){
-        debug_print ("__connect_inet_remote: client_socket_fd\n");
-        printk      ("__connect_inet_remote: client_socket_fd\n");
+        debug_print ("__connect_inet_local: client_socket_fd\n");
+        printk      ("__connect_inet_local: client_socket_fd\n");
         return (int) (-EINVAL);
     }
 
 // addr
 // Usando a estrutura que nos foi passada.
     if ((void *) addr == NULL){
-        printk ("__connect_inet_remote: addr\n");
+        printk ("__connect_inet_local: addr\n");
         return (int) (-EINVAL);
     }
 
@@ -2067,7 +2069,7 @@ __connect_inet_local (
     // Estamos usando inet em conexão local.
     // Então precisamos usar localhost como ip.
 
-        debug_print("__connect_inet_remote: AF_INET\n");
+        debug_print("__connect_inet_local: AF_INET\n");
         //#debug
         //printk("sys_connect: AF_INET port {%d}\n", addr_in->sin_port);
 
@@ -2081,32 +2083,32 @@ __connect_inet_local (
 
         // 21 - FTP
         if (target_port_short == 21){
-            printk("__connect_inet_remote: [21] FTP #todo\n");
+            printk("__connect_inet_local: [21] FTP #todo\n");
             goto fail;
         }
 
         // 23 - Telnet
         if (target_port_short == 23){
-            printk("__connect_inet_remote: [23] Telnet #todo\n");
+            printk("__connect_inet_local: [23] Telnet #todo\n");
             goto fail;
         }
 
         // 67 - DHCP
         if (target_port_short == 67){
-            printk("__connect_inet_remote: [67] DHCP #todo\n");
+            printk("__connect_inet_local: [67] DHCP #todo\n");
             goto fail;
         }
 
         // 80 - HTTP ;; Not allowed for now
         if (target_port_short == 80){
-            printk("__connect_inet_remote: [80] HTTP #test\n");
+            printk("__connect_inet_local: [80] HTTP #test\n");
             //break;
             goto fail;
         }
 
         // 443 - HTTPS 
         if (target_port_short == 443){
-            printk("__connect_inet_remote: [443] HTTPS #todo\n");
+            printk("__connect_inet_local: [443] HTTPS #todo\n");
             goto fail;
         }
 
@@ -2121,9 +2123,9 @@ __connect_inet_local (
             target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_DS);
             if (Verbose == TRUE)
             {
-                printk("__connect_inet_remote: [AF_INET] Connecting to the Display Server\n");
-                printk("__connect_inet_remote: IP {%x}\n",   target_ip_int );
-                printk("__connect_inet_remote: PORT {%d}\n", target_port_short );
+                printk("__connect_inet_local: [AF_INET] Connecting to the Display Server\n");
+                printk("__connect_inet_local: IP {%x}\n",   target_ip_int );
+                printk("__connect_inet_local: PORT {%d}\n", target_port_short );
                 //#debug
                 //while(1){}
             }
@@ -2140,9 +2142,9 @@ __connect_inet_local (
             target_pid = (pid_t) socket_get_gramado_server_pid(GRAMADO_PORT_NS);
             if (Verbose==TRUE)
             {
-                printk("__connect_inet_remote: [AF_INET] Connecting to the Network Server\n");
-                printk("__connect_inet_remote: IP {%x}\n",   target_ip_int );
-                printk("__connect_inet_remote: PORT {%d}\n", target_port_short );
+                printk("__connect_inet_local: [AF_INET] Connecting to the Network Server\n");
+                printk("__connect_inet_local: IP {%x}\n",   target_ip_int );
+                printk("__connect_inet_local: PORT {%d}\n", target_port_short );
                 //#debug
                 //while(1){}
             }
@@ -2155,8 +2157,10 @@ __connect_inet_local (
         // Telnet server #todo
 
         // #debug
-        printk("__connect_inet_remote: [FAIL] Port not valid {%d}\n",
+        printk("__connect_inet_local: Invalid port number {%d}\n",
             target_port_short );
+
+        debug_print("__connect_inet_local: Invalid port number\n");
 
         goto fail;
         break;
@@ -2164,8 +2168,8 @@ __connect_inet_local (
         //...
 
     default:
-        debug_print("__connect_inet_remote: domain not supported\n");
-        printk("__connect_inet_remote: [FAIL] Family not supported {%d}\n",
+        debug_print("__connect_inet_local: domain not supported\n");
+        printk("__connect_inet_local: [FAIL] Family not supported {%d}\n",
             addr_in->sin_family );
         goto fail;
         break;
@@ -2183,15 +2187,6 @@ __connect_inet_local (
 // se a intenção do cliente foi conectar-se com um servidor
 // dentro do localhost.
 
-    /*
-    // #todo: This is temporary
-    if (in_localhost != TRUE)
-    {
-        printk ("__connect_inet_remote: #todo Trying to connect to another machine\n");
-        goto fail;
-    }
-    */
-
 //
 // == Client process =============================
 //
@@ -2199,15 +2194,15 @@ __connect_inet_local (
 // Vamos obter o arquivo do tipo soquete que pertence ao sender
     if (current_process<0 || current_process >= PROCESS_COUNT_MAX)
     {
-        printk ("__connect_inet_remote: current_process\n");
+        printk ("__connect_inet_local: current_process\n");
         goto fail;
     }
 // Client process.
 // sender's process structure.
     cProcess = (struct te_d *) teList[current_process];
     if ((void *) cProcess == NULL){
-        debug_print("__connect_inet_remote: cProcess fail\n");
-        printk     ("__connect_inet_remote: cProcess fail\n");
+        debug_print("__connect_inet_local: cProcess fail\n");
+        printk     ("__connect_inet_local: cProcess fail\n");
         goto fail;
     }
 
@@ -2232,7 +2227,7 @@ __connect_inet_local (
 
     f = (file *) cProcess->Objects[client_socket_fd];
     if ((void *) f == NULL){
-        printk("__connect_inet_remote: [FAIL] f. The client's socket\n");
+        printk("__connect_inet_local: [FAIL] f. The client's socket\n");
         goto fail;
     }
 
@@ -2248,7 +2243,7 @@ __connect_inet_local (
 // This way we can reject connections before the server binds with an address.
 
     if (f->sync.can_connect != TRUE){
-        printk("__connect_inet_remote: [PERMISSION FAIL] Client doesn't accept connections.\n");
+        printk("__connect_inet_local: [PERMISSION FAIL] Client doesn't accept connections.\n");
         goto fail;
     }
 
@@ -2258,9 +2253,12 @@ __connect_inet_local (
 
     client_socket = (struct socket_d *) f->socket;
     if ((void *) client_socket == NULL){
-        printk("__connect_inet_remote: [FAIL] client_socket\n");
+        printk("__connect_inet_local: [FAIL] client_socket\n");
         goto fail;
     }
+
+    client_socket->is_client_connecting_with_remote_server = FALSE;
+    client_socket->connection_type = 1;  // LOCAL
 
 // #ps: 
 // For now this it the only valid state.
@@ -2269,10 +2267,9 @@ __connect_inet_local (
 
     if (client_socket->state != SS_UNCONNECTED) 
     {
-        printk("__connect_inet_remote: [FAIL] client socket is not SS_UNCONNECTED\n");
+        printk("__connect_inet_local: Client socket is not SS_UNCONNECTED\n");
         goto fail;
     }
-
 
 // #test
 // Assign a port number to the client socket.
@@ -2280,11 +2277,9 @@ __connect_inet_local (
     __new_client_port_number++;
     client_socket->port = (unsigned short) __new_client_port_number;
 
-
 //
 // Is it remote
 //
-
 
 // In this case we do not handle the server process
 // Not allowed for now
@@ -2302,8 +2297,8 @@ __connect_inet_local (
 
     if (target_pid<0 || target_pid >= PROCESS_COUNT_MAX)
     {
-        debug_print("__connect_inet_remote: target_pid\n");
-        printk     ("__connect_inet_remote: target_pid\n");
+        debug_print("__connect_inet_local: target_pid\n");
+        printk     ("__connect_inet_local: target_pid\n");
         goto fail;
     }
 
@@ -2313,8 +2308,8 @@ __connect_inet_local (
 
     sProcess = (struct te_d *) teList[target_pid];
     if ((void *) sProcess == NULL){
-        debug_print("__connect_inet_remote: sProcess fail\n");
-        printk     ("__connect_inet_remote: sProcess fail\n");
+        debug_print("__connect_inet_local: sProcess fail\n");
+        printk     ("__connect_inet_local: sProcess fail\n");
         goto fail;
     }
 
@@ -2335,15 +2330,14 @@ __connect_inet_local (
         }
     };
 
-// #fail: 
-// No more slots.
-    panic("__connect_inet_remote: [FIXME] We need a slot in the server\n");
+    // No more slots
+    panic("__connect_inet_local: [FIXME] We need a slot in the server\n");
 
 // ok
 __OK_new_slot:
 
     if (__slot == -1){
-        printk("__connect_inet_remote: No empty slot\n");
+        printk("__connect_inet_local: No empty slot\n");
         goto fail;
     }
 
@@ -2357,49 +2351,12 @@ __OK_new_slot:
 
 // --------------------------------------------------
 // #ps
-// In the case the target is not our well know server,
-// we need to connect to a remote server.
-// Here we initialize the 3 step handshake sending a SYN
-// and creating the connection structure.
-
-
-    // #todo: This is a work in progress!
-
-/*
-// #ps: No remote peer for __connect_inet_local
-remote_go:
-    if (target_port_short != __PORTS_DISPLAY_SERVER &&
-        target_port_short != __PORTS_NETWORK_SERVER)
-    {
-        // --- Call the new worker at the end ---
-        // #ps: Using the host order for ip and port.
-        // IN: socket, ip, port.
-        int __rv = 
-        tcp_client_connect(
-            client_socket, 
-            target_ip_int, 
-            target_port_short 
-        );
-        if (__rv < 0) {
-            printk("__connect_inet_remote: tcp_client_connect failed\n");
-            return __rv;
-        }
-
-        // Block until handshake completes (to be implemented)
-        // wait_for_socket_state(s, SS_CONNECTED);
-
-        return 0;   // OK for now
-    }
-*/
-
-// --------------------------------------------------
-// #ps
 // Continue in the case we are connectiong with 
 // well known server in localhost.
 
     server_socket = (struct socket_d *) sProcess->priv;
     if ((void *) server_socket == NULL){
-        printk ("__connect_inet_remote: [FAIL] server_socket\n");
+        printk ("__connect_inet_local: [FAIL] server_socket\n");
         goto fail;
     }
 
@@ -2450,7 +2407,6 @@ remote_go:
 // estamos apenas entrando na fila e implorando para nos conectarmos.
 // Quem realizara a conexão sera o accept(), 
 // pegando o cliente da fila de conexões pendentes.
-
 
 // #important:
 // Rhe socket for the server for now is already valid only for two ports.
@@ -2522,28 +2478,28 @@ remote_go:
     //    printk("sys_connect: Pending connection\n");
     //}
 
+    /*
     // #debug breakpoint
     if (Verbose == TRUE)
     {
-        printk("__connect_inet_remote: Breakpoint\n");
+        printk("__connect_inet_local: Breakpoint\n");
         // die();
         while (1){
             asm (" cli ");
             asm (" hlt ");
         };
     }
+    */
+
+    // printk("__connect_inet_local: Done\n");
 
     return 0;  // OK
 
 fail:
-    debug_print("__connect_inet_remote: fail\n");
-    printk     ("__connect_inet_remote: fail\n");
+    debug_print("__connect_inet_local: fail\n");
+    printk     ("__connect_inet_local: fail\n");
     return (int) -1;
 }
-
-
-
-
 
 
 // ============================================================
@@ -2986,6 +2942,9 @@ __connect_inet_remote (
         goto fail;
     }
 
+    client_socket->is_client_connecting_with_remote_server = TRUE;
+    client_socket->connection_type = 2;  // REMOTE
+
 // #ps: 
 // For now this it the only valid state.
 // #todo:
@@ -3280,7 +3239,7 @@ static int __connect_inet(
 {
     struct sockaddr_in *in_addr = (struct sockaddr_in *) addr;
 
-    printk("__connect_inet:\n");
+    // printk("__connect_inet:\n");
 
     // Sanity check
     if (!in_addr)
@@ -3302,11 +3261,23 @@ static int __connect_inet(
 // LOCAL: loopback ip and canonical ports
     if (IsCanonicalLocalPort == TRUE)
     {
-        unsigned int loopbackip_hostorder = (unsigned int) ntohl(INADDR_LOOPBACK);
-        if (target_ip_int == loopbackip_hostorder){
+        //printk("__connect_inet: It is canonical port\n");
+        //unsigned int loopbackip_hostorder = 0x7F000001; // 127.0.0.1 in host order
+        unsigned int loopbackip_hostorder = INADDR_LOOPBACK; 
+        //printk("__connect_inet: target_ip_int=%x loopbackip_hostorder=%x raw_network=%x\n",
+        //   target_ip_int,
+        //   loopbackip_hostorder,
+        //   in_addr->sin_addr.s_addr );
+        // while(1){}
+
+        if (target_ip_int == loopbackip_hostorder)
+        {
+            //printk("__connect_inet: forcing local connection\n");
             return __connect_inet_local(sockfd, addr, addrlen, connection_flags);
         }
     }
+
+    //printk("__connect_inet: remote connection\n");
 
 // REMOTE: remote peers
     return __connect_inet_remote(sockfd, addr, addrlen, connection_flags);

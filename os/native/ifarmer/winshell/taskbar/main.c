@@ -1730,6 +1730,8 @@ int main(int argc, char *argv[])
 
     //TaskbarInfo.style = style;
 
+    // printf("taskbar: Create window\n");
+
     main_window = 
         (int) gws_create_window (
                 client_fd,
@@ -1747,6 +1749,8 @@ int main(int argc, char *argv[])
         exit(1);
     }
     gws_set_active( client_fd, main_window );
+
+    // printf("taskbar: Create window ok\n");
 
 // =============================
 // #test
@@ -2144,6 +2148,8 @@ int main(int argc, char *argv[])
 // The thread wait until complete the 16 ms.
 // #bugbug: Valid only if the timer fires 1000 times a second.
 // It gives the opportunities for other threads to run a bit more.
+
+    printf("taskbar: Event loop\n");
 
     // isTimeToQuit =  FALSE;
 

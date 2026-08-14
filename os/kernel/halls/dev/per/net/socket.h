@@ -178,6 +178,7 @@ struct socket_d
 
 // 1=LOCAL | 2=REMOTE
     int connection_type;
+    int is_client_connecting_with_remote_server;
 
 // Local
 // ip and port.
