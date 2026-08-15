@@ -156,26 +156,23 @@ void test_sending_tcp(void)
     payload[1]=0;
     size_t payload_len = 0;  // 1
 
-    // Google Web (HTTP)
-    uint8_t google_ip[4] = {142, 250, 190, 46};
-
-
     printk("test_sending_tcp: sending SYNs to external targets\n");
 
     // Example sequence/ack numbers
-    tcp_seq seq = __generate_ISN();  //1000; // server initial sequence number
+    tcp_seq our_seq = __generate_ISN();  // initial sequence number
     tcp_ack ack = 0;  //_seq_number + 1;   // acknowledge client’s ISN
 
+    uint8_t google_ip[4] = {142, 250, 190, 46};
     network_send_tcp(
         dhcp_info.your_ipv4,
         google_ip,
         NetworkSaved.gateway_mac,
         SourcePort,   // source port
-        80,      // dest port
-        seq,  // seq
-        ack,  // ack
-        TH_SYN,  // flags
-        payload,    // no payload
+        80,           // dest port
+        our_seq,      // seq
+        ack,          // ack
+        TH_SYN,       // flags
+        payload,      // no payload
         payload_len
     );
 
@@ -187,8 +184,8 @@ void test_sending_tcp(void)
         NetworkSaved.gateway_mac,
         SourcePort,
         443,
-        0x2000,
-        0,
+        our_seq,   // our seq
+        ack,       // ack
         TH_SYN,
         payload,
         payload_len
@@ -803,10 +800,10 @@ tcp_client_connect(
     conn->ep_pair = pair;
 
     // Initialize sequence numbers
-    conn->tcp_conn->iss     = 1000;  // #todo: __generate_ISN();
-    conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1;
-    conn->tcp_conn->snd_una = conn->tcp_conn->iss;
-
+    tcp_seq our_seq = __generate_ISN();  // 1000 #test
+    conn->tcp_conn->iss = our_seq;
+    conn->tcp_conn->snd_una = our_seq;      // conn->tcp_conn->iss;
+    conn->tcp_conn->snd_nxt = our_seq + 1;  // conn->tcp_conn->iss + 1;
 
     // ------------------------------------------------
     // Allocate an ephemeral local port for this client socket.
@@ -862,8 +859,8 @@ tcp_client_connect(
         NetworkSaved.gateway_mac,
         sk_local->port,  // 11888 (host order) 
         dst_port,  // host order
-        conn->tcp_conn->iss,
-        0,
+        conn->tcp_conn->iss,  // seq
+        0,                    // ack
         TH_SYN,
         syn_payload,
         syn_payload_len
@@ -1146,7 +1143,8 @@ __kd_handle_tcp(
             printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
             // Example sequence/ack numbers
-            tcp_seq seq = 1000;  //__generate_ISN();  //1000; // server initial sequence number
+            // #ps: It looks safer to test our generator now
+            tcp_seq seq = 1000;  //__generate_ISN();  // initial sequence number
             tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
 
             // -- connection structure ----
@@ -1175,11 +1173,13 @@ __kd_handle_tcp(
             }
             conn->tcp_conn->state = TCP_SYN_RECEIVED;
             conn->packets_received++;
+            // IRS → Initial Receive Sequence number
             conn->tcp_conn->irs     = _seq_number;      // client's ISN
             conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
-            conn->tcp_conn->iss     = 1000;  //__generate_ISN();  //1000; // our ISN (or randomize later)
-            conn->tcp_conn->snd_una = conn->tcp_conn->iss;
-            conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1; // our SYN will consume 1
+            // ISS → Initial Send Sequence number
+            conn->tcp_conn->iss     = seq;  //1000;  //__generate_ISN();  // our ISN (or randomize later)
+            conn->tcp_conn->snd_una = seq;  //conn->tcp_conn->iss;
+            conn->tcp_conn->snd_nxt = seq + 1;  //conn->tcp_conn->iss + 1; // our SYN will consume 1
 
             conn->tcp_conn->snd_wnd = peer_window;  // Client's window size?
             //conn->tcp_conn->rcv_wnd -= 1;         // Maybe
@@ -1305,10 +1305,6 @@ __kd_handle_tcp(
 
             // #todo
             // >>> Lets work on this response! <<<
-    
-            // Example sequence/ack numbers
-            //tcp_seq seq = 1000;  //__generate_ISN();  //1000;// server initial sequence number
-            //tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
 
             // Flags: SYN + ACK
             uint16_t flags = TH_SYN | TH_ACK;
@@ -1989,7 +1985,8 @@ network_handle_tcp (
         printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
         // Example sequence/ack numbers
-        tcp_seq seq = 1000;  //__generate_ISN();  //1000; // server initial sequence number
+        // #ps: It looks safer to test our generator now
+        tcp_seq seq = 1000;  //__generate_ISN();  // initial sequence number
         tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
 
         // -- connection structure ----
@@ -2022,11 +2019,13 @@ network_handle_tcp (
         }
         conn->tcp_conn->state = TCP_SYN_RECEIVED;
         conn->packets_received++;
+        // IRS → Initial Receive Sequence number
         conn->tcp_conn->irs     = _seq_number;      // client's ISN
         conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
-        conn->tcp_conn->iss     = 1000;  //__generate_ISN();  //1000; // our ISN (or randomize later)
-        conn->tcp_conn->snd_una = conn->tcp_conn->iss;
-        conn->tcp_conn->snd_nxt = conn->tcp_conn->iss + 1; // our SYN will consume 1
+        // ISS → Initial Send Sequence number
+        conn->tcp_conn->iss     = seq;      //1000;
+        conn->tcp_conn->snd_una = seq;      //conn->tcp_conn->iss;
+        conn->tcp_conn->snd_nxt = seq + 1;  //conn->tcp_conn->iss + 1; // our SYN will consume 1
 
         conn->tcp_conn->snd_wnd = peer_window;  // Client's window size?
         //conn->tcp_conn->rcv_wnd -= 1;         // Maybe
@@ -2157,10 +2156,6 @@ network_handle_tcp (
 
         // #todo
         // >>> Lets work on this response! <<<
-    
-        // Example sequence/ack numbers
-        //tcp_seq seq = 1000;  //__generate_ISN();  //1000;// server initial sequence number
-        //tcp_ack ack = _seq_number + 1;   // acknowledge client’s ISN
 
         // Flags: SYN + ACK
         uint16_t flags = TH_SYN | TH_ACK;

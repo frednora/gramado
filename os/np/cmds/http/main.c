@@ -38,7 +38,8 @@ static void do_request(int sockfd);
 
 static void do_request(int sockfd)
 {
-    char buffer[1024];
+    //char buffer[1024];
+    char buffer[512];
     int n;
 
     const char *request =
@@ -47,6 +48,8 @@ static void do_request(int sockfd)
         "Connection: close\r\n"
         "\r\n";
 
+    // Clear
+    memset(buffer, 0, sizeof(buffer));    
 
     // Send the request
     n = (int) write(sockfd, request, strlen(request));
