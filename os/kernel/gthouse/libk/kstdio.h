@@ -85,10 +85,12 @@ extern int g_inputmode;
 // (including stderr, stdin, and stdout).
 // See: klimits2.h
 
+// FOPEN_MAX is the libc standard
+// NR_OPEN is Linux-like
 #define FOPEN_MAX          GRAMADO_FOPEN_MAX
+#define NR_OPEN            GRAMADO_FOPEN_MAX
 #define NUMBER_OF_FILES    GRAMADO_FOPEN_MAX
 #define _NFILE             GRAMADO_FOPEN_MAX
-#define NR_OPEN            GRAMADO_FOPEN_MAX
 #define RLIMIT_NOFILE      GRAMADO_FOPEN_MAX
 
 //BUFFER

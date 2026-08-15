@@ -1988,19 +1988,22 @@ fail2:
 }
 
 // __open_imp:
-// It implements the service for open() syscall.
-// open() function implementation in ring 0.
+// Here is the sys_open implementation.
 // Syscall 16.
-// #bugbug
-// Precisamos de um endereço em ring 3
-// para que a libc possa manipular o buffer ?
-// ou open deve ser usado somente com dispositivos ??
-// #obs:
-// vamos retornar o indice da tabela de arquivos abertos 
-// do processo atual.
-// #? isso não pertence à fcntl.c?
+// #ps: open() is not related with fcntl.h?
 // SVr4,  4.3BSD,  POSIX.1-2001. 
-// OUT: fd.
+// Limits:
+// Probably BUFSIZ (1024 for now) is the limit for this routine.
+// To improve this we need to allocate a bigger buffer 
+// in the file structure.
+// The worker is: do_read_file_from_disk() with the same limit.
+// Open a file, or create if is doesn't exist.
+// creat chama open.
+// open tenta ler num arquivo que nao existe?
+// IN:
+// pathname, flags, mode
+// OUT: 
+//   fd
 
 int 
 __open_imp (
@@ -2008,26 +2011,15 @@ __open_imp (
     int flags, 
     mode_t mode )
 {
-// Limits:
-// Probably BUFSIZ (1024 for now) is the limit for this routine.
-// To improve this we need to allocate a bigger buffer 
-// in the file structure.
-// The worker is: do_read_file_from_disk() with the same limit.
-
-// Open a file, or create if is doesn't exist.
-// creat chama open.
-// open tenta ler num arquivo que nao existe?
-
-    int value = -1;
     file *fp;
-    struct te_d *p;
+    struct te_d *p;  // Process structure
     pid_t current_process = -1;
+    char pathname_local_copy[256];
+    int value = -1;
 
     //debug_print ("__open_imp: $\n");
 
-// #todo:
-// check arguments.
-
+// parameters:
     if ((void*) pathname == NULL){
         return (int) (-EFAULT);
     }
@@ -2035,11 +2027,11 @@ __open_imp (
         return (int) (-EFAULT);
     }
 
-// Process
+// Process:
+// Get PID for the current process for a given core.
+// Get the process pointer.
 
-    // Get PID for the current process for a given core.
     // IN: core id
-
     current_process = (pid_t) get_current_process(0);
 
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
@@ -2052,25 +2044,19 @@ __open_imp (
         debug_print("__open_imp: p\n");
         goto fail;
     }
-    if ( p->used != TRUE || p->magic != 1234 ){
+    if (p->used != TRUE || p->magic != 1234){
         debug_print("__open_imp: p validation\n");
         goto fail;
     }
 
-// Local copy
-// Coping more than we need, 
-// this way we're coping the 0x00 byte at the end of string
-// and some extra bytes.
+// pathname:
+// Make a local copy of the pathname
 
-    char pathname_local_copy[256];
     memset(pathname_local_copy, 0, 256);
-    // #bugbug: Copy only the string, not the whole 256 bytes.
-    strncpy(pathname_local_copy, pathname, 256);
-    // pathname_local_copy[255] = 0;
-
-    // #todo:
-    // Maybe we can use it as safe measure
+    // #todo: Maybe we can use it as safe measure
     // size_t PathSize = strlen(pathname_local_copy);
+    strncpy(pathname_local_copy, pathname, 256);
+    pathname_local_copy[255-1] = 0;
 
 // ----------------------------
 // #hackhack
@@ -2174,10 +2160,10 @@ __open_imp (
 // if the name doesn't have one.
 // This is not what we want for all the cases.
 
-    fp = (file *)do_read_file_from_disk ( 
-                  (char *) pathname_local_copy, 
-                  flags, 
-                  mode );
+    fp = (file *) do_read_file_from_disk ( 
+                (char *) pathname_local_copy, 
+                flags, 
+                mode );
 
     if ((void*)fp == NULL)
         return (int) -1;
@@ -2441,10 +2427,9 @@ fail:
 }
 
 // Get free slots in the file_table[].
+// Called by kstdio.c when creating streams.
 int get_free_slots_in_the_file_table(void)
 {
-// Called by kstdio.c when creating streams.
-
     file *tmp;
     register int i=0;
 
@@ -2595,14 +2580,11 @@ void fs_init_structures (void)
         panic("fs_init_structures: Couldn't create the root structure\n");
     }
     memset( root, 0, sizeof(struct filesystem_d) );
-
     // kobject
     root->kobj._type = ObjectTypeFileSystem;
     root->kobj._class = ObjectClassKernelObject;
-
     root->used = TRUE;
     root->magic = 1234;
-
     root->name = (char *) ____root_name;
 
 // #todo 
@@ -2640,7 +2622,7 @@ void fs_init_structures (void)
     Type = (Type & 0xFFFF);
     if (Type <= 0){
         panic ("fs_init_structures: [PANIC] Type\n");
-    }else{
+    } else {
         root->type = (int) Type;
     };
 
@@ -2706,20 +2688,20 @@ void fs_init_structures (void)
     };
 }
 
-// Close a file given the structure pointer.
-int file_close (file *_file)
+// Close a file given the structure pointer
+int file_close(file *_file)
 {
 // #todo: Not implemented yet!
 
     debug_print("file_close: todo\n");
 
+// Structure validation
     if ((void*) _file == NULL){
         return (int) -1;
     }
-// Structure not in use.
     if (_file->used != TRUE)
         return (int) -1;
-// Reuse structure.
+    // Reuse support
     //if (_file->magic == 4321)
         //something();
 
@@ -3641,7 +3623,7 @@ void fs_pathname_backup ( pid_t pid, int n )
 // Service 170: Print the cwd string of a given PID.
 int fs_print_process_cwd(pid_t pid)
 {
-    struct te_d *p;
+    struct te_d *p;  // Process structure
 
     //debug_print ("fs_print_process_cwd:\n");
     printk      ("fs_print_process_cwd:\n");
@@ -3691,6 +3673,7 @@ fail:
     return (int) -1;
 }
 
+// #todo: showing only few fields
 void fs_show_file_info (file *f)
 {
     size_t StringSize=0;
@@ -3708,8 +3691,11 @@ void fs_show_file_info (file *f)
     if ((void*) f->_tmpfname != NULL){
         printk ("Name={%s}\n",f->_tmpfname);
     }
+
+    // ...
 }
 
+// Global table
 void fs_show_file_table(void)
 {
     file *f;
@@ -3822,6 +3808,7 @@ done:
 // is dir_address virtual or physical?
 // Change this name to dir_pa or dir_va.
 
+// Low level worker.
 int
 fsSaveFile ( 
     unsigned long fat_address,
@@ -4387,37 +4374,39 @@ fail:
 // Essa aqui poderia ter outro nome, pois ela carrega um arquivo
 // poderia chamar-se loadxxxx().
 // See: fs.c
-// IN:
-//   + #todo
-// Worker
-file *do_read_file_from_disk ( 
-    char *file_name, 
-    int flags, 
-    mode_t mode )
-{
 // Limits:
 // Probably BUFSIZ (1024 for now) is the limit for this routine.
 // To improve this we need to allocate a bigger buffer 
 // in the file structure.
 
+// IN:  filename, flags, more
+// OUT: file pointer
+
+file *do_read_file_from_disk ( 
+    char *file_name, 
+    int flags, 
+    mode_t mode )
+{
+    file *fp;  // File pointer (return value)
+    size_t FileSize = -1;
+    void *buff;
+    int __slot = -1;  // fd
+
+    struct te_d *p;  // Process structure
+
     int __ret = -1;
     int Status = -1;
 
-// File pointer.
-    file *fp;
-
-    size_t FileSize = -1;
-    struct te_d *p;
-    int __slot = -1;  // o fd.
-    void *buff;
-
+// #todo:
+// Provisory targets.
 // For now we're just able to get files and info
 // in the root dir.
 // Default: Root dir.
     unsigned long TargetDirAddress = VOLUME1_ROOTDIR_ADDRESS;
     unsigned long NumberOfEntries = FAT16_ROOT_ENTRIES;
 
-// Parameter:
+// Parameters:
+
     if ((void*) file_name == NULL)
     {
         //return (int) (-EINVAL);
@@ -4531,18 +4520,20 @@ EndOfShortcuts:
     // #todo
     // fs_search_inode_table(file_name);
 
-// Searching for the file only on the root dir.
-// Quando não existe, tentamos criar.
-// #bugbug: Então 'cat' não deve chamar essa função.
+// Searching for the file into a given directory.
+// #bugbug:
+// If we will create a file when it doesn't exist, it means 
+// 'cat' command cant call this function, and 
+// (This function is a woker for open()).
 
-    Status = (int) search_in_dir(file_name,TargetDirAddress);
+    Status = (int) search_in_dir(file_name, TargetDirAddress);
 
-// Found
+// -- Found ----
     if (Status == TRUE){
         goto __go;
     }
 
-// Not found
+// -- Not found ----
 // Let's create it if the flags tell us to do that
     if (Status != TRUE)
     {
@@ -4591,37 +4582,38 @@ EndOfShortcuts:
 
 __go:
 
-// Process
+// Get the process pointer
     p = (struct te_d *) get_current_process_pointer();
     if ((void *) p == NULL){
         printk("do_read_file_from_disk: p\n");
         goto fail;
     }
-    if ( p->used != TRUE || p->magic != 1234 ){
+    if (p->used != TRUE || p->magic != 1234){
         printk("do_read_file_from_disk: p validation\n");
         goto fail;
     }
-
-// Procurando um slot livre.
-    for (__slot=0; __slot<32; __slot++)
+// Find an empty spot in the list of open files
+    for (__slot=0; __slot < FOPEN_MAX; __slot++)
     {
-        if (p->Objects[__slot] == 0){ goto __OK; }
+        if (p->Objects[__slot] == 0)
+        {
+            goto __OK;
+        }
     };
-
-// fail
+// Fail
     //panic ("do_read_file_from_disk: No slots!\n");
-    printk("do_read_file_from_disk: No slots!\n");
+    printk("do_read_file_from_disk: No slots\n");
     goto fail;
 
-// Slot found.
+// An empty slot was found in the list of open files
 __OK:
 
-    if ( __slot < 0 || __slot >= 32 ){
+    if (__slot < 0 || __slot >= FOPEN_MAX){
         printk ("do_read_file_from_disk: Slot fail\n");
         goto fail;
     }
 
-// File struct
+// Create and initialize file structure
     fp = (file *) kmalloc(sizeof(file));
     if ((void *) fp == NULL){
         printk ("do_read_file_from_disk: fp\n");
@@ -4629,55 +4621,43 @@ __OK:
     }
     memset( fp, 0, sizeof(file) );
 
-// Initialize struture
+    // Identifications
     fp->used = TRUE;
     fp->magic = 1234;
     fp->pid = (pid_t) p->pid;
     fp->uid = (uid_t) current_user;
     fp->gid = (gid_t) current_group;
 
-// #bugbug [FIXME]
-// We need a type in read().
-
-// #bugbug
-// This function was called by sys_open, and open
-// is able to open any kind of file.
-// Why are we using this type here?
-
+    // File type
+    // #bugbug: 
+    // Creating a regular file in a worker
+    // called by sys_open().
     fp->____object = ObjectTypeFile;
 
-// ==================
-// #todo #bubug
-// Permissoes:
-// As permissoes dependem do tipo de arquivo.
-
-// #bugbug: Let's do this for normal files for now.
-    fp->sync.can_read  = TRUE;
-    fp->sync.can_write = TRUE;
-
-    fp->sync.action = ACTION_NULL;
-    // ==================
-
-// #todo:
-// We need to get the name in the inode.
-
+    // #todo:
+    // Filename support
+    // We need to get the name in the inode.
     //fp->_tmpfname = NULL;
 
-    fp->_fsize = 0;  // Isso é configurado logo abaixo.
+    // Permission
+    // #bugbug: Permissions depend on the file type
+    fp->sync.can_read = TRUE;
+    fp->sync.can_write = TRUE;
+    fp->sync.action = ACTION_NULL;
+
+    // File size and buffer size
+    fp->_fsize = 0;
     fp->_lbfsize = BUFSIZ;
 
-// Inicializando apenas.
-// #bugbug: Isso é provisório. 
-// Caso contrário teremos problemas pra ler.
+    // Initialize read and write offsets and counter
     fp->_r = 0;
     fp->_w = 0;
     fp->_cnt = BUFSIZ;  // Anda temos bastante espaço. todo o buffer
 
-// #
-// This is gonna be the return value.
-    fp->_file = __slot;
+    // Number of processes accessing this file?
+    fp->fd_counter = 1;
 
-    fp->fd_counter = 1;  //inicializando. 
+    fp->_file = __slot;  // fd
 
 // #todo
 // Se ele não foi encontrado na lista de inodes
@@ -4692,9 +4672,13 @@ __OK:
 // buffer
 //
 
-// buffer padrão
-// #bugbug: open chama isso. E se o arquivo for maior que o buffer ?
-// open() precisa alocar outro buffer.
+// Create a buffer for our file.
+// #bugbug: 
+// open() is calling this worker here.
+// what happens when the file is bigger than this buffer?
+// #ps: We are creating a second buffer in this case,
+// still limited to 8KB.
+// It means the allocation happens twice, wasting memory.
 
     fp->_base = (char *) kmalloc(BUFSIZ);
     if ((void *) fp->_base == NULL){
@@ -4702,65 +4686,51 @@ __OK:
         goto fail;
     }
     memset(fp->_base, 0, BUFSIZ);
-
-    //#test provisório
     fp->_lbfsize = BUFSIZ;
 
-// #debug
-    //printk ("FILE_AGAIN={%s}\n",file_name);
+    // #debug
+    //printk ("File name = {%s}\n", file_name);
 
-// File size.
-// #bugbug: 
-// OUT: 'unsigned long' ?
+// File size
 
     FileSize = 
         (size_t) fsGetFileSize( 
-                      (unsigned char *) file_name,
-                      (unsigned long) TargetDirAddress );
+                    (unsigned char *) file_name,
+                    (unsigned long) TargetDirAddress );
 
     if (FileSize <= 0){
         printk ("do_read_file_from_disk: FileSize\n");
         goto fail;
     }
-    // Structure field for file size
     fp->_fsize = (int) FileSize;
 
-// #bugbug
-// #importante
-
-// Limits.
-    //if ( FileSize < fp->_lbfsize ){ 
-    //    FileSize = fp->_lbfsize; 
-    //}
-
-// Limits.
-// Se o arquivo for maior que buffer disponivel.
-// Podemos aumentar o buffer.
-
-    // The file size is bigger than the buffer size.
+// #test
+// The file size is bigger than the buffer size
     if (FileSize >= fp->_lbfsize)
     {
         // #debug
-        printk("do_read_file_from_disk: [todo] File size out of limits\n");
+        printk("do_read_file_from_disk: Out of (BUFSIZ) limit\n");
+        printk("Creating a larger buffer\n");
         //printk("Size {%d}\n",FileSize);
         //goto fail;
 
         // #bugbug: Provisório.
         // Limite - 1MB.
         //if (FileSize > 1024*1024)
-        if (FileSize > 8*1024)  //8KB
+        if (FileSize > 8*1024)  //8 KB
         {
-            printk ("do_read_file_from_disk: File size out of limits\n");
-            printk ("%d bytes \n",FileSize);
+            printk("do_read_file_from_disk: Out of (8 KB) limit\n");
+            printk("%d bytes \n", FileSize);
             goto fail;
         }
-        
+
         // Allocate new buffer.
         // The buffer must to be bigger than the file size.
-        size_t buflen = FileSize+8;
         // #bugbug:
         // We need a limit here.
         // The limit is 8KB. See above.
+
+        size_t buflen = FileSize+8;
 
         fp->_base = (char *) kmalloc(buflen);
         if ((void *) fp->_base == NULL){
@@ -4768,88 +4738,55 @@ __OK:
             goto fail;          
         }
         memset(fp->_base, 0, buflen);
- 
-        // Temos um novo buffer size.
-        fp->_lbfsize = (int) buflen;
+        fp->_lbfsize = (int) buflen;  // New file size
     }
 
-// #paranoia.
-// Checando os limites novamente.
-// #bugbug: Provisório.
-// Limits - 1MB
-    //if (FileSize > 1024*1024)
-    //{
-    //    printk ("do_read_file_from_disk: File size out of limits\n");
-    //    goto fail;
-    //}
-
-// #paranoia.
-// Checando base novamente.
-
+// Check base address again
     if ((void *) fp->_base == NULL){
-        printk("do_read_file_from_disk: fp->_base (again)\n");
+        printk("do_read_file_from_disk: fp->_base again\n");
         goto fail;
     }
+    fp->_p = fp->_base;  // Base pointer
 
-//
-// #todo (Unix-like)
-// 
-
-// What is the unix-like standard for this initialization?
-
-// Pointer.
-    fp->_p = fp->_base;
-
-// Offsets
-// Atualizando os offsets que foram apenas inicializados.
-
-// #importante
-// Não poderemos ler se r e w forem iguais.
-// vamos ler do começo do arquivo.
-    fp->_r = 0;
-
-// #importante
-// O ponteiro de escrita mudou 
-// pois escrevemos um arquivo inteiro no buffer.
-    //fp->_w = FileSize;
-    fp->_w = fp->_fsize;
-    
-// #bugbug
-
-    //if ( FileSize >= BUFSIZ )
-    if (fp->_fsize >= fp->_lbfsize)
+// -----------------------------------------
+// We have enough space into the buffer
+    if (fp->_fsize < fp->_lbfsize)
     {
-        printk ("do_read_file_from_disk: File larger than buffer\n");
-        fp->_r = fp->_lbfsize;
-        fp->_w = fp->_lbfsize;
-        fp->_cnt = 0;
+        fp->_cnt = (fp->_lbfsize - fp->_fsize);
+        fp->_r = 0;           // The start. Nothis was read yet.
+        fp->_w = fp->_fsize;  // The file size
     }
 
-// Agora temos menos espaço no buffer.
-    //fp->_cnt = ( BUFSIZ - FileSize );
-    fp->_cnt = ( fp->_lbfsize - fp->_fsize );
+// -----------------------------------------
+// #bugbug: We don't have enough space yet.
+// #ps: File size can't be larger than the buffer size.
+    if (fp->_fsize >= fp->_lbfsize)
+    {
+        fp->_cnt = 0;
+        fp->_r = fp->_lbfsize;
+        fp->_w = fp->_lbfsize;
+        // #bugbug: No more space into the buffer
+        printk ("do_read_file_from_disk: File larger than buffer\n");
+        goto fail;
+    }
 
 // Load.
 // Load the file into the memory.
     //printk("Load ....\n");
     Status = 
         (int) fsLoadFile ( 
-                  VOLUME1_FAT_ADDRESS, 
-                  TargetDirAddress, 
-                  NumberOfEntries,  //#bugbug: Number of entries.
-                  file_name, 
-                  (unsigned long) fp->_base,
-                  fp->_lbfsize );
+                VOLUME1_FAT_ADDRESS, 
+                TargetDirAddress, 
+                NumberOfEntries,  //#bugbug: Number of entries
+                file_name, 
+                (unsigned long) fp->_base,
+                fp->_lbfsize );
 
     if (Status != 0){
-        printk ("do_read_file_from_disk: fsLoadFile failed\n");
+        printk("do_read_file_from_disk: on fsLoadFile()\n");
         goto fail;
     }
     //printk("Loaded ....\n");
-
-// #bugbug
-// Agora é a hora de atualizarmos as tabelas ....
-// Depois de carregarmos o arquivo.
 
 //
 // Pointer. (mode)
@@ -4888,24 +4825,14 @@ __OK:
         //fp->_p = fp->_base;
     //}
 
-// Pointer
-    fp->_p = fp->_base;
-
-// Offsets
-// Atualizando os offsets que foram apenas inicializados.
-
-// #importante
-// Não poderemos ler se r e w forem iguais.
-// vamos ler do começo do arquivo.
+// Offsets: again?
+    fp->_cnt = (fp->_lbfsize - fp->_fsize);
     fp->_r = 0;
-
-// #importante
-// O ponteiro de escrita mudou 
-// pois escrevemos um arquivo inteiro no buffer.
-    //fp->_w = FileSize;
     fp->_w = fp->_fsize;
 
-    fp->_cnt = ( fp->_lbfsize - fp->_fsize );
+//
+// mode    #todo
+//
 
 // The file is opened in append mode. 
 // O offset fica no fim do arquivo.
@@ -4913,51 +4840,40 @@ __OK:
         debug_print ("do_read_file_from_disk: O_APPEND\n");
         //fp->_p = fp->_base + s;
     }
-
     if (mode & O_ASYNC){
         debug_print ("do_read_file_from_disk: O_ASYNC\n");
     }
-
-/* 
     // Enable the close-on-exec flag for the new file descriptor.
-    if ( mode & O_CLOEXEC ){ 
-         debug_print ("sys_read_file: O_CLOEXEC\n");
-    }
- */
-
+    // if ( mode & O_CLOEXEC ){ 
+    //     debug_print ("sys_read_file: O_CLOEXEC\n");
+    //}
     if (mode & O_CREAT){
         debug_print ("do_read_file_from_disk: O_CREAT\n");
     }
 
-// #importante
-// Se não liberarmos para leitura então read()
-// não poderá ler.
+//
+// flags
+//
 
-    // ok to read
-    fp->_flags = (fp->_flags | __SRD);
+// #todo:
+// It depends on the mode?
 
-    // ok to write
-    //fp->_flags = (fp->_flags | __SWR);
+    fp->_flags = (fp->_flags | __SRD);    // ok to read
+    //fp->_flags = (fp->_flags | __SWR);  // ok to write
 
-// Salva o ponteiro de estrutura de arquivo.
-// Ja checamos fd.
+// Save the file pointer into the table of open files
     p->Objects[__slot] = (unsigned long) fp;
 
-    //#debug
-    //printk ("process name: %s\n",p->__processname);
-    //printk ("fd %d\n",fp->_file);
-    //printk("do_read_file_from_disk-OUTPUT: %s \n",fp->_base);
+    // #debug
+    // printk ("process name: %s\n", p->__processname);
+    // printk ("fd %d\n", fp->_file);
+    // printk("do_read_file_from_disk-OUTPUT: %s \n", fp->_base);
+    // ...
 
 done:
-// Return fd. Called by open().
-// #todo:
-// Here is a good moment to validate the fp structure,
-// not in the beginning of the routine.
-    // return (int) fp->_file;
-    return fp;
-
+    return (file *) fp;  // Valid file pointer
 fail:
-    return NULL;
+    return NULL;         // Invalid file pointer
 }
 
 /*
@@ -4990,7 +4906,7 @@ do_write_file_to_disk (
     unsigned long TargetDirAddress = VOLUME1_ROOTDIR_ADDRESS;
     unsigned long NumberOfEntries = FAT16_ROOT_ENTRIES;
 
-// Parameter.
+// Parameter:
     if ((void*) file_name == NULL){
         return (int) (-EINVAL);
     }
@@ -5034,25 +4950,24 @@ do_write_file_to_disk (
 // #todo:
 // Change parameter name "file". 
 // Maybe we can use "fp" instead.
-void set_global_open_file ( void *file, int Index )
+void set_global_open_file(void *file, int Index)
 {
 
 // #todo:
 // Limite maximo da lista.
 
-// Structure
+// parameters:
     if ((void *) file == NULL)
     {
         // ?? todo: message
         return;
     }
-
     if (Index < 0){
         // ?? todo: message
         return;
     }
 
-// Include pointer in the list.
+// Include pointer in the list
     file_table[Index] = (unsigned long) file;
 }
 
@@ -5087,6 +5002,7 @@ int fs_initialize_dev_dir(void)
         dev_dir[i].path[0] = 0;
         dev_dir[i].fp = NULL;
     };
+
     return 0;
 }
 
