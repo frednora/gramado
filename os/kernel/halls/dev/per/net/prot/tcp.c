@@ -714,6 +714,7 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
 
 
 // This will be called by sys_connect() when the family is AF_INET.
+// see: __connect_inet_remote in socket.c
 // IN:
 //   sk              = local client socket structure.
 //   dst_ip_ipv4_int = destination IPv4, HOST byte order (already ntohl'd by the caller).
@@ -725,48 +726,76 @@ tcp_client_connect(
     unsigned short dst_port)
 {
 // WAN
+
+    struct socket_d *sk_local;
+    struct socket_d *sk_remote;
+
     printk("tcp_client_connect: Client sends SYN\n");
 
     if (!sk)
         return -EINVAL;
 
-    // Create connection object
-    struct connection_d *conn = create_connection(CONN_TYPE_TCP);
-    if (!conn) return -ENOMEM;
+    sk_local = sk;
+    sk_remote = NULL;
 
+// ------------------------------
+// Create connection object
+    struct connection_d *conn = create_connection(CONN_TYPE_TCP);
+    if (!conn){
+        printk("tcp_client_connect: conn\n");
+        return -ENOMEM;
+    }
+    // Register connection
     int id = connection_register(conn);
     if (id < 0 || id >= MAX_CONNECTIONS) 
     {
-        printk("tcp_client_connect: Failed to register connection\n");
+        printk("tcp_client_connect: id\n");
         return -1;
     }              
-
     conn->status = CONN_STATUS_NONE;
     conn->tcp_conn->state = TCP_CLOSED;
 
-    // Create endpoint pair
+// ------------------------------
+// Create endpoint pair
     struct endpoint_pair_d *pair = create_endpoint_pair_object();
-    if (!pair) return -ENOMEM;
+    if (!pair)
+        return -ENOMEM;
 
-    // Local endpoint
-    // #ps: plugging the socket we already have.
+// ------------------------------
+// Local endpoint
+// #ps: plugging the socket we already have.
     struct endpoint_d *local_ep = create_endpoint_object();
+    if (!local_ep)
+        return -ENOMEM;
     local_ep->is_remote = FALSE;
-    local_ep->socket = sk;
+    // Plug socket for local ep
+    local_ep->socket = sk_local;
+    sk_local->conn = conn;
+    sk_local->ep = local_ep;
 
-    // Remote endpoint
-    // Creating the socket for the remote ep.
+// ------------------------------
+// Remote endpoint
+// Creating the socket for the remote ep.
     struct endpoint_d *remote_ep = create_endpoint_object();
+    if (!remote_ep)
+        return -ENOMEM;
     remote_ep->is_remote = TRUE;
-    remote_ep->socket = create_socket_object();
-    if (!remote_ep->socket){
+    // Create socket for remote ep
+    remote_ep->socket = NULL;
+    //remote_ep->socket = create_socket_object();
+    sk_remote = (struct socket_d *) create_socket_object();
+    if (!sk_remote){
         return -ENOMEM;
     }
-    remote_ep->socket->family   = AF_INET;
-    remote_ep->socket->type     = SOCK_STREAM;
-    remote_ep->socket->protocol = IPPROTO_TCP;
-    remote_ep->socket->ip_ipv4  = dst_ip_ipv4_int;  // host order, consistent with rest of socket_d usage
-    remote_ep->socket->port     = dst_port;         // host order
+    sk_remote->family   = AF_INET;
+    sk_remote->type     = SOCK_STREAM;
+    sk_remote->protocol = IPPROTO_TCP;
+    sk_remote->ip_ipv4  = dst_ip_ipv4_int;  // host order, consistent with rest of socket_d usage
+    sk_remote->port     = dst_port;         // host order
+    sk_remote->conn = conn;
+    sk_remote->ep = remote_ep;
+
+    remote_ep->socket = sk_remote;
 
     // Plug endpoints into pair
     pair->c_ep = local_ep;
@@ -789,8 +818,8 @@ tcp_client_connect(
         panic("__new_client_port_number >");
 
     // Set
-    sk->port = __new_client_port_number;
-    // sk->port = 11888;  // Host bytes order
+    sk_local->port = __new_client_port_number;
+    // sk_local->port = 11888;  // Host bytes order
     // ------------------------------------------------
 
     // ------------------------------------------------
@@ -824,14 +853,14 @@ tcp_client_connect(
 
     // #debug
     printk("TCP Packet: [sending] remote=%u (sport), local=%u (dport)\n", 
-        sk->port, dst_port );
+        sk_local->port, dst_port );
 
     int rv = 
     network_send_tcp(
         dhcp_info.your_ipv4,   // source IP (array)
         target_ip,             // target IP (array, correctly ordered)
         NetworkSaved.gateway_mac,
-        sk->port,  // 11888 (host order) 
+        sk_local->port,  // 11888 (host order) 
         dst_port,  // host order
         conn->tcp_conn->iss,
         0,
@@ -855,7 +884,7 @@ tcp_client_connect(
 // Socket
 //
 
-    sk->state = SS_CONNECTING;
+    sk_local->state = SS_CONNECTING;
 
     printk("Done\n");
     return 0;
@@ -1173,38 +1202,45 @@ __kd_handle_tcp(
                 return; // do not respond
             }
             // Create a socket for the remote client
-            //client_ep->socket = (struct socket_d *) kmalloc(sizeof(struct socket_d));
-            client_ep->socket = (struct socket_d *) create_socket_object();
-            if ((void*) client_ep->socket == NULL){
-                panic("TCP: on client_ep->socket\n");
+            struct socket_d *sk_client;
+            sk_client = (struct socket_d *) create_socket_object();
+            if ((void*) sk_client == NULL){
+                panic("TCP: on sk_client\n");
                 //return;
             }
-            client_ep->socket->family = AF_INET;
-            client_ep->socket->type = SOCK_STREAM;
-            client_ep->socket->protocol = IPPROTO_TCP;
+            sk_client->family = AF_INET;
+            sk_client->type = SOCK_STREAM;
+            sk_client->protocol = IPPROTO_TCP;
+
+            sk_client->conn = conn;     // Belongs to this connection
+            sk_client->ep = client_ep;  // Belongs to this ep
 
             // Remote peer identity
-            client_ep->socket->pid = -1;   // remote client, not a local process
-            client_ep->socket->uid = 0;
-            client_ep->socket->gid = 0;
+            sk_client->pid = -1;   // remote client, not a local process
+            sk_client->uid = 0;
+            sk_client->gid = 0;
 
             // IP/Port
-            //client_ep->socket->ip_ipv6 = 0;
-            client_ep->socket->ip_ipv4 = s_ipv4_int;  //NetworkSaved.caller_ip_int;
-            client_ep->socket->port = sport;
+            // sk_client->ip_ipv6 = 0;
+            sk_client->ip_ipv4 = s_ipv4_int;  //NetworkSaved.caller_ip_int;
+            sk_client->port = sport;
 
             // Connection state
-            client_ep->socket->state   = SS_CONNECTING;
-            client_ep->socket->flags   = 0;
-            client_ep->socket->conn_copy = FALSE;
+            sk_client->state   = SS_CONNECTING;
+            sk_client->flags   = 0;
+            sk_client->conn_copy = FALSE;
 
             // Backlog defaults
-            client_ep->socket->backlog_max = 0;
-            client_ep->socket->pending_client_count = 0;
-            client_ep->socket->pending_server_count = 0;
+            sk_client->backlog_max = 0;
+            sk_client->pending_client_count = 0;
+            sk_client->pending_server_count = 0;
             // magic string? It indicates pending connection?
-            // client_ep->socket->magic_string[0] = 'C';
+            // sk_client->magic_string[0] = 'C';
 
+            // Plug the socket into the ep
+            client_ep->socket = sk_client;
+
+            // Plug the ep into the pair
             pair->c_ep = client_ep;
 
             // -- local ep (server) ---------------
@@ -1223,7 +1259,6 @@ __kd_handle_tcp(
             // It should look up the process that registered itself as 
             // the listener for port 11888 and then grab the socket object 
             // that belongs to that process.
-            server_ep->socket = NULL;
             pair->s_ep = server_ep;
 
             // --------------------------------------------
@@ -1232,9 +1267,9 @@ __kd_handle_tcp(
             conn->ep_pair = pair;
 
             // --------------------------------------------
-
-            struct socket_d *sk_listener = 
-                socket_get_tcpserver_socket_by_port(11888);  // dport?
+            server_ep->socket = NULL;
+            struct socket_d *sk_listener; 
+            sk_listener = (struct socket_d *) socket_get_tcpserver_socket_by_port(11888);  // dport?
             if ((void*) sk_listener != NULL)
             {
                 if (sk_listener->magic == 1234)
@@ -1248,8 +1283,11 @@ __kd_handle_tcp(
 
                     sk_listener->pending_client_endpoints[backlog_tail] = 
                         client_ep->socket;
-                    sk_listener->pending_client_count++;
+
                     sk_listener->state = SS_CONNECTING;
+
+                    sk_listener->conn = conn;     // Belongs to this connection
+                    sk_listener->ep = server_ep;  // Belongs to this ep
 
                     server_ep->socket = sk_listener;   // Save into the ep
                 }
@@ -2011,37 +2049,46 @@ network_handle_tcp (
             return; // do not respond
         }
         // Create a socket for the remote client
-        client_ep->socket = (struct socket_d *) create_socket_object();
-        if ((void*) client_ep->socket == NULL){
-            panic("TCP: on client_ep->socket\n");
+        client_ep->socket = NULL;
+        struct socket_d *sk_client;
+        sk_client = (struct socket_d *) create_socket_object();
+        if ((void*) sk_client == NULL){
+            panic("TCP: on sk_client\n");
             //return;
         }
-        client_ep->socket->family = AF_INET;
-        client_ep->socket->type = SOCK_STREAM;
-        client_ep->socket->protocol = IPPROTO_TCP;
+        sk_client->family = AF_INET;
+        sk_client->type = SOCK_STREAM;
+        sk_client->protocol = IPPROTO_TCP;
+
+        sk_client->conn = conn;     // Belongs to this connection
+        sk_client->ep = client_ep;  // Belonts to this ep
 
         // Remote peer identity
-        client_ep->socket->pid = -1;   // remote client, not a local process
-        client_ep->socket->uid = 0;
-        client_ep->socket->gid = 0;
+        sk_client->pid = -1;   // remote client, not a local process
+        sk_client->uid = 0;
+        sk_client->gid = 0;
 
         // IP/Port
-        //client_ep->socket->ip_ipv6 = 0;
-        client_ep->socket->ip_ipv4 = s_ipv4_int;  //NetworkSaved.caller_ip_int;
-        client_ep->socket->port = sport;
+        // sk_client->ip_ipv6 = 0;
+        sk_client->ip_ipv4 = s_ipv4_int;  //NetworkSaved.caller_ip_int;
+        sk_client->port = sport;
 
         // Connection state
-        client_ep->socket->state = SS_CONNECTING;
-        client_ep->socket->flags = 0;
-        client_ep->socket->conn_copy = FALSE;
+        sk_client->state = SS_CONNECTING;
+        sk_client->flags = 0;
+        sk_client->conn_copy = FALSE;
 
         // Backlog defaults
-        client_ep->socket->backlog_max = 0;
-        client_ep->socket->pending_client_count = 0;
-        client_ep->socket->pending_server_count = 0;
+        sk_client->backlog_max = 0;
+        sk_client->pending_client_count = 0;
+        sk_client->pending_server_count = 0;
         // magic string? It indicates pending connection?
-        // client_ep->socket->magic_string[0] = 'C';
+        // sk_client->magic_string[0] = 'C';
 
+        // Plug the socket into the client ep
+        client_ep->socket = sk_client;
+
+        // Plug the ep into the pair
         pair->c_ep = client_ep;
 
         // -- local ep (server) ---------------
@@ -2060,7 +2107,7 @@ network_handle_tcp (
         // It should look up the process that registered itself as 
         // the listener for port 11888 and then grab the socket object 
         // that belongs to that process.
-        server_ep->socket = NULL;
+
         pair->s_ep = server_ep;
 
         // --------------------------------------------
@@ -2072,8 +2119,9 @@ network_handle_tcp (
         // The socket for the local server.
         // #important: We are not creating it,
         // we are getting the pointer based on the port number.
-        struct socket_d *sk_listener = 
-            socket_get_tcpserver_socket_by_port(dport);
+        server_ep->socket = NULL;
+        struct socket_d *sk_listener; 
+        sk_listener = (struct socket_d *) socket_get_tcpserver_socket_by_port(dport);
         if ((void*) sk_listener != NULL)
         {
             if (sk_listener->magic == 1234)
@@ -2087,8 +2135,11 @@ network_handle_tcp (
 
                 sk_listener->pending_client_endpoints[backlog_tail] = 
                     client_ep->socket;
-                sk_listener->pending_client_count++;
+
                 sk_listener->state = SS_CONNECTING;
+
+                sk_listener->conn = conn;     // Belongs to this connection
+                sk_listener->ep = server_ep;  // Belongs to this ep
 
                 server_ep->socket = sk_listener;   // Save into the ep
             }

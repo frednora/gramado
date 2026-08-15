@@ -160,9 +160,6 @@ struct socket_d
     int type;      // e.g. SOCK_STREAM, SOCK_DGRAM
     int protocol;  // e.g. IPPROTO_TCP, IPPROTO_UDP
 
-// #test: The new endpoint structure.
-    struct endpoint_d *ep;
-
 // Ownership information.
 // process, user, group.
     pid_t pid;
@@ -179,6 +176,9 @@ struct socket_d
 // 1=LOCAL | 2=REMOTE
     int connection_type;
     int is_client_connecting_with_remote_server;
+
+    struct connection_d *conn;  // Belongs to this connection
+    struct endpoint_d *ep;      // Belongs to this ep
 
 // Local
 // ip and port.

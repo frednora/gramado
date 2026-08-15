@@ -350,7 +350,7 @@ ssize_t sys_sendmsg (int sockfd, const struct msghdr *msg, int flags)
 
 // Service 7000
 // #ps: This wrapper calls some workers inside sockint.c file.
-int sys_socket( int family, int type, int protocol )
+int sys_socket(int family, int type, int protocol)
 {
     struct endpoint_d *ep;
     struct socket_d *sk;

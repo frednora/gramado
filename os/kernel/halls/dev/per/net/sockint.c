@@ -91,6 +91,9 @@ struct socket_d *create_socket_object(void)
     s->type = 0;   // (SOCK_STREAM, SOCK_DGRAM, SOCK_RAW ...)
     s->protocol = 0;
 
+    s->conn = NULL;  // Belongs to this connection
+    s->ep = NULL;    // Belongs to this ep
+
 // IP:Port
     s->ip_ipv6 = (unsigned long) 0;
     s->ip_ipv4 = (unsigned int) 0;
