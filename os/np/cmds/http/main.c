@@ -21,16 +21,9 @@
 #include <rtl/gramado.h>
 
 
-//#define HTTP_PORT     11888
+// http://httpbin.org
+#define TARGET_IP  "100.60.124.177"
 #define HTTP_PORT 80
-
-// #test: change to a remote IP to test tcp_client_connect()
-//#define TARGET_IP     "127.0.0.1"
-// Google
-//#define TARGET_IP     "8.8.8.8"
-//#define TARGET_IP     "142.250.190.46"
-#define TARGET_IP     "1.1.1.1"
-// 93.184.216.34
 
 static void do_request(int sockfd);
 
@@ -38,15 +31,16 @@ static void do_request(int sockfd);
 
 static void do_request(int sockfd)
 {
-    //char buffer[1024];
     char buffer[512];
     int n;
 
     const char *request =
-        "GET / HTTP/1.1\r\n"
-        "Host: gramados\r\n"
-        "Connection: close\r\n"
-        "\r\n";
+    "GET /html HTTP/1.1\r\n"
+    "Host: httpbin.org\r\n"
+    "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
+    "Accept: text/html\r\n"
+    "Connection: close\r\n"
+    "\r\n";
 
     // Clear
     memset(buffer, 0, sizeof(buffer));    
@@ -77,11 +71,17 @@ static void do_request(int sockfd)
 // Waiting to read the response.
     //gws_debug_print("gws_draw_char: response\n");
     while (1){
+        rtl_yield(); 
+        rtl_yield(); 
+        rtl_yield(); 
+        rtl_yield(); 
         Value = rtl_get_file_sync( sockfd, SYNC_REQUEST_GET_ACTION );
         //if (Value == ACTION_REQUEST){}
         if (Value == ACTION_REPLY ) { break; }
         if (Value == ACTION_ERROR ) { goto done; }
         if (Value == ACTION_NULL )  { goto done; }  // No reponse
+        // REMOVED: "if (Value == ACTION_NULL) { goto done; }"
+        // Instead of giving up, we let the CPU loop/yield until ACTION_REPLY is set by the driver
     };
 
 

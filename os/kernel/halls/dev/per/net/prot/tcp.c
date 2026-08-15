@@ -19,6 +19,11 @@
 #include <kernel.h>
 
 
+// Temporary definition for testing flow control
+//#define TCP_WINDOW_TEST 1024   // advertise 1 KB receive window
+#define __TEMPORARY_TCP_WINDOW_TEST  512
+
+
 // For testing only: track the last connection we created.
 // Later this will be replaced with endpoint-based lookup.
 static struct connection_d *cur_conn = NULL;
@@ -396,13 +401,16 @@ network_send_tcp (
 // Window size = 0 → “I have no buffer space left, don’t send me more data.”
 
     //Ltcp.window_size = ToNetByteOrder16(TCP_WINDOW_SIZE);  // max window
+    Ltcp.window_size = ToNetByteOrder16(__TEMPORARY_TCP_WINDOW_TEST);  // max window
 
+/*
     if (flags & TH_FIN) {
         Ltcp.window_size = ToNetByteOrder16(0);
     } else {
         Ltcp.window_size = ToNetByteOrder16(TCP_WINDOW_SIZE);  // max window
         //Ltcp.window_size = ToNetByteOrder16(cur_conn->tcp_conn->rcv_wnd);
     }
+*/
 
     // Checksum (16 bits)
     // We will calculate at the end of the routine.
@@ -431,8 +439,10 @@ network_send_tcp (
             tcp_segment, 
             sizeof(tcp_segment) 
         );
-
+    
     // Byte swapping
+    // This is necessary because the checksum must be 
+    // transmitted in network byte order.
     Ltcp.checksum = (uint16_t) ToNetByteOrder16(Ltcp.checksum);
 
     //printk ("size %d\n", sizeof (struct  udp_d) );
@@ -595,15 +605,20 @@ tcp_socket_send(
     size_t len )
 {
     struct connection_d *conn;
+    struct socket_d *local_sk;
     struct socket_d *remote_sk;
     uint8_t target_ip[4];
     tcp_seq seq;
     tcp_ack ack;
+    uint16_t Flags = 0;
     int rv;
 
-    if ((void *) sk == NULL)
+    local_sk = sk;
+    remote_sk = NULL;
+
+    if ((void *) local_sk == NULL)
         return -EINVAL;
-    if (sk->magic != 1234)
+    if (local_sk->magic != 1234)
         return -EINVAL;
     if ((void *) buf == NULL)
         return -EINVAL;
@@ -611,9 +626,9 @@ tcp_socket_send(
         return 0;
 
     // Only AF_INET stream sockets that finished the handshake
-    if (sk->family != AF_INET)
+    if (local_sk->family != AF_INET)
         return -EAFNOSUPPORT;
-    if (sk->state != SS_CONNECTED)
+    if (local_sk->state != SS_CONNECTED)
         return -ENOTCONN;
 
 // Connection:
@@ -646,22 +661,24 @@ tcp_socket_send(
     target_ip[2] = (uint8_t) ((remote_sk->ip_ipv4 >>  8) & 0xFF);
     target_ip[3] = (uint8_t) ( remote_sk->ip_ipv4        & 0xFF);
 
-    seq = conn->tcp_conn->snd_nxt;
-    ack = conn->tcp_conn->rcv_nxt;
+    seq = conn->tcp_conn->snd_nxt;  // (next sequence number to send)
+    ack = conn->tcp_conn->rcv_nxt;  // (next expected acknowledgment)
 
     printk("tcp_socket_send: %d sends to %d", 
-        sk->port, remote_sk->port );
+        local_sk->port, remote_sk->port );
+
+    Flags = (TH_ACK | TH_PUSH);
 
     rv = 
     network_send_tcp(
-        dhcp_info.your_ipv4,          // source IP
-        target_ip,                    // destination IP
-        NetworkSaved.gateway_mac,     // next-hop MAC (gateway for WAN)
-        sk->port,                     // local port
-        remote_sk->port,              // remote port
+        dhcp_info.your_ipv4,       // source IP
+        target_ip,                 // destination IP
+        NetworkSaved.gateway_mac,  // next-hop MAC (gateway for WAN)
+        local_sk->port,
+        remote_sk->port,
         seq,
         ack,
-        (uint16_t) (TH_ACK | TH_PUSH),
+        (uint16_t) Flags,
         (char *) buf,
         len
     );
@@ -1999,7 +2016,6 @@ network_handle_tcp (
         }
         // Register connection
         int id = connection_register(conn);
-        // #todo: Check id validation
         if (id < 0 || id >= MAX_CONNECTIONS) 
         {
             printk("Failed to register connection\n");
@@ -2474,9 +2490,18 @@ network_handle_tcp (
 
         // #debug
         // Display payload
-        if (data_len > 0) {
-            printk("TCP Payload (%d bytes):\n%s\n", 
-                (int)data_len, __tcp_payload );
+        if (data_len > 0) 
+        {
+            //printk("TCP Payload (%d bytes):\n%s\n", 
+                //(int)data_len, __tcp_payload );
+
+            int _i;
+            for (_i = 0; _i < 5; _i++)
+            {
+                printk("%s", (__tcp_payload + _i));
+                _i = _i+200; 
+            }
+
         }
 
         // ---------------------------------------

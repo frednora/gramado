@@ -1305,6 +1305,10 @@ fail:
 // Entao o fd passado por argumento nao precisa ser o mesmo
 // do socket privado do processo. Pois poderemos estar
 // escrevendo em outro socket que nao o privado.
+// #: It needs to be used only as a worker for syscalls.
+// #todo
+// Get the processor pointer
+// and increment the write operation counter for this process.
 
 // OUT:
 // 0 = Couldn't read.
@@ -1312,33 +1316,19 @@ fail:
 
 ssize_t __write_imp (int fd, char *ubuf, size_t count)
 {
-// #: It needs to be used only as a worker for syscalls.
-// #todo
-// Get the processor pointer
-// and increment the write operation counter for this process.
-
-
-// File pointer.
     file *fp;
-
-    ssize_t nbytes=0;
     struct socket_d *s1;
     struct socket_d *s2;
-    //int ubuf_len=0;  //#bugbug: We don't know the size of the user buffer.
+    struct te_d *p;  // Process structure
+    ssize_t nbytes=0;
     size_t ncopy=0;
 
     //debug_print("__write_imp: :)\n");
 
-//-----------------------------
-    struct te_d *p;
-
-    // Get PID for the current process for a given core.
-    // IN: core id
+// Get PID for the current process for a given core.
+// IN: core id
 
     pid_t current_process = (pid_t) get_current_process(0);
-
-// Process
-// #todo: There is a helper for that small routine.
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX){
         //debug_print("__write_imp: current_process\n");
         goto fail;
@@ -1348,10 +1338,11 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         //debug_print("__write_imp: p\n");
         goto fail;
     }
-    if ( p->used != TRUE || p->magic != 1234 ){
+    if (p->used != TRUE || p->magic != 1234){
         //debug_print("__write_imp: p validation\n");
         goto fail;
     }
+
 // #warning
 // The goal here is counting how many timer the operation was called.
     p->write_counter++;
@@ -1369,13 +1360,13 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     if (count < 0){ 
         return (ssize_t) (-EINVAL);
     }
-// Nothing to do.
+    // Nothing to do
     if (count == 0){ 
         return 0; 
     }
 
 //
-// Size of the buffer.
+// Size of the buffer
 //
 
 // len
@@ -1409,7 +1400,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
     if ((void *) fp == NULL)
     {
         //debug_print("__write_imp: fp not open\n");
-        printk     ("__write_imp: fp not open #hang\n");
+        printk("__write_imp: fp not open #hang\n");
         //printk      ("fd{%d} pid{%d}\n",fd,current_process);
         //printk("entry0: %x\n", __P->Objects[0]);
         //printk("entry1: %x\n", __P->Objects[1]);
@@ -1679,18 +1670,20 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
 // #bugbug
 // Nao podemos fazer a copia se os dois sockets 
 // estiverem com a conexao pendente.
+
+    // Write into a socket file
     if (fp->____object == ObjectTypeSocket)
     {
         do_credits_by_tid(lapic_info[0].current_tid);
-        
 
         // -- Below is for remote connections ------------
         // Check the socket validation and state
         // Send data to a REMOTE peer.
         // We get the connection information based on the client's socket.
         // Established AF_INET → real TCP send.
+        // see: tcp.c
         struct socket_d *sk = fp->socket;
-        if ((void*)sk != NULL)
+        if ((void*) sk != NULL)
         {
             if ( sk->magic == 1234 && 
                  sk->family == AF_INET && 
