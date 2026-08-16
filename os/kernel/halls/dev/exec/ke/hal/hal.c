@@ -143,12 +143,14 @@ void hal_reboot(void)
 {
     debug_print("hal_reboot:\n");
 
-    switch (system_state ){
+    switch (system_state){
+
     // Normal situations
     case SYSTEM_BOOTING:
-    case SYSTEM_REBOOT:
+    case SYSTEM_RESTART:
         debug_print("...\n");
         break;
+
     default:
         debug_print("Booting on an unexpected situation\n");
         break;

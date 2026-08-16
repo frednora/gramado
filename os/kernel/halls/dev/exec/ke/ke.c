@@ -418,14 +418,14 @@ fail:
     return (int) -1;
 }
 
-// Wrapper.
+// Wrapper
 int keReboot(void)
 {
     unsigned long Flags = 0;
-    system_state = SYSTEM_REBOOT;
 
-// [Worker]
-// Call a safe implementation of this routine.
+    system_state = SYSTEM_RESTART;
+
+// Call a safe implementation of this routine
 // See: system.c
     return (int) do_reboot(Flags);
 }

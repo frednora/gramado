@@ -532,7 +532,7 @@ int do_reboot(unsigned long flags)
 {
     //int value = FALSE;
 
-    system_state = SYSTEM_REBOOT;
+    system_state = SYSTEM_RESTART;
 
 // #todo
 // Is it the superuser?

@@ -2,28 +2,23 @@
 // Global definitions. See globals.c
 // Created by Fred Nora.
 
-#ifndef __KMAIN_GLOBALS_H
-#define __KMAIN_GLOBALS_H    1
+#ifndef __KWRAP_GLOBALS_H
+#define __KWRAP_GLOBALS_H    1
 
 
 // See:
 // globals.c
 // admin/product.h
-extern int g_product_type; 
+extern int g_product_type;
+
+// See: kernel.h
+extern int system_state;
+
+// The kernel has booted?
+// see: globals.c
+extern int has_booted;
 
 
-// Are we using the GUI or not?
-#define GUI_ON   1
-#define GUI_OFF  0
-
-// #deprecated
-// We still need to delete this when possible.
-// Layers
-#define KERNEL      0
-#define GRAMADO     1   //1 kgws
-#define EXECUTIVE   2   //2
-#define MICROKERNEL 3   //3
-#define HAL         4   //4
 
 // IOPL constants.
 // Intel/AMD
@@ -35,8 +30,8 @@ extern int g_product_type;
 #define RING3  3
 
 
-//#define LOBYTE(w) ((char)(((unsigned long )(w)) & 0xff))
-//#define HIBYTE(w) ((char)((((unsigned long)(w)) >> 8) & 0xff))
+//#define LOBYTE(w)  ((char)(((unsigned long )(w)) & 0xff))
+//#define HIBYTE(w)  ((char)((((unsigned long)(w)) >> 8) & 0xff))
 
 // ===================================================
 
@@ -86,11 +81,6 @@ extern int g_extraheap2_initialized;
 // extra heap 3
 extern unsigned long g_extraheap3_size;
 extern int g_extraheap3_initialized;
-
-
-// The kernel has booted?
-// see: globals.c
-extern int has_booted;
 
 extern int g_redirect_printk_to_serial_during_syscalls;
 

@@ -11,6 +11,18 @@
 // Type of product.
 int g_product_type = PRODUCT_TYPE;
 
+//
+// System state
+//
+
+// booting, rebooting ...
+int system_state = SYSTEM_NULL;
+
+// The kernel has booted.
+// see: x86init.c
+int has_booted = FALSE;
+
+
 // Salvando o último endereço válido de memória ram.
 // usado em head.asm
 // see: x64mm.h
@@ -40,16 +52,6 @@ int current_arch = CURRENT_ARCH_X86_64;
 // GRAMADO_JAIL, GRAMADO_P1 ...
 int current_mode=0;
 
-// The kernel has booted.
-// see: x86init.c
-int has_booted = FALSE;
-
-//
-// System state
-//
-
-// booting, rebooting ...
-int system_state = SYSTEM_NULL;
 
 // INPUT_MODE_SETUP, INPUT_MODE_WS ...
 //int current_input_mode=0;

@@ -2,6 +2,63 @@
 // Gramado OS headers.
 // Created by Fred Nora.
 
+// System states:
+// What is the moment in the kernel's journey.
+// system_state is about the big phases of the kernel’s life.
+
+/*
+SYSTEM_NULL:
++ Nothing
+
+SYSTEM_PREINIT:
++ Getting info from bootloader tables.
++ Setup global, and configurations.
++ Starting serial debug support and virtual console support.
+
+SYSTEM_BOOTING:
++ The system is starting ...
+
+SYSTEM_RUNNING:
++ The system is running
+
+SYSTEM_SCHEDULING:
++ The system is scheduling ...
+
+SYSTEM_RESTART:
++ The system is running the routine to restart the kernel
++ The system is running the reboot routine
+
+SYSTEM_POWEROFF:
++ The system is running the poweroff routine
+
+SYSTEM_ABORTED:
++ The system was aborted ... ex: initialization fail
+
+SYSTEM_PANIC:
++ Running the panic routine.
+
+SYSTEM_DEAD:
++ The initialization fail and we are
++ halted for ever.
+
+*/
+
+// System states
+#define SYSTEM_NULL        0
+#define SYSTEM_PREINIT     1
+#define SYSTEM_BOOTING     2
+#define SYSTEM_RUNNING     3
+#define SYSTEM_SCHEDULING  4
+#define SYSTEM_RESTART     5
+#define SYSTEM_POWEROFF    6
+#define SYSTEM_ABORTED     7
+#define SYSTEM_PANIC       8
+#define SYSTEM_DEAD        9
+
+extern int system_state;
+
+// ============================
+
 #define CURRENT_ARCH_X86      1000
 #define CURRENT_ARCH_X86_64   1001
 // ...
@@ -30,7 +87,6 @@
 //
 
 #include "../gthouse/kwrap/mode.h"
-#include "../gthouse/kwrap/state.h"   // Big moments for the kernel's life.
 #include "../gthouse/kwrap/irql.h"    // Micro moments related with interrupts.
 #include "../gthouse/kwrap/system.h"
 #include "../gthouse/kwrap/klimits2.h"
