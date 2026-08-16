@@ -29,7 +29,7 @@
 static struct connection_d *cur_conn = NULL;
 
 const unsigned short __first_ephemeral_port = 32768;
-const unsigned short __last_ephemeral_port = 39999;
+const unsigned short __last_ephemeral_port = 32999;
 static unsigned short __new_client_port_number = 32768; // Inicial
 
 //static char __tcp_payload[1024];
@@ -664,7 +664,7 @@ tcp_socket_send(
     seq = conn->tcp_conn->snd_nxt;  // (next sequence number to send)
     ack = conn->tcp_conn->rcv_nxt;  // (next expected acknowledgment)
 
-    printk("tcp_socket_send: %d sends to %d", 
+    printk("tcp_socket_send: %d sends to %d\n", 
         local_sk->port, remote_sk->port );
 
     Flags = (TH_ACK | TH_PUSH);
@@ -697,8 +697,10 @@ tcp_socket_send(
 // allowing the ring 3 process to read it.
 int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
 {
-    if (!sk || sk->magic != 1234) return -EINVAL;
-    if (sk->state != SS_CONNECTED) return -ENOTCONN;
+    if (!sk || sk->magic != 1234) 
+        return -EINVAL;
+    if (sk->state != SS_CONNECTED)
+        return -ENOTCONN;
 
     file *fp = sk->private_file;
     if (!fp) return -ENOTCONN;
@@ -740,6 +742,7 @@ tcp_client_connect(
     unsigned short dst_port)
 {
 // WAN
+// Send SYN
 
     struct socket_d *sk_local;
     struct socket_d *sk_remote;
@@ -866,7 +869,7 @@ tcp_client_connect(
 // (1st step)
 
     // #debug
-    printk("TCP Packet: [sending] remote=%u (sport), local=%u (dport)\n", 
+    printk("TCP: [Send SYN] s=%u (sport), d=%u (dport)\n", 
         sk_local->port, dst_port );
 
     int rv = 
@@ -951,19 +954,13 @@ __kd_handle_tcp(
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
 
     //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", tcp->th_sport, tcp->th_dport);
-    printk("TCP Packet: [receiving] remote=%u (sport), local=%u (dport)\n", 
-        sport, dport);
+    printk("TCP: [Receiving] s=%u (sport), d=%u (dport)\n", 
+        sport, dport );
 
 //
 // Super drop
+// Only the kernel debugger is allowed
 //
-
-    // #debug:
-    // Not listening to these ports for now. Too much noise.
-    //if (dport == 80)
-        //return;
-    //if (dport == 443)
-        //return;
 
     if (dport != 11888){
         printk("__kd_handle_tcp: Invalid port\n");
@@ -1822,8 +1819,8 @@ network_handle_tcp (
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
 
     //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", tcp->th_sport, tcp->th_dport);
-    printk("TCP Packet: [receiving] remote=%u (sport), local=%u (dport)\n", 
-        sport, dport);
+    //printk("TCP Packet: [receiving] remote=%u (sport), local=%u (dport)\n", 
+        //sport, dport);
 
 // Target is kernel debugger
     if (dport == 11888){
@@ -1832,23 +1829,54 @@ network_handle_tcp (
     }
 
 //
-// Drop these for now
+// Super drop
+// Only some ports are allowed.
+// We are acoiding noise for now.
 //
 
-    // #debug:
-    // Not listening to these ports for now. Too much noise.
-    //if (dport == 80)
-        //return;
-    //if (dport == 443)
-        //return;
+    int AllowThisPort = FALSE;
 
-// The well‑known ports are defined by IANA as 0–1023.
-// Drop all well-known ports (0–1023) to avoid noise
-    if (dport <= 1023) {
+//
+// YOU SHALL NOT PASS!
+//
+
+    // Ephemeral ports
+    if (dport >= __first_ephemeral_port && 
+        dport <= __last_ephemeral_port)
+    {
+        AllowThisPort = TRUE;
+    }
+
+    // Special experimental ports
+    if ( dport == 4040 ||
+         dport == 4041 || 
+         dport == 22888 )
+    {
+        AllowThisPort = TRUE;
+    }
+
+    // Future: enable HTTP/HTTPS when ready
+    // if (dport == 80 || dport == 443)
+    //     AllowThisPort = TRUE;
+
+//
+// Drop
+//
+
+// #ps:
+// This filter is dropping a lot of noise. A LOT.
+
+    if (AllowThisPort != TRUE) {
+        //printk("TCP: Invalid port %u <<< X >>>\n", dport);
         return;
     }
 
+//
+// Welcome to Gramado Castle
+//
 
+   printk("TCP Packet: [Receiving] s=%u (sport), r=%u (dport)\n", 
+        sport, dport );
 
 // Not for kernel debugger
 
@@ -1857,7 +1885,7 @@ network_handle_tcp (
     // handling the connection structure at the beginning of this routine.
 
     // #debug: Provisory drop.
-    printk("network_handle_tcp: [TEST TEST TEST] Not 11888\n");
+    //printk("network_handle_tcp: [TEST TEST TEST] Not 11888\n");
     //return;
     
 // -------- normal TCP --------

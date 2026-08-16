@@ -501,7 +501,8 @@ network_handle_arp(
         ar->arp_spa[2] == 1   &&
         ar->arp_spa[3] == 1) 
     {
-        printk("ARP: Gateway reply detected\n");
+        // #debug
+        // printk("ARP: Gateway reply detected\n");
 
         /*
         // Save into NetworkInfo
@@ -540,10 +541,9 @@ network_handle_arp(
     } else if (op == ARP_OPC_REPLY){
 
         // #debug
-        printk("ARP: REPLY from %d.%d.%d.%d\n",
-            ar->arp_spa[0], ar->arp_spa[1], 
-            ar->arp_spa[2], ar->arp_spa[3] 
-        );
+        //printk("ARP: REPLY from %d.%d.%d.%d\n",
+        //    ar->arp_spa[0], ar->arp_spa[1], 
+        //    ar->arp_spa[2], ar->arp_spa[3] );
 
         int t_idx = arp_table_lookup(ar->arp_spa);
         
@@ -587,7 +587,8 @@ network_handle_arp(
                 if (NetworkInfo->initialized == TRUE)
                 {
                     // #debug
-                    printk("Saving gateway info\n");
+                    //printk("Saving gateway info\n");
+
                     network_fill_ipv4( 
                         NetworkInfo->gateway_ipv4,
                         ar->arp_spa );

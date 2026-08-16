@@ -17,7 +17,6 @@
 #include <netinet/tcp.h>
 
 
-
 #define HTTP_PORT    22888
 static void handle_connection(int connfd);
 
