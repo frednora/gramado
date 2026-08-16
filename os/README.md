@@ -45,29 +45,32 @@ Some extra features are:
 ## Core System  (Pride)
 
 ```
-boot/     - Gramado OS bootloader.
-kernel/   - Gramado OS kernel.
-modules/  - Ring 0 loadable kernel modules. (Not dynlinked).
-moon/     - The init process.
+boot/      - Gramado OS bootloader.
+kernel/    - Gramado OS kernel.
+m1/dungeon - Ring 0 loadable kernel modules. (Not dynlinked).
+luna/      - The init process.
 ```
 
 ```
 This creates a very clear startup flow:
-    boot → kernel → modules → moon (init)
+    boot → kernel → m1/dungeon → luna (init)
 ```
 
-## Native UI (Sup.:)
+
+## Mammal
 
 ```
-native/   - Native UI
+mammal/   - Posix-like commands and experiments.
+```
+
+## Reptile UI
+
+```
+reptile/  - Reptile UI
             Compositor and client-side GUI applications.
+            3D demos.
 ```
 
-## Nomad Pastors (Env.:)
-
-```
-np/       - Posix-like commands and experiments.
-```
 
 ## Other folders
 

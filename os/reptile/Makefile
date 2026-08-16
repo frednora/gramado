@@ -1,8 +1,9 @@
 # Created by Fred Nora
 
 all:
-	make -C hunter/
-	make -C ifarmer/
+	make -C b/
+	make -C np/
+	make -C velo3d/
 
 clean:
 	-rm -f *.o

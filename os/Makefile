@@ -20,26 +20,30 @@ BUILD = $(BASE)/build1
 # It's because of the close interaction userland
 # with the other subfolders in core/.
 
-
-# =================================
-# Native UI
-
-__DEP_L2 = native
-# Compositor / Display servers
-L2_COMP     = $(__DEP_L2)/hunter
-# Client-side GUI applications
-L2_WINSHELL = $(__DEP_L2)/ifarmer/winshell
+# The init process
+# The first ring 3 process
+INIT_PROCESS = luna
 
 
 # =================================
-# Nomad Pastors - POSIX-like commands and experiments
+# L1: Mammal - POSIX-like commands and experiments
 
-__DEP_LZ = np
-L4_CPP00 = $(__DEP_LZ)/cpp00
-LZ_CMDS  = $(__DEP_LZ)/cmds
+__DEP_L1 = mammal
+L1_CMDS  = $(__DEP_L1)/cmds
+L1_CPP00 = $(__DEP_L1)/cpp00
 
-__DEP_NORA3D = nora3d
-#L3_XX = $(__DEP_LZ)/xx
+
+# =================================
+# L2: Reptile UI
+
+__DEP_L2 = reptile
+# Compositors / Display servers (b)
+L2_COMP     = $(__DEP_L2)/b
+# Client-side GUI applications (Nomad Pastors)
+L2_WINSHELL = $(__DEP_L2)/np/winshell
+# 3D demos
+L2_VELO3D   = $(__DEP_L2)/velo3d
+
 
 ## =================================
 # Make variables (CC, etc...)
@@ -134,34 +138,32 @@ build-gramado-os:
 # Create a backup; The bootloder expects this.
 	@cp kernel/KERNEL.BIN  $(BUILD)/DE
 
+# The init process
+	@$(MAKE) -C $(INIT_PROCESS)/
+	@cp $(INIT_PROCESS)/src/bin/INIT.BIN  $(BUILD)/
+
+
 # (3) modules/
 
 # ::Build the ring0 module image
 # ::Build user mode drivers
 # ::Build user mode servers
 
-	@echo "Compiling modules/"
-	@$(Q)$(MAKE) -C modules/
+	@echo "Compiling m1/"
+	@$(Q)$(MAKE) -C m1/
 
-	@echo "Installing modules/"
+	@echo "Installing m1/"
 
 # The main kernel module
-	@cp modules/bin/DUNGEON.BIN  $(BUILD)/
-	@cp modules/bin/DUNGEON.BIN  $(BUILD)/GRAMADO
+	@cp m1/bin/DUNGEON.BIN  $(BUILD)/
+	@cp m1/bin/DUNGEON.BIN  $(BUILD)/GRAMADO
 
 # netu
-	@-cp modules/netu/core/bin/NET.BIN   $(BUILD)/GRAMADO/
-	@-cp modules/netu/core/bin/NETD.BIN  $(BUILD)/GRAMADO/
+	@-cp m1/netu/core/bin/NET.BIN   $(BUILD)/GRAMADO/
+	@-cp m1/netu/core/bin/NETD.BIN  $(BUILD)/GRAMADO/
 
 # Ring 3 VGA device driver
-	@cp modules/udrivers/bin/VGAD.BIN  $(BUILD)/GRAMADO
-
-
-# The init process
-	@$(MAKE) -C moon/
-
-# Copy the init process.
-	@cp moon/src/bin/INIT.BIN  $(BUILD)/
+	@cp m1/udrivers/bin/VGAD.BIN  $(BUILD)/GRAMADO
 
 	@echo "~build-gramado-os end?"
 
@@ -173,110 +175,75 @@ build-extras:
 
 	@echo "build-extras"
 
-# __DEP_L2:: Display servers
-	@echo "Compiling __DEP_L2"
+# ----------------------------------
+# Compile layers
+	@echo "Compiling L1 and L2"
+	@make -C $(__DEP_L1)/
 	@make -C $(__DEP_L2)/
 
-	@echo "Installing __DEP_L2"
-# Winu Core - Compositor / Display server
-	@-cp $(L2_COMP)/comp00/bin/COMP00.BIN    $(BUILD)/DE
+# ----------------------------------
+# L1: Install binaries
+	@echo "Installing L1"
 
-#===================================
-# Install BMPs from cali assets.
-# Copy the $(L2_WINSHELL)/assets/
-# We can't survive without this one.
-	@cp $(L2_WINSHELL)/assets/themes/theme01/*.BMP  $(BUILD)/DE
+	@-cp $(L1_CMDS)/bin/CAT.BIN       $(BUILD)/
+	@-cp $(L1_CMDS)/bin/REBOOT.BIN    $(BUILD)/
+	@-cp $(L1_CMDS)/bin/SHUTDOWN.BIN  $(BUILD)/
+	@-cp $(L1_CMDS)/bin/UNAME.BIN     $(BUILD)/
 
+#	@-cp $(L1_CMDS)/bin/CAT00.BIN    $(BUILD)/
+#	@-cp $(L1_CMDS)/bin/CMP.BIN      $(BUILD)/
+#	@-cp $(L1_CMDS)/bin/ED00.BIN     $(BUILD)/
+	@-cp $(L1_CMDS)/bin/HTTP.BIN     $(BUILD)/
+	@-cp $(L1_CMDS)/bin/HTTPSRV.BIN  $(BUILD)/
+#	@-cp $(L1_CMDS)/bin/HEXDUMP.BIN  $(BUILD)/
+	@-cp $(L1_CMDS)/bin/GRAMCNF.BIN  $(BUILD)/
+	@-cp $(L1_CMDS)/bin/JS.BIN       $(BUILD)/
+#	@-cp $(L1_CMDS)/bin/LUA1.BIN     $(BUILD)/
+#	@-cp $(L1_CMDS)/bin/TASCII.BIN   $(BUILD)/
+#	@-cp $(L1_CMDS)/bin/TPRINTF.BIN  $(BUILD)/
 
-# ?::
-	@echo "Compiling np/"
-	@make -C $(__DEP_LZ)/
+	@-cp $(L1_CMDS)/bin/PUBSH.BIN     $(BUILD)/DE/
+	@-cp $(L1_CMDS)/bin/SHELL.BIN     $(BUILD)/DE/
+	@-cp $(L1_CMDS)/bin/SHELL2.BIN    $(BUILD)/DE/
 
-	@echo "Compiling nora3d/"
-	@make -C $(__DEP_NORA3D)/
+#	@-cp $(L1_CMDS)/bin/FALSE.BIN     $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/TRUE.BIN      $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/CMP.BIN       $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/SHOWFUN.BIN   $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/SUM.BIN       $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/N9.BIN        $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/N10.BIN       $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/N11.BIN       $(BUILD)/GRAMADO/
+#	@-cp $(L1_CMDS)/bin/UDPTEST.BIN   $(BUILD)/GRAMADO/
+	@-cp $(L1_CMDS)/bin/PUBSH.BIN     $(BUILD)/GRAMADO/
+	@-cp $(L1_CMDS)/bin/REBOOT.BIN    $(BUILD)/GRAMADO/
+	@-cp $(L1_CMDS)/bin/SH7.BIN       $(BUILD)/GRAMADO/
+	@-cp $(L1_CMDS)/bin/SHELL.BIN     $(BUILD)/GRAMADO/
+	@-cp $(L1_CMDS)/bin/SHUTDOWN.BIN  $(BUILD)/GRAMADO/
 
+	@-cp $(L1_CPP00)/bin/CPP00.BIN    $(BUILD)/DE
 
-# --------
-# cpp00
-# cpp application example
-	@-cp $(L4_CPP00)/bin/CPP00.BIN  $(BUILD)/DE
+# ----------------------------------
+# L2: Install binaries, theme and 3d demos
+	@echo "Installing L2"
 
+	@-cp $(L2_COMP)/comp00/bin/COMP00.BIN  $(BUILD)/DE
 
-# --------
-# sdk
-
-	@-cp $(LZ_CMDS)/bin/CAT.BIN       $(BUILD)/
-	@-cp $(LZ_CMDS)/bin/CAT00.BIN     $(BUILD)/
-
-# tests
-	@-cp $(LZ_CMDS)/bin/LUA1.BIN       $(BUILD)/
-#	@-cp $(LZ_CMDS)/bin/CMP.BIN        $(BUILD)/
-#	@-cp $(LZ_CMDS)/bin/TASCII.BIN     $(BUILD)/
-#	@-cp $(LZ_CMDS)/bin/TPRINTF.BIN    $(BUILD)/
-	@-cp $(LZ_CMDS)/bin/ED00.BIN       $(BUILD)/
-
-	@-cp $(LZ_CMDS)/bin/HTTP.BIN       $(BUILD)/
-	@-cp $(LZ_CMDS)/bin/HTTPSRV.BIN    $(BUILD)/
-
-#	@-cp $(LZ_CMDS)/bin/HEXDUMP.BIN    $(BUILD)/
-
-
-# Experimental commands
-#	@-cp $(LZ_CMDS)/bin/FALSE.BIN      $(BUILD)/GRAMADO/
-#	@-cp $(LZ_CMDS)/bin/TRUE.BIN       $(BUILD)/GRAMADO/
-#	@-cp $(LZ_CMDS)/bin/CMP.BIN       $(BUILD)/GRAMADO/
-#	@-cp $(LZ_CMDS)/bin/SHOWFUN.BIN   $(BUILD)/GRAMADO/
-#	@-cp $(LZ_CMDS)/bin/SUM.BIN       $(BUILD)/GRAMADO/
-	@-cp $(LZ_CMDS)/bin/GRAMCNF.BIN    $(BUILD)/
-	@-cp $(LZ_CMDS)/bin/JS.BIN    $(BUILD)/
-
-#@-cp $(LZ_CMDS)/bin/N9.BIN         $(BUILD)/GRAMADO/
-#@-cp $(LZ_CMDS)/bin/N10.BIN        $(BUILD)/GRAMADO/
-#@-cp $(LZ_CMDS)/bin/N11.BIN        $(BUILD)/GRAMADO/
-#@-cp $(LZ_CMDS)/bin/UDPTEST.BIN  $(BUILD)/GRAMADO/
-
-	@-cp $(LZ_CMDS)/bin/REBOOT.BIN    $(BUILD)/
-	@-cp $(LZ_CMDS)/bin/SHUTDOWN.BIN  $(BUILD)/
-	@-cp $(LZ_CMDS)/bin/UNAME.BIN     $(BUILD)/
-
-	@-cp $(LZ_CMDS)/bin/PUBSH.BIN     $(BUILD)/GRAMADO/
-	@-cp $(LZ_CMDS)/bin/REBOOT.BIN    $(BUILD)/GRAMADO/
-	@-cp $(LZ_CMDS)/bin/SH7.BIN       $(BUILD)/GRAMADO/
-	@-cp $(LZ_CMDS)/bin/SHELL.BIN     $(BUILD)/GRAMADO/
-	@-cp $(LZ_CMDS)/bin/SHUTDOWN.BIN  $(BUILD)/GRAMADO/
-
-	@-cp $(LZ_CMDS)/bin/PUBSH.BIN     $(BUILD)/DE/
-	@-cp $(LZ_CMDS)/bin/SHELL.BIN     $(BUILD)/DE/
-	@-cp $(LZ_CMDS)/bin/SHELL2.BIN    $(BUILD)/DE/
-
-
-# --------
-# winshell
-# These need the '#' prefix.
-
-# DE core applications
 	@-cp $(L2_WINSHELL)/bin/TASKBAR.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/TERMINAL.BIN  $(BUILD)/DE/
 
-# DE Utilities
-	@-cp $(L2_WINSHELL)/bin/DOC.BIN      $(BUILD)/DE/
+#	@-cp $(L2_WINSHELL)/bin/DOC.BIN      $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/EDITOR.BIN   $(BUILD)/DE/
+#	@-cp $(L2_WINSHELL)/bin/GWS.BIN      $(BUILD)/DE/
+#	@-cp $(L2_WINSHELL)/bin/LAUNCH.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/MEMORY.BIN   $(BUILD)/DE/
+#	@-cp $(L2_WINSHELL)/bin/MENUAPP.BIN  $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/POWER.BIN    $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/SYSINFO.BIN  $(BUILD)/DE/
 
-# Experimental applications
-	@-cp $(L2_WINSHELL)/bin/LAUNCH.BIN   $(BUILD)/DE/
-	@-cp $(L2_WINSHELL)/bin/MENUAPP.BIN  $(BUILD)/DE/
+	@cp $(L2_WINSHELL)/assets/themes/theme01/*.BMP  $(BUILD)/DE
 
-# Other applications
-	@-cp $(L2_WINSHELL)/bin/GWS.BIN      $(BUILD)/DE/
-
-# --------
-# heavy (nora3d/)
-# 3D game demos
-
-	@-cp $(__DEP_NORA3D)/bin/ENG00.BIN   $(BUILD)/DE/
+	@-cp $(L2_VELO3D)/bin/ENG00.BIN   $(BUILD)/DE/
 
 
 	@echo "~ build-extras"
@@ -406,17 +373,17 @@ clean-all: clean
 	-rm -rf kernel/kernel.map 
 
 # ==================
-# (3) modules/
-# Clear the ring0 module images
-	-rm -rf modules/*.o
-	-rm -rf modules/*.BIN
-	-rm -rf modules/bin/*.BIN
+# Clear INIT.BIN
+	-rm $(INIT_PROCESS)/src/*.o
+	-rm $(INIT_PROCESS)/src/*.BIN 
+	-rm $(INIT_PROCESS)/src/bin/*.BIN 
 
 # ==================
-# Clear INIT.BIN
-	-rm moon/src/*.o
-	-rm moon/src/*.BIN 
-	-rm moon/src/bin/*.BIN 
+# (3) modules/
+# Clear the ring0 module images
+	-rm -rf m1/*.o
+	-rm -rf m1/*.BIN
+	-rm -rf m1/bin/*.BIN
 
 
 # ==================
