@@ -95,22 +95,16 @@ all:
 # ethernet
 	$(CC) -c ethernet/ethernet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
 
-# core protocols
-# arp, ipv4, ipv6
-
-	$(CC) -c prot/core/arp.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
-
-	$(CC) -c prot/core/ipv4.c  \
-$(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
-
-# protocols
-	$(CC) -c prot/tcp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
-	$(CC) -c prot/udp.c    $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
-	$(CC) -c prot/dhcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
+# ipv4
+	$(CC) -c ipv4/arp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
+	$(CC) -c ipv4/ipv4.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
+	$(CC) -c ipv4/tcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
+	$(CC) -c ipv4/udp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
+	$(CC) -c ipv4/dhcp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
 
 # link
 	$(LD) -r -o p3_net.o $(OBJS)
+#bugbug: too much
 	cp p3_net.o ../../../../
 	rm *.o
 

@@ -3364,13 +3364,13 @@ sys_connect (
 
     // It is AF_GRAMADO family
     if (IsAFGRAMADO == TRUE){
-        return (int) __connect_af_gramado( sockfd, addr, addrlen, ConnectionFlags );
+        return (int) __connect_af_gramado(sockfd, addr, addrlen, ConnectionFlags);
 
     // It is NOT AF_GRAMADO family
     } else if (IsAFGRAMADO == FALSE){
 
         // if AF_INET
-        return (int) __connect_inet ( sockfd, addr, addrlen, ConnectionFlags );
+        return (int) __connect_inet(sockfd, addr, addrlen, ConnectionFlags);
     }; 
 
 // Unexpected error

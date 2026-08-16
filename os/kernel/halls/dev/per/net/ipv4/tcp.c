@@ -2513,69 +2513,100 @@ network_handle_tcp (
 
     if (cur_conn->status == CONN_STATUS_ESTABLISHED)
     {
-        printk("TCP: Clent received something with the connection already established\n");
+        printk("TCP: Client received something with the connection already established\n");
 
         // ...
 
         if ((void*) cur_conn->tcp_conn == NULL)
         {
             //fail
+            cur_conn->status = CONN_STATUS_CLOSED;
             return;
         }
 
         cur_conn->packets_received++;
 
-        // data++
-        cur_conn->tcp_conn->rcv_nxt = _seq_number + data_len; // advance receive pointer
-
-        // #debug
-        // Display payload
-        if (data_len > 0) 
+        // -------------------------------------------------
+        // 1. Advance rcv_nxt only for in-order data
+        // -------------------------------------------------
+        if (_seq_number == cur_conn->tcp_conn->rcv_nxt) 
         {
-            //printk("TCP Payload (%d bytes):\n%s\n", 
-                //(int)data_len, __tcp_payload );
+            // In-order data segment
+            cur_conn->tcp_conn->rcv_nxt += data_len;
+            if (fFIN)
+                cur_conn->tcp_conn->rcv_nxt += 1;   // FIN consumes one sequence number
 
-            int _i;
-            for (_i = 0; _i < 5; _i++)
+
+            // #debug: Display payload
+            // #todo: Here we are receiving the data,
+            // but sometimes the routine bellow can't put
+            // the data into the buffer.
+            // #todo:
+            // Our goal now is put the whole message 
+            // with all the segments inside a buffer
+            // and allow the ring 3 client to read it.
+            if (data_len > 0) 
             {
-                printk("%s", (__tcp_payload + _i));
-                _i = _i+200; 
+                printk("TCP Payload (%d bytes):\n%s\n", 
+                    (int)data_len, __tcp_payload );
+                //int _i;
+                //for (_i = 0; _i < 5; _i++)
+                //{
+                //    printk("%s\n", (__tcp_payload + _i));
+                //    _i = _i+200; 
+                //}
+                //printk("\n");
             }
 
-        }
-
-        // ---------------------------------------
-        if (cur_conn->ep_pair && cur_conn->ep_pair->c_ep)
-        {
-            if (cur_conn->ep_pair->c_ep) 
+            // -------------------------------------------------
+            // 2. Append data to the socket buffer (do NOT overwrite)
+            // -------------------------------------------------
+            if (cur_conn->ep_pair && cur_conn->ep_pair->c_ep)
             {
-                struct socket_d *sk = cur_conn->ep_pair->c_ep->socket;
-                if (sk && sk->magic == 1234) 
+                if (cur_conn->ep_pair->c_ep) 
                 {
-                    if (sk->private_file && data_len > 0){
-                    printk("Saving payload into the file\n");
-                    file *fp = sk->private_file;
-                    size_t to_copy = 
-                        (data_len < fp->_lbfsize) ? data_len : fp->_lbfsize;
-                    memcpy(fp->_base, buffer + TCP_HEADER_LENGHT, to_copy);
-                    fp->_w = to_copy;
-                    fp->_r = 0;
-                    // Permissions
-                    fp->sync.can_read = TRUE;   // allow read
-                    fp->_flags |= __SRD;        // mark readable
-                    //fp->_flags &= ~__SWR;       // optional: clear write-only
-                    fp->sync.action = ACTION_REPLY; // signal to client that data is ready
-                    }
-                }
+                    struct socket_d *sk = cur_conn->ep_pair->c_ep->socket;
+                    if (sk && sk->magic == 1234) 
+                    {
+                        if (sk->private_file && data_len > 0)
+                        {
+                            //printk("TCP Payload (%d bytes):\n%s\n", 
+                                //(int)data_len, __tcp_payload );
+
+                            printk("Saving payload into the file\n");
+                            file *fp = sk->private_file;
+                            size_t to_copy = 
+                                (data_len < fp->_lbfsize) ? data_len : fp->_lbfsize;
+                            memcpy(fp->_base, buffer + TCP_HEADER_LENGHT, to_copy);
+                            fp->_w = to_copy;
+                            fp->_r = 0;
+                            // Permissions
+                            fp->sync.can_read = TRUE;   // allow read
+                            fp->_flags |= __SRD;        // mark readable
+                            //fp->_flags &= ~__SWR;       // optional: clear write-only
+                            fp->sync.action = ACTION_REPLY; // signal to client that data is ready
+                        }
+                   }
+               }
             }
+
+        }
+        else if (_seq_number + data_len <= cur_conn->tcp_conn->rcv_nxt) {
+            // Pure retransmission / already received → just ACK
+            printk("TCP: duplicate segment (seq=%u)\n", _seq_number);
+        }
+        else {
+            // Out-of-order → drop for now
+            printk("TCP: out-of-order seq=%u expected=%u\n",
+                _seq_number, cur_conn->tcp_conn->rcv_nxt );
         }
 
-        // -------------------------------------------
-        unsigned int Flags = TH_ACK;
-        if (fFIN == 1){
-            cur_conn->tcp_conn->rcv_nxt += 1;
-            Flags = TH_ACK | TH_FIN;
-        }
+        // -------------------------------------------------
+        // 3. Always send the current cumulative ACK
+        // -------------------------------------------------
+        uint16_t Flags = TH_ACK;
+        if (fFIN)
+            Flags |= TH_FIN;   // only if you want to close your side too
 
         // Send ACK.
         // Acknoledgind the received data.

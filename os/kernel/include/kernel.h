@@ -361,19 +361,18 @@ extern int system_state;
 #include "../halls/dev/per/net/ethernet/ethernet.h"
 
 // =================================
-// prot/
+// ipv4/
+#include "../halls/dev/per/net/ipv4/arp.h"
+#include "../halls/dev/per/net/ipv4/ipv4.h"
+#include "../halls/dev/per/net/ipv4/tcp.h"
+#include "../halls/dev/per/net/ipv4/udp.h"
+#include "../halls/dev/per/net/ipv4/dhcp.h" 
+#include "../halls/dev/per/net/ipv4/icmp.h" 
 
-// Core protocols: arp, ipv4, ipv6
-#include "../halls/dev/per/net/prot/core/arp.h"
-#include "../halls/dev/per/net/prot/core/ip.h"
+// =================================
+// ipv6/
 
-// Commom protocols
-#include "../halls/dev/per/net/prot/tcp.h"
-#include "../halls/dev/per/net/prot/udp.h"
-#include "../halls/dev/per/net/prot/dhcp.h" 
 
-// Extra protocols
-#include "../halls/dev/per/net/prot/icmp.h" 
 
 // dev/per/net/
 
