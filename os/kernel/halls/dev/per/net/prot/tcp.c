@@ -960,10 +960,15 @@ __kd_handle_tcp(
 
     // #debug:
     // Not listening to these ports for now. Too much noise.
-    if (dport == 80)
+    //if (dport == 80)
+        //return;
+    //if (dport == 443)
+        //return;
+
+    if (dport != 11888){
+        printk("__kd_handle_tcp: Invalid port\n");
         return;
-    if (dport == 443)
-        return;
+    }
 
 // These are extracting the sequence number and 
 // acknowledgment number from the TCP header of an incoming packet.
@@ -1832,10 +1837,17 @@ network_handle_tcp (
 
     // #debug:
     // Not listening to these ports for now. Too much noise.
-    if (dport == 80)
+    //if (dport == 80)
+        //return;
+    //if (dport == 443)
+        //return;
+
+// The well‑known ports are defined by IANA as 0–1023.
+// Drop all well-known ports (0–1023) to avoid noise
+    if (dport <= 1023) {
         return;
-    if (dport == 443)
-        return;
+    }
+
 
 
 // Not for kernel debugger
