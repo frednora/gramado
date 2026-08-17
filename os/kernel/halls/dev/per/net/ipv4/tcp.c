@@ -639,8 +639,13 @@ tcp_socket_send(
         return -ENOTCONN;
     if (conn->magic != 1234)
         return -ENOTCONN;
+    if (conn->status == CONN_STATUS_CLOSED){
+        printk("tcp_socket_send: Cant send. Closed connection\n");
+        return -ENOTCONN;
+    }
     if (conn->status != CONN_STATUS_ESTABLISHED)
         return -ENOTCONN;
+
     if ((void *) conn->tcp_conn == NULL)
         return -ENOTCONN;
     if ((void *) conn->ep_pair == NULL)
@@ -666,6 +671,13 @@ tcp_socket_send(
 
     printk("tcp_socket_send: %d sends to %d\n", 
         local_sk->port, remote_sk->port );
+
+    printk("tcp_socket_send: seq=%u (offset=%u) ack=%u (offset=%u)\n",
+        seq,
+        seq - conn->tcp_conn->iss,
+        ack,
+        ack - conn->tcp_conn->irs);
+
 
     Flags = (TH_ACK | TH_PUSH);
 
@@ -907,6 +919,147 @@ tcp_client_connect(
     return 0;
 }
 
+
+/*
+ * tcp_change_socket_buffer:
+ *   Safely enlarge the private_file buffer of a socket
+ *   so it can hold multi-segment TCP data (up to 8 KB).
+ *
+ *   Intended to be called once the connection reaches
+ *   ESTABLISHED state (client or server side).
+ *
+ *   IN:  sk  - socket that will receive remote data
+ *   OUT: 0 on success, negative on failure
+ */
+
+int tcp_change_socket_buffer(struct socket_d *sk, size_t desired_size)
+{
+    file *fp;
+    char *old_base;
+    char *new_base;
+    size_t old_size;
+    size_t new_size = desired_size;  //8192;          // target size for remote TCP
+    size_t copy_len;
+
+    // -------------------------------------------------
+    // 1. Validate the socket
+    // -------------------------------------------------
+    if ((void *) sk == NULL) {
+        printk("tcp_change_socket_buffer: sk == NULL\n");
+        return -EINVAL;
+    }
+    if (sk->magic != 1234) {
+        printk("tcp_change_socket_buffer: sk validation failed\n");
+        return -EINVAL;
+    }
+
+// Minimum
+    if (new_size < BUFSIZ)
+        new_size = BUFSIZ;
+
+    // -------------------------------------------------
+    // 2. Validate the private_file
+    // -------------------------------------------------
+    fp = sk->private_file;
+    if ((void *) fp == NULL) {
+        printk("tcp_change_socket_buffer: private_file == NULL\n");
+        return -ENOENT;
+    }
+    if (fp->magic != 1234) {
+        printk("tcp_change_socket_buffer: private_file validation failed\n");
+        return -EINVAL;
+    }
+    if ((void *) fp->_base == NULL) {
+        printk("tcp_change_socket_buffer: _base == NULL\n");
+        return -EINVAL;
+    }
+
+    // Already large enough → nothing to do
+    if (fp->_lbfsize >= (int) new_size) {
+        //printk("tcp_enlarge_socket_buffer: already large enough (%d)\n",
+        //       fp->_lbfsize);
+        return 0;
+    }
+
+/*
+    // Sanity on current offsets
+    if (fp->_w < 0 || fp->_r < 0 ||
+        fp->_w > fp->_lbfsize ||
+        fp->_r > fp->_lbfsize)
+    {
+        printk("tcp_change_socket_buffer: corrupt offsets (_r=%d _w=%d _lbfsize=%d)\n",
+               fp->_r, fp->_w, fp->_lbfsize);
+        return -EINVAL;
+    }
+*/
+
+    // -------------------------------------------------
+    // 3. Allocate the new larger buffer
+    // -------------------------------------------------
+    new_base = (char *) kmalloc(new_size);
+    if ((void *) new_base == NULL) {
+        printk("tcp_change_socket_buffer: kmalloc(%u) failed\n",
+               (unsigned) new_size);
+        return -ENOMEM;
+    }
+    memset(new_base, 0, new_size);
+
+    // -------------------------------------------------
+    // 4. Copy existing data (if any)
+    // -------------------------------------------------
+    old_base = fp->_base;
+    old_size = (size_t) fp->_lbfsize;
+
+/*
+    // How many bytes are currently valid?
+    copy_len = (size_t) fp->_w;          // everything up to the write pointer
+    if (copy_len > old_size)
+        copy_len = old_size;
+    if (copy_len > new_size)
+        copy_len = new_size;
+    if (copy_len > 0)
+        memcpy(new_base, old_base, copy_len);
+*/
+
+    // -------------------------------------------------
+    // 5. Install the new buffer
+    // -------------------------------------------------
+    fp->_base = new_base;
+    fp->_p = new_base;
+    fp->_lbfsize = (int) new_size;
+
+    // #test
+    fp->_r = 0;
+    fp->_w = 0;
+    fp->_cnt = fp->_lbfsize;
+
+    // Keep the existing read/write pointers (they are still valid
+    // relative to the beginning of the buffer).
+    // We do NOT touch _r or _w here.
+
+    // Optional but useful: update remaining space counter
+    // if your file structure uses it.
+    // fp->_cnt = new_size - fp->_w;
+
+    // -------------------------------------------------
+    // 6. Free the old buffer (only if it was dynamic)
+    // -------------------------------------------------
+    // Safety note:
+    // - If the original buffer was allocated with kmalloc, free it.
+    // - If it came from a static/slab area, do NOT free it.
+    // For the moment we free it, because socket private_files
+    // created by the normal path are dynamic.
+    // If you later introduce static buffers, add a flag to the
+    // file structure to decide whether kfree is safe.
+    if (old_base != NULL) {
+        // kfree(old_base);   // enable when you are sure it is safe
+    }
+
+    printk("tcp_change_socket_buffer: socket %p enlarged to %u bytes\n",
+           sk, (unsigned) new_size);
+
+    return 0;
+}
 
 //
 // $
@@ -1662,10 +1815,8 @@ __kd_handle_tcp(
             // before responding, or the client's TCP will think this data
             // was never ACKed and will retransmit it.
             cur_conn->tcp_conn->rcv_nxt += data_len;
-
-            // Decrease our own window size.
+            // Decrease our own window size
             cur_conn->tcp_conn->rcv_wnd -= data_len;
-
             cur_conn->packets_received++;
 
             // #test: Checking for HTTP traffic on port 11888.
@@ -1863,9 +2014,7 @@ network_handle_tcp (
 // Drop
 //
 
-// #ps:
-// This filter is dropping a lot of noise. A LOT.
-
+    // #ps: This filter is dropping a lot of noise. A LOT.
     if (AllowThisPort != TRUE) {
         //printk("TCP: Invalid port %u <<< X >>>\n", dport);
         return;
@@ -1939,10 +2088,10 @@ network_handle_tcp (
 
 // Control flags (6 bits)
     uint16_t fFIN=0;
-    uint16_t fSYN=0;  // SYN :)
+    uint16_t fSYN=0;
     uint16_t fRST=0;
     uint16_t fPUSH=0;
-    uint16_t fACK=0;  // ACK :)
+    uint16_t fACK=0;
     uint16_t fURG=0;
 
     flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
@@ -2012,7 +2161,6 @@ network_handle_tcp (
     printk("TCP: dport=%d SYN={%d} ACK={%d} FIN={%d}\n", 
         dport, fSYN, fACK, fFIN);
 
-
 //
 // Step 1: No servers for now. (No pure SYN)
 //
@@ -2035,11 +2183,19 @@ network_handle_tcp (
     // to a server running in localhost in ring 3.
     // #ps: This selver already has its own socket. We need to plug it
     // into the connection chain, not create.
+
+    // 1 :: SYN from remote client to a local server
     if (fSYN == 1 && fACK == 0)
     {
-        printk("\n");
-        printk("TEST TESTE: STEP 1 STEP 1 STEP 1\n");
-        printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
+        printk("-- Step 1 --------\n");
+        //printk("TEST TESTE: STEP 1 STEP 1 STEP 1\n");
+        printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", 
+            _seq_number, _ack_number );
+        //printk("TCP_SYN: seq=%u (offset=%u) ack=%u (offset=%u)\n",
+        //    _seq_number,
+        //    _seq_number - conn->tcp_conn->iss,
+        //    _ack_number,
+        //    _ack_number - conn->tcp_conn->irs );
 
         // Example sequence/ack numbers
         // #ps: It looks safer to test our generator now
@@ -2253,10 +2409,17 @@ network_handle_tcp (
     // host   → remote : SYN
     // Remote → host   : SYN-ACK
     // host   → remote : ACK
+
+    // 2 :: SYN_ACK from remote server to a local client
     if (fSYN == 1 && fACK == 1)
     {
         printk("TCP_SYN_ACK: SEQ={%d} | ACK={%d}\n", 
             _seq_number, _ack_number );
+        //printk("TCP_SYN_ACK: seq=%u (offset=%u) ack=%u (offset=%u)\n",
+            //_seq_number,
+            //_seq_number - conn->tcp_conn->iss,
+            //_ack_number,
+            //_ack_number - conn->tcp_conn->irs );
 
         printk("TCP_SYN_ACK: Sending final ACK\n");
 
@@ -2344,6 +2507,11 @@ network_handle_tcp (
             {
                 c_sock->state = SS_CONNECTED;
                 s_sock->state = SS_CONNECTED;
+
+                // Enlarge the socket buffer for the client
+                int ok = tcp_change_socket_buffer(c_sock, 5*1024); // 5KB
+                if (ok != 0)
+                    printk("TCP: [FAIL] couldin't enlarge the socket buffer\n");
             }
         }
 
@@ -2384,17 +2552,26 @@ network_handle_tcp (
     // #ps: The state is CONN_STATUS_SYN_RECEIVED
     // Because the SYN was already received by the 
     // local server.
+
+    // 3 :: ACK from remote client local server
+    // right after sending the SYN_ACK.
     if ((void*)cur_conn != NULL){
     if (cur_conn->magic == 1234 && 
         cur_conn->status == CONN_STATUS_SYN_RECEIVED){
     if (fSYN == 0 && fACK == 1)
     {
-        printk("TCP_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
-        printk("Step3 ACK: received=%u expected_iss+1=%u snd_nxt=%u snd_una=%u\n",
+        //printk("TCP_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
+        printk("TCP_ACK: seq=%u (offset=%u) ack=%u (offset=%u)\n",
+            _seq_number,
+            _seq_number - cur_conn->tcp_conn->iss,
             _ack_number,
-            cur_conn->tcp_conn->iss + 1,
-            cur_conn->tcp_conn->snd_nxt,
-            cur_conn->tcp_conn->snd_una);
+            _ack_number - cur_conn->tcp_conn->irs );
+
+        //printk("Step3 ACK: received=%u expected_iss+1=%u snd_nxt=%u snd_una=%u\n",
+        //    _ack_number,
+        //    cur_conn->tcp_conn->iss + 1,
+        //    cur_conn->tcp_conn->snd_nxt,
+        //    cur_conn->tcp_conn->snd_una );
 
         // -----------------------------------------------------
         // #todo
@@ -2416,9 +2593,9 @@ network_handle_tcp (
         // We already received the SYN
         if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
         {
-            // by the book, the third ACK in the handshake normally carries no payload. 
-            // But in TCP, you must expect that it can carry data, 
-            // because the protocol allows it
+            // By the book, the third ACK in the handshake normally 
+            // carries no payload. But in TCP, you must expect that 
+            // it can carry data, because the protocol allows it.
             cur_conn->tcp_conn->rcv_nxt = _seq_number + data_len;
 
             // _ack_number → comes from the peer’s TCP header. 
@@ -2448,14 +2625,13 @@ network_handle_tcp (
             //    return;
             //}
 
-            printk("ACK matches: connection established\n");
-
             //cur_conn->tcp_conn->snd_una = cur_conn->tcp_conn->iss + 1;
             cur_conn->tcp_conn->snd_una = _ack_number;
             cur_conn->packets_received++;
             cur_conn->tcp_conn->state = TCP_ESTABLISHED;
             cur_conn->status = CONN_STATUS_ESTABLISHED;
-            printk("TCP_ACK: Connection ESTABLISHED for id={%d} :)\n", 
+
+            printk("TCP_ACK: [ACK match] Connection {%d} ESTABLISHED  :)\n", 
                 cur_conn->id );
         }
         return;
@@ -2474,13 +2650,12 @@ network_handle_tcp (
     struct connection_d *cl_conn = 
         tcp_find_connection_by_remote_peer(s_ipv4_int, dport);
    
-
-    printk("REMOTE: ip:%x port:%d \n", d_ipv4_int, dport );
+    printk("TCP Target: ip:%x port:%d \n", d_ipv4_int, dport);
 
 // Switch current connection
+// Update state, window, sequence numbers, deliver payload.
     if ((void*)cl_conn != NULL) 
     {
-        // Update state, window, sequence numbers, deliver payload
         if (cl_conn->magic == 1234)
         {
             cur_conn = cl_conn;
@@ -2488,28 +2663,18 @@ network_handle_tcp (
             // printk("TCP: Reusing conn structure   <<<<<<<< \n");
         }
     }
-// -------------------------
-
-    // drop
+// drop
     if ((void*) cur_conn == NULL)
         return;
     if (cur_conn->magic != 1234)
         return;
 
-
-    if ( dport < __first_ephemeral_port || 
-         dport > __last_ephemeral_port )
-    {
-        //drop
-        return;
-    }
-
 // #todo:
-    // continue handling operation between the remote server
-    // and the local client.
-
-    // #ps: the connection was stablished in the step2.
-    // remember we are the client now ... no other servers, only the 11888 for now.
+// continue handling operation between the remote server and 
+// the local client.
+// #ps: 
+// The connection was stablished in the step2. Remember, 
+// we are the client now ... no other servers, only the 11888 for now.
 
     if (cur_conn->status == CONN_STATUS_ESTABLISHED)
     {
@@ -2517,9 +2682,8 @@ network_handle_tcp (
 
         // ...
 
-        if ((void*) cur_conn->tcp_conn == NULL)
-        {
-            //fail
+        // fail
+        if ((void*) cur_conn->tcp_conn == NULL){
             cur_conn->status = CONN_STATUS_CLOSED;
             return;
         }
@@ -2535,7 +2699,6 @@ network_handle_tcp (
             cur_conn->tcp_conn->rcv_nxt += data_len;
             if (fFIN)
                 cur_conn->tcp_conn->rcv_nxt += 1;   // FIN consumes one sequence number
-
 
             // #debug: Display payload
             // #todo: Here we are receiving the data,
@@ -2561,6 +2724,7 @@ network_handle_tcp (
             // -------------------------------------------------
             // 2. Append data to the socket buffer (do NOT overwrite)
             // -------------------------------------------------
+            /*
             if (cur_conn->ep_pair && cur_conn->ep_pair->c_ep)
             {
                 if (cur_conn->ep_pair->c_ep) 
@@ -2587,9 +2751,73 @@ network_handle_tcp (
                             fp->sync.action = ACTION_REPLY; // signal to client that data is ready
                         }
                    }
-               }
+                }
+            }
+            */
+
+            // #todo:
+            // We can create a worker that do this routine,
+            // injecting incoming data into the socket buffer.
+            struct socket_d *sk;
+            sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
+            if ((void*) sk == NULL){
+                panic("TCP: invalid sk\n");
+                return;
+            }
+            if (sk->magic != 1234){
+                panic("TCP: sk validation\n");  return;
+            }
+            file *fp = sk->private_file;
+            if ((void*) fp == NULL){
+                panic("TCP: invalid fp\n");  return;
+            }
+            if (fp->magic != 1234){
+                panic("TCP: fp validation\n");  return;
+            }
+            size_t room = (fp->_cnt > 0) ? (size_t) fp->_cnt : 0;
+            if (data_len > room){
+                // Can't buffer this segment yet — refuse it entirely.
+                // rcv_nxt stays put, so the ACK we send below is a dup ACK
+                // for the old position, telling the peer to retransmit later.
+                printk("TCP: socket buffer full, dropping segment (%u bytes)\n",
+                    (unsigned) data_len);
+            } else {
+                // It is probably ONE message segment
+                printk("Saving payload into the file (%d bytes) <<<<\n", data_len);
+                // silently truncates
+                size_t to_copy = 
+                    (data_len < fp->_cnt) 
+                    ? data_len 
+                    : fp->_cnt;
+
+                // Inject at this position
+                memcpy(
+                    fp->_base + fp->_w, 
+                    buffer + TCP_HEADER_LENGHT, 
+                    to_copy );
+                fp->_w += (int) to_copy;
+                fp->_fsize = fp->_w;
+                fp->_cnt = (fp->_lbfsize - fp->_fsize);
+
+                // Permissions
+                //fp->_flags &= ~__SRD;  // Cant read for now
+                //fp->_flags &= ~__SWR;          // optional: clear write-only
+                //fp->sync.can_read = FALSE;        // allow read
+                //fp->sync.action = ACTION_NULL;  // signal to client that data is ready
+
+                fp->_flags |= __SRD;
+                fp->sync.can_read = TRUE;
+                fp->sync.can_write = TRUE;
+                fp->sync.action    = ACTION_REPLY;   // wake the client for THIS chunk too
             }
 
+            if (fFIN){
+                //fp->_r = 0;  // Read from the beginning when afte FIN
+                //fp->_flags |= __SRD;             // mark readable
+                //fp->_flags &= ~__SWR;          // optional: clear write-only
+                //fp->sync.can_read = TRUE;        // allow read
+                //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
+            }
         }
         else if (_seq_number + data_len <= cur_conn->tcp_conn->rcv_nxt) {
             // Pure retransmission / already received → just ACK

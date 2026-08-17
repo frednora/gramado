@@ -464,6 +464,10 @@ int connection_register(struct connection_d *conn);
 struct connection_d *get_connection(int id);
 void network_show_connections(void);
 
+struct socket_d *get_client_socket_from_connection(struct connection_d *conn);
+struct socket_d *get_server_socket_from_connection(struct connection_d *conn);
+
+
 //
 // == Prototypes ====================
 //

@@ -260,7 +260,7 @@ ssize_t read(int fd, const void *buf, size_t count)
 
     if (value < 0){
         errno = (-value);
-        return (ssize_t) (-1);
+        //return (ssize_t) (-1);
     }
 
     return (ssize_t) value;
@@ -294,9 +294,10 @@ ssize_t write(int fd, const void *buf, size_t count)
             (unsigned long) buf, 
             (unsigned long) count ); 
 
-    if (value<0){
+    if (value < 0){
         errno = (-value);
-        return (ssize_t) (-1);
+        //return (ssize_t) (-1);
+        //return (ssize_t) value;
     }
 
     return (ssize_t) value;

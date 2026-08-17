@@ -188,6 +188,9 @@ tcp_client_connect(
     unsigned int dst_ip_ipv4_int,
     unsigned short dst_port);
 
+int tcp_change_socket_buffer(struct socket_d *sk, size_t desired_size);
+
+
 //
 // $
 // HANDLER

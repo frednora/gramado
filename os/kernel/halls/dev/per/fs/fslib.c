@@ -1693,7 +1693,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                 {
                     int sent = (int) tcp_socket_send(sk, ubuf, count);
                     if (sent < 0){
-                        return (int) -1;
+                        // return (int) -1;
                     }
                     return (int) sent;
                 }

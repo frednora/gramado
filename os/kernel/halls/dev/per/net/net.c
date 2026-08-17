@@ -285,6 +285,41 @@ void network_show_connections(void)
     //printk("--- End of List ---\n");
 }
 
+// Return client socket from connection
+struct socket_d *get_client_socket_from_connection(struct connection_d *conn)
+{
+    struct socket_d *sk;
+
+    if (!conn)
+        return NULL;
+    if (!conn->ep_pair)
+        return NULL;
+    if (!conn->ep_pair->c_ep){
+        return NULL;
+    }
+    sk = conn->ep_pair->c_ep->socket;;
+
+    return sk;
+}
+
+// Return server socket from connection
+struct socket_d *get_server_socket_from_connection(struct connection_d *conn)
+{
+    struct socket_d *sk;
+
+    if (!conn)
+        return NULL;
+    if (!conn->ep_pair) 
+        return NULL;
+    if (!conn->ep_pair->s_ep){ 
+        return NULL;
+    }
+    sk = conn->ep_pair->s_ep->socket;
+
+    return sk;
+}
+
+
 
 
 // Network interface for keyboard input.

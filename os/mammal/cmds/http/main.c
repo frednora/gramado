@@ -31,8 +31,7 @@ static void do_request(int sockfd);
 
 static void do_request(int sockfd)
 {
-    char buffer[512];
-    int n;
+// Bigger buffer so we can pull a decent chunk at a time
 
     const char *request =
     "GET /html HTTP/1.1\r\n"
@@ -42,59 +41,40 @@ static void do_request(int sockfd)
     "Connection: close\r\n"
     "\r\n";
 
-    // Clear
-    memset(buffer, 0, sizeof(buffer));    
-
-    // Send the request
-    n = (int) write(sockfd, request, strlen(request));
-    if (n < 0) {
-        perror(":: write failed");
+    int r_number = (int) write(sockfd, request, strlen(request));
+    if (r_number < 0) 
+    {
+        perror(":: write failed\n");
+        if (r_number == (-107))  //ENOTCONN
+        {
+            printf("client: ENOTCONN Exited\n");
+            exit(1);
+        }
         return;
     }
+    printf("HTTP_CLIENT.BIN: Sent %d bytes\n", r_number);
 
-    printf("HTTP_CLIENT.BIN: Sent %d bytes\n", n);
+// ------------------------
 
-    //#provisory
-    //return;
-
-    // Clear buffer
-    bzero(buffer, sizeof(buffer));
-
-
+    while (1) {
     
-// #test
-    int Value=0;
-
-    //rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
-
-// Response
-// Waiting to read the response.
-    //gws_debug_print("gws_draw_char: response\n");
-    while (1){
-        rtl_yield(); 
-        rtl_yield(); 
-        rtl_yield(); 
-        rtl_yield(); 
-        Value = rtl_get_file_sync( sockfd, SYNC_REQUEST_GET_ACTION );
-        //if (Value == ACTION_REQUEST){}
-        if (Value == ACTION_REPLY ) { break; }
-        if (Value == ACTION_ERROR ) { goto done; }
-        if (Value == ACTION_NULL )  { goto done; }  // No reponse
-        // REMOVED: "if (Value == ACTION_NULL) { goto done; }"
-        // Instead of giving up, we let the CPU loop/yield until ACTION_REPLY is set by the driver
-    };
-
-
-    // Read the response
-    n = (int) read(sockfd, buffer, sizeof(buffer)-1);
-    if (n < 0) {
-        perror("read failed");
-        return;
+        // Wait until kernel signals data ready
+    while (rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION) != ACTION_REPLY) {
+        rtl_yield(); // yield CPU until reply arrives
     }
 
-    // Null-terminate and print
+    // Read available data
+    char buffer[1024];
+    int n = read(sockfd, buffer, sizeof(buffer)-1);
+    if (n <= 0) 
+        break; // EOF or error
+
     buffer[n] = '\0';
-    printf("HTTP_CLIENT.BIN: Received response:\n%s\n", buffer);
+    printf("%s", buffer);
+
+    // Reset sync state so kernel can send more
+    rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
+    }
 
 done:
     rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
