@@ -65,14 +65,24 @@ static void do_request(int sockfd)
     //while (1) {
     
     // Wait until kernel signals data ready
+    int Count = 5000;
     while (1) 
     {
         rtl_yield(); // yield CPU until reply arrives
         int ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
-        if (ActionState == ACTION_REPLY)
+        if (ActionState == ACTION_REPLY){
+            printf("HTTP.BIN: Reply received\n");
             break;
+        }
         // Disconnecting. Let's connect again.
         if (ActionState == 200000)
+        {
+            printf("HTTP.BIN: We are disconnected\n");
+            goto fail;
+        }
+
+        Count++;
+        if (Count<=0)
             goto fail;
     };
 
