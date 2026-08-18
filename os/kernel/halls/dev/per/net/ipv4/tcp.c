@@ -628,8 +628,10 @@ tcp_socket_send(
     // Only AF_INET stream sockets that finished the handshake
     if (local_sk->family != AF_INET)
         return -EAFNOSUPPORT;
-    if (local_sk->state != SS_CONNECTED)
+    if (local_sk->state != SS_CONNECTED){
+        printk("tcp_socket_send: Cant send. socket unconnected\n");
         return -ENOTCONN;
+    }
 
 // Connection:
 // Find the connection that owns this local socket
@@ -640,7 +642,7 @@ tcp_socket_send(
     if (conn->magic != 1234)
         return -ENOTCONN;
     if (conn->status == CONN_STATUS_CLOSED){
-        printk("tcp_socket_send: Cant send. Closed connection\n");
+        printk("tcp_socket_send: Cant send. Connection is closed\n");
         return -ENOTCONN;
     }
     if (conn->status != CONN_STATUS_ESTABLISHED)
@@ -668,6 +670,17 @@ tcp_socket_send(
 
     seq = conn->tcp_conn->snd_nxt;  // (next sequence number to send)
     ack = conn->tcp_conn->rcv_nxt;  // (next expected acknowledgment)
+
+    // Relative values
+    // sent_offset shows how much of your data has been acknowledged.
+    size_t sent_offset = conn->tcp_conn->snd_una - conn->tcp_conn->iss;
+    // recv_offset shows how much of the peer’s data you’ve consumed.
+    size_t recv_offset = conn->tcp_conn->rcv_nxt - conn->tcp_conn->irs;
+
+    //printk("tcp_socket_send: seq=%u ack=%u sent_offset=%u recv_offset=%u\n",
+       //seq, ack, sent_offset, recv_offset );
+
+// ======================================================
 
     printk("tcp_socket_send: %d sends to %d\n", 
         local_sk->port, remote_sk->port );
@@ -832,10 +845,16 @@ tcp_client_connect(
     conn->ep_pair = pair;
 
     // Initialize sequence numbers
-    tcp_seq our_seq = __generate_ISN();  // 1000 #test
-    conn->tcp_conn->iss = our_seq;
-    conn->tcp_conn->snd_una = our_seq;      // conn->tcp_conn->iss;
-    conn->tcp_conn->snd_nxt = our_seq + 1;  // conn->tcp_conn->iss + 1;
+    tcp_seq our_seq = __generate_ISN();     // 1000 #test
+    conn->tcp_conn->iss = our_seq;          // Our initial
+    conn->tcp_conn->snd_una = our_seq;      // The las unackowledged byte 
+    conn->tcp_conn->snd_nxt = our_seq + 1;  //
+
+    // IRS (Initial Receive Sequence):
+    // You don’t know the server’s ISN yet. 
+    // Leave irs unset until you receive the SYN+ACK.
+    conn->tcp_conn->irs = 0;
+    conn->tcp_conn->rcv_nxt = 0;
 
     // ------------------------------------------------
     // Allocate an ephemeral local port for this client socket.
@@ -2165,6 +2184,8 @@ network_handle_tcp (
 // Step 1: No servers for now. (No pure SYN)
 //
 
+// Step 1 – Client sends SYN to us (We are the server)
+
     /*
     if (fSYN && !fACK) 
     {
@@ -2235,9 +2256,9 @@ network_handle_tcp (
         conn->tcp_conn->irs     = _seq_number;      // client's ISN
         conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
         // ISS → Initial Send Sequence number
-        conn->tcp_conn->iss     = seq;      //1000;
-        conn->tcp_conn->snd_una = seq;      //conn->tcp_conn->iss;
-        conn->tcp_conn->snd_nxt = seq + 1;  //conn->tcp_conn->iss + 1; // our SYN will consume 1
+        conn->tcp_conn->iss     = seq;
+        conn->tcp_conn->snd_una = seq;  // Oldest unacknowleged byte
+        conn->tcp_conn->snd_nxt = seq + 1;
 
         conn->tcp_conn->snd_wnd = peer_window;  // Client's window size?
         //conn->tcp_conn->rcv_wnd -= 1;         // Maybe
@@ -2399,6 +2420,7 @@ network_handle_tcp (
 // Step 2: SYN/ACK  
 //
 
+// Step 2 – Server replies with SYN+ACK (We are the client)
 // We received a SYN/ACK because we sent a syn to a remote server.
 
     // (2) SYN/ACK
@@ -2485,9 +2507,15 @@ network_handle_tcp (
         printk("TCP_SYN_ACK: ACK Sent\n");
 
         // #test: Update sequence numbers
-        cur_conn->tcp_conn->snd_una = final_seq;  // or _ack_number from the peer
-        cur_conn->tcp_conn->snd_nxt = final_seq;  // next byte we will send
-        cur_conn->tcp_conn->rcv_nxt = final_ack;  // next byte we expect from peer
+        //cur_conn->tcp_conn->snd_una = final_seq;  // The last unacknowledged byte
+        //cur_conn->tcp_conn->snd_nxt = final_seq;  // next byte we will send
+        //cur_conn->tcp_conn->irs = final_ack;  // The initial acknoleged byte in remote peer
+        //cur_conn->tcp_conn->rcv_nxt = final_ack;  // next byte we expect from peer
+
+        cur_conn->tcp_conn->snd_una = cur_conn->tcp_conn->iss + 1; // SYN acknowledged
+        cur_conn->tcp_conn->snd_nxt = cur_conn->tcp_conn->iss + 1; // still next to send
+        cur_conn->tcp_conn->irs     = final_seq;                   // server’s ISN
+        cur_conn->tcp_conn->rcv_nxt = final_seq + 1;               // expect next byte
 
         // Optional but useful
         // cur_conn->ep_pair->c_ep->socket->state = SS_CONNECTED;
@@ -2593,6 +2621,8 @@ network_handle_tcp (
         // We already received the SYN
         if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
         {
+            cur_conn->tcp_conn->snd_una = _ack_number;  // Oldest unacknowleged byte
+
             // By the book, the third ACK in the handshake normally 
             // carries no payload. But in TCP, you must expect that 
             // it can carry data, because the protocol allows it.
@@ -2626,7 +2656,6 @@ network_handle_tcp (
             //}
 
             //cur_conn->tcp_conn->snd_una = cur_conn->tcp_conn->iss + 1;
-            cur_conn->tcp_conn->snd_una = _ack_number;
             cur_conn->packets_received++;
             cur_conn->tcp_conn->state = TCP_ESTABLISHED;
             cur_conn->status = CONN_STATUS_ESTABLISHED;
@@ -2687,6 +2716,8 @@ network_handle_tcp (
             cur_conn->status = CONN_STATUS_CLOSED;
             return;
         }
+
+        cur_conn->tcp_conn->snd_una = _ack_number;   // Las unacknowledged byte
 
         cur_conn->packets_received++;
 
@@ -2800,23 +2831,26 @@ network_handle_tcp (
                 fp->_cnt = (fp->_lbfsize - fp->_fsize);
 
                 // Permissions
-                //fp->_flags &= ~__SRD;  // Cant read for now
-                //fp->_flags &= ~__SWR;          // optional: clear write-only
-                //fp->sync.can_read = FALSE;        // allow read
-                //fp->sync.action = ACTION_NULL;  // signal to client that data is ready
+                //fp->_flags &= ~__SRD;         // Cant read for now
+                //fp->_flags &= ~__SWR;         // optional: clear write-only
+                //fp->sync.can_read = TRUE;      // allow read
+                //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
 
                 fp->_flags |= __SRD;
                 fp->sync.can_read = TRUE;
-                fp->sync.can_write = TRUE;
+                fp->sync.can_write = FALSE;
                 fp->sync.action    = ACTION_REPLY;   // wake the client for THIS chunk too
             }
 
             if (fFIN){
                 //fp->_r = 0;  // Read from the beginning when afte FIN
-                //fp->_flags |= __SRD;             // mark readable
+                fp->_flags |= __SRD;             // mark readable
                 //fp->_flags &= ~__SWR;          // optional: clear write-only
-                //fp->sync.can_read = TRUE;        // allow read
-                //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
+                fp->sync.can_read = TRUE;        // allow read
+                fp->sync.can_write = FALSE;
+                fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
+            
+                //sk->state = SS_UNCONNECTED;
             }
         }
         else if (_seq_number + data_len <= cur_conn->tcp_conn->rcv_nxt) {
@@ -2860,8 +2894,21 @@ network_handle_tcp (
 
         cur_conn->packets_sent++;
 
-        if (fFIN == 1)
+        if (fFIN == 1){
+            printk("TCP: Disconnecting ...\n");
             cur_conn->status = CONN_STATUS_CLOSED;
+
+            struct socket_d *sk;
+            sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
+            if ((void*) sk == NULL){
+                panic("TCP: invalid sk\n");
+                return;
+            }
+            if (sk->magic != 1234){
+                panic("TCP: sk validation\n");  return;
+            }
+            sk->state = SS_UNCONNECTED;
+        }
     }
 
     printk("TCP: drop\n");
