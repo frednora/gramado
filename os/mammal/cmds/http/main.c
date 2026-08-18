@@ -25,10 +25,6 @@
 #define TARGET_IP  "100.60.124.177"
 #define HTTP_PORT 80
 
-// http://example.com
-//#define TARGET_IP  "93.184.215.14"
-//#define HTTP_PORT 80
-
 static void do_request(int sockfd);
 
 // ===============================================
@@ -45,6 +41,10 @@ static void do_request(int sockfd)
     "Connection: close\r\n"
     "\r\n";
 
+// ------------------------
+// We are connected.
+// Send a request.
+
     int r_number = (int) write(sockfd, request, strlen(request));
     if (r_number < 0) 
     {
@@ -59,25 +59,34 @@ static void do_request(int sockfd)
     printf("HTTP_CLIENT.BIN: Sent %d bytes\n", r_number);
 
 // ------------------------
+// Waiting for a reply
+// The kernel is setting the action flag when some data comes from the server
 
     //while (1) {
     
-        // Wait until kernel signals data ready
-    while (rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION) != ACTION_REPLY) {
+    // Wait until kernel signals data ready
+    while (1) 
+    {
         rtl_yield(); // yield CPU until reply arrives
-    }
+        int ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
+        if (ActionState == ACTION_REPLY)
+            break;
+        // Disconnecting. Let's connect again.
+        if (ActionState == 200000)
+            goto fail;
+    };
+
+    printf("HTTP.BIN: Reply received\n");
 
     // Read available data
     char buffer[1024];
     int n = read(sockfd, buffer, sizeof(buffer)-1);
-    //if (n <= 0) 
-        //break; // EOF or error
-
-    if (n>0)
-    {
-        buffer[n] = '\0';
-        printf("%s", buffer);
+    printf("HTTP.BIN: %d bytes received\n", n);
+    if (n <= 0){
+        goto fail;
     }
+    buffer[n] = '\0';
+    printf("%s", buffer);
 
     // Reset sync state so kernel can send more
     rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
@@ -120,6 +129,8 @@ int main(int argc, char *argv[])
         printf("HTTP_CLIENT.BIN: socket creation failed...\n");
         exit(0);
     }
+    // Reset the sync state
+    rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
 
 
     while (Try > 1){
@@ -133,6 +144,9 @@ int main(int argc, char *argv[])
     }
 
 // Connect
+
+    // sync state: #test ACTION_CONNECTING. This is a new one.
+    rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, 10000);
     int ConnectStatus = -1;
     ConnectStatus = connect(
         sockfd,
@@ -140,32 +154,38 @@ int main(int argc, char *argv[])
         sizeof(struct sockaddr_in)
     );
 
-    if (ConnectStatus < 0){
+    if (ConnectStatus < 0)
+    {
         printf("HTTP_CLIENT.BIN: connect failed\n");
         //exit(0);
+
+        // rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, 10000);
     }
 
-    printf("HTTP_CLIENT.BIN: Connected! fd={%d}\n", sockfd);
+//
+// Waiting the connection happens
+//
 
-// Wait for ever
-    // while(1){}
+    int ActionState = -1;
+    while (1){
+        rtl_yield(); // yield CPU
+        ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
+        // We are not connectiong anymore
+        if (ActionState != 10000)
+            break;
+    };
 
-    //while (1){
-    int i=0;
-    for (i=0; i<100; i++)
-        rtl_yield;
-    //rtl_sleep(5*1000);  // #bubug: Not working
+    printf("HTTP_CLIENT.BIN: Connected! fd={%d} :)\n", sockfd);
 
-        do_request(sockfd);
+    // We are fully connected now.
+    // Lets call the request and get a response.
+    do_request(sockfd);
 
-    //}
-
-        Try--;
+    Try--;
 
     };  // end of while
 
     // close(sockfd);
-
     printf("HTTP_CLIENT.BIN: done\n");
     return EXIT_SUCCESS;
 }

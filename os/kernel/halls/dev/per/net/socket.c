@@ -2641,7 +2641,7 @@ __connect_inet_remote (
     int client_socket_fd = -1;
 
     // File
-    struct file_d *f;
+    struct file_d *fp_client;
 
     struct sockaddr_in *addr_in;  // Address style in the case of AF_INET
 
@@ -2910,15 +2910,15 @@ __connect_inet_remote (
 // O servidor não pode fechar o arquivo de socket do cliente remoto.
 // E também não devemos permitir que isso aconteça na conexão local.
 
-    f = (file *) cProcess->Objects[client_socket_fd];
-    if ((void *) f == NULL){
-        printk("__connect_inet_remote: [FAIL] f. The client's socket\n");
+    fp_client = (file *) cProcess->Objects[client_socket_fd];
+    if ((void *) fp_client == NULL){
+        printk("__connect_inet_remote: [FAIL] fp_client. The client's socket\n");
         goto fail;
     }
 
 // Is this file a socket object?
     int IsSocketObject = -1;
-    IsSocketObject = (int) is_socket((file *) f);
+    IsSocketObject = (int) is_socket((file *) fp_client);
     if (IsSocketObject != TRUE){
         return (int) (-ENOTSOCK);
     }
@@ -2927,7 +2927,7 @@ __connect_inet_remote (
 // #todo:
 // This way we can reject connections before the server binds with an address.
 
-    if (f->sync.can_connect != TRUE){
+    if (fp_client->sync.can_connect != TRUE){
         printk("__connect_inet_remote: [PERMISSION FAIL] Client doesn't accept connections.\n");
         goto fail;
     }
@@ -2936,7 +2936,7 @@ __connect_inet_remote (
 // Socket structure in the sender's file.
 // Pega a estrutura de socket associada ao arquivo.
 
-    client_socket = (struct socket_d *) f->socket;
+    client_socket = (struct socket_d *) fp_client->socket;
     if ((void *) client_socket == NULL){
         printk("__connect_inet_remote: [FAIL] client_socket\n");
         goto fail;
@@ -2950,19 +2950,16 @@ __connect_inet_remote (
 // #todo:
 // We need to handle some other states here too.
 
-    if (client_socket->state != SS_UNCONNECTED) 
-    {
+    if (client_socket->state != SS_UNCONNECTED){
         printk("__connect_inet_remote: [FAIL] client socket is not SS_UNCONNECTED\n");
         goto fail;
     }
-
 
 // #test
 // Assign a port number to the client socket.
 // #todo #bugbug We gotta work on this routine.
     __new_client_port_number++;
     client_socket->port = (unsigned short) __new_client_port_number;
-
 
 //
 // Is it remote
@@ -3066,6 +3063,10 @@ remote_go:
             return __rv;
         }
 
+        // Confirming. (redundant)
+        // We ar still waiting for the syn_ack
+        fp_client->sync.action = ACTION_CONNECTING;
+
         // Block until handshake completes (to be implemented)
         // wait_for_socket_state(s, SS_CONNECTED);
 
@@ -3101,7 +3102,7 @@ remote_go:
 // :: The free slot we found before.
     //sProcess->Objects[__slot] = (unsigned long) f;
 // :: The standard fd used by the servers in GramadoOS.
-    sProcess->Objects[31] = (unsigned long) f;
+    sProcess->Objects[31] = (unsigned long) fp_client;
 
 // Connecting!
 // #bugbug

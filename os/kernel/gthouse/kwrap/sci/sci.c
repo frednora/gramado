@@ -2637,30 +2637,32 @@ void *sci2 (
         return NULL;
     }
 
+// ----------------------------------
 // 10000 - sys_set_file_sync
 // Configurando sincronização de leitura e escrita em arquivo.
 // principalmente socket.
 // A estrutura de arquivo contém uma estrutura de sincronização de leitura e escrita.
 // #ok: podemos usar ioctl
-// See: sys.c
+// See: fs.c
     if (number == 10000)
     {
-        debug_print("sci2: [10000] sys_set_file_sync\n");
+        //debug_print("sci2: [10000] sys_set_file_sync\n");
         // IN: fd, request, data
-        sys_set_file_sync( (int) arg2, (int) arg3, (int) arg4 );
+        sys_set_file_sync((int) arg2, (int) arg3, (int) arg4);
         return NULL;
     }
 
+// ----------------------------------
 // 10001 - sys_get_file_sync
 // Pegando informação sobre sincronização de leitura e escrita de arquivos.
 // principalmente para socket.
 // A estrutura de arquivo contém uma estrutura de sincronização de leitura e escrita.
 // #ok: podemos usar ioctl
-// See: sys.c
+// See: fs.c
 // IN: fd, request
     if (number == 10001){
         //debug_print("sci2: [10000] sys_get_file_sync\n");
-        return (void*) sys_get_file_sync( (int) arg2, (int) arg3 );
+        return (void*) sys_get_file_sync((int) arg2, (int) arg3);
     }
 
 //

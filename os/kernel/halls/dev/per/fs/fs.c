@@ -377,12 +377,9 @@ void sys_set_file_sync(int fd, int request, int data)
     file *object;
     struct te_d  *p;
     pid_t current_process = -1;
-   
-    //#bugbug
-    // Pensaremos nessa possibilidade.
 
-// Parameters
-    if ( fd < 0 || fd >= OPEN_MAX ){
+// Parameters:
+    if (fd < 0 || fd >= OPEN_MAX){
         debug_print("sys_set_file_sync: fd\n");
         return;
     }
@@ -398,15 +395,12 @@ void sys_set_file_sync(int fd, int request, int data)
     }
  */
 
-
 // == Process ================
 
     // Get PID for the current process for a given core.
     // IN: core id
-
     current_process = (pid_t) get_current_process(0);
-
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
     {
         debug_print("sys_set_file_sync: current_process\n");
         return;
@@ -421,20 +415,19 @@ void sys_set_file_sync(int fd, int request, int data)
         return;
     }
 
-// object
-// Everything is a file.
+// Object. (Everything is a file)
 
     object = (file *) p->Objects[fd];
     if ((void*) object == NULL){
         debug_print("sys_set_file_sync: object\n");
         return;
     }
-    if ( object->used != TRUE || object->magic != 1234 ){
+    if (object->used != TRUE || object->magic != 1234){
         debug_print("sys_set_file_sync: validation\n");
         return;
     }
 
-// request.
+// request
 
     switch (request){
 
@@ -444,35 +437,39 @@ void sys_set_file_sync(int fd, int request, int data)
         break;
 
     // #test
+    // 216 - Now we can write
     // reset
-    // Now we can write
-    // SYNC_REQUEST_RESET_WR
-    case 216:
-
+    case SYNC_REQUEST_RESET_WR:
+        
         //#debug
-        //printk("216:\n"); 
+        // panic("216:\n"); 
 
-        object->sync.action = 0;
-        //object->_flags = (__SWR | __SRD); 
+        object->sync.action = ACTION_NULL;
+        object->sync.can_write = TRUE;
         object->_flags = __SWR;
+
+        // Rewind
         k_rewind(object);
+        // Back to 0
         object->_r = 0;
         object->_w = 0;
-        object->socket_buffer_full = FALSE; //empty buffer
+        // Buffer is empty
+        object->socket_buffer_full = FALSE;
+
         return;
         break;
 
     // #test
-    // Now we can read
-    // SYNC_REQUEST_RESET_RD
-    case 217:
+    // 217 - Now we can read
+    case SYNC_REQUEST_RESET_RD:
 
         //#debug
-        //printk("217:\n"); 
+        // panic("217:\n"); 
 
-        object->sync.action = 0;
-        //object->_flags = (__SWR | __SRD); 
+        object->sync.action = ACTION_NULL;
+        object->sync.can_read = TRUE;
         object->_flags = __SRD;
+
         return;
         break;
 

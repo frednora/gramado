@@ -2536,6 +2536,18 @@ network_handle_tcp (
                 c_sock->state = SS_CONNECTED;
                 s_sock->state = SS_CONNECTED;
 
+                // Let's allow the client to send the first request
+                file *fp = c_sock->private_file;
+                if ((void*) fp == NULL){
+                    panic("TCP step 2: invalid fp\n");  return;
+                }
+                if (fp->magic != 1234){
+                    panic("TCP step 2: fp validation\n");  return;
+                }
+                fp->sync.action = ACTION_NULL;
+                fp->sync.can_write = TRUE;  // Can send a request
+                fp->_flags |= __SWR;        // flags: can write
+
                 // Enlarge the socket buffer for the client
                 int ok = tcp_change_socket_buffer(c_sock, 5*1024); // 5KB
                 if (ok != 0)
@@ -2584,8 +2596,8 @@ network_handle_tcp (
     // 3 :: ACK from remote client local server
     // right after sending the SYN_ACK.
     if ((void*)cur_conn != NULL){
-    if (cur_conn->magic == 1234 && 
-        cur_conn->status == CONN_STATUS_SYN_RECEIVED){
+    if (cur_conn->magic == 1234){
+    if (cur_conn->status == CONN_STATUS_SYN_RECEIVED || cur_conn->status == CONN_STATUS_SYN_SENT){
     if (fSYN == 0 && fACK == 1)
     {
         //printk("TCP_ACK: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
@@ -2618,7 +2630,10 @@ network_handle_tcp (
             printk("__kd_handle_tcp: [step 3] cur_conn validation\n");
             return;
         }
+        // --------
         // We already received the SYN
+        // We are a server and already received a SYN,
+        // and we sent a syn_ack
         if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
         {
             cur_conn->tcp_conn->snd_una = _ack_number;  // Oldest unacknowleged byte
@@ -2662,9 +2677,25 @@ network_handle_tcp (
 
             printk("TCP_ACK: [ACK match] Connection {%d} ESTABLISHED  :)\n", 
                 cur_conn->id );
+
+            return;
         }
+        // --------
+        // In this case we are client and we send a SYN
+        // If after sending a SYN we’re receiving a pure ACK (no SYN flag set), 
+        // it usually means the remote server is acknowledging our SYN 
+        // but NOT completing the handshake correctly. 
+        if (cur_conn->status == CONN_STATUS_SYN_SENT)
+        {
+            printk("TCP: Pure ACK received after sending SYN\n");
+            // ...
+            return;
+        }
+
+        // Drop
         return;
     }  // flags
+    }  // Two valid states
     }  // valid magic for connection pointer
     }  // valid connection pointer
 
@@ -2704,11 +2735,10 @@ network_handle_tcp (
 // #ps: 
 // The connection was stablished in the step2. Remember, 
 // we are the client now ... no other servers, only the 11888 for now.
-
     if (cur_conn->status == CONN_STATUS_ESTABLISHED)
     {
         printk("TCP: Client received something with the connection already established\n");
-
+        printk(">>> %d bytes\n", data_len);
         // ...
 
         // fail
@@ -2751,40 +2781,6 @@ network_handle_tcp (
                 //}
                 //printk("\n");
             }
-
-            // -------------------------------------------------
-            // 2. Append data to the socket buffer (do NOT overwrite)
-            // -------------------------------------------------
-            /*
-            if (cur_conn->ep_pair && cur_conn->ep_pair->c_ep)
-            {
-                if (cur_conn->ep_pair->c_ep) 
-                {
-                    struct socket_d *sk = cur_conn->ep_pair->c_ep->socket;
-                    if (sk && sk->magic == 1234) 
-                    {
-                        if (sk->private_file && data_len > 0)
-                        {
-                            //printk("TCP Payload (%d bytes):\n%s\n", 
-                                //(int)data_len, __tcp_payload );
-
-                            printk("Saving payload into the file\n");
-                            file *fp = sk->private_file;
-                            size_t to_copy = 
-                                (data_len < fp->_lbfsize) ? data_len : fp->_lbfsize;
-                            memcpy(fp->_base, buffer + TCP_HEADER_LENGHT, to_copy);
-                            fp->_w = to_copy;
-                            fp->_r = 0;
-                            // Permissions
-                            fp->sync.can_read = TRUE;   // allow read
-                            fp->_flags |= __SRD;        // mark readable
-                            //fp->_flags &= ~__SWR;       // optional: clear write-only
-                            fp->sync.action = ACTION_REPLY; // signal to client that data is ready
-                        }
-                   }
-                }
-            }
-            */
 
             // #todo:
             // We can create a worker that do this routine,
@@ -2839,7 +2835,7 @@ network_handle_tcp (
                 fp->_flags |= __SRD;
                 fp->sync.can_read = TRUE;
                 fp->sync.can_write = FALSE;
-                fp->sync.action    = ACTION_REPLY;   // wake the client for THIS chunk too
+                fp->sync.action = ACTION_REPLY;   // wake the client for THIS chunk too
             }
 
             if (fFIN){
@@ -2908,7 +2904,90 @@ network_handle_tcp (
                 panic("TCP: sk validation\n");  return;
             }
             sk->state = SS_UNCONNECTED;
+            file *fp = sk->private_file;
+            if ((void*) fp == NULL){
+                panic("TCP: invalid fp\n");  return;
+            }
+            if (fp->magic != 1234){
+                panic("TCP: fp validation\n");  return;
+            }
+            // #todo: Reset everything
+            fp->sync.action = ACTION_REPLY;
+            //fp->sync.action = ACTION_DISCONNECTING;  //200000   
+            fp->sync.can_read = TRUE;
+            //fp->sync.can_write = TRUE;
+            //fp->_r = 0;
+            //fp->_w = 0;
+            //fp->_cnt = fp->_lbfsize; 
+            return;
         }
+    }
+
+    // Receiving something with the connection closed
+    if (cur_conn->status == CONN_STATUS_CLOSED)
+    {
+        printk("Receiving something with the connection closed\n");
+
+        //if (fFIN){
+
+        struct socket_d *sk;
+        sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
+        if ((void*) sk == NULL){
+            panic("TCP: invalid sk\n");
+            return;
+        }
+        if (sk->magic != 1234){
+            panic("TCP: sk validation\n");  return;
+        }
+        sk->state = SS_UNCONNECTED;
+        file *fp = sk->private_file;
+        if ((void*) fp == NULL){
+            panic("TCP: invalid fp\n");  return;
+        }
+        if (fp->magic != 1234){
+            panic("TCP: fp validation\n");  return;
+        }
+        // #todo: Reset everything
+        //fp->sync.action = ACTION_NULL;
+        fp->sync.action = ACTION_DISCONNECTING;  //200000   
+        fp->sync.can_read = TRUE;
+        fp->sync.can_write = TRUE;
+        fp->_r = 0;
+        fp->_w = 0;
+        fp->_cnt = fp->_lbfsize; 
+
+        // -------------------------------------------------
+        // 3. Always send the current cumulative ACK
+        // -------------------------------------------------
+        uint16_t Flags = TH_ACK;
+        if (fFIN)
+            Flags |= TH_FIN;   // only if you want to close your side too
+
+        // Send ACK.
+        // Acknoledgind the received data.
+        int rv = 
+            network_send_tcp(
+                dhcp_info.your_ipv4,
+                NetworkSaved.caller_ipv4,
+                NetworkSaved.caller_mac,
+                dport,
+                sport,
+                cur_conn->tcp_conn->snd_nxt,
+                cur_conn->tcp_conn->rcv_nxt,
+                Flags,
+                dummy_payload, 
+                0
+            );
+
+        if (rv < 0) {
+            printk(": [] Failed to ACK client FIN\n");
+            return;  // leave state as-is; a retransmitted FIN can retry
+        }
+        printk(": acked\n");
+
+        return;
+    
+        //}
     }
 
     printk("TCP: drop\n");

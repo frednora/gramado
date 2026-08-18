@@ -78,7 +78,6 @@ extern int g_inputmode;
 #define FILENAME_MAX    GRAMADO_FILENAME_MAX
 #endif
 
-
 // The size of the file table.
 // The macro yields the maximum number of files that the target 
 // environment permits to be simultaneously open 
@@ -198,19 +197,22 @@ struct __sbuf
 // =======================================================
 // Sync
 
-// Commands for synchronization.
+// Commands for synchronization:
 #define SYNC_REQUEST_SET_ACTION  1
 #define SYNC_REQUEST_GET_ACTION  2
-#define SYNC_REQUEST_RESET_WR    216  //Now we can write.
-#define SYNC_REQUEST_RESET_RD    217  //Now we can read.
+#define SYNC_REQUEST_RESET_WR    216  // Now we can write
+#define SYNC_REQUEST_RESET_RD    217  // Now we can read
+// ...
 
-// Action flags.
-// usado em 'file sync'
+// Action flags good for local connections
 #define ACTION_NULL       0
 #define ACTION_REQUEST    1000
 #define ACTION_REPLY      2000
 #define ACTION_EVENT      3000
 #define ACTION_ERROR      4000
+// Action flags good for remote connections
+#define ACTION_CONNECTING  10000  // Before calling connect()
+#define ACTION_DISCONNECTING  20000
 
 struct kstdio_sync_d
 {
