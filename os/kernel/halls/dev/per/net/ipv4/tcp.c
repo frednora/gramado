@@ -1098,8 +1098,7 @@ int tcp_change_socket_buffer(struct socket_d *sk, size_t desired_size)
 // The TCP header tracks the state of 
 // communication between two TCP endpoints.
 
-// Kernel debugger 11888
-// #test: Converting it to a state drivn logic
+// Kernel debugger. Port 11888 only.
 static void 
 __kd_handle_tcp( 
     const unsigned char *buffer, 
@@ -1108,9 +1107,9 @@ __kd_handle_tcp(
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    //register int i=0;
     uint16_t flags=0;
     size_t data_len = 0;
+    //register int i=0;
 
     // No payload for handshake
     char dummy_payload[2];
@@ -1134,7 +1133,6 @@ __kd_handle_tcp(
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
 
-    //printk("TCP Packet: remote=%u (sport), local=%u (dport)\n", tcp->th_sport, tcp->th_dport);
     printk("TCP: [Receiving] s=%u (sport), d=%u (dport)\n", 
         sport, dport );
 
@@ -1284,7 +1282,6 @@ __kd_handle_tcp(
 // 3) FIN <<
 // 4) ACK >>
 
-
 //If source IP = 0 → 
 //You don’t know who the peer is. 
 //You cannot establish a connection. Drop the packet or log an error.
@@ -1300,21 +1297,6 @@ __kd_handle_tcp(
     //#debug
     //printk("TCP: sport{%d}   #debug\n",sport);
     //printk("TCP: dport{%d}   #debug\n",dport);
-
-    // #todo: Ignore it for now
-    if (dport == 443){
-        return;  // No verbose
-    }
-    // #todo: Ignore it for now
-    if (dport == 80)
-    {
-        printk("TCP: dport{%d} (Server not implemented yet)\n", dport);
-        printk("SYN={%d} ACK={%d}\n", fSYN, fACK);
-        //if ( fSYN == 1 && fACK == 1 ){
-        //    printk("TCP: SYS/ACK received in port{%d}\n", dport);
-        //}
-        return;
-    }
 
 // Show
 
@@ -1556,11 +1538,13 @@ __kd_handle_tcp(
     // #test
     //struct connection_d *c_conn =
     c_conn = tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
-        //struct connection_d *c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
+    //struct connection_d *
+    //c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
     if (!c_conn){
         printk("step2: [WARNING] No connection based on remote peer\n"); 
         //printk("step2: syn_ack fail\n");
         //return; 
+        // fall through
     }
     if (c_conn)
     {
@@ -1574,8 +1558,13 @@ __kd_handle_tcp(
 // We are 11888 client and we send a SYN
     if (cur_conn->status == CONN_STATUS_SYN_SENT)
     {
-
         printk("#### Step 2: in CONN_STATUS_SYN_SENT ####\n");
+
+        // When we sent SYN, all we want back is SYN_ACK.
+        if (fSYN != 1 || fACK != 1){
+            printk("Not sy_ack on CONN_STATUS_SYN_SENT\n");
+            return;  // Drop
+        }
 
         // (2) SYN/ACK
         // A server accepted the connection.
