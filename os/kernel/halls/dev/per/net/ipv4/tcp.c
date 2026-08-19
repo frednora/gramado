@@ -2664,7 +2664,7 @@ network_handle_tcp (
         );
     }
 
-    // Specific case: SYN only (server side accept)
+// Specific case: SYN only (server side accept)
     if (fSYN == 1 && fACK == 0)
     {
         c_conn = tcp_find_connection_server_side(
@@ -2800,16 +2800,16 @@ network_handle_tcp (
     {
         printk("#### Step 2: Waiting syn_ack in CONN_STATUS_SYN_SENT ####\n");
 
-        if (fSYN != 1 || fACK != 1){
-            printk("[WARNING] Not a syn_ack\n");
-            return;
-        }
-
         if (fRST){
             printk("[WARNING] RST received during during CONN_STATUS_SYN_SENT\n");
             // Optional: clean up the half-open connection
             cur_conn->status = CONN_STATUS_CLOSED;
             // free resources...
+            return;
+        }
+
+        if (fSYN != 1 || fACK != 1){
+            printk("[WARNING] Not a syn_ack\n");
             return;
         }
 
@@ -2933,16 +2933,17 @@ network_handle_tcp (
         printk(">>> %d bytes\n", data_len);
         // ...
 
-        // Illegal
-        if (fSYN == 1){
-            printk("SYN received during CONN_STATUS_ESTABLISHED\n");
-            return;
-        }
         if (fRST == 1){
             printk("RST received during CONN_STATUS_ESTABLISHED\n");
             // Optional: clean up the half-open connection
             cur_conn->status = CONN_STATUS_CLOSED;
             // free resources...
+            return;
+        }
+
+        // Illegal
+        if (fSYN == 1){
+            printk("SYN received during CONN_STATUS_ESTABLISHED\n");
             return;
         }
         if (fFIN == 1){
@@ -3182,15 +3183,16 @@ network_handle_tcp (
 
     if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
     {
-        // Illegal?
-        if (fSYN == 1){
-            printk("SYN received during CONN_STATUS_SYN_RECEIVED\n");
-            return;
-        }
         if (fRST == 1){
             printk("RST received during CONN_STATUS_SYN_RECEIVED\n");
             // Abort the half-open connection
             cur_conn->status = CONN_STATUS_CLOSED;
+            return;
+        }
+
+        // Illegal?
+        if (fSYN == 1){
+            printk("SYN received during CONN_STATUS_SYN_RECEIVED\n");
             return;
         }
         if (fFIN == 1){
