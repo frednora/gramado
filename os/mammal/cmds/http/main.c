@@ -65,7 +65,7 @@ static void do_request(int sockfd)
     //while (1) {
     
     // Wait until kernel signals data ready
-    int Count = 5000;
+    int Count = 200;
     while (1) 
     {
         rtl_yield(); // yield CPU until reply arrives
@@ -93,6 +93,7 @@ static void do_request(int sockfd)
     int n = read(sockfd, buffer, sizeof(buffer)-1);
     printf("HTTP.BIN: %d bytes received\n", n);
     if (n <= 0){
+        printf ("read() failed: rv=%d\n", n);
         goto fail;
     }
     buffer[n] = '\0';
@@ -180,7 +181,7 @@ int main(int argc, char *argv[])
     while (1){
         rtl_yield(); // yield CPU
         ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
-        // We are not connectiong anymore
+        // We are not connecting anymore
         if (ActionState != 10000)
             break;
     };
