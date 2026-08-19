@@ -151,69 +151,65 @@ int main(int argc, char *argv[])
     addr.sin_addr.s_addr = inet_addr(target_ip);
     addr.sin_port = htons(HTTP_PORT);
 
-// Create socket
-    sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (sockfd < 0){
-        printf("HTTP_CLIENT.BIN: socket creation failed...\n");
-        exit(0);
-    }
-    // Reset the sync state
-    rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
-
-
-    printf("\n");
-    printf("SOCKET fd={ %d } <<<< \n", sockfd);
-    printf("\n");
-
 //
 // Connection loop
 //
 
-    while (Try > 1){
+    while (Try > 1)
+    {
+        // Create socket
+        sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        if (sockfd < 0){
+            printf("HTTP_CLIENT.BIN: socket creation failed...\n");
+            exit(0);
+        }
+        // Reset the sync state
+        rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
 
-    printf("HTTP_CLIENT.BIN [%d]: Connecting to %s:%d\n", 
-        Try, target_ip, HTTP_PORT );
+        printf("\n");
+        printf("SOCKET fd={ %d } <<<< \n", sockfd);
+        printf("\n");
 
-    if (sockfd < 0){
-       printf("HTTP.BIN: sockfd exit()\n");
-       exit(1);
-    }
+        printf("HTTP_CLIENT.BIN [%d]: Connecting to %s:%d\n", 
+            Try, target_ip, HTTP_PORT );
 
-    // Connect
-    // sync state: #test ACTION_CONNECTING. This is a new one.
-    rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, 10000);
-    int ConnectStatus = -1;
-    ConnectStatus = connect(
-        sockfd,
-        (struct sockaddr *) &addr,
-        sizeof(struct sockaddr_in)
-    );
+        if (sockfd < 0){
+            printf("HTTP.BIN: sockfd exit()\n");
+            exit(1);
+        }
 
-    if (ConnectStatus < 0){
-        printf("HTTP_CLIENT.BIN: connect failed\n");
-        //exit(0);
-        // rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, 10000);
-    }
+        // Connect
+        // sync state: #test ACTION_CONNECTING. This is a new one.
+        rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, 10000);
+        int ConnectStatus = -1;
+        ConnectStatus = connect(
+            sockfd,
+            (struct sockaddr *) &addr,
+            sizeof(struct sockaddr_in) );
 
-//
-// Waiting the connection happens
-//
+        if (ConnectStatus == 0){
 
-    int ActionState = -1;
-    while (1){
-        rtl_yield(); // yield CPU
-        ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
-        // We are not connecting anymore
-        if (ActionState != 10000)
-            break;
-    };
-    printf("HTTP_CLIENT.BIN: Connected! fd={%d} :)\n", sockfd);
+            // Waiting the connection happens
+            int ActionState = -1;
+            while (1)
+            {
+                rtl_yield(); // yield CPU
+                ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
+                // We are not connecting anymore
+                if (ActionState != 10000)
+                    break;
+            };
+            printf("HTTP_CLIENT.BIN: Connected! fd={%d} :)\n", sockfd);
 
-    // We are fully connected now.
-    // Lets call the request and get a response.
-    do_request(sockfd);
+            // We are fully connected now.
+            // Lets call the request and get a response.
+            do_request(sockfd);
 
-    Try--;
+        } else if (ConnectStatus < 0) {
+            printf("HTTP_CLIENT.BIN: connect failed\n");
+        }
+
+        Try--;
     };  // end of while
 
     // close(sockfd);
