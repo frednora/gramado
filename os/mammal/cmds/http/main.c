@@ -1,7 +1,9 @@
-// Experimental http client
+// Experimental http client for Gramado OS.
 // Connects to the http.bin server, sends a GET, prints the response.
+// Environment:
+//     Ring 3.
+// Created by Fred Nora
 
-// rtl
 #include <types.h>
 #include <sys/types.h>
 #include <sys/cdefs.h>
@@ -20,6 +22,9 @@
 
 #include <rtl/gramado.h>
 
+//
+// Definitions and prototypes
+//
 
 // http://httpbin.org
 #define TARGET_IP  "100.60.124.177"
@@ -29,10 +34,14 @@ static void do_request(int sockfd);
 
 // ===============================================
 
+// We are already connected.
+// Send a request and wait for a response.
 static void do_request(int sockfd)
 {
-// Bigger buffer so we can pull a decent chunk at a time
+    //char response_buffer[1024];
+    char response_buffer[512];
 
+// HTTP request
     const char *request =
     "GET /html HTTP/1.1\r\n"
     "Host: httpbin.org\r\n"
@@ -42,8 +51,7 @@ static void do_request(int sockfd)
     "\r\n";
 
 // ------------------------
-// We are connected.
-// Send a request.
+// Send
 
     int r_number = (int) write(sockfd, request, strlen(request));
     if (r_number < 0) 
@@ -88,41 +96,50 @@ static void do_request(int sockfd)
 
     printf("HTTP.BIN: Reply received\n");
 
-    // Read available data
-    char buffer[1024];
-    int n = read(sockfd, buffer, sizeof(buffer)-1);
+// ------------------------
+// Receive
+
+    memset( response_buffer, 0, sizeof(response_buffer));
+
+    // #test: Lets read always the first part of the file (for now)
+    lseek(sockfd, 0, SEEK_SET);   // rewind to beginning
+
+    int n = read(sockfd, response_buffer, sizeof(response_buffer)-1);
     printf("HTTP.BIN: %d bytes received\n", n);
     if (n <= 0){
         printf ("read() failed: rv=%d\n", n);
         goto fail;
     }
-    buffer[n] = '\0';
-    printf("%s", buffer);
+    response_buffer[n] = '\0';
 
-    // Reset sync state so kernel can send more
-    rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
+// Print response buffer
+
+    printf("RESPONSE BUFFER: {%s}\n", response_buffer);
 
     // }
 
 done:
+    // Reset sync state so kernel can send more
     rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
     return;
+
 fail:
+    // Reset sync state so kernel can send more
     rtl_set_file_sync( sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
     return;
 }
 
 
+// IN: target IP
 int main(int argc, char *argv[])
 {
     struct sockaddr_in addr;
     int sockfd;
     const char *target_ip = TARGET_IP;
-
     int Try = 8;
 
-    // Allow overriding the target IP from the command line:
-    // http_client.bin 203.0.113.7
+// Allow overriding the target IP from the command line:
+// http_client.bin 203.0.113.7
     if (argc > 1){
         target_ip = argv[1];
     }
@@ -144,6 +161,14 @@ int main(int argc, char *argv[])
     rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
 
 
+    printf("\n");
+    printf("SOCKET fd={ %d } <<<< \n", sockfd);
+    printf("\n");
+
+//
+// Connection loop
+//
+
     while (Try > 1){
 
     printf("HTTP_CLIENT.BIN [%d]: Connecting to %s:%d\n", 
@@ -154,8 +179,7 @@ int main(int argc, char *argv[])
        exit(1);
     }
 
-// Connect
-
+    // Connect
     // sync state: #test ACTION_CONNECTING. This is a new one.
     rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, 10000);
     int ConnectStatus = -1;
@@ -165,11 +189,9 @@ int main(int argc, char *argv[])
         sizeof(struct sockaddr_in)
     );
 
-    if (ConnectStatus < 0)
-    {
+    if (ConnectStatus < 0){
         printf("HTTP_CLIENT.BIN: connect failed\n");
         //exit(0);
-
         // rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, 10000);
     }
 
@@ -185,7 +207,6 @@ int main(int argc, char *argv[])
         if (ActionState != 10000)
             break;
     };
-
     printf("HTTP_CLIENT.BIN: Connected! fd={%d} :)\n", sockfd);
 
     // We are fully connected now.
@@ -193,10 +214,10 @@ int main(int argc, char *argv[])
     do_request(sockfd);
 
     Try--;
-
     };  // end of while
 
     // close(sockfd);
-    printf("HTTP_CLIENT.BIN: done\n");
+
+    printf("HTTP_CLIENT.BIN: EXIT_SUCCESS\n");
     return EXIT_SUCCESS;
 }

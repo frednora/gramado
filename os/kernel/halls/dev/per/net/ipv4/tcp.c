@@ -779,6 +779,8 @@ tcp_client_connect(
 {
 // WAN
 // Send SYN
+// It is correctly filling the connection structure 
+// with all four values (local IP/port and remote IP/port).
 
     struct socket_d *sk_local;
     struct socket_d *sk_remote;
@@ -826,6 +828,34 @@ tcp_client_connect(
     sk_local->conn = conn;
     sk_local->ep = local_ep;
 
+    // ------------------------------------------------
+    // Set IP
+    // Convert dhcp_info.your_ipv4 (array) into host-order uint32_t
+    unsigned int local_ip_int =
+    ((unsigned int)dhcp_info.your_ipv4[0] << 24) |
+    ((unsigned int)dhcp_info.your_ipv4[1] << 16) |
+    ((unsigned int)dhcp_info.your_ipv4[2] << 8)  |
+    ((unsigned int)dhcp_info.your_ipv4[3]);
+
+    // ------------------------------------------------
+    // Set PORT
+    // Allocate an ephemeral local port for this client socket.
+    // #todo: check for collisions against a real in-use table;
+    // for now this is a simple wrap-around counter.
+    if (__new_client_port_number < __first_ephemeral_port)
+        panic ("__new_client_port_number <");
+    if (__new_client_port_number > __last_ephemeral_port)
+        __new_client_port_number = __first_ephemeral_port;
+        // panic("__new_client_port_number >");
+
+    // ------------------------------------------------
+
+// Set IP:PORT for local client
+    sk_local->ip_ipv4 = local_ip_int;  // store local IP in host order
+    sk_local->port    = __new_client_port_number;
+
+    __new_client_port_number++;
+
 // ------------------------------
 // Remote endpoint
 // Creating the socket for the remote ep.
@@ -868,20 +898,6 @@ tcp_client_connect(
     conn->tcp_conn->rcv_nxt = 0;
 
     // ------------------------------------------------
-    // Allocate an ephemeral local port for this client socket.
-    // #todo: check for collisions against a real in-use table;
-    // for now this is a simple wrap-around counter.
-    if (__new_client_port_number < __first_ephemeral_port)
-        panic ("__new_client_port_number <");
-    if (__new_client_port_number > __last_ephemeral_port)
-        panic("__new_client_port_number >");
-
-    // Set
-    sk_local->port = __new_client_port_number;
-    // sk_local->port = 11888;  // Host bytes order
-    // ------------------------------------------------
-
-    // ------------------------------------------------
     // A bare SYN carries no application data, but
     // network_send_tcp() rejects data_buffer == NULL
     // outright, even when data_lenght is 0.
@@ -919,10 +935,10 @@ tcp_client_connect(
         dhcp_info.your_ipv4,   // source IP (array)
         target_ip,             // target IP (array, correctly ordered)
         NetworkSaved.gateway_mac,
-        sk_local->port,  // 11888 (host order) 
-        dst_port,  // host order
-        conn->tcp_conn->iss,  // seq
-        0,                    // ack
+        sk_local->port,        // source port (host order) 
+        dst_port,              // target port (host order)
+        conn->tcp_conn->iss,   // seq
+        0,                     // ack
         TH_SYN,
         syn_payload,
         syn_payload_len
@@ -2592,9 +2608,32 @@ network_handle_tcp (
 // In that case, you decide whether 
 // to support passive open (server mode) or just drop it.
 
-    struct connection_d *c_conn = 
-        tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
+    struct connection_d *c_conn = NULL;
 
+// General case: fallback
+// It is probing in conn->ep_pair->s_ep->socket.
+    c_conn = tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
+
+// Specific case: SYN+ACK (client side connect)
+    if (fSYN == 1 && fACK == 1)
+    {
+        // panic ("#test: during syn_ack\n");
+        c_conn = tcp_find_connection_client_side(
+            d_ipv4_int, dport,   // local client side
+            s_ipv4_int, sport    // remote server side
+        );
+    }
+
+    // Specific case: SYN only (server side accept)
+    if (fSYN == 1 && fACK == 0)
+    {
+        c_conn = tcp_find_connection_server_side(
+           d_ipv4_int, dport,   // local server side
+           s_ipv4_int, sport    // remote client side
+       );
+    }
+
+    // --------------
     if (!c_conn)
     { 
         printk("Invalid c_conn\n");
@@ -2834,7 +2873,9 @@ network_handle_tcp (
         // ...
 
         // fail
-        if ((void*) cur_conn->tcp_conn == NULL){
+        if ((void*) cur_conn->tcp_conn == NULL)
+        {
+            printk("Invalid cur_conn->tcp_conn\n");
             cur_conn->status = CONN_STATUS_CLOSED;
             return;
         }
@@ -2848,6 +2889,8 @@ network_handle_tcp (
         // -------------------------------------------------
         if (_seq_number == cur_conn->tcp_conn->rcv_nxt) 
         {
+            printk("TCP: Lets handle data    :) <<<\n");
+
             // In-order data segment
             cur_conn->tcp_conn->rcv_nxt += data_len;
             if (fFIN)
@@ -2914,6 +2957,14 @@ network_handle_tcp (
                     (data_len < fp->_cnt) 
                     ? data_len 
                     : fp->_cnt;
+
+
+                printk("\n");
+                printk("\n");
+                printk("TCP: COPY COPY COPY    :) <<<\n");
+                printk("TCP RX: writing into fd=%d\n", fp->_file);
+                printk("\n");
+                printk("\n");
 
                 // Inject at this position
                 memcpy(

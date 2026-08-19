@@ -312,12 +312,59 @@ struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port)
     return NULL;  // Not found
 }
 
-struct connection_d *tcp_find_connection_by_endpoints(
+// Client‑side lookup (used when receiving SYN+ACK during connect):
+// Emphasizes that this is for the local client initiating a connection,
+// matching local client IP/port against the remote server IP/port.
+struct connection_d *tcp_find_connection_client_side(
     unsigned int local_ip,
     unsigned short local_port,
     unsigned int remote_ip,
     unsigned short remote_port)
 {
+// Client is local
+
+    int i;
+    for (i = 0; i < MAX_CONNECTIONS; i++) 
+    {
+        struct connection_d *conn = connectionList[i];
+        if (conn && conn->magic == 1234) 
+        {
+            if (conn->ep_pair && 
+                conn->ep_pair->c_ep && 
+                conn->ep_pair->s_ep) 
+            {
+                struct socket_d *c_sock = conn->ep_pair->c_ep->socket; // local client
+                struct socket_d *s_sock = conn->ep_pair->s_ep->socket; // remote server
+
+                if (c_sock && c_sock->magic == 1234 &&
+                    s_sock && s_sock->magic == 1234)
+                {
+                    // Client is local
+                    if (c_sock->ip_ipv4 == local_ip &&
+                        c_sock->port    == local_port &&
+                        s_sock->ip_ipv4 == remote_ip &&
+                        s_sock->port    == remote_port)
+                    {
+                        return (struct connection_d *) conn; // Found the right connection
+                    }
+                }
+            }
+        }
+    }
+    return NULL; // Not found
+}
+
+// Server‑side lookup (used when receiving SYN during accept): 
+// Emphasizes that this is for the local server listening, 
+// matching remote client IP/port against the local server IP/port.
+struct connection_d *tcp_find_connection_server_side(
+    unsigned int local_ip,
+    unsigned short local_port,
+    unsigned int remote_ip,
+    unsigned short remote_port)
+{
+// Client is remote
+
     int i;
     for (i=0; i < MAX_CONNECTIONS; i++) 
     {
@@ -336,6 +383,7 @@ struct connection_d *tcp_find_connection_by_endpoints(
                      s_sock && 
                      s_sock->magic == 1234 )
                 {
+                    // Client is remote
                     if (c_sock->ip_ipv4 == remote_ip &&
                         c_sock->port    == remote_port &&
                         s_sock->ip_ipv4 == local_ip &&

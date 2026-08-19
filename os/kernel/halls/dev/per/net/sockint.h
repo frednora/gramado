@@ -459,7 +459,13 @@ int socket_find_empty_tcpserver_slot(void);
 
 struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port);
 
-struct connection_d *tcp_find_connection_by_endpoints(
+struct connection_d *tcp_find_connection_client_side(
+    unsigned int local_ip,
+    unsigned short local_port,
+    unsigned int remote_ip,
+    unsigned short remote_port);
+
+struct connection_d *tcp_find_connection_server_side(
     unsigned int local_ip,
     unsigned short local_port,
     unsigned int remote_ip,
