@@ -35,14 +35,12 @@ CFLAGS := \
 	-fno-optimize-sibling-calls    
 
 all:
-#	make -C  arm/
-	make -C  x86_64/
 
-# kmain for BSP processor
-	$(CC) -c kmain.c   -I ../../include  $(CFLAGS) -o kmain.o
+# kmain for AP processor
+	$(CC) -c apmain.c   -I ../../include  $(CFLAGS) -o apmain.o
 
 # Copy
-	mv kmain.o   ../../
+	mv apmain.o   ../../
 
 clean:
 # ...
