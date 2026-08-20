@@ -2281,7 +2281,7 @@ void rtl_yield(void)
 // allowing us to create more different sort of wrappers.
 void rtl_sleep_until(unsigned long ms)
 {
-    if (ms==0){
+    if (ms == 0){
         ms=1;
     }
     sc82( 266, ms, ms, ms );

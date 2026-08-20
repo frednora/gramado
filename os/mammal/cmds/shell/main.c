@@ -412,6 +412,22 @@ static void process_command(void)
     else {
         write(__fd_stdout, "shell: unknown command\n", 24);
         write( __fd_stdout, "\n", 1 );  // Go to next line
+
+
+        // =================================================
+        unsigned long j1 = rtl_jiffies();
+        printf("Initial jiffies: %lu\n", j1);
+
+        // Voluntarily yield CPU
+        //rtl_yield();
+
+        rtl_sleep_until(4);
+
+        // After yield, check jiffies again
+        unsigned long j2 = rtl_jiffies();
+        printf("After yield jiffies: %lu\n", j2);
+        // ==================================================
+
     }
 
     //reset_prompt();

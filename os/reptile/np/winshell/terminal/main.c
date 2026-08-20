@@ -4289,6 +4289,22 @@ int terminal_init(unsigned short flags)
 // Only the foreground thread can change this.
     sc82(10013, tid, tid, tid);
 
+
+/*
+// =================================================
+    unsigned long j1 = rtl_jiffies();
+    printf("Initial jiffies: %lu\n", j1);
+
+    // Voluntarily yield CPU
+    //rtl_yield();
+    rtl_sleep_until(4000);
+
+    // After yield, check jiffies again
+    unsigned long j2 = rtl_jiffies();
+    printf("After yield jiffies: %lu\n", j2);
+// ==================================================
+*/
+
 /*
     char buf[128];
     ssize_t n = read(ptym_fd, buf, sizeof(buf)-1);

@@ -38,7 +38,7 @@ static struct thread_d  *p6q;  // Higher
 
 // ----------------------------------------
 // Event responter thread
-int g_use_event_responder=TRUE;
+int g_use_event_responder=FALSE;
 struct thread_d *ev_responder_thread;
 
 // Global counters 
@@ -403,21 +403,31 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
     for (i=1; i < THREAD_COUNT_MAX; i++) 
     {
         TmpThread = (struct thread_d *) threadList[i];
-        if (TmpThread && TmpThread->used == TRUE && TmpThread->magic == 1234) 
+        if ( TmpThread && TmpThread->used == TRUE && 
+             TmpThread->magic == 1234) 
         {
 
             // --- NEW: Wake-up check for WAITING threads --- 
             if (TmpThread->state == WAITING) 
             { 
+
+                //printk ("Thread is waiting ...\n");
+                printk("now %d | sleep %d >> wakeup %d\n", 
+                    jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy ); 
+
                 // Alarm check 
                 if (jiffies > TmpThread->alarm) { 
                     TmpThread->alarm = 0; 
                     // #todo: signal handling 
                 } 
                 // Wake-up check 
-                if (jiffies >= TmpThread->wake_jiffy) { 
+                if (jiffies >= TmpThread->wake_jiffy) 
+                {
+                    //printk("now %d | sleep %d >> wakeup %d\n", 
+                        //jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy ); 
                     do_thread_ready(TmpThread->tid); 
                     TmpThread->wake_jiffy = 0; // reset 
+                    //panic("breakpoint");
                 } 
             }
 

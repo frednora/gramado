@@ -31,10 +31,6 @@ void do_credits_by_tid(tid_t tid)
 }
 
 // 12, 7
-// do_thread_sleeping:
-// Muda o state de uma thread pra blocked.
-// #todo: Mudar o nome da função para do_thread_blocked.
-
 void do_thread_blocked(tid_t tid)
 {
     struct thread_d *t;
@@ -66,8 +62,8 @@ void do_thread_blocked(tid_t tid)
     }
 */
 
-    t->state = BLOCKED;
     t->blocked_jiffy = (unsigned long) jiffies;
+    t->state = BLOCKED;
 }
 
 // 10
@@ -113,7 +109,7 @@ void do_thread_initialized(tid_t tid)
     if (t->magic != 1234){
         return;
     }
-//  Change state.
+
     t->state = INITIALIZED;
 }
 
@@ -149,8 +145,8 @@ void do_thread_ready(tid_t tid)
     }
 */
 
-    t->state = READY;
     t->ready_jiffy = (unsigned long) jiffies;
+    t->state = READY;
 }
 
 // 2,4
@@ -165,11 +161,12 @@ void do_thread_running(tid_t tid)
     if ((void *) t == NULL){
         return;
     }
-// Change state
-    if (t->used == TRUE && t->magic == 1234)
+    if (t->used != TRUE && t->magic != 1234)
     {
-        t->state = RUNNING;
+        return;
     }
+
+    t->state = RUNNING;
 }
 
 // 1
@@ -197,15 +194,23 @@ void do_thread_standby(tid_t tid)
 }
 
 // 5, 13
+// + It sets the status to waiting.
+// + It marks the time we start sleeping and 
+//   the time we will wake up.
 void do_thread_waiting(tid_t tid, unsigned long ms)
 {
     struct thread_d *t;
     unsigned long JiffiesToWait = ms;
 
-    //printk("do_thread_waiting: %dms\n", ms);
+    printk("do_thread_waiting: %dms\n", ms);
 
     if (tid < 0 || tid >= THREAD_COUNT_MAX){
         return;
+    }
+
+// Jiffies to wait can't be 0.
+    if (JiffiesToWait == 0){
+        JiffiesToWait = 1;
     }
 
 // structure
@@ -220,19 +225,17 @@ void do_thread_waiting(tid_t tid, unsigned long ms)
         return;
     }
 
-    t->state = WAITING;
-// Start
+// Set start jiffy and end jiffie.
+// It marks the time we start sleeping and 
+// the time we will wake up.
     t->waiting_jiffy = (unsigned long) jiffies;
-// End
-    if (JiffiesToWait == 0){
-        JiffiesToWait = 1;
-    }
-// Time to wake up
-    t->wake_jiffy = (unsigned long) (jiffies + JiffiesToWait);
+    t->wake_jiffy    = (unsigned long) (jiffies + JiffiesToWait);
 
-// #debug
+    // #debug
     //printk("do_thread_waiting: j1=%d | j2=%d |\n", jiffies, t->wake_jiffy);
     //printk("do_thread_waiting: done\n");
+
+    t->state = WAITING;
 }
 
 // 9
@@ -264,26 +267,14 @@ void do_thread_zombie(tid_t tid)
         return;
     }
 
-    t->state = ZOMBIE;
     t->zombie_jiffy = (unsigned long) jiffies;
+    t->state = ZOMBIE;
 }
 
-/*
- * do_waitpid:
- *     espera por qualquer um do processo filho.
- */
-
-//#todo 
-//vamos apenas lidar com a estrutura de processo.
-//#importante: o kernel terá a obrigação de 
-//finalizar o processo quando sua thread primária ficar em zombie. 
-//poi um processo tem várias threads, e se uma fechar não significa que o 
-//processo terminou. Por isso vamos apenas checar o estado dos processos e 
-//não das threads.
-//rever essa função, há muito o que fazer nela 
-//ela precisa retornar valores padronizados e configurar 
-//o status recebido
-
+// This routine does:
+// + Blocking the process
+// + Blocking the thread
+// + Setting the reason we blocked the thread
 int do_waitpid (pid_t pid, int *status, int options)
 {
     struct te_d *p;  // process (Thread Environment)
@@ -300,55 +291,64 @@ int do_waitpid (pid_t pid, int *status, int options)
     // tem que bloquear o processo atual até que um dos seus 
     // processos filhos seja fechado.
 
+//
+// Our process
+//
+
     p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
-        printk ("do_waitpid: Current process struct fail\n");
-        return -1;
-    } else {
+        printk("do_waitpid: p\n");
+        goto fail;
+    } 
+    if (p->used != TRUE || p->magic != 1234)
+    {
+        printk("do_waitpid: p validation\n");
+        goto fail;
+    }
+   
+// Block this process         
+    p->state = PROCESS_BLOCKED;
 
-        if ( p->used != TRUE || p->magic != 1234 )
-        {
-            debug_print ("do_waitpid: validation\n");
-            //#todo: Fail?
-        }
-        
-        if ( p->used == TRUE && p->magic == 1234 )
-        {
+// It is the process we are waiting for
+    p->wait4pid = (pid_t) pid; 
 
-            //#debug
-            //printk ("blocking process\n");
-            
-            p->state = PROCESS_BLOCKED;
+//
+// Our thread
+//
 
-			//significa que está esperando por qualquer
-			//um dos filhos.
-            p->wait4pid = (pid_t) pid; 
+    struct thread_d *t;
 
-            //checando se a thread atual é a thread flower. 
-            if (CurrentTID == p->flower->tid)
-            {
-                //#debug
-                //printk ("the current thread is also the flower thread\n");
-            }
-           
-            //printk ("blocking thread\n");
-            //tem que bloquear todas as threads do pai.
-            //Isso pode estar falhando;
-            //block_for_a_reason ( (int) p->flower, (int) WAIT_REASON_WAIT4PID );
-            p->flower->state = BLOCKED; 
-        }
-    };
+    t = (struct thread_d *) p->flower;
 
-	// aqui precisamos dar informações sobre o status do processo
+    if ((void *) t == NULL){
+        printk("do_waitpid: t\n");
+        goto fail;
+    } 
+    if (t->used != TRUE || t->magic != 1234)
+    {
+        printk("do_waitpid: t validation\n");
+        goto fail;
+    }
 
-    // #bugbug: Isso pode ter falhado.
-    //fake value. 
+// Mismatch?
+    if (CurrentTID == p->flower->tid){
+        printk ("do_waitpid: [Mismatch] TID\n");
+        goto fail;
+    }
+
+// Block our thread
+    p->flower->state = BLOCKED; 
+
+// #todo:
+// Set the reason we are blocking the thread
+    //block_for_a_reason ( (int) p->flower, (int) WAIT_REASON_WAIT4PID );
+
+// Status?
     //*status = 1; 
 
-    //#debug
-    //printk ("do_waitpid: done. \n");
-    //refresh_screen();
+    return 0;  // OK
 
+fail:
     return (int) (-1);
 }
 
@@ -517,7 +517,6 @@ void wait_for_a_reason ( tid_t tid, int reason )
 
    // #debug
    printk ("wait_for_a_reason: done\n");
-   //refresh_screen();
 }
 
 // wakeup_thread_reason:
@@ -717,7 +716,7 @@ void wakeup_thread(tid_t tid)
 }
 
 // Yield
-// Set a flag that this thread will be preempted.
+// Set a flag that says this thread will be preempted.
 // Desiste do tempo de processamento.
 // cooperativo.
 // Muda o seu tempo executando para: Próximo de acabar.
@@ -731,7 +730,7 @@ void wakeup_thread(tid_t tid)
 // Isso não deve afetar a prioridde da thread.
 // see: __task_switch() ts.c
 
-void yield (tid_t tid)
+void yield(tid_t tid)
 {
     struct thread_d  *t;
 
@@ -751,11 +750,10 @@ void yield (tid_t tid)
 }
 
 // Called by __task_switch() in ts.c
-void sleep_until (tid_t tid, unsigned long ms)
-{
 // Dormimos e agendamos a hora de acordarmos.
 // Worker. Do not call it in a sci.
-
+void sleep_until (tid_t tid, unsigned long ms)
+{
     //printk("sleep_until:\n");
 
     if (tid<0 || tid >= THREAD_COUNT_MAX){
@@ -780,11 +778,10 @@ void sleep_until (tid_t tid, unsigned long ms)
 // O ts.c vai esgotar o quantum dessa thread
 // no momento do task switching.
 // Isso não deve afetar a prioridde da thread.
+// Dormimos e agendamos a hora de acordarmos.
 
 void sleep(tid_t tid, unsigned long ms)
 {
-// Dormimos e agendamos a hora de acordarmos.
-
     struct thread_d  *t;
 
     //printk ("sleep\n");
@@ -815,7 +812,6 @@ void sleep(tid_t tid, unsigned long ms)
     t->Deferred.sleep_in_progress = TRUE;
     t->Deferred.desired_sleep_ms = ms;
 }
-
 
 // #test: (Not in used yet)
 void schedi_drop_quantum(struct thread_d *thread)

@@ -500,10 +500,10 @@ static unsigned long __task_switch(int lapic_info_id)
 
     if (CurrentThread->runningCount < CurrentThread->quantum){
 
+        /*
         // Yield in progress. 
         // Esgota o quantum e ela sairá naturalmente no próximo tick.
         // Revertemos a flag acionada em schedi.c.
-
         // :: yield - Force quantum end.
         if ( CurrentThread->state == RUNNING && 
              CurrentThread->Deferred.yield_in_progress == TRUE )
@@ -511,7 +511,9 @@ static unsigned long __task_switch(int lapic_info_id)
             CurrentThread->runningCount = CurrentThread->quantum;  // Esgota
             CurrentThread->Deferred.yield_in_progress = FALSE;
         }
+        */
 
+        /*
         // :: sleep - Mark thread WAITING until wake_jiffy.
         if ( CurrentThread->state == RUNNING && 
              CurrentThread->Deferred.sleep_in_progress == TRUE )
@@ -519,12 +521,16 @@ static unsigned long __task_switch(int lapic_info_id)
             //printk ("ts: Do sleep until\n");
             CurrentThread->runningCount = CurrentThread->quantum;  // Esgoto
             // set waiting
+            // It changes the current state.
+            // Is we changed the current state we need to pick another one.
+            // or this thread will go to the running state after this routine.
             sleep_until(
                 CurrentThread->tid, 
                 CurrentThread->Deferred.desired_sleep_ms );
             CurrentThread->Deferred.sleep_in_progress = FALSE;
             //printk ("ts: Status=%d\n",CurrentThread->state);
         }
+        */
 
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
 
@@ -545,9 +551,11 @@ static unsigned long __task_switch(int lapic_info_id)
 
     } else if (CurrentThread->runningCount >= CurrentThread->quantum){
 
+        // #preempt
         // The context is already saved,
         // we can process something before planing the next thread.
         __tsOnFinishedExecuting(CurrentThread);
+
 
         // Is it a ring 0 thread?
         // #debug
@@ -681,6 +689,7 @@ ZeroGravity:
     // Are we using the event responder feature?
     // Do we have a pending event for the ev responder thread?
     // Set main fields, rebuild the queue and go ahead.
+    /*
     int hasEvent = FALSE;
     if (g_use_event_responder == TRUE) 
     {
@@ -703,6 +712,7 @@ ZeroGravity:
             goto go_ahead;
         }
     }
+    */
 
 //
 // End of round?
