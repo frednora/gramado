@@ -414,6 +414,7 @@ static void process_command(void)
         write( __fd_stdout, "\n", 1 );  // Go to next line
 
 
+        /*
         // =================================================
         unsigned long j1 = rtl_jiffies();
         printf("Initial jiffies: %lu\n", j1);
@@ -427,6 +428,7 @@ static void process_command(void)
         unsigned long j2 = rtl_jiffies();
         printf("After yield jiffies: %lu\n", j2);
         // ==================================================
+        */
 
     }
 
