@@ -126,6 +126,10 @@ network_handle_ethernet (
     unsigned char *payload_base;
     ssize_t PayloadSize;
 
+    int UseFirewall = FALSE;
+    int FirewallStatus = FALSE;
+
+
     // Drop it!
     // Set this flag using the command "net-on" on terminal.bin.
     if (NetworkInitialization.initialized != TRUE)
@@ -242,6 +246,15 @@ network_handle_ethernet (
         break;
 
     case ETHERTYPE_IPV4:
+        if (UseFirewall == TRUE)
+        {
+            FirewallStatus = firewall_apply_ipv4_filters(payload_base, PayloadSize);
+            if (FirewallStatus < 0)
+            {
+                // Do something ... drop, log etc ...
+            }
+        }
+        // Call the handler
         network_handle_ipv4(payload_base, PayloadSize);
         return 0;  // OK
         break;

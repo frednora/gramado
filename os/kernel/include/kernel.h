@@ -360,6 +360,9 @@ extern int system_state;
 // Ethernet
 #include "../halls/dev/per/net/ethernet/ethernet.h"
 
+// Firewall
+#include "../halls/dev/per/net/firewall/firewall.h"
+
 // =================================
 // ipv4/
 #include "../halls/dev/per/net/ipv4/arp.h"

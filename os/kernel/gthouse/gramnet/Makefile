@@ -1,4 +1,4 @@
-# libk/
+# gramnet/
 # Create p1_gnet.o kernel module.
 # Highest level component.
 

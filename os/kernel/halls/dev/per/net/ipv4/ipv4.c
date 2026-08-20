@@ -229,6 +229,9 @@ network_handle_ipv4(
     unsigned char *payload_base;
     ssize_t PayloadSize;
 
+    int UseFirewall = FALSE;
+    int FirewallStatus = FALSE;
+
     //printk ("IP: received\n");
 
 // #warning
@@ -369,6 +372,21 @@ network_handle_ipv4(
 
     switch (Protocol){
     case PROTOCOL_IP_TCP:
+        if (UseFirewall == TRUE)
+        {
+            FirewallStatus = 
+                firewall_apply_tcp_filters(
+                    payload_base, 
+                    PayloadSize,
+                    NetworkSaved.caller_ip_int,  // s_ipv4_int
+                    NetworkSaved.target_ip_int   // d_ipv4_int
+            );
+            if (FirewallStatus < 0)
+            {
+                // Do something ... drop, log etc ...
+            }
+        }
+        // Call the handler
         network_handle_tcp( 
             payload_base, 
             PayloadSize,

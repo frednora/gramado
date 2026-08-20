@@ -72,7 +72,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = domain.o inet.o \
 socket.o sockint.o \
 netif.o \
-ethernet.o arp.o ipv4.o tcp.o udp.o dhcp.o \
+ethernet.o firewall.o arp.o ipv4.o tcp.o udp.o dhcp.o \
 net.o    
 
 
@@ -92,8 +92,12 @@ all:
 # Network inteface support
 	$(CC) -c ifconfig/netif.c  $(KERNEL_INCLUDE) $(CFLAGS) -o netif.o
 
+
 # ethernet
 	$(CC) -c ethernet/ethernet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
+
+# firewall
+	$(CC) -c firewall/firewall.c  $(KERNEL_INCLUDE) $(CFLAGS) -o firewall.o
 
 # ipv4
 	$(CC) -c ipv4/arp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o arp.o

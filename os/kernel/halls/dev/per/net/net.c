@@ -297,7 +297,7 @@ struct socket_d *get_client_socket_from_connection(struct connection_d *conn)
     if (!conn->ep_pair->c_ep){
         return NULL;
     }
-    sk = conn->ep_pair->c_ep->socket;;
+    sk = conn->ep_pair->c_ep->socket;
 
     return sk;
 }
@@ -855,6 +855,9 @@ network_on_receiving (
     const unsigned char *frame, 
     ssize_t frame_size )
 {
+    int UseFirewall = FALSE;
+    int FirewallStatus = FALSE;
+
     // If the kernel is not initialized yet.
     // No NIC device can call us yet.
     if (system_state != SYSTEM_RUNNING)
@@ -866,7 +869,16 @@ network_on_receiving (
     //if (frame_size<0)
         //return (int) -1;
 
-    return (int) network_handle_ethernet(frame,frame_size);
+    if (UseFirewall == TRUE)
+    {
+        FirewallStatus = firewall_apply_ethernet_filters(frame, frame_size);
+        if (FirewallStatus < 0)
+        {
+            // Do something ... drop, log etc ...
+        }
+    }
+
+    return (int) network_handle_ethernet(frame, frame_size);
 
 //-----------------
 
@@ -1578,6 +1590,9 @@ int netInitialize(void)
 // the DHCP support.
 
     netif_initialize();
+
+
+    firewall_initialize();
 
     // ...
 
