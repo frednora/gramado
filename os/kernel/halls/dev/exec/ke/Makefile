@@ -175,7 +175,7 @@ all:
 	$(CC) -c ke.c     $(KERNEL_INCLUDE) $(CFLAGS) -o ke.o
 
 
-# link
+# link (Ugly path)
 	$(LD) -r -o p1_ke.o $(OBJS)
 	cp p1_ke.o ../../../../
 	rm *.o

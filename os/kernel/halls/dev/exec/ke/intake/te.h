@@ -5,8 +5,7 @@
 #ifndef __INTAKE_TE_H
 #define __INTAKE_TE_H    1
 
-//#bugbug
-//talvez aqui nao seja o melhor lugar pra definir isso.
+
 #define gramado_pid_t  pid_t
 
 #define PROCESS_MAGIC  1234  // In use

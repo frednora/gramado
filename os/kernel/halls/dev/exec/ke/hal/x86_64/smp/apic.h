@@ -14,15 +14,14 @@
 // See:
 // https://opensource.apple.com/source/xnu/xnu-2050.24.15/osfmk/i386/lapic.h.auto.html
 
-
 // APICs (both local and I/O) are memory mapped devices. 
 // The default location for the local APIC 
 // is at 0xfee00000 in physical memory. 
 
+#ifndef __SMP_APIC_H
+#define __SMP_APIC_H    1
 
-#ifndef ____APIC_H
-#define ____APIC_H    1
-
+#define APIC_NULL  0
 
 /*
     LAPIC registers. 
@@ -43,12 +42,11 @@ losethos os - Adam1a.HPP.
 // #todo: Vamos precisar de um endereço virtual para acessarmos isso.
 */
 
-// BDA base address.
+// BDA base address
 #define BDA_BASE  0x040E
 // MP signature. "_MP_".
 #define MP_SIG  0x5F504D5F
-
-// Base physical address.
+// Base physical address
 #define LAPIC_BASE  0xFEE00000
 
 // Offsets:
@@ -68,10 +66,8 @@ losethos os - Adam1a.HPP.
 
 #define LAPIC_IRR          0x200
 
-
 #define LAPIC_ICR_LOW      0x300
 #define LAPIC_ICR_HIGH     0x310
-
 
 #define LAPIC_LVT_TIMER    0x320
 #define LAPIC_LVT_THERMAL  0x330
@@ -80,11 +76,9 @@ losethos os - Adam1a.HPP.
 #define LAPIC_LVT_LINT1    0x360
 #define LAPIC_LVT_ERR      0x370
 
-
 #define LAPIC_INITIAL_COUNT_TIMER 	0x380
 #define LAPIC_CURRENT_COUNT_TIMER	0x390
 #define LAPIC_DIVIDE_TIMER		    0x3e0
-
 
 // ====================
 
@@ -164,8 +158,6 @@ losethos os - Adam1a.HPP.
 // Not part of the LVT; separate register at offset 0xF0.
 // Bit 8 enables LAPIC, low byte defines spurious vector.
 #define LAPIC_SPURIOUS_VECTOR  0xFF
-
-
 
 
 // ====================
@@ -327,7 +319,6 @@ struct lapic_info_d
 
 	// ...
 
-
 	int gdt_initialized;
 	int tss_initialized;
 	// ...
@@ -343,7 +334,6 @@ extern struct lapic_info_d lapic_info[NR_CPUS];
 #define LAPIC_INFO_BSP_INDEX  0
 // ...
 
-
 // =======================
 
 extern int apic_SPINLOCK;
@@ -357,18 +347,15 @@ unsigned int apic_get_version_00(void);
 void local_apic_eoi(int lapic_info_id);
 void local_apic_eoi_00(void);
 
-
 void apic_mark_cpu_as_running(int lapic_info_id);
 
 // Handler for the lapic timer (test)
 void apic_TimerHandler0000(void);
 
-
 // Check presence of apic.
 int has_apic (void);
 void cpu_set_apic_base(unsigned long apic);
 unsigned long cpu_get_apic_base(void); 
-
 
 void local_apic_send_init(unsigned int apic_id, int lapic_info_id);
 void local_apic_send_startup(unsigned int apic_id, unsigned int vector, int lapic_info_id);
@@ -378,9 +365,9 @@ void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id);
 void apic_setup_registers(int lapic_info_id);
 int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id);
 
-#endif    //____APIC_H
+#endif    // __SMP_APIC_H
 
 //
-// End.
+// End
 //
 

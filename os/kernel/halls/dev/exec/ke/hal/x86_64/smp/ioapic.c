@@ -1,15 +1,13 @@
-
 // ioapic.c
 // Document created by Fred Nora - (2023)
 // Credits:
 //   + Ported from Sirius-x86-64, created by Nelson Cole.
+//
 
 #include <kernel.h>
 
 // Initialization control.
 struct ioapic_info_d  IOAPIC;
-
-#define IOAPIC_NULL  0
 
 // #todo
 // I/O APIC
@@ -47,11 +45,10 @@ static unsigned int read_ioapic_register(int reg)
     if (IOAPIC.initialized != TRUE)
         panic("read_ioapic_register: depends on IOAPIC.initialized\n");
 
-
-// The base is a local pointer.
+// The base is a local pointer
     *(volatile unsigned char*)(ioapic_base + IO_APIC_IND) = reg;
 
-    return ( *(volatile unsigned int*)(ioapic_base + IO_APIC_DAT));
+    return ( *(volatile unsigned int*)(ioapic_base + IO_APIC_DAT) );
 }
 
 // write
@@ -60,29 +57,30 @@ static void write_ioapic_register(int reg, unsigned int val)
     if (IOAPIC.initialized != TRUE)
         panic("write_ioapic_register: depends on IOAPIC.initialized\n");
 
-// The base is a local pointer.
+// The base is a local pointer
     *(volatile unsigned char*)(ioapic_base + IO_APIC_IND) = reg;
     *(volatile unsigned int*) (ioapic_base + IO_APIC_DAT) = val;
 }
 
 
-
 int ioapic_masked(int n)
 {
-// This pointer is define into this document.
+    // This pointer is defined into this document
     unsigned long pointer = (unsigned long) &ioapic_redir_table;
 
-// Chech the range.
-    if (n<0 || n>=24)
+// Chech the range
+    if (n<0 || n >= 24)
         panic("ioapic_masked: n\n");
 
     ioapic_redir_table[n].mask = 1;
 
     unsigned int *data = (unsigned int*) pointer;
 
+    // #todo: Get a better syntax for the parameters
     write_ioapic_register(
         IO_APIC_REDIR_TBL(n),
-        *(unsigned int*)(data + (n *2)) );
+        *(unsigned int*)(data + (n *2)) 
+    );
 
     return 0;
 }
@@ -99,6 +97,8 @@ int ioapic_umasked(int n)
     ioapic_redir_table[n].mask = 0;
 
     unsigned int *data = (unsigned int*) pointer;
+
+    // #todo: Get a better syntax for the parameters
     write_ioapic_register(
         IO_APIC_REDIR_TBL(n),
         *(unsigned int*)(data + (n *2)) );
@@ -120,11 +120,9 @@ __set_ioapic_redir_table(
     unsigned char mask,
     unsigned char destination)
 {
-
     // #warning
     // The redirection table is define here in this document
     unsigned long pointer = (unsigned long) &ioapic_redir_table;
-
     unsigned int *data = (unsigned int*) pointer;
 
 // Invalid entry
@@ -212,17 +210,14 @@ __set_ioapic_redir_table(
 }
 
 // Initialize the redirection table
+// Called by __setup_ioapic().
 static int __ioapic_initialize_redirection_table(int maximum_redirection)
 {
-// Called by __setup_ioapic().
-
-// 24
-    int Max = (int) maximum_redirection;
+    int Max = (int) maximum_redirection;  // 24
     if (Max < 0)
        panic("__ioapic_initialize_redirection_table: Max\n");
     if (Max > 24)
         panic("__ioapic_initialize_redirection_table: Max\n");
-
 
     // The BSP needs to be initialized
     if (lapic_info[0].initialized != TRUE)
@@ -269,13 +264,11 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
 }
 
 // Worker
+// Called by ioapic_initialize().
 static int __setup_ioapic(void)
 {
-// Called by ioapic_initialize().
-
     if (IOAPIC.initialized != TRUE)
         panic("__setup_ioapic: It depends on IOAPIC.initialized\n");
-
 
 // -------------------------
 // Save the virtual address of the base of the registers 
@@ -283,7 +276,6 @@ static int __setup_ioapic(void)
     ioapic_base = (unsigned long) IOAPIC.ioapic_va;
     if (ioapic_base == 0)
         panic("__setup_ioapic: ioapic_base\n");
-
 
 // -------------------------
 // Get the 'Maximum redirection' entry.
@@ -315,33 +307,38 @@ static int __setup_ioapic(void)
 // Unmask some of them
 //
 
-// IRQ1 → vector 33
+// IRQ1  → vector 33 (PS/2 Keyboard)
+// IRQ12 → vector 44 (PS/2 Mouse)
+// IRQ14 → vector 46 (Primary IDE)
+// IRQ15 → vector 47 (Secondary IDE)
+
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD == 1)
         ioapic_umasked(1);
-// IRQ12 → vector 44
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
         ioapic_umasked(12);
-// IRQ14 → vector 46,
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE == 1)
         ioapic_umasked(14);
-// IRQ15 → vector 47
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
         ioapic_umasked(15);
+
+    // ... 
+
+// #todo:
+// Do we need to redirect the NIC device too?
 
     return 0;
 }
 
 // Initialize IOAPIC once — this is BSP’s job, not repeated per AP.
+// Called by archinit() in kmain.c.
 void ioapic_initialize(void)
 {
-// Called by archinit() in kmain.c.
-
     printk("ioapic_initialize:\n");
 
-// Not initialized yet
+    // Not initialized yet
     IOAPIC.initialized = FALSE;
 
-// It depends on LAPIC
+    // It depends on LAPIC
     if (lapic_info[0].initialized != TRUE)
         panic ("ioapic_initialize: It depends on lapic_info[0].initialized\n");
 
@@ -367,7 +364,7 @@ void ioapic_initialize(void)
     IOAPIC.ioapic_va = (unsigned long) IOAPIC_VA;
 
 // -------------------------------------
-// Mapping area for registers.
+// Mapping area for registers
 
     int map_status = -1;
     map_status = 
@@ -383,9 +380,8 @@ void ioapic_initialize(void)
 
 //==========================================
 
-//
-// Initialize the interrupts.
-//
+// Initialize the interrupts
+
     __setup_ioapic();
 }
 

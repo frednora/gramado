@@ -4,6 +4,15 @@
 #ifndef __INTAKE_THREAD_H
 #define __INTAKE_THREAD_H    1
 
+
+#define gramado_tid_t  tid_t
+
+// --------------------------------
+#define THREAD_MAGIC  1234  // In use
+#define THREAD_STOCK  4321  // Free for reuse
+//...
+
+
 // =================================
 // System threads: (canonical)
 // The first system thread is '0'. It is the ring 3 init thread.
@@ -25,11 +34,6 @@
 // The source TID when kernel sends message to a thread
 #define __HARDWARE_TID  (USER_THRESHOLD_TID - 1)
 
-
-// --------------------------------
-#define THREAD_MAGIC  1234  // In use
-#define THREAD_STOCK  4321  // Free for reuse
-//...
 
 // Preemption support.
 // Se pode ou não entrar em preempção. 

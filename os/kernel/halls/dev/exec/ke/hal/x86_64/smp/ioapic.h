@@ -1,8 +1,11 @@
-
 // ioapic.h
+// Created by Fred Nora
 
-#ifndef __HAL_IOAPIC_H
-#define __HAL_IOAPIC_H    1
+#ifndef __SMP_IOAPIC_H
+#define __SMP_IOAPIC_H    1
+
+#define IOAPIC_NULL  0
+
 
 /*
 // ioapic
@@ -30,7 +33,6 @@
     (0x10 + 2 * n)  //REDIR_TBL[0:23] 64 bits 
 
 
-
 // Initialization control.
 // The base address to accesses IOAPIC.
 struct ioapic_info_d
@@ -41,7 +43,6 @@ struct ioapic_info_d
     int entry;  // pagedirectory entry.
 };
 extern struct ioapic_info_d  IOAPIC;
-
 
 
 struct __IOAPIC_REDIR_TBL 
@@ -61,7 +62,9 @@ struct __IOAPIC_REDIR_TBL
 
 }__attribute__((packed));
 
-
+//
+// == Prototypes =======================
+//
 
 int ioapic_masked(int n);
 int ioapic_umasked(int n);

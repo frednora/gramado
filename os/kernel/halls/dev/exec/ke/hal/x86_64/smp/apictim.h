@@ -2,8 +2,8 @@
 // APIC timer support.
 // Created by Fred Nora.
 
-#ifndef __HAL_APIC_TIM_H
-#define __HAL_APIC_TIM_H    1
+#ifndef __SMP_APICTIM_H
+#define __SMP_APICTIM_H    1
 
 void apic_timer_setup_periodic(unsigned int vector, int masked, int lapic_info_id);
 

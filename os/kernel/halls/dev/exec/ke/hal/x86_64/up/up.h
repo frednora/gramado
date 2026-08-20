@@ -1,14 +1,13 @@
-/*
- * File: up.h 
- *    Uni-processor (UP) support.
- */
+// up.h 
+// Uni-processor (UP) support.
+// Created by Fred Nora
 
 // See:
 // https://en.wikipedia.org/wiki/Uniprocessor_system
 // ...
 
-#ifndef __KE_UP_H
-#define __KE_UP_H    1
+#ifndef __UP_UP_H
+#define __UP_UP_H    1
 
 // Obs: 
 // Não tem ponteiro. Apenas para UniProcessor.

@@ -79,32 +79,23 @@ struct lapic_info_d lapic_info[NR_CPUS];
 // it will read back the APIC ID assigned to that core’s LAPIC.
 unsigned int localId=0;
 
-#define APIC_NULL  0
-
-
 int apic_SPINLOCK = FALSE;
-
 
 // The base address for the registers
 static unsigned long g_lapic_va=0;
-
 
 //
 // == private functions: prototypes =====================
 //
 
-
-
 static unsigned int local_apic_read_command(
     unsigned short addr, int lapic_info_id);
 static unsigned int local_apic_read_command_00(unsigned short addr);
-
 
 static void local_apic_write_command(
     unsigned short addr,unsigned int val, int lapic_info_id);
 static void local_apic_write_command_00(
     unsigned short addr,unsigned int val);
-
 
 // apic stuffs for x86.
 static inline void imcr_pic_to_apic (void);
@@ -122,7 +113,6 @@ void flush_cashes(void)
 }
 */
 
-
 // #test
 // Handler for the lapic timer.
 // This was a test. Now we're using the standard handler. 
@@ -131,8 +121,7 @@ void apic_TimerHandler0000(void)
 {
     int i=0;
 
-    apic_SPINLOCK = TRUE; // Lock
-
+    apic_SPINLOCK = TRUE;  // Lock
 
     // #test
     // Drawing rectangles
@@ -162,11 +151,9 @@ void apic_mark_cpu_as_running(int lapic_info_id)
     lapic_info[lapic_info_id].running = TRUE;
 }
 
-
 // old implemenation
 static unsigned int local_apic_read_command(unsigned short addr, int lapic_info_id)
 {
-
     if ((void *) lapic_info[lapic_info_id].lapic_va == NULL)
     {
         panic("local_apic_read_command: lapic_info[lapic_info_id].lapic_va\n");
@@ -201,8 +188,7 @@ static void local_apic_write_command_00(unsigned short addr,unsigned int val)
 {
     void *base_va = (void* ) g_lapic_va;
 
-    if ((void *)base_va == NULL)
-    {
+    if ((void *)base_va == NULL){
         panic("local_apic_write_command_00: base_va\n");
     }
 
@@ -226,7 +212,6 @@ unsigned int apic_get_id_00(void)
     unsigned int hw_lapic_id = (unsigned int) (value >> 24) & 0xFF;
     return (unsigned int) hw_lapic_id;
 }
-
 
 // Get local apic version.
 // see: https://wiki.osdev.org/APIC#Local_APIC_registers
@@ -262,7 +247,6 @@ void local_apic_eoi_00(void)
     );
 }
 
-
 // Spurious Interrupt Vector Register
 // Set the Spurious Interrupt Vector Register bit 8 to 
 // start receiving interrupts.
@@ -283,7 +267,6 @@ static void local_apic_set_spurious_interrupt(void)
 */
 
 // =========
-
 
 /*
  * imcr_pic_to_apic:
@@ -353,7 +336,6 @@ inline void invalidate_cache_flush(void)
 }
 */
 
-
 //
 // ======================================================
 //
@@ -370,7 +352,7 @@ inline void invalidate_cache_flush(void)
  */
 // #todo: Change function name.
 // See: cpuid.h
-int has_apic (void)
+int has_apic(void)
 {
     int hasAPIC = FALSE;
     unsigned int eax=0;
@@ -494,7 +476,6 @@ void local_apic_send_init(unsigned int apic_id, int lapic_info_id)
     };
 }
 
-
 // ex: vector={0x08} =  address={0x8000}
 void 
 local_apic_send_startup(
@@ -534,12 +515,12 @@ local_apic_send_startup(
 }
 
 // Send INIT IPI
+// One single time
 void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id)
 {
-// One single time.
-    local_apic_write_command(0x280, 0, lapic_info_id);  // Clear APIC errors.
+    local_apic_write_command(0x280, 0, lapic_info_id);  // Clear APIC errors
     local_apic_send_init(apic_id, lapic_info_id);
-    mdelay(100); // wait 10 msec
+    mdelay(100);  // wait 10 msec
 }
 
 // Send STARTUP IPI (twice)
@@ -548,20 +529,19 @@ void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id)
 // + Clears the Error Status Register (0x280) before each send.
 // + Uses vector 0x08 → trampoline at 0x8000.
 // + Waits 200 ms between sends.
+// Twice
 void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id)
 {
-// Twice
-
     unsigned int vector_number = 0x8;
     long i=0;
+
     for (i=0; i<2; i++)
     {
         local_apic_write_command(0x280, 0, lapic_info_id);  // Clear APIC errors.
         local_apic_send_startup(apic_id, vector_number, lapic_info_id);
-        mdelay(200); // wait 200 msec
+        mdelay(200);  // wait 200 msec
     };
 }
-
 
 /*
 // Disable all interrupts at the legacy PIC.
@@ -575,9 +555,9 @@ static void mask_all_interrupts(void)
 }
 */
 
+// Legacy PIC mask all off.
 static void __apic_disable_legacy_pic(void)
 {
-// Legacy PIC mask all off.
 
     printk("apic_disable_legacy_pic:\n");
 
@@ -606,20 +586,19 @@ static void __apic_disable_legacy_pic(void)
 
 // =================
 
-
 // #todo: 
 // #danger !!!
 /* Section 11.4.1 of 3rd volume of Intel SDM recommends 
   mapping the base address page as strong uncacheable 
   for correct APIC operation. */
-// IN:
-// lapic_info_id - Id for the processor structure.
-void apic_setup_registers(int lapic_info_id)
-{
 // Called by I_kmain() in main.c.
 // + Setup apic
 // + Enable global apic
 // + Setup apic timer
+// IN:
+// lapic_info_id - Id for the processor structure.
+void apic_setup_registers(int lapic_info_id)
+{
 
 // #todo
 // We need to setup a lot of registers 
@@ -632,8 +611,8 @@ void apic_setup_registers(int lapic_info_id)
     if (lapic_info_id >= NR_CPUS)
         goto fail;
 
-// #todo
-// Do we have apic support in this processor?
+    // #todo
+    // Do we have apic support in this processor?
     //if (has_apic() != TRUE)
         //panic("apic_setup_registers: APIC not supported\n");
 
@@ -648,8 +627,8 @@ void apic_setup_registers(int lapic_info_id)
 // Disable legacy PIC
 //
 
-// #todo:
-// It only can be done once.
+    // #todo:
+    // It only can be done once.
 
     __apic_disable_legacy_pic();
 
@@ -667,7 +646,6 @@ void apic_setup_registers(int lapic_info_id)
         (unsigned short) 0x00e0, 
         (unsigned int) 0xffffffff, 
         lapic_info_id );
-
 
 // Logical Destination Register (LDR)
 // LAPIC_LDR
@@ -965,11 +943,9 @@ Note: Common to keep masked until you install an error handler; then unmask.
         lapic_info_id
     );
 
-
     // #todo
     // LVT_THERMAL_VECTOR
     // LVT_CMCI_VECTOR
-
 
 /*
 Spurious-Interrupt Vector Register:
@@ -1097,12 +1073,11 @@ fail:
 // It's necessary for the routines that interact with the APIC via registers.
 // + Map memory for the registers
 // + Setup the initialization flag
-
-int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
-{
 // + Called in x64smp.c during the BSP intialization
 // + #todo: Probably called again by the AP
 
+int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
+{
     // #debug
     // printk("lapic_initializing: lapic_pa = {%x}\n", lapic_pa);
 
@@ -1254,7 +1229,7 @@ int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id)
         lapic_info[lapic_info_id].local_version 
     );
 
-// Mark this core as already running
+    // Mark this core as already running
     apic_mark_cpu_as_running(lapic_info_id);
 
     // #debug
