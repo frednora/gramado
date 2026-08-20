@@ -1,9 +1,6 @@
 
 all:
 
-# gramnet
-	make -C gramnet/
-
 # Top level routines
 	make -C kwrap/
 

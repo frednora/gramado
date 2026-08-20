@@ -10,6 +10,9 @@ all:
 	make -C ap/
 	make -C bsp/
 
+	make -C gramnet/
+	make -C net/
+
 clean:
 	-rm ap/*.o
 	-rm bsp/*.o

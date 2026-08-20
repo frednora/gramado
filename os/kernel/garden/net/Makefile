@@ -2,7 +2,7 @@
 # Compile all the files and create p3_net.o
 # Makefile for the kernel networking.
 
-INCLUDE = ../../../../include
+INCLUDE = ../../include
 
 AS	= as
 LD	= ld
@@ -92,7 +92,6 @@ all:
 # Network inteface support
 	$(CC) -c ifconfig/netif.c  $(KERNEL_INCLUDE) $(CFLAGS) -o netif.o
 
-
 # ethernet
 	$(CC) -c ethernet/ethernet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
 
@@ -108,8 +107,11 @@ all:
 
 # link
 	$(LD) -r -o p3_net.o $(OBJS)
-#bugbug: too much
-	cp p3_net.o ../../../../
+
+# Copy
+	cp p3_net.o ../../
+
+# Clean
 	rm *.o
 
 clean:

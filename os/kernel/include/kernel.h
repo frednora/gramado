@@ -347,50 +347,45 @@ extern int system_state;
 
 // (network, protocols and socket)
 // network
-#include "../halls/dev/per/net/mac.h"
-#include "../halls/dev/per/net/host.h"
-#include "../halls/dev/per/net/in.h"
-#include "../halls/dev/per/net/un.h"
+#include "../garden/net/mac.h"
+#include "../garden/net/host.h"
+#include "../garden/net/in.h"
+#include "../garden/net/un.h"
 
 //
 // Protocols
 //
 
-
 // Ethernet
-#include "../halls/dev/per/net/ethernet/ethernet.h"
+#include "../garden/net/ethernet/ethernet.h"
 
 // Firewall
-#include "../halls/dev/per/net/firewall/firewall.h"
+#include "../garden/net/firewall/firewall.h"
 
 // =================================
 // ipv4/
-#include "../halls/dev/per/net/ipv4/arp.h"
-#include "../halls/dev/per/net/ipv4/ipv4.h"
-#include "../halls/dev/per/net/ipv4/tcp.h"
-#include "../halls/dev/per/net/ipv4/udp.h"
-#include "../halls/dev/per/net/ipv4/dhcp.h" 
-#include "../halls/dev/per/net/ipv4/icmp.h" 
+#include "../garden/net/ipv4/arp.h"
+#include "../garden/net/ipv4/ipv4.h"
+#include "../garden/net/ipv4/tcp.h"
+#include "../garden/net/ipv4/udp.h"
+#include "../garden/net/ipv4/dhcp.h" 
+#include "../garden/net/ipv4/icmp.h" 
 
 // =================================
 // ipv6/
 
-
-
-// dev/per/net/
-
 // Network
 
-#include "../halls/dev/per/net/nports.h"     //(network) Network Ports  (sw)
-#include "../halls/dev/per/net/inet.h"
+#include "../garden/net/nports.h"     //(network) Network Ports  (sw)
+#include "../garden/net/inet.h"
 
-#include "../halls/dev/per/net/sockint.h"  //
-#include "../halls/dev/per/net/socket.h"   // last always
+#include "../garden/net/sockint.h"  //
+#include "../garden/net/socket.h"   // last always
 
-#include "../halls/dev/per/net/domain.h"
+#include "../garden/net/domain.h"
 
-#include "../halls/dev/per/net/ifconfig/netif.h"  // Network interface
-#include "../halls/dev/per/net/net.h"     //(network) Gerenciamento de rede.  
+#include "../garden/net/ifconfig/netif.h"  // Network interface
+#include "../garden/net/net.h"     //(network) Gerenciamento de rede.  
 
 // ----------------------
 // Last:
@@ -498,10 +493,10 @@ extern int system_state;
 // ==================================
 // gramnet/
 
-#include "../gthouse/gramnet/http.h"
-#include "../gthouse/gramnet/gprot.h"
+#include "../garden/gramnet/http.h"
+#include "../garden/gramnet/gprot.h"
 // ...
-#include "../gthouse/gramnet/gramnet.h"
+#include "../garden/gramnet/gramnet.h"
 
 
 // Core module.

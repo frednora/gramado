@@ -25,7 +25,6 @@ all:
 	make -C per/blkdev/
 	make -C per/netdev/
 	make -C per/fs/
-	make -C per/net/
 	make -C per/
 
 clean:

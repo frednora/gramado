@@ -5,14 +5,18 @@ The entry point for the kernel.
 ```
 + Startup routine for the kernel.
 + ISR/IRQ routines for the handlers.
++ Network infrastructure
 
 ```
 
 ## Folders
 
 ```
-ap/  - AP processors
-bsp/ - BSP processors
+ap/      - AP processors
+bsp/     - BSP processors
+gramnet/ - Top level protocols
+net/     - Low level network infrastructure.
+           (firewall, protocols and sockets)
 ```
 
 ## Purpose
