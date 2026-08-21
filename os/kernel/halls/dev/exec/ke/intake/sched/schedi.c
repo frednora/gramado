@@ -746,7 +746,7 @@ void yield(tid_t tid)
         return;
     }
 
-    t->Deferred.yield_in_progress = TRUE;  // Set the flag
+    t->runningCount = t->quantum;  // No more time
 }
 
 // Called by __task_switch() in ts.c

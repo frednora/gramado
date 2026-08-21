@@ -417,48 +417,32 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
             }
 
             // --- NEW: Wake-up check for WAITING threads --- 
-            //if (TmpThread->state == WAITING) 
+
             if (TmpThread->Deferred.sleep_in_progress == TRUE)
-            { 
-                //printk ("Thread is waiting ...\n");
-                printk("now %d | sleep %d >> wakeup %d\n", 
-                    jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy ); 
+            {
+                //printk ("sched [INTERLIAVING]: jiffies=%d | j1=%d | j2=%d \n", 
+                    //jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy );
 
-                // Alarm check 
-                //if (jiffies > TmpThread->alarm) { 
-                //    TmpThread->alarm = 0; 
-                    // #todo: signal handling 
-                //} 
-                /*
-                // Wake-up check 
-                if (jiffies >= TmpThread->wake_jiffy) 
+                if (TmpThread->state != WAITING)
+                    printk("Thread was NOT WAITING\n");
+
+                // If the current jiffy is bigger than the wakeup time
+                if (jiffies >= TmpThread->wake_jiffy)
                 {
-                    //printk("now %d | sleep %d >> wakeup %d\n", 
-                        //jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy ); 
-                    do_thread_ready(TmpThread->tid); 
-                    TmpThread->wake_jiffy = 0; // reset 
-                    //panic("breakpoint");
-                }
-                */
-               
-                // 
-                //if (TmpThread->Deferred.sleep_in_progress == TRUE){
-
-                    printk ("sched [Interlieving]: j1=%d | j2=%d |\n", 
-                        jiffies, TmpThread->wake_jiffy );
-
-                    // If the current jiffy is bigger than the wakeup time
-                    if (jiffies >= TmpThread->wake_jiffy)
+                    if (TmpThread->Deferred.sleep_phase == 2)
                     {
-                        //printk ("sched [Interlieving]: j1=%d | j2=%d |\n", 
-                            //jiffies, TmpThread->wake_jiffy );
+                        //printk ("sched [INTERLIAVING]: jiffies=%d | j1=%d | j2=%d \n", 
+                            //jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy );
                         do_thread_ready(TmpThread->tid);  // Wakeup
+                        
                         TmpThread->Deferred.sleep_in_progress = FALSE;  // Unset flag
+                        TmpThread->Deferred.sleep_phase = 0;
+                        TmpThread->Deferred.desired_sleep_ms = 0;
+                        //TmpThread->waiting_jiffy = 0;
+                        //TmpThread->wake_jiffy = 0;
+                        //printk("Thread is UP\n");
                     }
-                //} //else {
-                    //continue;
-                //}
-
+                }
             }
 
             // Filter by priority
@@ -828,8 +812,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
             if (TmpThread->Deferred.sleep_in_progress == TRUE)
             {
-                printk ("sched [RR]: jiffies=%d | j1=%d | j2=%d \n", 
-                    jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy );
+                //printk ("sched [RR]: jiffies=%d | j1=%d | j2=%d \n", 
+                    //jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy );
 
                 if (TmpThread->state != WAITING)
                     printk("Thread was NOT WAITING\n");
@@ -839,8 +823,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 {
                     if (TmpThread->Deferred.sleep_phase == 2)
                     {
-                        printk ("sched [RR]: jiffies=%d | j1=%d | j2=%d \n", 
-                            jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy );
+                        //printk ("sched [RR]: jiffies=%d | j1=%d | j2=%d \n", 
+                            //jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy );
                         do_thread_ready(TmpThread->tid);  // Wakeup
                         
                         TmpThread->Deferred.sleep_in_progress = FALSE;  // Unset flag
@@ -848,7 +832,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                         TmpThread->Deferred.desired_sleep_ms = 0;
                         //TmpThread->waiting_jiffy = 0;
                         //TmpThread->wake_jiffy = 0;
-                        printk("Thread is UP\n");
+                        //printk("Thread is UP\n");
                     }
                 }
             }

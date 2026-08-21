@@ -160,11 +160,6 @@ struct pf_info_d
 struct deferred_d 
 {
 
-// == Yield support ====
-// 1 = Sinaliza que a thread está dando a preferência e que 
-// deve sair quando for seguro fazer isso.
-    int yield_in_progress;
-
 // == Sleep support ====
     int sleep_in_progress;
     int sleep_phase;

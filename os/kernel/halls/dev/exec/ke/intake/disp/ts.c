@@ -120,9 +120,6 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
     //if ( CurrentThread->state != RUNNING )
     //    panic("task_switch: CurrentThread->state != RUNNING");
 
-    //if ( CurrentThread->state != RUNNING )
-    //     goto ZeroGravity;
-
 //
 // Preempt
 //
@@ -509,38 +506,6 @@ static unsigned long __task_switch(int lapic_info_id)
 
     if (CurrentThread->runningCount < CurrentThread->quantum){
 
-        /*
-        // Yield in progress. 
-        // Esgota o quantum e ela sairá naturalmente no próximo tick.
-        // Revertemos a flag acionada em schedi.c.
-        // :: yield - Force quantum end.
-        if ( CurrentThread->state == RUNNING && 
-             CurrentThread->Deferred.yield_in_progress == TRUE )
-        {
-            CurrentThread->runningCount = CurrentThread->quantum;  // Esgota
-            CurrentThread->Deferred.yield_in_progress = FALSE;
-        }
-        */
-
-        /*
-        // :: sleep - Mark thread WAITING until wake_jiffy.
-        if ( CurrentThread->state == RUNNING && 
-             CurrentThread->Deferred.sleep_in_progress == TRUE )
-        {
-            //printk ("ts: Do sleep until\n");
-            CurrentThread->runningCount = CurrentThread->quantum;  // Esgoto
-            // set waiting
-            // It changes the current state.
-            // Is we changed the current state we need to pick another one.
-            // or this thread will go to the running state after this routine.
-            sleep_until(
-                CurrentThread->tid, 
-                CurrentThread->Deferred.desired_sleep_ms );
-            CurrentThread->Deferred.sleep_in_progress = FALSE;
-            //printk ("ts: Status=%d\n",CurrentThread->state);
-        }
-        */
-
         if (CurrentThread->Deferred.sleep_in_progress == TRUE && 
             CurrentThread->Deferred.sleep_phase == 1 )
         {
@@ -555,17 +520,15 @@ static unsigned long __task_switch(int lapic_info_id)
                 CurrentThread->wake_jiffy =  
                     jiffies + CurrentThread->Deferred.desired_sleep_ms;
 
-                printk("ts: RUNNING >> WAITING now=%d j1=%d  j2=%d\n",
-                    jiffies, 
-                    CurrentThread->waiting_jiffy, 
-                    CurrentThread->wake_jiffy );
+                //printk("ts: RUNNING >> WAITING now=%d j1=%d  j2=%d\n",
+                    //jiffies, 
+                    //CurrentThread->waiting_jiffy, 
+                    //CurrentThread->wake_jiffy );
 
             goto ZeroGravity;
         }
 
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
-
-        //debug_print (" The same again $\n");
 
         // #important:
         // There was no taskswitching.
@@ -629,10 +592,10 @@ static unsigned long __task_switch(int lapic_info_id)
                 CurrentThread->wake_jiffy =  
                     jiffies + CurrentThread->Deferred.desired_sleep_ms;
 
-                printk("ts: READY >> WAITING now=%d j1=%d  j2=%d\n",
-                    jiffies, 
-                    CurrentThread->waiting_jiffy, 
-                    CurrentThread->wake_jiffy );
+                //printk("ts: READY >> WAITING now=%d j1=%d  j2=%d\n",
+                    //jiffies, 
+                    //CurrentThread->waiting_jiffy, 
+                    //CurrentThread->wake_jiffy );
 
                 goto ZeroGravity;
         }
@@ -852,12 +815,14 @@ go_ahead:
 // Jumping to ZeroGravity can put us into an infinity loop.
 
     TargetThread = (void *) currentq;
+    // #ps: This is dangerous. Possible loop.
     if ((void *) TargetThread == NULL)
     {
         debug_print ("ts: pointer ");
         lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
         goto ZeroGravity;
     }
+    // #ps: This is dangerous. Possible loop.
     if ( TargetThread->used != TRUE || TargetThread->magic != 1234 )
     {
         debug_print ("ts: val ");
@@ -866,6 +831,7 @@ go_ahead:
     }
 // Not ready?
 // We get from the queue a valid thread that changed it's state.
+    // #ps: This is dangerous. Possible loop.
     if (TargetThread->state != READY)
     {
         // #debug
@@ -875,14 +841,6 @@ go_ahead:
         lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
         goto ZeroGravity;
     }
-/*
-    if (TargetThread->Deferred.sleep_in_progress == TRUE) 
-    {
-        // skip this thread, it is sleeping
-        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
-        goto ZeroGravity;
-    }
-*/
 
 //
 // == Dispatcher ====
@@ -939,10 +897,6 @@ dispatch_current:
         // The idle thread can't sleep
         if (TargetThread == InitThread)
             panic("__task_switch: Init thread [idle] is sleeping #test\n");
-
-        // skip this thread, it is sleeping
-        //lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
-        //goto ZeroGravity;
 
         TargetThread = InitThread;
         TargetThread->state = READY;

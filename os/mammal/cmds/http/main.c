@@ -76,7 +76,7 @@ static void do_request(int sockfd)
     int Count = 200;
     while (1) 
     {
-        rtl_yield(); // yield CPU until reply arrives
+        // rtl_yield(); // yield CPU until reply arrives
         int ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
         if (ActionState == ACTION_REPLY){
             printf("HTTP.BIN: Reply received\n");
@@ -193,7 +193,7 @@ int main(int argc, char *argv[])
             int ActionState = -1;
             while (1)
             {
-                rtl_yield(); // yield CPU
+                //rtl_yield(); // yield CPU
                 ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
                 // We are not connecting anymore
                 if (ActionState != 10000)

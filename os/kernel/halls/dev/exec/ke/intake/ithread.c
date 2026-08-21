@@ -182,9 +182,6 @@ struct thread_d *create_init_thread(void)
     t->signal = 0;
     t->umask  = 0;
 
-    // Yield
-    t->Deferred.yield_in_progress = FALSE;
-
     // Sleep
     t->Deferred.sleep_in_progress = FALSE;
     t->Deferred.desired_sleep_ms = 0;

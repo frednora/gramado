@@ -105,7 +105,7 @@ static void process_run_command(const char *cmdline, int use_pipes)
         sprintf(msg, "shell2: launched tid=%d\n", tid);
         write(STDOUT_FILENO, msg, strlen(msg));
 
-        rtl_sleep(2000);  //2sec
+        // rtl_sleep(2000);  //2sec
         // Tell the kernel the child is now foreground 
         sc82 (10011,tid,tid,tid);
 
@@ -215,7 +215,9 @@ static void process_command(void)
         }
         */
 
-        rtl_sleep_until(4000);  // 4 sec
+        // #ps: This is working
+        //rtl_sleep_until(2000);  // 2 sec
+        //rtl_sleep_until(4000);  // 4 sec
     }
 
     //reset_prompt();

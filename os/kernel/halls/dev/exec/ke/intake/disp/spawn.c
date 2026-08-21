@@ -365,8 +365,8 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 
 // Not saved
     target_thread->saved = FALSE;
+
 // No deferred actions required
-    target_thread->Deferred.yield_in_progress = FALSE;
     target_thread->Deferred.sleep_in_progress = FALSE;
     target_thread->Deferred.exit_in_progress = FALSE;
 
