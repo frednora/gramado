@@ -103,7 +103,7 @@ ipc_post_message_to_tid2 (
             case WAIT_REASON_BLOCKED:  // Generic
             case WAIT_REASON_LOOP:     // Empty msg queue
                 printk("ipc: Unblocking ...\n");
-                do_thread_ready(dst_tid);
+                //do_thread_ready(dst_tid);
                 break;
         };        
     }
@@ -119,6 +119,7 @@ ipc_post_message_to_tid2 (
 // A malicious process could send a lot of messages
 // causing starvation in the other threads?
 
+    /*
     if (g_use_event_responder == TRUE)
     {
         t->has_pending_event = TRUE;
@@ -129,6 +130,7 @@ ipc_post_message_to_tid2 (
         //ev_responder_thread = (struct thread_d *) t;
         set_ev_responder(t);
     }
+    */
 
 //
 // The message
@@ -273,7 +275,7 @@ ipc_post_message_to_tid (
             case WAIT_REASON_LOOP:     // Empty msg queue
                 // #debug
                 printk("ipc: Unblocking %d\n", dst_tid);
-                do_thread_ready(dst_tid);
+                //do_thread_ready(dst_tid);
                 break;
         };        
     }
@@ -287,6 +289,7 @@ ipc_post_message_to_tid (
 // A malicious process could send a lot of messages
 // causing starvation in the other threads?
 
+    /*
     if (g_use_event_responder == TRUE)
     {
         t->has_pending_event = TRUE;
@@ -297,11 +300,12 @@ ipc_post_message_to_tid (
         //ev_responder_thread = (struct thread_d *) t;
         set_ev_responder(t);
     }
+    */
 
     if (MessageCode == MSG_MOUSEMOVE)
     {
-        t->quantum = QUANTUM_MAX * 2;
-        t->state = READY;
+        //t->quantum = QUANTUM_MAX * 2;
+        //t->state = READY;
     }
 
 // ======================================================

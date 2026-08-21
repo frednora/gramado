@@ -452,7 +452,7 @@ void exit(int status)
 
     //if (value ...
 
-// Wait forever.
+// Wait forever
     while (1){ asm ("pause"); };
 }
 

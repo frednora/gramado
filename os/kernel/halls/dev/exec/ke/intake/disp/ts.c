@@ -467,7 +467,16 @@ static unsigned long __task_switch(int lapic_info_id)
     //if ((jiffies % 16) == 0){
         //spawn_test_signal();
     //}
-//=======================================================
+// =======================================================
+
+//
+// State-driven logic
+//
+
+// The task switching routine is state‑driven and 
+// revolves around the relationship between 
+// a thread’s runningCount (ticks consumed) and 
+// its quantum (ticks allowed).
 
 //
 // == Checar se esgotou o tempo de processamento ==
@@ -532,6 +541,28 @@ static unsigned long __task_switch(int lapic_info_id)
         }
         */
 
+        if (CurrentThread->Deferred.sleep_in_progress == TRUE && 
+            CurrentThread->Deferred.sleep_phase == 1 )
+        {
+            CurrentThread->Deferred.sleep_phase = 2;
+    
+            CurrentThread->runningCount = CurrentThread->quantum;
+                // We do not preempt. we keep the thread
+                // in the waiting state
+                CurrentThread->state = WAITING;
+
+                CurrentThread->waiting_jiffy = jiffies;
+                CurrentThread->wake_jiffy =  
+                    jiffies + CurrentThread->Deferred.desired_sleep_ms;
+
+                printk("ts: RUNNING >> WAITING now=%d j1=%d  j2=%d\n",
+                    jiffies, 
+                    CurrentThread->waiting_jiffy, 
+                    CurrentThread->wake_jiffy );
+
+            goto ZeroGravity;
+        }
+
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
 
         //debug_print (" The same again $\n");
@@ -581,6 +612,29 @@ static unsigned long __task_switch(int lapic_info_id)
             //asm ("cli");
             //lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
             //goto dispatch_current;
+        }
+
+
+        if (CurrentThread->Deferred.sleep_in_progress == TRUE && 
+            CurrentThread->Deferred.sleep_phase == 1 )
+        {
+                CurrentThread->Deferred.sleep_phase = 2;
+    
+                CurrentThread->runningCount = CurrentThread->quantum;
+                // We do not preempt. we keep the thread
+                // in the waiting state
+                CurrentThread->state = WAITING;
+
+                CurrentThread->waiting_jiffy = jiffies;
+                CurrentThread->wake_jiffy =  
+                    jiffies + CurrentThread->Deferred.desired_sleep_ms;
+
+                printk("ts: READY >> WAITING now=%d j1=%d  j2=%d\n",
+                    jiffies, 
+                    CurrentThread->waiting_jiffy, 
+                    CurrentThread->wake_jiffy );
+
+                goto ZeroGravity;
         }
 
         // # todo: 
@@ -644,6 +698,12 @@ ZeroGravity:
 // asm ("mwait"); 
 // Only 1 thread.
 // The Idle thread is gonna be the scheduler condutor.
+
+    //printk("ZeroGravity loop: tid=%d state=%d flag=%d jiffies=%d\n",
+       //CurrentThread->tid,
+       //CurrentThread->state,
+       //CurrentThread->Deferred.sleep_in_progress,
+       //jiffies);
 
 // No threads. The counter is telling us that 
 // there is no thread in this system for uniprocessor.
@@ -815,6 +875,14 @@ go_ahead:
         lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
         goto ZeroGravity;
     }
+/*
+    if (TargetThread->Deferred.sleep_in_progress == TRUE) 
+    {
+        // skip this thread, it is sleeping
+        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
+        goto ZeroGravity;
+    }
+*/
 
 //
 // == Dispatcher ====
@@ -856,11 +924,26 @@ dispatch_current:
     if ( TargetThread->used != TRUE || TargetThread->magic != 1234 ){
         panic ("ts-dispatch_current: validation\n");
     }
-
 // Not ready?
     if (TargetThread->state != READY)
     {
         //panic ("ts-dispatch_current: Not ready\n");
+        TargetThread = InitThread;
+        TargetThread->state = READY;
+        TargetThread->next = NULL;
+    }
+
+// The target thread is in a sleep routine
+    if (TargetThread->Deferred.sleep_in_progress == TRUE) 
+    {
+        // The idle thread can't sleep
+        if (TargetThread == InitThread)
+            panic("__task_switch: Init thread [idle] is sleeping #test\n");
+
+        // skip this thread, it is sleeping
+        //lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
+        //goto ZeroGravity;
+
         TargetThread = InitThread;
         TargetThread->state = READY;
         TargetThread->next = NULL;
@@ -999,6 +1082,22 @@ fail:
 // >> ?? Na saída ??
 // ?? quem atualizou as variáveis de critério de escolha ??? o dispacher ??
 */
+
+// Return value:
+// The task switching routine (__task_switch) is 
+// returning values that the assembly caller 
+// interprets as optimization flags. 
+// #important: The bit 7 decides is the caller will
+// skip or not the CR3 reload.
+// + 0x80 (bit 7 set):
+//   Caller action: Skip CR3 reload, resume the same thread.
+// + 0x00 (bit 7 clear):
+//   Caller action: Reload CR3, restore context of new thread.
+// Documentation Summary:
+// + Return 0x80: “Resume current thread, skip CR3 reload.”
+// + Return 0x00: “Perform full context switch, reload CR3.”
+// + Errors: Panic, no return to user mode.
+
 // Called by:
 // Called by irq0_TIMER() int pit.c.
 // See also: hw.asm

@@ -1,0 +1,150 @@
+
+ Here is how the state-driven logic for the task switching works:
+
+-----------------------------------------
+Task Switching Logic (Core Flow):
+
+1. Context Save
++ On each timer tick, the current thread’s context is saved (arch_save_context).
++ Counters are updated:
+  step → total ticks scheduled.
+  total_time_ms → runtime in milliseconds.
+  runningCount → ticks consumed in current quantum.
+  runningCount_ms → quantum time in ms.
+
+2. Quantum Check
+
++ Case A: Still in quantum
+  Condition: runningCount < quantum.
+  Action: Return with flag 0x80 → resume the same thread.
+  Meaning: Thread continues running in user mode, no switch occurs.
+
++ Case B: Quantum expired
+  Condition: runningCount >= quantum.
+  Action: Call __tsOnFinishedExecuting().
+  Meaning: Thread is preempted, 
+           moved from RUNNING → READY, and scheduler is invoked 
+           to pick the next thread.
+
+3. Preemption (__tsOnFinishedExecuting)
+
+If thread is still RUNNING:
+t->state = READY;
+t->readyCount = 0;
+
+Additional housekeeping:
+  Check for standby threads.
+  Handle signals.
+  Deferred work (dead thread collector, IPC, etc.).
+
+4. Scheduler Handoff
+  Control passes to ZeroGravity → scheduler rebuilds the queue.
+  If no threads are available, fall back to Init/Idle thread.
+  Otherwise, pick the next READY thread.
+
+5. Dispatch
++ Dispatcher validates the chosen thread:
+  Must be used == TRUE, magic == 1234.
+  Must be in READY state.
++ If not READY, fallback to InitThread and force it READY.
++ Finally:
+  Set counters to zero.
+  Transition READY → RUNNING.
+  Restore context and return to user mode (iretq).
+
+Summary in State Terms:
+  RUNNING → RUNNING: If quantum not expired.
+  RUNNING → READY:   If quantum expired (preemption).
+  READY   → RUNNING: When dispatcher selects the thread.
+  WAITING / BLOCKED / ZOMBIE: 
+    Not considered in this simplified flow.
+
+=====================================================
+
+Return Values in Task Switching:
+
+1. 0x80 → Resume Current Thread
++ Condition:
+  runningCount < quantum (thread still has time left).
+  No preemption, no reschedule needed.
++ Meaning:
+  Skip CR3 reload (optimization).
+  Resume execution of the same thread in user mode.
+  State transition: RUNNING → RUNNING.
+
+2. 0x00 → Full Task Switch
++ Condition:
+  Quantum expired (runningCount >= quantum).
+  Or scheduler forced a new thread selection.
+  Or task switch was locked/unlocked logic triggered.
++ Meaning:
+  Perform full dispatcher cycle.
+  Reload CR3, restore context of new thread.
+  State transition: 
+    RUNNING → READY (old thread), 
+    READY → RUNNING (new thread).
+
+3. Other Values (rare / error paths)
+  panic() or die():
+  Invalid thread, invalid state, or unexpected condition.
+  Kernel halts or recovers.
+
+============================================
+Return Value Semantics (Assembly)
+
+0x80 → Resume Current Thread
++ Set when:
+  runningCount < quantum (thread still has time left).
++ Caller interpretation:
+  Skip CR3 reload (optimization).
+  Continue executing the same thread in user mode.
++ State meaning:
+  Thread remains RUNNING.
+  No visible state transition occurs.
+
+Assembly action:
+If equal, branch to .SkipCR3Reload and avoid page table reload.
+
+  and rax, 0x80
+  cmp rax, 0x80
+  je .SkipCR3Reload
+
+0x00 → Full Task Switch
++ Set when:
+  runningCount >= quantum (quantum expired).
+  Or scheduler forced a new thread selection.
++ Caller interpretation:
+  Reload CR3 (new address space).
+  Restore context of the newly selected thread.
++ State meaning:
+  Old thread: RUNNING → READY.
+  New thread: READY → RUNNING.
+
+Assembly action:
+  CR3 is reloaded.
+  Context restored.
+  iretq returns into the new thread.
+
+Error / Panic Paths:
++ If invalid state or thread pointer:
+  panic() or die() invoked.
+  No return to user mode.
++ Caller doesn’t interpret these values — execution halts.
+
+Caller’s Role:
+The assembly stub (PeripheralHall_irq0) doesn’t care about 
+the full numeric value. It only inspects bit 7 (0x80).
++ If bit 7 is set   → same thread continues.
++ If bit 7 is clear → full context switch.
+
+Documentation Summary
++ Return 0x80:  “Skip CR3 reload, resume current thread.”
++ Return 0x00:  “Perform full context switch, reload CR3.”
++ Other values: Not used; errors handled via panic.
+
+In one sentence:
+The return value is a flag for the assembly caller: 
+0x80 means “resume current thread without CR3 reload,” while 
+0x00 means “do a full context switch and reload CR3,” 
+ensuring the interrupt handler knows whether to optimize or 
+fully switch.

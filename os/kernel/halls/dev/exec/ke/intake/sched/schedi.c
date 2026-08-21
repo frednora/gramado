@@ -780,6 +780,8 @@ void sleep_until (tid_t tid, unsigned long ms)
 // Isso não deve afetar a prioridde da thread.
 // Dormimos e agendamos a hora de acordarmos.
 
+// It only sets the intention. 
+// Do not change the state of the thread.
 void sleep(tid_t tid, unsigned long ms)
 {
     struct thread_d  *t;
@@ -796,7 +798,7 @@ void sleep(tid_t tid, unsigned long ms)
     if ((void *) t == NULL){
         return;
     }
-    if ( t->used != TRUE || t->magic != 1234 )
+    if (t->used != TRUE || t->magic != 1234)
     {
         return;
     }
@@ -811,6 +813,12 @@ void sleep(tid_t tid, unsigned long ms)
 // Sleep support
     t->Deferred.sleep_in_progress = TRUE;
     t->Deferred.desired_sleep_ms = ms;
+    t->Deferred.sleep_phase = 1;  // Setted
+    // t->runningCount = t->quantum; // force preemption
+
+// On the next tick, __task_switch() runs and 
+// changes the state.
+
 }
 
 // #test: (Not in used yet)

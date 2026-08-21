@@ -415,21 +415,24 @@ static void process_command(void)
 
 
         /*
+        // #ps: This applications terminal/shell are very sensitive yet.
+        // Not a good place to test this.
+        while (1){
         // =================================================
         unsigned long j1 = rtl_jiffies();
-        printf("Initial jiffies: %lu\n", j1);
+        printf("Initial jiffies: %u\n", j1);
 
         // Voluntarily yield CPU
         //rtl_yield();
 
-        rtl_sleep_until(4);
+        rtl_sleep_until(4000);
 
         // After yield, check jiffies again
         unsigned long j2 = rtl_jiffies();
-        printf("After yield jiffies: %lu\n", j2);
+        printf("After yield jiffies: %u\n", j2);
         // ==================================================
+        }
         */
-
     }
 
     //reset_prompt();

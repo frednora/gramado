@@ -167,6 +167,7 @@ struct deferred_d
 
 // == Sleep support ====
     int sleep_in_progress;
+    int sleep_phase;
     unsigned long desired_sleep_ms;
 
 // ---------------------------------

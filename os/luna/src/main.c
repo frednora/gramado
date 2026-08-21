@@ -328,7 +328,7 @@ static void do_launch_de(void)
     //while(1){}
 
 // Sleep in ms
-    rtl_sleep(2000);
+    // rtl_sleep(2000);
 
 // Quit the command line interface
     isTimeToQuitCmdLine = TRUE;
@@ -353,7 +353,7 @@ static void do_launch_de2(void)
     Init.environment = EnvironmentWinuCore;
 
 // Sleep in ms
-    rtl_sleep(2000);
+    // rtl_sleep(2000);
 
 // Launch new process.
     ret_val = (int) rtl_clone_and_execute("#terminal.bin");
@@ -373,7 +373,7 @@ static void do_launch_list(void)
     rtl_clone_and_execute(app1_name);
     Init.environment = EnvironmentWinuCore;
 // Sleep in ms
-    rtl_sleep(2000);
+    // rtl_sleep(2000);
 
 
     rtl_clone_and_execute("#taskbar.bin");
@@ -738,29 +738,26 @@ static int input_compare_string(void)
 
 // #test
 // Launch a shell application 
-// This application will interpret the commands and send
-// data to the kernel console in ring0.
+// This application will interpret the commands and 
+// send data to the kernel console in ring0.
     int shell2_tid = -1;
-    if ( gramado_strncmp(prompt,"shell2",6) == 0 )
+    if ( gramado_strncmp(prompt, "shell2", 6) == 0 )
     {
         printf("Launching shell.bin #todo\n");
         do_clear_console();
         shell2_tid = (int) rtl_clone_and_execute_return_tid("#shell2.bin");
         if (shell2_tid > 0)
         {
-            rtl_sleep(2000);  //2sec
-            // ?
+            // rtl_sleep(2000);  //2sec
             sc82(10011, shell2_tid, shell2_tid, shell2_tid);
-
             // #todo:
             // Actually the puepose is not exit the init process.
             // Maybe we can keep it alive while running the shell2.
         }
-        
+        //while(1){}
         //printf ("init: Exit ...\n");
-        exit(0);
-
-        //isTimeToQuitCmdLine = TRUE;
+        //exit(0);
+        isTimeToQuitCmdLine = TRUE;
         goto exit_cmp;
     }
 
@@ -772,7 +769,7 @@ static int input_compare_string(void)
         do_clear_console();
         uname_tid = (int) rtl_clone_and_execute_return_tid("uname.bin");
         if (uname_tid > 0){
-            rtl_sleep(2000);  //2sec
+            //rtl_sleep(2000);  //2sec
             sc82(10011, uname_tid, uname_tid, uname_tid);
         }
         exit(0);

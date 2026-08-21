@@ -2345,6 +2345,7 @@ void *sci2 (
 // Agendando a operação de sleep.
 // O ts vai fazer isso quando for seguro.
 // IN: tid, ms
+// see: sched.c
     if (number == 266){
         sys_sleep( (tid_t) CurrentTID, (unsigned long) arg2 );
         return NULL;
