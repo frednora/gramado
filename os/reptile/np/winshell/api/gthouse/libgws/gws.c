@@ -1967,7 +1967,7 @@ __gws_createwindow_request (
 
     // Local name
     memset(LocalName, 0, 256);
-    sprintf(LocalName,Name);
+    sprintf(LocalName, Name);
 
 // String support
 // Set up the string starting in the offset '14'.
@@ -2035,7 +2035,8 @@ static wid_t __gws_createwindow_response(int fd)
     unsigned long *message_buffer = 
         (unsigned long *) libgws_disp->packet;
 
-// Clean the local buffer and then populate with some data
+// Clean the local buffer and 
+// then populate with some data that came from the server.
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
@@ -2043,10 +2044,10 @@ static wid_t __gws_createwindow_response(int fd)
 // Read
     n_reads = 
         (ssize_t) recv ( 
-                    fd, 
-                    libgws_disp->packet, 
-                    sizeof(libgws_disp->packet), 
-                    0 );
+                fd, 
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
 
 // #bugbug
 // If we do not read the file, so the flag will not switch
@@ -2056,23 +2057,19 @@ static wid_t __gws_createwindow_response(int fd)
         goto fail;
     }
 
-// The response message
-// Recebemos alguma coisa.
-// A mesagem pode ser de vários tipos.
-// A mensagem que esperamos nesse caso é SERVER_PACKET_TYPE_REPLY.
-// Porque estamos esperando resposta de um request.
-
+// Get wid and msg code.
     wid_t wid = (int) message_buffer[0];
-    int msg = (int) message_buffer[1];
+    int   msg = (int) message_buffer[1];
 
+// Reply is the only valid message code here
     switch (msg){
     case SERVER_PACKET_TYPE_REPLY: 
         return (wid_t) wid;
         break;
-    //case SERVER_PACKET_TYPE_REQUEST:
-    //case SERVER_PACKET_TYPE_EVENT:
-    //case SERVER_PACKET_TYPE_ERROR:
-    default:
+    // case SERVER_PACKET_TYPE_REQUEST:
+    // case SERVER_PACKET_TYPE_EVENT:
+    // case SERVER_PACKET_TYPE_ERROR:
+    default:  
         goto fail;
         break;
     };
@@ -2201,12 +2198,12 @@ gws_draw_char (
     };
 
 done:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 }
 
@@ -2277,12 +2274,12 @@ gws_draw_text (
     };
 
 done:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return; 
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return; 
 }
 
@@ -2338,12 +2335,12 @@ gws_set_text (
     };
 
 done:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 }
 
@@ -2422,13 +2419,12 @@ gws_get_text (
         }
     }
 
-// status OK.
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    return 0;
+    __gws_clear_msg_buff();
+    return 0;  // OK
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) -1;
 }
 
@@ -2485,12 +2481,13 @@ gws_clone_and_execute2 (
 
     response = (int) __gws_clone_and_execute_response(fd);
 
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) response;
+
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) -1;
 }
 
@@ -3017,12 +3014,12 @@ gws_change_window_position (
 
     __gws_change_window_position_reponse(fd);
 
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return 0;
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) -1;
 }
 
@@ -3059,12 +3056,12 @@ gws_resize_window(
 
     __gws_resize_window_reponse(fd);
 
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return 0;
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) -1;
 }
 
@@ -3105,12 +3102,12 @@ gws_redraw_window (
     };
 
 done:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 }
 
@@ -3182,13 +3179,13 @@ struct gws_event_d *gws_get_next_event(
         // #todo: goto fail;
     }
 
-// #ok
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    return (struct gws_event_d *) e;
+    __gws_clear_msg_buff();
+    return (struct gws_event_d *) e;  // OK
+
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return NULL;
 }
 
@@ -3241,13 +3238,13 @@ struct gws_window_info_d *gws_get_window_info(
         goto fail;
     }
 
-// ok
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    return (struct gws_window_info_d *) wi;
+    __gws_clear_msg_buff();
+    return (struct gws_window_info_d *) wi;  // OK
+
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return NULL;
 }
 
@@ -3309,12 +3306,12 @@ gws_refresh_window(int fd, wid_t wid)
     };
 
 done:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 }
 
@@ -3361,12 +3358,13 @@ gws_refresh_retangle (
 
 // A sincronização nos diz que já temos um reply.
     Response = (int) __gws_refresh_rectangle_response(fd);  
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) Response;
+
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) -1;
 }
 
@@ -3425,15 +3423,15 @@ gws_draw_rectangle (
 
 // A sincronização nos diz que já temos um reply.
     Response = (int) __gws_draw_rectangle_response(fd);  
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) Response;
+
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (int) -1;
 }
-
 
 // Atualiza o retângulo da surface da thread.
 void 
@@ -3589,13 +3587,13 @@ gws_create_window (
     if (wid == 0)
         goto fail;
 
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (wid_t) wid;
 
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return (wid_t) -1;
 }
 
@@ -4230,20 +4228,19 @@ gws_async_command (
         (unsigned long *) libgws_disp->packet;
 
 // --------------------
-// Clean the main buffer
+// Clear the main buffer
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
 
 // wid, message code, request, subrequest, data1
+// #todo: 
+// We need a list of services we can all with this function.
+// We can deliver more data if we want.
     message_buffer[0] = 0;
     message_buffer[1] = GWS_AsyncCommand;
-// #todo: We need a list of services we can all with this function.
-    message_buffer[2] = request;           // request
-    message_buffer[3] = sub_request;       // sub request
-// data
-// #todo: 
-// We can deliver more data if we want.
+    message_buffer[2] = request;
+    message_buffer[3] = sub_request;
     message_buffer[4] = data;  // data1
     // ...
 
@@ -4257,21 +4254,21 @@ gws_async_command (
 // Sending ...
     n_writes = 
         (int) send ( 
-                fd,
-                libgws_disp->packet, 
-                sizeof(libgws_disp->packet), 
-                0 );
+            fd,
+            libgws_disp->packet, 
+            sizeof(libgws_disp->packet), 
+            0 );
 
     if (n_writes <= 0){
         goto fail;
     }
 
 // Sync
-    rtl_set_file_sync ( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
+    rtl_set_file_sync(fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST);
 
 // No return
     while (1){
-        Value = (int) rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
+        Value = (int) rtl_get_file_sync(fd, SYNC_REQUEST_GET_ACTION);
         // Essa é a sincronização esperada.
         // Não teremos uma resposta, mas precisamos
         // conferir a sincronização.
@@ -4283,13 +4280,13 @@ gws_async_command (
     };
 
 done:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return; 
 }
 
@@ -4379,13 +4376,13 @@ gws_async_command2 (
     };
 
 done:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return;
 
 fail:
-    __gws_clear_msg_buff();
     rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
     return; 
 }
 
