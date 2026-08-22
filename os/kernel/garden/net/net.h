@@ -254,6 +254,9 @@ struct connection_d
     int used;
     int magic;
 
+    // #test
+    // char buf[1024];
+
     int id;       // unique connection identifier
     int type;     // LOCAL, TCP, UDP, etc.
     //int protocol;

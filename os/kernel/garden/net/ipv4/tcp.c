@@ -729,35 +729,61 @@ tcp_socket_send(
 // allowing the ring 3 process to read it.
 int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
 {
-    if (!sk || sk->magic != 1234) 
+    char *ubuf = (char *) buf;
+
+    //#debug
+    printk("tcp_socket_recv: READING ...\n");
+
+// socket
+    if (!sk || sk->magic != 1234) {
+        printk("tcp_socket_recv: sk\n");
         return -EINVAL;
-    if (sk->state != SS_CONNECTED)
-    {
+    }
+    if (sk->state != SS_CONNECTED){
         printk("tcp_socket_recv: socket not connected\n");
         return -ENOTCONN;
     }
-
-    file *fp = sk->private_file;
-    if (!fp) 
-        return -ENOTCONN;
-
-    // How many bytes are available?
-    size_t available = (fp->_w - fp->_r);
-    if (available == 0) {
-        return 0; // nothing to read yet
+    if ((void*) buf == NULL){
+        printk("tcp_socket_recv: buf\n");
+        return -EINVAL;
     }
 
-    // Limit to user buffer size
-    size_t to_copy = (len < available) ? len : available;
+// file
+    // File
+    file *fp = sk->private_file;
+    if (!fp) {
+        printk("tcp_socket_recv: private_file NULL\n");
+        return -ENOTCONN;
+    }
 
-    memcpy(buf, fp->_base + fp->_r, to_copy);
+    // How many bytes are available?
+    size_t available = (fp->_fsize - fp->_r);  // use fsize as authoritative end
+    printk("tcp_socket_recv: available=%d r=%d w=%d fsize=%d\n",
+           available, fp->_r, fp->_w, fp->_fsize);
+
+    // Limit to user buffer size
+    // Respecting the limit of the user's buffer.
+    size_t to_copy = (len < available) ? len : available;
+    printk("tcp_socket_recv: to_copy=%d (requested=%d)\n", 
+        to_copy, len );
+
+// Copy!
+// From file to user's buffer.
+    memcpy(
+        ubuf, 
+        fp->_base + fp->_r, 
+        to_copy );
 
     // Advance read offset
     fp->_r += to_copy;
 
     // If we consumed everything, reset flags
-    if (fp->_r >= fp->_w) {
-        fp->_r = fp->_w;
+    //if (fp->_r >= fp->_w)
+    if (fp->_r >= fp->_fsize) 
+    {
+        //fp->_r = fp->_w;
+        fp->_r = fp->_fsize;
+        fp->_w = fp->_fsize;
         fp->sync.can_read = FALSE;
     }
 
@@ -1055,7 +1081,7 @@ int tcp_change_socket_buffer(struct socket_d *sk, size_t desired_size)
     // -------------------------------------------------
     new_base = (char *) kmalloc(new_size);
     if ((void *) new_base == NULL) {
-        printk("tcp_change_socket_buffer: kmalloc(%u) failed\n",
+        printk("tcp_change_socket_buffer: kmalloc(%d) failed\n",
                (unsigned) new_size);
         return -ENOMEM;
     }
@@ -2764,12 +2790,12 @@ network_handle_tcp (
         }
         // #todo: Reset everything
         //fp->sync.action = ACTION_NULL;
-        fp->sync.action = ACTION_DISCONNECTING;  //200000   
-        fp->sync.can_read = TRUE;
-        fp->sync.can_write = TRUE;
-        fp->_r = 0;
-        fp->_w = 0;
-        fp->_cnt = fp->_lbfsize; 
+        //fp->sync.action = ACTION_DISCONNECTING;  //200000   
+        //fp->sync.can_read = TRUE;
+        //fp->sync.can_write = TRUE;
+        //fp->_r = 0;
+        //fp->_w = 0;
+        //fp->_cnt = fp->_lbfsize; 
 
         return;
     
@@ -2892,6 +2918,8 @@ network_handle_tcp (
                     fp->sync.action = ACTION_NULL;
                     fp->sync.can_write = TRUE;  // Can send a request
                     fp->_flags |= __SWR;        // flags: can write
+                    //fp->_r = 0;
+                    //fp->_w = 0;
 
                     // Enlarge the socket buffer for the client
                     int ok = tcp_change_socket_buffer(c_sock, 5*1024); // 5KB
@@ -3003,8 +3031,11 @@ network_handle_tcp (
             // #todo:
             // We can create a worker that do this routine,
             // injecting incoming data into the socket buffer.
+            // see: net.c
             struct socket_d *sk;
             sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
+            // sk = (struct socket_d *) cur_conn->ep_pair->c_ep->socket;
+
             if ((void*) sk == NULL){
                 panic("TCP: invalid sk\n");
                 return;
@@ -3046,13 +3077,13 @@ network_handle_tcp (
                 printk("\n");
                 printk("TCP: COPY COPY COPY    :) <<<\n");
                 printk("TCP RX: writing into fd=%d\n", fp->_file);
-                printk("\n");
+                printk("fp1 va = %x\n", &fp);
                 printk("\n");
 
                 // Inject at this position
                 memcpy(
                     fp->_base + fp->_w, 
-                    buffer + TCP_HEADER_LENGHT, 
+                    __tcp_payload,  //buffer + TCP_HEADER_LENGHT, 
                     to_copy );
                 fp->_w += (int) to_copy;
                 fp->_fsize = fp->_w;
@@ -3064,20 +3095,40 @@ network_handle_tcp (
                 //fp->sync.can_read = TRUE;      // allow read
                 //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
 
-                fp->_flags |= __SRD;
-                fp->sync.can_read = TRUE;
+                //fp->_flags |= __SRD;
+                fp->sync.can_read = FALSE;
                 fp->sync.can_write = FALSE;
-                fp->sync.action = ACTION_REPLY;   // wake the client for THIS chunk too
+                fp->sync.action = ACTION_NULL;
             }
 
             if (fFIN){
-                //fp->_r = 0;  // Read from the beginning when afte FIN
-                fp->_flags |= __SRD;             // mark readable
-                //fp->_flags &= ~__SWR;          // optional: clear write-only
-                fp->sync.can_read = TRUE;        // allow read
+                fp->sync.can_read = TRUE;    // allow read
+                fp->_r = 0;                  // Read from the beginning when afte FIN
+                fp->_flags |= __SRD;         // mark readable
+                //fp->_flags &= ~__SWR;      // optional: clear write-only
+
                 fp->sync.can_write = FALSE;
                 fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
                 sk->state = SS_CONNECTED; // We need to read
+
+                // #debug:
+                // Print from base up to write offset
+                //size_t i;
+                //for (i=0; i < fp->_fsize; i++) {
+                //    char c = fp->_base[i];
+                //    if (c >= 32 && c <= 126) {
+                //        printk("%c", c);  // printable ASCII
+                //    } else {
+                //        printk(".");      // non-printable placeholder
+                //    }
+                //}
+                //printk("\n");
+                // panic("breakpoint\n");
+
+                // #test
+                // Cache content into the connection structure.
+                // We are checking if the file is faling
+                //memcpy( cur_conn->buf, fp->_base, 1024);
             }
         }
         else if (_seq_number + data_len <= cur_conn->tcp_conn->rcv_nxt) {

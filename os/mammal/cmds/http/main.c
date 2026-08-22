@@ -38,8 +38,8 @@ static void do_request(int sockfd);
 // Send a request and wait for a response.
 static void do_request(int sockfd)
 {
-    //char response_buffer[1024];
-    char response_buffer[512];
+    char response_buffer[4096];
+    //char response_buffer[512];
 
 // HTTP request
     const char *request =
@@ -71,7 +71,8 @@ static void do_request(int sockfd)
 // The kernel is setting the action flag when some data comes from the server
 
     //while (1) {
-    
+  
+/*
     // Wait until kernel signals data ready
     int Count = 200;
     while (1) 
@@ -93,17 +94,17 @@ static void do_request(int sockfd)
         if (Count<=0)
             goto fail;
     };
-
     printf("HTTP.BIN: Reply received\n");
+*/
 
 // ------------------------
 // Receive
 
-    memset( response_buffer, 0, sizeof(response_buffer));
+    memset( response_buffer, 0, sizeof(response_buffer) );
 
+/*
     // #test: Lets read always the first part of the file (for now)
     lseek(sockfd, 0, SEEK_SET);   // rewind to beginning
-
     int n = read(sockfd, response_buffer, sizeof(response_buffer)-1);
     printf("HTTP.BIN: %d bytes received\n", n);
     if (n <= 0){
@@ -111,12 +112,62 @@ static void do_request(int sockfd)
         goto fail;
     }
     response_buffer[n] = '\0';
+*/
+
+/*
+    int total = 0;
+    while (1) {
+        int n = read(sockfd, response_buffer + total, sizeof(response_buffer) - 1 - total);
+        if (n <= 0) 
+            break;  // no more data
+        total += n;
+        if (total >= sizeof(response_buffer)-1) 
+            break;  // avoid overflow
+    };
+*/
 
 // Print response buffer
-
-    printf("RESPONSE BUFFER: {%s}\n", response_buffer);
+    //printf("RESPONSE BUFFER: {%s}\n", response_buffer);
 
     // }
+
+    printf("Reading ...\n");
+    //rtl_sleep_until(20000);
+
+    char buf[512];
+    //int total = 0;
+    int n;
+    while (1) {
+        printf("r ...\n");
+        rtl_sleep_until(40000);
+        n = read(sockfd, buf, sizeof(buf));
+        //if (n <= 0) 
+            //break;
+        if (n > 0){
+            printf("r after ...\n");
+            //fwrite(buf, 1, n, stdout);
+            //total += n;
+            break;
+        }
+    }
+    printf("RESPONSE: \n");
+    //buf[511] = 0;
+    //printf("%s\n", buf);
+    //printf("Total bytes read: %d\n", n);
+
+    // #debug:
+    // Print from base up to write offset
+    size_t i;
+    for (i=0; i < 512; i++) {
+        char c = buf[i];
+        if (c >= 32 && c <= 126) {
+            printf("%c", c);  // printable ASCII
+        } else {
+            printf(".");      // non-printable placeholder
+        }
+    }
+    printf("\n");
+    //printf("Total bytes read: %d\n", n);
 
 done:
     // Reset sync state so kernel can send more

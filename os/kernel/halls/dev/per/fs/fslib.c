@@ -398,7 +398,12 @@ file_write_buffer (
     }
 
 // Tentando escrever mais do que cabe no arquivo.
-    if (len >= BUFSIZ){
+// #bugbug:
+// We already have support for larger buffer.
+// Lets check agains the buffer actual size.
+    // if (len >- f->_blksize)  // #todo
+    if (len >= BUFSIZ)
+    {
         printk ("file_write_buffer: len >= BUFSIZ\n");
         goto fail;
     }
@@ -408,8 +413,10 @@ file_write_buffer (
 //
 
 // Socket file.
+// #ps: Write it directly into the base.
 // Se o arquivo é um socket, então não concatenaremos 
 // escrita ou leitura.
+
     if (f->____object == ObjectTypeSocket){
         memcpy( (void *) f->_base, (const void *) string, len );
         return (int) len;
@@ -647,7 +654,7 @@ __read_imp (
 // Deveria ser int?
 
 // fd
-    if ( fd < 0 || fd >= OPEN_MAX ){
+    if (fd < 0 || fd >= OPEN_MAX){
         return (ssize_t) (-EBADF);
     }
 // ubuf
@@ -942,6 +949,7 @@ __read_imp (
         // debug_print("__read_imp: [DEBUG] Trying to read a socket object\n");
         do_credits_by_tid( lapic_info[0].current_tid );
 
+        PROGRESS("SOCKET OBJECT\n");
 
         // -- Below is for remote connections ------------
         // Check the socket validation and state
@@ -957,11 +965,28 @@ __read_imp (
             {
                 if (sk->is_client_connecting_with_remote_server == TRUE)
                 {
-                    int n = tcp_socket_recv(sk, ubuf, count);
-                    if (n < 0){
-                        return (int) -1;
-                    }
-                    return (int) n;  // 0 = no data yet (non-blocking style)
+                    if (fp->sync.can_read != TRUE)
+                        return 0;
+                    //PROGRESS("SOCKET calling worker\n");
+                    printk("fp2 va = %x\n", &fp);
+                    //panic("breakpoint\n");
+                    fp->_base[0] = 'x';
+                    //printk("%s\n",fp->_base);
+                    size_t mysize = count;
+                    if (count > 512)
+                        mysize = 512;
+                    memcpy ( (void *) ubuf, (const void *) fp->_base, mysize );
+                    return mysize;
+
+                    //int n = tcp_socket_recv(sk, ubuf, count);
+                    //if (n < 0){
+                    //    return (int) -1;
+                    //}
+                    //return (int) n;  // 0 = no data yet (non-blocking style)
+
+                    //memcpy ( (void *) ubuf, (const void *) sk->conn->buf, 1024 );
+                    //return 1024;
+                    return 0;
                 }
             }
         }
@@ -997,7 +1022,7 @@ __read_imp (
             // Isso pode ser ruim pela natureza da chamada sys_read()
             // que vem de uma syscall que nao salvou o contexto.
 
-            if (fp->sync.block_on_read_empty == TRUE )
+            if (fp->sync.block_on_read_empty == TRUE)
             {
                 debug_print("__read_imp: SLEEP READER\n");
                 panic("__read_imp: [DEBUG] Couldn't read socket. Buffer not full\n");
@@ -1682,6 +1707,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         // We get the connection information based on the client's socket.
         // Established AF_INET → real TCP send.
         // see: tcp.c
+        // SEND: (Not writting into the file)
         struct socket_d *sk = fp->socket;
         if ((void*) sk != NULL)
         {
@@ -1750,7 +1776,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
         {
             // Se podemos escrever.
             // #todo: Ja fizemos isso logo acima.
-            if ( fp->_flags & __SWR )
+            if (fp->_flags & __SWR)
             {
                 //debug_print ("__write_imp: >>>> WRITE\n");
                 fp->_flags = 0;
