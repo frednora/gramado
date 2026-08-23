@@ -965,28 +965,16 @@ __read_imp (
             {
                 if (sk->is_client_connecting_with_remote_server == TRUE)
                 {
-                    if (fp->sync.can_read != TRUE)
-                        return 0;
-                    //PROGRESS("SOCKET calling worker\n");
-                    printk("fp2 va = %x\n", &fp);
-                    //panic("breakpoint\n");
-                    fp->_base[0] = 'x';
-                    //printk("%s\n",fp->_base);
-                    size_t mysize = count;
-                    if (count > 512)
-                        mysize = 512;
-                    memcpy ( (void *) ubuf, (const void *) fp->_base, mysize );
-                    return mysize;
-
-                    //int n = tcp_socket_recv(sk, ubuf, count);
-                    //if (n < 0){
-                    //    return (int) -1;
-                    //}
-                    //return (int) n;  // 0 = no data yet (non-blocking style)
-
-                    //memcpy ( (void *) ubuf, (const void *) sk->conn->buf, 1024 );
-                    //return 1024;
-                    return 0;
+                    //if (fp->sync.can_read != TRUE)
+                    //    return 0;
+                    PROGRESS("SOCKET calling worker\n");
+                    // see: tcp.c
+                    // It is working
+                    int n = tcp_socket_recv(sk, ubuf, count);
+                    if (n < 0){
+                        return (int) -1;
+                    }
+                    return (int) n;  // 0 = no data yet (non-blocking style)
                 }
             }
         }

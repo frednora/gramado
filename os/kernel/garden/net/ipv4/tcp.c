@@ -729,6 +729,7 @@ tcp_socket_send(
 // allowing the ring 3 process to read it.
 int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
 {
+    struct connection_d *conn;
     char *ubuf = (char *) buf;
 
     //#debug
@@ -748,8 +749,22 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
         return -EINVAL;
     }
 
+// connection
+    conn = sk->conn;
+    if ((void*) conn == NULL)
+        return -ENOTCONN;
+    if (conn->magic != 1234)
+        return -ENOTCONN;
+// That state means: the peer has finished sending, but 
+// you can still read whatever is buffered locally.
+    if (conn->status != CONN_STATUS_CLOSE_WAIT)
+    {
+        printk("tcp_socket_recv: conn->state\n");
+        return -ENOTCONN;
+    }
+
+
 // file
-    // File
     file *fp = sk->private_file;
     if (!fp) {
         printk("tcp_socket_recv: private_file NULL\n");
@@ -848,7 +863,7 @@ tcp_client_connect(
     struct endpoint_d *local_ep = create_endpoint_object();
     if (!local_ep)
         return -ENOMEM;
-    local_ep->is_remote = FALSE;
+    local_ep->is_remote = FALSE;  // <<<
     // Plug socket for local ep
     local_ep->socket = sk_local;
     sk_local->conn = conn;
@@ -888,10 +903,9 @@ tcp_client_connect(
     struct endpoint_d *remote_ep = create_endpoint_object();
     if (!remote_ep)
         return -ENOMEM;
-    remote_ep->is_remote = TRUE;
+    remote_ep->is_remote = TRUE;  // <<<
     // Create socket for remote ep
     remote_ep->socket = NULL;
-    //remote_ep->socket = create_socket_object();
     sk_remote = (struct socket_d *) create_socket_object();
     if (!sk_remote){
         return -ENOMEM;
@@ -903,10 +917,14 @@ tcp_client_connect(
     sk_remote->port     = dst_port;         // host order
     sk_remote->conn = conn;
     sk_remote->ep = remote_ep;
+    //sk_remote->private_file = NULL;  // Remote socket doesn't have a file
 
     remote_ep->socket = sk_remote;
 
-    // Plug endpoints into pair
+//
+// Plug endpoints into pair
+//
+
     pair->c_ep = local_ep;
     pair->s_ep = remote_ep;
     conn->ep_pair = pair;
@@ -2699,7 +2717,9 @@ network_handle_tcp (
        );
     }
 
-    // --------------
+// --------------
+// The connection is not valid.
+// Maybe a remote client is sending a SYN.
     if (!c_conn)
     { 
         printk("Invalid c_conn\n");
@@ -2721,7 +2741,12 @@ network_handle_tcp (
         printk("Invalid c_conn magic\n");
         return;
     }
-    cur_conn = c_conn;  // Save current
+
+//
+// Save current
+//
+
+    cur_conn = c_conn;
 
 
 // ++
@@ -2825,6 +2850,10 @@ network_handle_tcp (
     if (cur_conn->status == CONN_STATUS_SYN_SENT)
     {
         printk("#### Step 2: Waiting syn_ack in CONN_STATUS_SYN_SENT ####\n");
+
+        // #debug
+        //if (cur_conn->ep_pair->c_ep->is_remote == TRUE)
+            //panic("No expected remote ep on CONN_STATUS_SYN_SENT\n");
 
         if (fRST){
             printk("[WARNING] RST received during during CONN_STATUS_SYN_SENT\n");
@@ -2974,6 +3003,8 @@ network_handle_tcp (
             printk("SYN received during CONN_STATUS_ESTABLISHED\n");
             return;
         }
+        // That FIN means the remote peer has finished sending data. 
+        // We need to acknowledge it and move into the correct closing state.
         if (fFIN == 1){
             printk("FIN received during CONN_STATUS_ESTABLISHED\n");
             // return;
@@ -3027,6 +3058,9 @@ network_handle_tcp (
                 //}
                 //printk("\n");
             }
+
+            //if (cur_conn->ep_pair->c_ep->is_remote == TRUE)
+                //panic("No expected remote ep\n");
 
             // #todo:
             // We can create a worker that do this routine,
@@ -3146,8 +3180,8 @@ network_handle_tcp (
         // -------------------------------------------------
         uint16_t Flags = TH_ACK;
         if (fFIN){
-            Flags |= TH_RST;    
-            Flags |= TH_FIN;   // only if you want to close your side too
+            //Flags |= TH_RST;    
+            //Flags |= TH_FIN;   // only if you want to close your side too
         }
         // Send ACK.
         // Acknoledgind the received data.
@@ -3174,8 +3208,8 @@ network_handle_tcp (
         cur_conn->packets_sent++;
 
         if (fFIN == 1){
-            printk("TCP: Disconnecting ...\n");
-            cur_conn->status = CONN_STATUS_CLOSED;
+            printk("TCP: Change state to CLOSE_WAIT ...\n");
+            cur_conn->status = CONN_STATUS_CLOSE_WAIT;
 
             struct socket_d *sk;
             sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
@@ -3187,7 +3221,7 @@ network_handle_tcp (
                 panic("TCP: sk validation\n");  return;
             }
             //sk->state = SS_UNCONNECTED;
-            sk->state = SS_CONNECTED; // Because maybe we still need to read
+            sk->state = SS_CONNECTED;  // Because maybe we still need to read
 
             file *fp = sk->private_file;
             if ((void*) fp == NULL){

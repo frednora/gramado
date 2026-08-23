@@ -101,7 +101,7 @@ struct socket_d *create_socket_object(void)
 
 // The buffer.
 // The data goes into the stream.
-    s->private_file = NULL;  //(file *) 0;
+    s->private_file = NULL;
 
 // Socket flags
 // The flags that describe the state of this socket.
