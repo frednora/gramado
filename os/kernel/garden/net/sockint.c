@@ -823,6 +823,103 @@ int socket_write(int fd, char *buf, int count)
     return (int) __write_imp(fd, buf, count);
 }
 
+
+/*
+ * socket_close:
+ * -----------------
+ * Kernel-side implementation of close() for socket file descriptors.
+ *
+ * Purpose:
+ *   Initiates the TCP connection shutdown sequence when a process
+ *   calls close() on a socket. This routine drives the TCP state
+ *   machine into the correct closing path depending on who initiated
+ *   the shutdown.
+ *
+ * Behavior:
+ *   • If the peer closed first (conn->status == CONN_STATUS_CLOSE_WAIT):
+ *       - We send our FIN.
+ *       - Transition to CONN_STATUS_LAST_ACK.
+ *       - LAST_ACK means: waiting for the peer to ACK our FIN.
+ *         Once acknowledged, the connection goes to CLOSED.
+ *
+ *   • If we are initiating the close (conn->status == CONN_STATUS_ESTABLISHED):
+ *       - We send our FIN.
+ *       - Transition to CONN_STATUS_FIN_WAIT1.
+ *       - FIN_WAIT1 means: waiting for the peer to ACK our FIN.
+ *         If the peer also sends its FIN, we may move to CLOSING
+ *         or FIN_WAIT2 before reaching CLOSED.
+ *
+ *   • After the peer ACKs our FIN:
+ *       - Transition to CONN_STATUS_CLOSED.
+ *       - Socket state becomes SS_CLOSED.
+ *
+ * Notes:
+ *   - This routine should also release or mark the socket and
+ *     connection structures for reuse.
+ *   - Proper FIN/ACK exchange ensures a clean shutdown and prevents
+ *     half-open connections.
+ */
+
+int socket_close(struct socket_d *sk)
+{
+    // #debug
+    printk("socket_close: #test\n");
+
+// Socket
+    if (!sk) 
+        return -EINVAL;
+    if (sk->magic != 1234) 
+        return -EINVAL;
+
+// Connection
+    struct connection_d *conn = sk->conn;
+    if (!conn) 
+        return -ENOTCONN;
+    if (conn->magic != 1234) 
+        return -ENOTCONN;
+
+// LAST_ACK:
+// Meaning: The peer closed first (you received their FIN), and 
+// you replied with your own FIN.
+// The peer closed first (we were in CLOSE_WAIT).
+// We sent our FIN in response and are now waiting
+// for the peer to ACK it. Once acknowledged, the
+// connection transitions to CLOSED.
+
+// FIN_WAIT1:
+// Meaning: Your side has initiated the close by sending a FIN.
+// We sent a FIN to the peer, beginning the active close.
+// Waiting for an ACK of our FIN. If the peer also sends
+// its own FIN, we will move to CLOSING or FIN_WAIT2.
+
+
+// Connection status
+    if (conn->status == CONN_STATUS_CLOSE_WAIT) {
+        // #todo: Send FIN
+        // Change status to last_ack
+        conn->status = CONN_STATUS_LAST_ACK;
+        sk->state = SS_DISCONNECTING;
+    }
+    else if (conn->status == CONN_STATUS_ESTABLISHED) {
+        // #todo: Send FIN
+        // Change status to fin_wait1
+        conn->status = CONN_STATUS_FIN_WAIT1;
+        sk->state = SS_DISCONNECTING;
+    } else {
+        printk("socket_close: Invalid connection state\n");
+    }
+
+    // After peer ACKs our FIN:
+    conn->status = CONN_STATUS_CLOSED;
+    sk->state = SS_CLOSED;
+
+    // #todo:
+    // Release or mark to reuse the socket structure
+    // Release or mark to reuse the connection structure
+
+    return 0;   // OK
+}
+
 int socket_ioctl(int fd, unsigned long request, unsigned long arg)
 {
     struct te_d *p;

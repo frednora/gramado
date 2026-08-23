@@ -2250,20 +2250,18 @@ int __close_imp(int fd)
         debug_print("__close_imp: p\n");
         goto fail;
     }
-    if ( p->used != TRUE || p->magic != 1234 ){
+    if (p->used != TRUE || p->magic != 1234){
         debug_print("__close_imp: p validation\n");
         goto fail;
     }
 
-// object
-// The object is a file structure.
-
+// The object is a file structure
     object = (file *) p->Objects[fd];
     if ((void *) object == NULL){
         debug_print("__close_imp: object\n");
         goto fail;
     }
-    if ( object->used != TRUE || object->magic != 1234 ){
+    if (object->used != TRUE || object->magic != 1234){
         debug_print("__close_imp: object validation\n");
         goto fail;
     }
@@ -2279,9 +2277,14 @@ int __close_imp(int fd)
     if (object->____object == ObjectTypeSocket)
     {
         debug_print("__close_imp: Trying to close a socket object\n");
-        object->socket->used = FALSE; //invalidando a estrutura de socket
-        object->socket->magic = 0;//invalidando a estrutura de socket
-        Done = TRUE;
+
+        struct socket_d *sk = object->socket;
+        if ((void*)sk == NULL){
+            goto fail;
+        }
+        socket_close(sk);
+        // Done = TRUE;
+        return 0;
     }
 
 // ==============================================

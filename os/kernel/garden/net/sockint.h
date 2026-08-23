@@ -525,6 +525,7 @@ update_socket (
 int socket_read(int fd, char *buf, int count);
 int socket_write(int fd, char *buf, int count);
 
+int socket_close(struct socket_d *sk);
 
 // ioctl:
 int socket_ioctl(int fd, unsigned long request, unsigned long arg);
