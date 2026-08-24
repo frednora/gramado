@@ -300,8 +300,9 @@ xxxProcessEvent (
                 {
                     //#debug
                     //printf("init.bin: 4004, from {%d}\n",caller_tid);
-                    memset(__filename_local_buffer,0,64);
-                    sprintf(__filename_local_buffer,"#editor.bin");
+                    memset(__filename_local_buffer, 0, 64);
+                    //sprintf(__filename_local_buffer,"#editor.bin");
+                    sprintf(__filename_local_buffer,"#browser.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }

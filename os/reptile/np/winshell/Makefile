@@ -12,6 +12,7 @@ all:
 	make -C  terminal/
 
 # 2 - DE Utilities
+	make -C  browser/
 	make -C  doc/
 	make -C  editor/
 	make -C  memory/

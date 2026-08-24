@@ -1,0 +1,108 @@
+# BROWSER.BIN
+# Created by Fred Nora.
+
+VERSION = 0
+PATCHLEVEL = 0
+SUBLEVEL = 0
+EXTRAVERSION =
+#NAME = editor
+
+linkFlags  = -m elf_x86_64 \
+-s -x -static -T ../link.ld
+
+# usermode cross compiler flags.
+CFLAGS = -Wall
+#CFLAGS += -O3
+CFLAGS += -Wundef
+CFLAGS += -Wmissing-prototypes
+CFLAGS += -Wno-uninitialized
+CFLAGS += -Wno-format-security
+CFLAGS += -Wno-trigraphs
+CFLAGS += -Werror=strict-prototypes
+CFLAGS += -Werror=implicit-function-declaration
+CFLAGS += -Werror=return-type
+CFLAGS += -std=gnu89
+CFLAGS += -m64
+CFLAGS += -s
+CFLAGS += -static
+CFLAGS += -fcommon
+CFLAGS += -fgnu89-inline
+CFLAGS += -finline-functions
+CFLAGS += -fshort-wchar
+CFLAGS += -ffreestanding
+CFLAGS += -fleading-underscore
+CFLAGS += -fstrict-overflow
+CFLAGS += -nostdlib
+CFLAGS += -nodefaultlibs
+CFLAGS += -nostdinc
+CFLAGS += -fno-builtin
+CFLAGS += -fno-stack-protector
+CFLAGS += -fno-strict-aliasing
+CFLAGS += -fno-PIE
+CFLAGS += -fno-pie
+CFLAGS += -fno-omit-frame-pointer
+CFLAGS += -fno-optimize-sibling-calls    
+
+# rtl
+LIBC      = ../api/garden/rtl/include/
+LIBCOBJ   = ../api/garden/rtl/obj
+
+# libgws - (Using the server-side services)
+LIBGWS    = ../api/gthouse/libgws/include/
+LIBGWSOBJ = ../api/gthouse/libgws/obj
+
+# libgui - Client-side services
+LIBGUI    = ../api/gthouse/libgui/include/
+LIBGUIOBJ = ../api/gthouse/libgui/obj
+
+# Objects
+myObjects = crt0.o globals.o rtl.o \
+ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
+ioctl.o socket.o inet.o \
+libgws.o libgui.o \
+browser.o main.o    
+
+
+.PHONY: all all-c hello-link finalize clean
+
+all: main.o all-c hello-link finalize clean
+	@echo "Ok?"
+
+main.o:
+	gcc -c main.c     $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o main.o
+	gcc -c browser.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o browser.o
+	gcc -c globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o globals.o
+
+all-c:
+
+	cp $(LIBCOBJ)/crt0.o   .
+	cp $(LIBCOBJ)/rtl.o  .
+
+	cp $(LIBCOBJ)/ctype.o   .
+	cp $(LIBCOBJ)/stdio.o .
+	cp $(LIBCOBJ)/fcntl.o .
+	cp $(LIBCOBJ)/stdlib.o .
+	cp $(LIBCOBJ)/string.o .
+	cp $(LIBCOBJ)/unistd.o  .
+
+	cp $(LIBCOBJ)/termios.o  .
+	cp $(LIBCOBJ)/ioctl.o  .
+	cp $(LIBCOBJ)/socket.o  .
+
+	cp $(LIBCOBJ)/inet.o  .
+
+
+# libgws
+	cp $(LIBGWSOBJ)/libgws.o .
+
+# libgui
+	cp $(LIBGUIOBJ)/libgui.o .
+
+hello-link:
+	ld $(linkFlags) -o BROWSER.BIN $(myObjects)    
+finalize:
+	cp BROWSER.BIN  ../bin
+clean:
+	-rm *.o
+	-rm BROWSER.BIN 
+	

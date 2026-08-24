@@ -232,6 +232,7 @@ build-extras:
 	@-cp $(L2_WINSHELL)/bin/TASKBAR.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/TERMINAL.BIN  $(BUILD)/DE/
 
+	@-cp $(L2_WINSHELL)/bin/BROWSER.BIN  $(BUILD)/DE/
 #	@-cp $(L2_WINSHELL)/bin/DOC.BIN      $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/EDITOR.BIN   $(BUILD)/DE/
 #	@-cp $(L2_WINSHELL)/bin/GWS.BIN      $(BUILD)/DE/
