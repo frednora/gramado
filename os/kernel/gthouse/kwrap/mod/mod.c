@@ -203,7 +203,7 @@ static int __mod_initialize_first_module(void)
 
 // Name
     memset(m->name,0,64);
-    mysprintf(m->name,name);
+    ksprintf(m->name,name);
     s = strlen(name);
     m->name_size = s;
     m->name[s] = 0;   // finalize

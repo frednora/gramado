@@ -4,12 +4,21 @@
 #ifndef __LIBK_LIBK_H
 #define __LIBK_LIBK_H    1
 
-// ======================================
-
-
-
+//
+// Prototypes
+//
 
 int libk_initialize(void);
+
+
+//
+// Aliases
+//
+
+// -----------------------------------
+// The sprintf() implementation in kernel-side.
+#define ksprintf  mysprintf
+
 
 // ------------------
 // crt prefix

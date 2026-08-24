@@ -16,9 +16,6 @@ unsigned long file_table[NUMBER_OF_FILES];
 
 struct file_table_info_d  FileTableInfo;
 
-// Global list of pipes.
-unsigned long pipeList[NUMBER_OF_PIPES];
-
 // Standard stream.
 // Initialized by kstdio_initialize() in kstdio.c
 file *stdin;
@@ -36,6 +33,9 @@ file *volume1_rootdir_fp;
 file *volume2_rootdir_fp;
 
 //...
+
+// Global list of pipes.
+unsigned long pipeList[NUMBER_OF_PIPES];
 
 // 0
 //Pipe para a rotina execve particular 
@@ -150,17 +150,15 @@ int sys_setup_stdin(int stdin_fd)
         return FALSE;
     }
 
-// pid
+// process
 
     // Get PID for the current process for a given core.
     // IN: core id
-
     current_process = (pid_t) get_current_process(0);
-
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
+    {
         return FALSE;
-
-// Process structure
+    }
     p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL){
         return FALSE;
@@ -198,37 +196,29 @@ int sys_setup_stdin(int stdin_fd)
 
 int is_socket(file *f)
 {
-
-// Parameter validation.
     if ((void *) f == NULL){
         return FALSE;
     }
     if (f->magic != 1234){
         return FALSE;
     }
-
-// Yes
+    // Yes it is a socket
     if (f->____object == ObjectTypeSocket){
         return TRUE;
     }
-// No
-    return FALSE;
+    return FALSE;  // No it's not
 }
 
 int is_virtual_console(file *f)
 {
-
-// Parameter validation.
     if ((void *) f == NULL){
         return FALSE;
     }
-
-// Yes
+    // Yes it is a console
     if (f->____object == ObjectTypeVirtualConsole){
         return TRUE;
     } 
-// No
-    return FALSE;
+    return FALSE;  // No it's not
 }
 
 // Kernel size version of the
@@ -426,11 +416,8 @@ fail:
  * talvez seja bom implementa-lo aqui também.
  */
 
-/*
- * prints:
- *     Rotina de suporta a printk. 
- */
- 
+// prints:
+// It supports printk. 
 // #bugbug
 // We need to create a cleaner routine.
 // This one is a mess.
@@ -443,9 +430,10 @@ prints (
     int width, 
     int pad )
 {
-    register int pc = 0, padchar = ' ';
+    const char *ptr;
+    int pc = 0;
+    int padchar = ' ';
     register int len = 0;
-    register const char *ptr;
 
     if (width > 0) 
     {
@@ -488,12 +476,10 @@ prints (
     return (int) pc;
 }
 
+// printi:
+// Support for printk.
+// #todo: '**out' #dangerdanger
 
-/*
- * printi:
- *     Rotina de suporta a printk.
- */
-// '**out' #dangerdanger
 int 
 printi (
     char **out, 
@@ -553,7 +539,7 @@ printi (
 
 // #obs: 
 // retorna pc + o retorno da função.
-// ugly shit
+// ugly
     
     return (int) pc + prints(out, s, width, pad);
 }
@@ -565,15 +551,19 @@ printi (
 // E se essa rotina for chamada com o primeiro argumento nulo?
 // vai escrever na IVT ?
 // Vai chamar alguma rotina passando esse emsmo endereço de buffer.
-//Atençao:
+// Atençao:
 // print() nao analisa flags como runlevel ou kernel phase.
+// #todo: Update comment
 
-int print ( char **out, int *varg )
+int print(char **out, int *varg)
 {
-    register int width = 0;
-    register int pad = 0;
-    register int pc = 0;
-    register char *format = (char *) (*varg++);
+    // #ps:This increament is not good
+    char *format = (char *) (*varg++);
+
+    int width = 0;
+    int pad = 0;
+    int pc = 0;
+
     char scr[2];
 
     // Ugly
@@ -781,7 +771,7 @@ kinguio_i2hex(
             strcpy (dest,cp);
             break;
         };
-    }
+    };
 
     cp = &dest[0];
     n = strlen(cp);
@@ -792,14 +782,14 @@ kinguio_i2hex(
 // Local
 static char *__utoa_r (unsigned long val, char *str)
 {
-    char* valuestring = (char*) str;
+    char *valuestring = (char*) str;
     unsigned long value = val;
-    char swap, *p;
+    char *p;
+    char swap;
 
     p = valuestring;
 
-    do
-    {
+    do {
         *p++ = (char)(value % 10) + '0';
         value /= 10;
 
@@ -812,7 +802,7 @@ static char *__utoa_r (unsigned long val, char *str)
         swap = *valuestring;
         *valuestring++ = *p;
         *p-- = swap;
-    }
+    };
 
     return str;
 }
@@ -825,7 +815,7 @@ char *kinguio_utoa(
     char *cp = (char *) dst;
     unsigned long lu = (unsigned long)val;
 
-    if(radix == 16)
+    if (radix == 16)
         kinguio_i2hex_versao2(lu, cp, 16);
     else 
         __utoa_r(lu, cp);
@@ -922,12 +912,15 @@ characters written. Casting to long ensures that the pointer difference is compu
 then the result is cast back to an int for the return value.
 */
 // Worker for printf and sprintf.
+
 int 
 kinguio_vsprintf(
     char *str, 
     const char *fmt, 
     va_list ap )
 {
+// A buffer to hold converted numbers as strings.
+    static char buffer[1024];
 
 // 'index' tracks the current position in the format string.
     register int index=0;
@@ -940,12 +933,9 @@ kinguio_vsprintf(
 // _c_r is a two-character array used to store a single character as a null-terminated string.
     char _c_r[] = "\0\0";
 
-    // A buffer to hold converted numbers as strings.
-    static char buffer[1024];
-
     // Variables for handling numerical conversions.
     // d|i|x
-    int   d=0;  // Temporary storage for int values
+    int d=0;  // Temporary storage for int values
     //long ld=0;  // Temporary storage for long integers (signed)
 
     // Unsigned numbers handling (using either int or long, depending on format specifiers).
@@ -1178,7 +1168,7 @@ int sprintf_old ( char *str, const char *format, ... )
 {
     register int *varg = (int *) (&format);
 
-    return (int) print (&str, varg);
+    return (int) print(&str, varg);
 }    
 
 // mysprintf: (ksprintf)
@@ -1197,8 +1187,7 @@ int mysprintf(char *buf, const char *fmt, ...)
     return (int) n;
 }
 
-
-int k_ungetc( int c, file *f )
+int k_ungetc(int c, file *f)
 {
 
 // Parameters:
@@ -1337,10 +1326,10 @@ int k_ferror(file *f)
 // #dictioonary-ptbr: whence=deonde
 // #todo
 // IN:
-int k_fseek( file *f, long offset, int whence )
+int k_fseek(file *f, long offset, int whence)
 {
-    register int i=0;
     char *p;
+    register int i=0;
 
     if ((void *) f == NULL){
         debug_print ("k_fseek: f\n");
@@ -1575,6 +1564,8 @@ int k_fscanf (file *f, const char *format, ... )
 
     panic ("k_fscanf: #todo\n");
 
+    return 0;
+
 fail:
     return (int) -1;
 }
@@ -1656,8 +1647,8 @@ int k_fputs(const char *str, file *f)
     ksprintf(f->_p, str);
 // Update _p
     f->_p = (f->_p + StringSize);
-// OK
-    return 0;
+
+    return 0;  // OK
 
 fail:
     return (int) (-1);
@@ -2258,46 +2249,45 @@ static void __clear_prompt_buffers(void)
 }
 
 // Create n files and put the pointer into the file table.
-static void __initialize_file_table(void)
-{
 // #todo
 // We need a structure to track te information
 // about the file table. file_table[],
 // maybe FileTableInfo.xxxx.
 
+static void __initialize_file_table(void)
+{
+    file *tmp_fp;
     register int i=0;
-    file *tmp;
 
     FileTableInfo.initialized = FALSE;
     FileTableInfo.size = (int) NUMBER_OF_FILES;
 
     for (i=0; i<NUMBER_OF_FILES; i++)
     {
-        tmp = (void*) kmalloc(sizeof(file));
-        if ((void*)tmp == NULL){
-           x_panic("__initialize_file_table: tmp\n");
+        tmp_fp = (void*) kmalloc(sizeof(file));
+        if ((void*)tmp_fp == NULL){
+           x_panic("__initialize_file_table: tmp_fp\n");
         }
-        memset( tmp, 0, sizeof(struct file_d) );
+        memset( tmp_fp, 0, sizeof(struct file_d) );
 
-        tmp->____object = ObjectTypeFile;  // Regular file.
-        tmp->_flags = 0;                   // (__SWR | __SRD); 
-        tmp->fd_counter = 0;
-        tmp->_tmpfname = NULL;
+        tmp_fp->____object = ObjectTypeFile;  // Regular file.
+        tmp_fp->_flags = 0;                   // (__SWR | __SRD); 
+        tmp_fp->fd_counter = 0;
+        tmp_fp->_tmpfname = NULL;
         //...
-        tmp->used = TRUE;
-        tmp->magic = 1234;
-        file_table[i] = (unsigned long) tmp; 
+        tmp_fp->used = TRUE;
+        tmp_fp->magic = 1234;
+        file_table[i] = (unsigned long) tmp_fp;
     };
 
     FileTableInfo.initialized = TRUE;
 }
 
-// Create n inodes and put the pointers
-// into the inode table.
+// Create n inodes and put the pointers into the inode table
 static void __initialize_inode_table(void)
 {
-    register int i=0;
     struct inode_d *tmp_inode;
+    register int i=0;
 
     for (i=0; i<32; i++)
     {
@@ -2323,22 +2313,22 @@ static void __initialize_inode_table(void)
 // of the early initialization routine.
 static void __initialize_virtual_consoles(void)
 {
-    register int i=0;
-
     struct tty_d *Lconsole0 = (struct tty_d *) &CONSOLE_TTYS[0];
     struct tty_d *Lconsole1 = (struct tty_d *) &CONSOLE_TTYS[1];
     struct tty_d *Lconsole2 = (struct tty_d *) &CONSOLE_TTYS[2];
     struct tty_d *Lconsole3 = (struct tty_d *) &CONSOLE_TTYS[3];
 
-    unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
-    unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
-
     char __tmpname[64];
-
     const char *con0_name = "CONSOLE0";
     const char *con1_name = "CONSOLE1";
     const char *con2_name = "CONSOLE2";
     const char *con3_name = "CONSOLE3";
+
+    unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
+    unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
+
+    register int i=0;
+
 
     PROGRESS("__initialize_virtual_consoles: (second time) <<<< \n");
 
@@ -2354,18 +2344,18 @@ static void __initialize_virtual_consoles(void)
 // Setup colors
 //
 
-//  It sets the current and the default colors for each console.
+// It sets the current and the default colors for each console.
+// 0) Default kernel console
+// 1) Auxiliary kernel console
+// 2) Warning console
+// 4) Danger console
 
-// Default kernel console
     bg_colors[0] = (unsigned int) COLOR_BLUE;
     fg_colors[0] = (unsigned int) COLOR_WHITE;
-// Auxiliary kernel console
     bg_colors[1] = (unsigned int) COLOR_BLUE;
     fg_colors[1] = (unsigned int) COLOR_YELLOW;
-// Warning console
     bg_colors[2] = (unsigned int) COLOR_ORANGE;
     fg_colors[2] = (unsigned int) COLOR_WHITE;
-// Danger console
     bg_colors[3] = (unsigned int) COLOR_RED;
     fg_colors[3] = (unsigned int) COLOR_YELLOW;
 
@@ -2441,36 +2431,28 @@ static void __initialize_virtual_consoles(void)
         }
     };
 
-// Associate stdin with one of the consoles.
+// Associate standard stream with one of the consoles
+
     stdin->tty  = (struct tty_d *) Lconsole0;
-// Associate stdout with one of the consoles.
     stdout->tty = (struct tty_d *) Lconsole0;
-// Associate stderr with one of the consoles.
     stderr->tty = (struct tty_d *) Lconsole0;
 
 // The foreground console
-    jobcontrol_switch_console(DEFAULT_CONSOLE); //  Console 0
+    jobcontrol_switch_console(DEFAULT_CONSOLE);  //  Console 0
+
 // Setup the pointer for the current console
     set_up_cursor(0,0);
-
-// #test
-    //set_up_cursor(0,1);
-    //console_outbyte('x',fg_console);
-    //while(1){}
-// ============================================================
-
 
 // ============================================================
 // Console 0
     file *fp0 = kmalloc(sizeof(file));
     memset(fp0, 0, sizeof(file));
 
-    fp0->used      = TRUE;
-    fp0->magic     = 1234;
+    fp0->used = TRUE;
+    fp0->magic = 1234;
 
     fp0->____object = ObjectTypeVirtualConsole;
     fp0->isDevice   = TRUE;
-
     fp0->device     = NULL;   // will be filled by devmgr
     fp0->dev_major  = 0;
     fp0->dev_minor  = 0;
@@ -2504,12 +2486,11 @@ static void __initialize_virtual_consoles(void)
     file *fp1 = kmalloc(sizeof(file));
     memset(fp1, 0, sizeof(file));
 
-    fp1->used      = TRUE;
-    fp1->magic     = 1234;
+    fp1->used = TRUE;
+    fp1->magic = 1234;
 
     fp1->____object = ObjectTypeVirtualConsole;
     fp1->isDevice   = TRUE;
-
     fp1->device     = NULL;   // will be filled by devmgr
     fp1->dev_major  = 0;
     fp1->dev_minor  = 0;
@@ -2543,12 +2524,11 @@ static void __initialize_virtual_consoles(void)
     file *fp2 = kmalloc(sizeof(file));
     memset(fp2, 0, sizeof(file));
 
-    fp2->used      = TRUE;
-    fp2->magic     = 1234;
+    fp2->used = TRUE;
+    fp2->magic = 1234;
 
     fp2->____object = ObjectTypeVirtualConsole;
     fp2->isDevice   = TRUE;
-
     fp2->device     = NULL;   // will be filled by devmgr
     fp2->dev_major  = 0;
     fp2->dev_minor  = 0;
@@ -2582,12 +2562,11 @@ static void __initialize_virtual_consoles(void)
     file *fp3 = kmalloc(sizeof(file));
     memset(fp3, 0, sizeof(file));
 
-    fp3->used      = TRUE;
-    fp3->magic     = 1234;
+    fp3->used = TRUE;
+    fp3->magic = 1234;
 
     fp3->____object = ObjectTypeVirtualConsole;
     fp3->isDevice   = TRUE;
-
     fp3->device     = NULL;   // will be filled by devmgr
     fp3->dev_major  = 0;
     fp3->dev_minor  = 0;
@@ -2616,10 +2595,9 @@ static void __initialize_virtual_consoles(void)
         DEVICE_TYPE_TTY,
         Lconsole3 );
 
-// #debug
-    //devmgr_show_device_list(ObjectTypeVirtualConsole);
-    //refresh_screen();
-    //while(1){}
+    // #debug
+    // devmgr_show_device_list(ObjectTypeVirtualConsole);
+    // while(1){}
 }
 
 //
@@ -2627,49 +2605,31 @@ static void __initialize_virtual_consoles(void)
 // INITIALIZATION
 //
 
-/*
- * kstdio_initialize:
- *     Inicializando stdio pertencente ao kernel base.
- *     Inicializa as estruturas do fluxo padrão.
- *     Quem chamou essa inicialização ?? Em que hora ??
- * #bugbug: Pelo jeito somente depois dessa inicialização é que temos mensagens 
- * com printk decentes. Então a inicialização do kernel precisa disso.
- * >> precisamos antecipar essa inicilização. Mas ela precisa ser depois da
- * inicialização da paginação.
- */
-// Estamos no kernel base em ring 0.
-// Queremos que as streams sejam acessíveis para as rotinas
-// da libc em ring3. Para a libc alterar os elementos
-// da estrutura.
-// #bugbug: Talvez seja possível criar essas estruturas
-// em memória compartilhada, usado o alocaro apropriado.
-// kmalloc com certeza e ring0.
+// kstdio_initialize:
 // In this routine:
-// + Initializing the structures for stdin, stdout and stderr
+// + Initializing the structures for stdin, stdout and stderr.
+// #ps: 
+// This is necessary for the full initialization of printk.
+// But, at this moment we already have a weak support for printk
+// because of the early initialization of the consoles.
+// but now we will make the full initialization of the consoles.
+// #ps: who is calling it?
 
 int kstdio_initialize(void)
 {
-
-// Ja temos suporte a print nesse momento por causa
-// das configurações de console. Mas nessa rotina 
-// refaremos as configurações de console.
-
-    kstdio_standard_streams_initialized = FALSE;
-
     PROGRESS("kstdio_initialize:\n");
 
-// ??
-// Input mode
+    kstdio_standard_streams_initialized = FALSE;
+    errno = 0;  // Last registered error
+
 // #bugbug
 // We have another definition of input mode.
-// An global io structure.
+// A global io structure.
 
     g_inputmode = INPUT_MODE_MULTIPLE_LINES;
 
     kstdio_info.kstdio_in_terminalmode = TRUE;
     kstdio_info.kstdio_in_verbosemode = TRUE;
-
-    errno = 0;  // Last registered error
 
 // Buffers used by the standard stream.
 // Initialize the global file table.
@@ -2688,15 +2648,15 @@ int kstdio_initialize(void)
     __initialize_stderr();
 
 // Virtual consoles.
-// The standard streams was initialized first because we're
-// gonna need them now.
+// The standard streams was initialized first 
+// because we're gonna need them now.
     __initialize_virtual_consoles();
+
+    kstdio_standard_streams_initialized = TRUE;  // Done
 
     //PROGRESS("BREAKPOINT\n");
     //while(1){}
 
-// Done
-    kstdio_standard_streams_initialized = TRUE;
     return TRUE;
 
 //fail:

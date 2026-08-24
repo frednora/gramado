@@ -58,7 +58,8 @@ extern int g_inputmode;
 // See: limits.h
 #define EOF    GRAMADO_EOF
 
-//enum FileFlags {_F_READ = 0x0001, _F_WRIT = 0x0002, _F_RDWR = 0x0003, _F_ERR = 0x0010, _F_EOF = 0x0020, _F_BIN = 0x0040};
+//enum FileFlags {_F_READ = 0x0001, _F_WRIT = 0x0002, 
+// _F_RDWR = 0x0003, _F_ERR = 0x0010, _F_EOF = 0x0020, _F_BIN = 0x0040};
 
 #define _IOMYBUF  0x0008  /* stdio malloc()'d buffer */
 #define _IOEOF    0x0010  /* EOF reached on read */
@@ -95,7 +96,8 @@ extern int g_inputmode;
 //BUFFER
 //_IOFBF, _IOLBF and _IONBF
 //_IONBF: The macro yields the value of the mode argument to 
-// setvbuf to indicate no buffering. (Flush the stream buffer at the end of each write operation.)
+// setvbuf to indicate no buffering. 
+// (Flush the stream buffer at the end of each write operation.)
 
 /*
 #define  _IONBF  0       //unbuffered 
@@ -278,15 +280,13 @@ extern unsigned long syncList[SYNC_COUNT_MAX];
 // Ring 0.
 struct file_d
 {
-// Structure validation fields.
     int used;
     int magic;
-
-// File descriptor. It belongs to a process. p->Objects[fd].
-    int _file;
-
-// What object is associated with this file.
+// What object is associated with this file
     object_type_t ____object;
+// File descriptor. 
+// It belongs to a process. p->Objects[fd].
+    int _file;
 
 // The communication domain
     struct tty_d  *tty;
@@ -519,6 +519,7 @@ extern int kstdio_standard_streams_initialized;
 //Pipe para a rotina execve particular 
 //usada no no init do ambiente Gramado Core.
 extern file *pipe_gramadocore_init_execve;
+
 // 1
 //Pipe usado pela rotina execve.
 extern file *pipe_execve;
@@ -696,12 +697,6 @@ regularfile_ioctl (
 //
 
 int kstdio_initialize(void);
-
-
-// -----------------------------------
-// sprintf() in ring0.
-#define ksprintf  mysprintf
-
 
 #endif    
 
