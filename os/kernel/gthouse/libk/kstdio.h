@@ -399,8 +399,37 @@ struct file_d
 // There are two kinds of synchronization,
 // the _flags and the sync.
 
-// Ex: __SRD and __SWR
+
+//
+// == Flags ==
+//
+
+    // File status flags (shared across all descriptors pointing to this file)
+    // ---------------------------------------------------------------
+    // These correspond to POSIX "file status flags" manipulated by
+    // fcntl(F_GETFL/F_SETFL). Examples: O_APPEND, O_NONBLOCK, O_SYNC.
+    // They affect how the underlying file behaves when read/written.
+    // If you duplicate a descriptor, the new one shares these flags
+    // because both point to the same file object.
+    // Ex: __SRD and __SWR
+
     unsigned short _flags;
+
+
+    // Descriptor flags (private to each file descriptor)
+    // ---------------------------------------------------------------
+    // These correspond to POSIX "descriptor flags" manipulated by
+    // fcntl(F_GETFD/F_SETFD). Example: FD_CLOEXEC.
+    // They apply only to this specific descriptor, not shared with
+    // other descriptors pointing to the same file object.
+    // If you duplicate a descriptor, the new one gets its own copy
+    // of these flags.
+
+    unsigned short fd_flags;
+
+//
+// == Synchronization ==
+//
 
 // Sincronizando a leitura e a escrita
 // para arquivos como socket, tty, buffer ... etc.

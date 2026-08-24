@@ -3469,6 +3469,39 @@ AddExt:
     *name = '\0';
 }
 
+int fs_duplicate_fd(int oldfd, int start) 
+{
+    struct te_d *p;
+    file *fp;
+    pid_t current_process = get_current_process(0);
+
+    if (oldfd < 0 || oldfd >= OPEN_MAX) return -EBADF;
+    if (start < 0 || start >= OPEN_MAX) return -EINVAL;
+
+// process
+    p = (struct te_d *) teList[current_process];
+    if (!p || p->magic != 1234) return -EBADF;
+
+// file pointer
+    fp = (file *) p->Objects[oldfd];
+    if (!fp) 
+        return -EBADF;
+    if (fp->magic != 1234) 
+        return -EBADF;
+
+    // Find next free slot >= start
+    int newfd;
+    for (newfd = start; newfd < OPEN_MAX; newfd++) 
+    {
+        if (p->Objects[newfd] == 0){
+            p->Objects[newfd] = (unsigned long) fp;
+            return newfd;
+        }
+    }
+
+    return -EMFILE; // no free slots
+}
+
 
 // Pega um fd na lista de arquivos do processo, dado o PID.
 // Objects[i]
@@ -4997,6 +5030,121 @@ void *get_global_open_file (int Index)
 
     return (void *) file_table[Index];
 }
+
+// Called by sys_fcntl().
+int __sys_fcntl_imp(int fd, int cmd, unsigned long arg)
+{
+    debug_print ("__sys_fcntl_imp: #todo\n");
+
+// Parameters
+    if (fd < 0 || fd >= OPEN_MAX){
+        return (int) (-EBADF);
+    }
+    if (cmd < 0){
+        return (int) (-EINVAL);
+    }
+
+// File pointer:
+
+    file *fp = get_file_from_fd(fd);
+    if (!fp) 
+        return -EBADF;
+    if (fp->magic != 1234) 
+        return -EBADF;
+
+
+// POSIX Table 6-1.
+// See: fcntl.h
+
+    switch (cmd){
+
+    // Duplicating a file descriptor
+    // Return: The new file descriptor.
+    case F_DUPFD:
+        return fs_duplicate_fd(fd, arg);
+        break;
+    
+    // F_DUPFD_CLOEXEC
+    // Duplicate FD ≥ arg and set FD_CLOEXEC
+    case F_DUPFD_CLOEXEC: 
+    {
+        int newfd = fs_duplicate_fd(fd, arg);
+        if (newfd >= 0)
+        {
+            file *newfp = get_file_from_fd(newfd);
+            if (newfp) 
+                newfp->fd_flags |= FD_CLOEXEC;
+        }
+        return newfd;
+    }
+
+    // File descriptor flags
+
+    // Return (as the function result) the file descriptor flags.
+    case F_GETFD:
+        return fp->fd_flags;
+        break;
+
+    // Set the file descriptor flags to the value specified by arg.
+    case F_SETFD:
+        fp->fd_flags = arg;
+        return 0;
+        break;
+
+    // File status flags:
+    // Return (as the function result) the file access mode and
+    // the file status flags; arg is ignored.
+    // Return: Value of file status flags.
+    case F_GETFL:
+        return fp->_flags;
+        break;
+
+    // Set the file status flags to the value specified by arg.
+    case F_SETFL:
+        fp->_flags = arg;
+        return 0;
+        break;
+
+    // Advisory record locking
+
+    // Get record locking information
+    case F_GETLK:
+        debug_print ("__sys_fcntl_imp: [TODO] F_GETLK\n");
+        goto fail;
+        break;
+
+    // Set record locking information
+    case F_SETLK:
+        debug_print ("__sys_fcntl_imp: [TODO] F_SETLK\n");
+        goto fail;
+        break;
+
+    // Set record locking info; wait if blocked
+    case F_SETLKW:
+        debug_print ("__sys_fcntl_imp: [TODO] F_SETLKW\n");
+        goto fail;
+        break;
+
+    // Free a section of a regular file
+    case F_FREESP:
+        // truncate logic: free space starting at arg
+        fp->_fsize = (int) arg;
+        return 0;
+        break;
+
+    // ...
+
+    // Invalid or not supported command value.
+    default:
+        return (int) (-EINVAL);
+        break;
+    };
+
+fail:
+    debug_print ("sys_fcntl: FAIL\n");
+    return (int) -1;
+}
+
 
 // Clear the list 'dev_dir[i]'.
 int fs_initialize_dev_dir(void)

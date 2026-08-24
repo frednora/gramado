@@ -924,7 +924,8 @@ int socket_ioctl(int fd, unsigned long request, unsigned long arg)
 {
     struct te_d *p;
     pid_t current_process = -1;
-    file *f;
+    file *fp;
+    struct socket_d *sk;
 
     debug_print ("socket_ioctl: TODO\n");
 
@@ -938,51 +939,94 @@ int socket_ioctl(int fd, unsigned long request, unsigned long arg)
 
     // Get PID for the current process for a given core.
     // IN: core id
-
     current_process = (pid_t) get_current_process(0);
-
     p = (void*) teList[current_process];
-    if ((void *) p == NULL){
+    if ((void *) p == NULL)
+    {
         debug_print("socket_ioctl: p\n");
+        goto fail;
+    }
+    if (p->magic != 1234){
+        debug_print("socket_ioctl: p validation\n");
         goto fail;
     }
 
 // file
-    f = (file *) p->Objects[fd];
-    if ((void *) f == NULL){
-        debug_print("socket_ioctl: f\n");
+    fp = (file *) p->Objects[fd];
+    if ((void *) fp == NULL){
+        debug_print("socket_ioctl: fp\n");
         goto fail;
     }
-    if (f->used != TRUE || f->magic != 1234 ){
-        panic("socket_ioctl: validation\n");
+    if (fp->used != TRUE || fp->magic != 1234)
+    {
+        panic("socket_ioctl: fp validation\n");
     }
+
+// socket
+// #ps: It needs to be a socket object.
+
+    // Is it a socket object?
+    if (fp->____object != ObjectTypeSocket){
+        debug_print("socket_ioctl: fp is not a socket\n");
+        return -ENOTSOCK;
+    }
+
+    sk = fp->socket;
+    if (!sk) 
+        return -ENOTSOCK;
+    if (sk->magic != 1234) 
+        return -ENOTSOCK;
 
 // Request
 
     switch (request){
 
-    // #bugbug
-    // Nao conseguimos usar direito os elementos da estrutura
-    // Precisamos trabalhar na interrupçao do sistema,
-    // na coisa dos segmentos de dados ...
-    // Por causa do tipo de segmento, estamos escrevendo 
-    // ou lendo no lugar errado.
-    // #todo: Test it again!
+
+    // === Standard requests ===
+    case FIONBIO:  // toggle non-blocking mode
+        if (arg){ 
+            fp->_flags |= O_NONBLOCK;
+        } else {     
+            fp->_flags &= ~O_NONBLOCK;
+        }
+        return 0;
+        break;
+
+    case FIONREAD: {
+        int available = (fp->_w >= fp->_r) ? (fp->_w - fp->_r) : 0;
+        if (fp->_fsize > 0 && 
+            available > (fp->_fsize - fp->_r)) 
+        {
+            available = fp->_fsize - fp->_r;
+            if (available < 0) 
+                available = 0;
+        }
+        // If socket not readable, return 0
+        if (fp->sync.can_read != TRUE) 
+            available = 0;
+            return available;
+        }
+        break;
 
     case 4000:
         debug_print ("socket_ioctl: [4000]\n");
         printk("socket_ioctl: [4000] fd %d pid %d #debug\n", fd, arg);
         // Is it a valid pid?
-        f->sync.sender_pid = (pid_t) arg;
+        fp->sync.sender_pid = (pid_t) arg;
         return 0;
         break;
 
-    case 4001:  return (int) f->sync.sender_pid;   break;
-    case 4002:  return (int) f->sync.can_read;     break;
-    case 4003:  return (int) f->sync.can_write;    break;
-    case 4004:  return (int) f->sync.can_execute;  break;
-
+    case 4001:  return (int) fp->sync.sender_pid;   break;
+    case 4002:  return (int) fp->sync.can_read;     break;
+    case 4003:  return (int) fp->sync.can_write;    break;
+    case 4004:  return (int) fp->sync.can_execute;  break;
     // ...
+
+    // === Debugging / custom flags ===
+    case 4100:  // toggle debug mode
+        // sk->debug = (int) arg;
+        return 0;
+        break;
 
     default:
         return (int) (-EINVAL);

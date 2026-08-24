@@ -1790,20 +1790,62 @@ k_setvbuf (
 // Maybe we can do some operations 
 // in a regular file using ioctl.
 // EINVAL request or argp is not valid.
-int 
-regularfile_ioctl ( 
-    int fd, 
-    unsigned long request, 
-    unsigned long arg )
+int regularfile_ioctl(int fd, unsigned long request, unsigned long arg)
 {
-    // debug_print ("regularfile_ioctl: #todo\n");
+    struct te_d *p;
+    pid_t current_process;
+    file *fp;
 
-    if ( fd < 0 || fd >= OPEN_MAX )
-    {
-        return (int) (-EBADF);
+    if (fd < 0 || fd >= OPEN_MAX) 
+        return -EBADF;
+
+// process
+    current_process = get_current_process(0);
+    p = (struct te_d *) teList[current_process];
+    if (!p) 
+        return -EINVAL;
+    if (p->magic != 1234) 
+        return -EINVAL;
+
+// file pointer
+    fp = (file *) p->Objects[fd];
+    if (!fp) 
+        return -EINVAL;
+    if (fp->magic != 1234) 
+        return -EINVAL;
+
+// It needs to be a regular file
+    if (fp->____object != ObjectTypeFile)
+        return -ENOTTY; // not a regular file
+
+    switch (request) {
+        case FIONREAD: {
+            int available = fp->_fsize - fp->_r;
+            if (available < 0) 
+                available = 0;
+            return available;
+        }
+
+        case FIONBIO:
+            // Non-blocking mode is meaningless for regular files,
+            // but accept for compatibility.
+            return 0;
+
+        case FIOQSIZE:
+            return fp->_fsize;
+
+        case 4000:
+            fp->sync.sender_pid = (pid_t)arg;
+            return 0;
+
+        case 4001: return fp->sync.sender_pid;
+        case 4002: return fp->sync.can_read ? 1 : 0;
+        case 4003: return fp->sync.can_write ? 1 : 0;
+        case 4004: return fp->sync.can_execute ? 1 : 0;
+
+        default:
+            return -EINVAL;
     }
-
-//...
 
     return -1;
 }

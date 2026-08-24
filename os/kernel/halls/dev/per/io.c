@@ -57,18 +57,20 @@ struct io_control_d  IOControl;
 // functions, as tty_ioctl etc.
 
 int 
-io_ioctl ( 
+__sys_ioctl_imp ( 
     int fd, 
     unsigned long request, 
     unsigned long arg )
 {
+// dispatcher
+
     file *f;
     int ObjectType = -1;
 
     debug_print ("io_ioctl:\n");
 
 // Parameter:
-    if ( fd < 0 || fd >= OPEN_MAX )
+    if (fd < 0 || fd >= OPEN_MAX)
     {
         return (int) (-EBADF);
     }
@@ -101,7 +103,7 @@ io_ioctl (
     // Normal file?
     // See: kstdio.c
     case ObjectTypeFile:
-        debug_print ("io_ioctl: ObjectTypeFile\n");
+        debug_print ("__sys_ioctl_imp: ObjectTypeFile\n");
         return (int) regularfile_ioctl ( 
                         (int) fd, 
                         (unsigned long) request, 
@@ -112,7 +114,7 @@ io_ioctl (
     // See: tty.c
     case ObjectTypeTTY:
     //case ObjectTypeTerminal: 
-        debug_print ("io_ioctl: ObjectTypeTTY\n"); 
+        debug_print ("__sys_ioctl_imp: ObjectTypeTTY\n"); 
         return (int) tty_ioctl ( 
                         (int) fd, 
                         (unsigned long) request, 
@@ -122,7 +124,7 @@ io_ioctl (
     // socket object
     // see: socket.c ?
     case ObjectTypeSocket:
-        debug_print ("io_ioctl: ObjectTypeSocket\n");
+        debug_print ("__sys_ioctl_imp: ObjectTypeSocket\n");
         return (int) socket_ioctl ( 
                         (int) fd, 
                         (unsigned long) request, 
@@ -132,7 +134,7 @@ io_ioctl (
     // Console object
     // See: console.c
     case ObjectTypeVirtualConsole: 
-        debug_print ("io_ioctl: ObjectTypeVirtualConsole\n");
+        debug_print ("__sys_ioctl_imp: ObjectTypeVirtualConsole\n");
         return (int) console_ioctl ( 
                         (int) fd, 
                         (unsigned long) request, 
@@ -146,14 +148,14 @@ io_ioctl (
     // ...
 
     default:
-        debug_print ("io_ioctl: default\n");
+        debug_print ("__sys_ioctl_imp: default\n");
         // ENOTTY maybe
         goto fail;
         break;
     };
 
 fail:
-    debug_print ("io_ioctl: Fail\n");
+    debug_print ("__sys_ioctl_imp: Fail\n");
     return (int) -1;
 }
 

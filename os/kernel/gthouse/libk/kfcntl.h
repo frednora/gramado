@@ -17,10 +17,17 @@
 #define F_SETLK     6	/* set record locking information */
 #define F_SETLKW    7	/* set record locking info; wait if blocked */
 #define F_FREESP    8	/* free a section of a regular file */
+// Extension: POSIX.1-2008
+#define F_DUPFD_CLOEXEC  9   /* duplicate FD, set FD_CLOEXEC */
 // ...
 
-/* File descriptor flags used for fcntl().  POSIX Table 6-2. */
-#define FD_CLOEXEC         1	/* close on exec flag for third arg of fcntl */
+/* File descriptor flags used for fcntl(). POSIX Table 6-2 */
+#define FD_CLOEXEC   0x01   /* close on exec */
+// Possible extension: Gramado-specific descriptor flags
+//#define FD_NONBLOCK  0x02   /* non-blocking descriptor (per-FD) */
+//#define FD_CLOFORK   0x04   /* close on fork (experimental) */
+// ...
+
 
 /* L_type values for record locking with fcntl().  POSIX Table 6-3. */
 #define F_RDLCK            1	/* shared or read lock */

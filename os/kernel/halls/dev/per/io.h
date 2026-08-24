@@ -67,7 +67,7 @@ extern struct io_control_d  IOControl;
 
 
 
-int io_ioctl( int fd, unsigned long request, unsigned long arg );
+int __sys_ioctl_imp( int fd, unsigned long request, unsigned long arg );
 
 
 //

@@ -135,6 +135,9 @@ int sys_close(int fd)
 }
 
 // sys_fcntl:
+// General file descriptor control
+// POSIX standardized, portable
+// Handles POSIX commands directly (dup, flags, locks).
 // Manipulate file descriptor.
 // #todo: 
 // Rever esses argumentos.
@@ -142,129 +145,53 @@ int sys_close(int fd)
 // See: 
 // https://man7.org/linux/man-pages/man2/fcntl.2.html
 
-int sys_fcntl ( int fd, int cmd, unsigned long arg )
+int sys_fcntl(int fd, int cmd, unsigned long arg)
 {
     debug_print ("sys_fcntl: #todo\n");
 
 // Parameters
-    if ( fd < 0 || fd >= OPEN_MAX ){
+    if (fd < 0 || fd >= OPEN_MAX){
         return (int) (-EBADF);
     }
     if (cmd < 0){
         return (int) (-EINVAL);
     }
 
-// POSIX Table 6-1.
-// See: fcntl.h
+    int rv;
+    rv = (int) __sys_fcntl_imp(fd, cmd, arg);
 
-    switch (cmd){
+    return (int) rv;
 
-    // Duplicating a file descriptor
-    // Return: The new file descriptor.
-    case F_DUPFD:
-        debug_print ("sys_fcntl: [TODO] F_DUPFD\n");
-        goto fail;
-        break;
-    
-    // F_DUPFD_CLOEXEC
-
-    // File descriptor flags
-
-    // Return (as the function result) the file descriptor flags.
-    case F_GETFD:
-        debug_print ("sys_fcntl: [TODO] F_GETFD\n");
-        goto fail;
-        break;
-
-    // Set the file descriptor flags to the value specified by arg.
-    case F_SETFD:
-        debug_print ("sys_fcntl: [TODO] F_SETFD\n");
-        goto fail;
-        break;
-
-    // File status flags
-
-    // Return (as the function result) the file access mode and
-    // the file status flags; arg is ignored.
-    // Return: Value of file status flags.
-    case F_GETFL:
-        debug_print ("sys_fcntl: [TODO] F_GETFL\n");
-        goto fail;
-        break;
-
-    // Set the file status flags to the value specified by arg.
-    case F_SETFL:
-        debug_print ("sys_fcntl: [TODO] F_SETFL\n");
-        goto fail;
-        break;
-
-    // Advisory record locking
-
-    // Get record locking information
-    case F_GETLK:
-        debug_print ("sys_fcntl: [TODO] F_GETLK\n");
-        goto fail;
-        break;
-
-    // Set record locking information
-    case F_SETLK:
-        debug_print ("sys_fcntl: [TODO] F_SETLK\n");
-        goto fail;
-        break;
-
-    // Set record locking info; wait if blocked
-    case F_SETLKW:
-        debug_print ("sys_fcntl: [TODO] F_SETLKW\n");
-        goto fail;
-        break;
-
-    // Free a section of a regular file
-    case F_FREESP:
-        debug_print ("sys_fcntl: [TODO] F_FREESP\n");
-        goto fail;
-        break;
-
-    // ...
-
-    // Invalid or not supported command value.
-    default:
-        return (int) (-EINVAL);
-        break;
-    };
-
-fail:
-    debug_print ("sys_fcntl: FAIL\n");
-    return (int) -1;
+//fail:
+    // debug_print ("sys_fcntl: FAIL\n");
+    // return (int) -1;
 }
 
 // sys_ioctl:
+// Device-specific I/O control
+// Not standardized; commands vary per device/driver
+// Calls io_ioctl(), which dispatches to device-specific workers.
 // Called by sc82 in sci.c
-// Enquanto sys_ioctl eh chamada pelos applicativos,
-// io_ioctl eh chamada pelas rotinas dentro do kernel.
+// sys_ioctl is called by the ring 3 programs.
 // See: io.c
-int sys_ioctl( int fd, unsigned long request, unsigned long arg )
+int sys_ioctl(int fd, unsigned long request, unsigned long arg)
 {
-// ioctl() implementation.
-
     int status = -1;
 
     debug_print ("sys_ioctl: [FIXME] \n");
     //printk("sys_ioctl: [FIXME] \n");
 
 // Parameters
-    if ( fd < 0 || fd >= OPEN_MAX ){
+    if (fd < 0 || fd >= OPEN_MAX){
         return (int) (-EBADF);
     }
 
-// Call io_.
-    status = (int) io_ioctl(fd,request,arg);
+// Call the worker
+    status = (int) __sys_ioctl_imp(fd, request, arg);
     if (status < 0)
     {
         //?
     }
-
-    // #debug
-    // We need to see the error messages.
 
     return (int) status;
 }

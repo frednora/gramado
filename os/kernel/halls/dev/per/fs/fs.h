@@ -531,6 +531,8 @@ void fsUpdateWorkingDiretoryString(char *string);
 void fs_fntos(char *name);
 void fs_fntos2(char *name);
 
+int fs_duplicate_fd(int oldfd, int start);
+
 int fs_get_free_fd_from_pid (pid_t pid);
 int fs_initialize_process_cwd ( pid_t pid, char *string );
 void fs_pathname_backup ( pid_t pid, int n );
@@ -659,6 +661,8 @@ int
 fs_load_image(
     const char *filename, 
     unsigned long image_va );
+
+int __sys_fcntl_imp(int fd, int cmd, unsigned long arg);
 
 void fs_init_structures(void);
 
