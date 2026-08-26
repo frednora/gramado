@@ -1,7 +1,7 @@
 # Created by Fred Nora
 
 all:
-	make -C b/
+	make -C comp00/
 	make -C np/
 	make -C velo3d/
 

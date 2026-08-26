@@ -16,19 +16,19 @@ BUILD = $(BASE)/build1
 # The OS has two major components:
 # The 'kernel image' and the 'dependencies'
 # The dependencies are: modules, and apps.
-# All the dependencies are in userland/ folder,
+# All the dependencies are in ?/ folder,
 # It's because of the close interaction userland
-# with the other subfolders in core/.
+# with the other subfolders in ?/.
 
 # The init process
 # The first ring 3 process
-INIT_PROCESS = luna
+INIT_PROCESS = sysd
 
 
 # =================================
 # L1: Mammal - POSIX-like commands and experiments
 
-__DEP_L1 = mammal
+__DEP_L1 = ../ead/mammal
 L1_CMDS  = $(__DEP_L1)/cmds
 L1_CPP00 = $(__DEP_L1)/cpp00
 
@@ -36,9 +36,9 @@ L1_CPP00 = $(__DEP_L1)/cpp00
 # =================================
 # L2: Reptile UI
 
-__DEP_L2 = reptile
-# Compositors / Display servers (b)
-L2_COMP     = $(__DEP_L2)/b
+__DEP_L2 = ../ead/reptile
+# Display server/compositor
+L2_COMP     = $(__DEP_L2)/comp00
 # Client-side GUI applications (Nomad Pastors)
 L2_WINSHELL = $(__DEP_L2)/np/winshell
 # 3D demos
@@ -149,21 +149,21 @@ build-gramado-os:
 # ::Build user mode drivers
 # ::Build user mode servers
 
-	@echo "Compiling m1/"
-	@$(Q)$(MAKE) -C m1/
+	@echo "Compiling modules/"
+	@$(Q)$(MAKE) -C modules/
 
-	@echo "Installing m1/"
+	@echo "Installing modules/"
 
 # The main kernel module
-	@cp m1/bin/DUNGEON.BIN  $(BUILD)/
-	@cp m1/bin/DUNGEON.BIN  $(BUILD)/GRAMADO
+	@cp modules/bin/DUNGEON.BIN  $(BUILD)/
+	@cp modules/bin/DUNGEON.BIN  $(BUILD)/GRAMADO
 
 # netu
-	@-cp m1/netu/core/bin/NET.BIN   $(BUILD)/GRAMADO/
-	@-cp m1/netu/core/bin/NETD.BIN  $(BUILD)/GRAMADO/
+	@-cp modules/netu/core/bin/NET.BIN   $(BUILD)/GRAMADO/
+	@-cp modules/netu/core/bin/NETD.BIN  $(BUILD)/GRAMADO/
 
 # Ring 3 VGA device driver
-	@cp m1/udrivers/bin/VGAD.BIN  $(BUILD)/GRAMADO
+	@cp modules/udrivers/bin/VGAD.BIN  $(BUILD)/GRAMADO
 
 	@echo "~build-gramado-os end?"
 
@@ -177,9 +177,11 @@ build-extras:
 
 # ----------------------------------
 # Compile layers
-	@echo "Compiling L1 and L2"
-	@make -C $(__DEP_L1)/
-	@make -C $(__DEP_L2)/
+# suspended
+
+#	@echo "Compiling L1 and L2"
+#	@make -C $(__DEP_L1)/
+#	@make -C $(__DEP_L2)/
 
 # ----------------------------------
 # L1: Install binaries
@@ -227,7 +229,7 @@ build-extras:
 # L2: Install binaries, theme and 3d demos
 	@echo "Installing L2"
 
-	@-cp $(L2_COMP)/comp00/bin/COMP00.BIN  $(BUILD)/DE
+	@-cp $(L2_COMP)/src/bin/COMP00.BIN  $(BUILD)/DE
 
 	@-cp $(L2_WINSHELL)/bin/TASKBAR.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/TERMINAL.BIN  $(BUILD)/DE/
@@ -382,10 +384,9 @@ clean-all: clean
 # ==================
 # (3) modules/
 # Clear the ring0 module images
-	-rm -rf m1/*.o
-	-rm -rf m1/*.BIN
-	-rm -rf m1/bin/*.BIN
-
+	-rm -rf modules/*.o
+	-rm -rf modules/*.BIN
+	-rm -rf modules/bin/*.BIN
 
 # ==================
 # Clear the disk cache

@@ -12,18 +12,13 @@ all:
 # Excluive for the display server.
 	make -C gthouse/
 
-# Display servers
-	make -C comp00/
-
-# ps: Not time for more display servers.
-#	make -C ds01/
+# Display server/ Compositor
+	make -C src/
 
 clean:
-#	-rm -f comp00/*.o
-#	-rm -f ds0~1/*.o
-	-rm -f comp00/bin/*.BIN
-#	-rm -f ds01/bin/*.BIN
+#	-rm -f src/*.o
+	-rm -f src/bin/*.BIN
 
 clean-all:
-	-rm -f comp00/*.o
-	-rm -f comp00/bin/*.BIN
+	-rm -f src/*.o
+	-rm -f src/bin/*.BIN
