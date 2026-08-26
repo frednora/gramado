@@ -63,6 +63,8 @@
 #include "taskbar.h"
 
 
+static unsigned long __sh_flags = 0;
+
 // Network ports
 #define PORTS_WS  4040
 #define PORTS_NS  4041
@@ -1792,6 +1794,15 @@ int main(int argc, char *argv[])
         main_window,
         (struct gws_window_info_d *) &wi );
 
+
+// ============================================================
+// #test
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) wi.sh_flags;
+
+// ============================================================
+
     dc00 = (struct dccanvas_d *) libgui_create_dc(
         wi.ca_canvas_base_address,
         wi.ca_canvas_width,
@@ -2161,11 +2172,36 @@ int main(int argc, char *argv[])
 
         start_jiffie = (unsigned long) rtl_jiffies();
 
+
+        // #test It's working
+        // But its dangeours.
+        // Get value inside the shared area
+
+        // #important
+        // It doesnt work for the taskbar because its a different kind of window
+        //char *p;
+        if (__sh_flags != 0)
+        {
+            char *flags_ptr = (char *) __sh_flags;
+            if (*flags_ptr & 0x0008)
+            {
+                // Clear BLIT bit
+                *flags_ptr &= ~0x0008;
+                  // Redraw
+                update_clients(client_fd);
+            }
+            //if (*p == 1)
+            //{
+            //    printf("power: FLAGS\n");
+            //    exit(0);
+            //}
+        }
+
         // 1. Pump events from Display Server
         // #bugbug:
         // This pump is very slow, affecting the responsivity
         // for the other pump that gets events from the system.
-        pump(client_fd,main_window);
+        pump(client_fd, main_window);
 
         // 2. Pump events from Input Broker (system events)
         for (nSysMsg=0; nSysMsg<32; nSysMsg++)

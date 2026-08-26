@@ -967,14 +967,22 @@ void compComposeDesktop(void)
                         //height = 2;
                 }
 
+
                 /*
                 // #test It's working
                 // But its dangeours.
-                // Sending a flag
+                // We are in the test phase yet ...
+                // the client is sending us some flags
                 if ((void*) ci->owner_window->shflags_p != NULL)
                 {
                     char *p = (char *) ci->owner_window->shflags_p;
-                    *p = 1;
+                    //*p = 1;
+
+                    if (*p == 1)
+                        yellow_status("YES 1");
+
+                    if (*p == 2)
+                        yellow_status("NO 2");
                 }
                 */
 

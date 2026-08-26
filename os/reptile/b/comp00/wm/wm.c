@@ -2192,8 +2192,25 @@ end:
     if ((void*)taskbar_window != NULL)
     {
         redraw_window(taskbar_window,TRUE);
-        on_update_window(taskbar_window,GWS_Paint);
+
+        if (taskbar_window->shflags_p != NULL) 
+        {
+            uint32_t *flags = (uint32_t*) taskbar_window->shflags_p;
+
+            // Saying to the taskbar to repaint the components
+            *flags |= 0x0008;
+        }
+
+        // #suspended: we are using the flag
+        // on_update_window(taskbar_window, GWS_Paint);
+
+        // #test
+        // It avoids drawing the taskbar's components twice
+        return;
     }
+
+    // #bugbug
+    // In the case of taskbar it will redraw the components twice
 
 // Send Paint message to all clients. (Overlapped only)
 // IN: wid, msgcode, data1, data2
@@ -2309,8 +2326,18 @@ done:
     {
         if (active_window->magic == 1234)
         {
+            // #test
+            // Setting a bit instead of posting the message
+
+            // #ps:
+            // This is working very well. 10x faster then posting the message
+
+            uint32_t *flags = (uint32_t*) active_window->shflags_p;
+            *flags |= 0x0008;
+
             //if (active_window->state != WINDOW_STATE_MINIMIZED)
-            window_post_message( active_window->id, GWS_Paint, 0, 0 );
+            
+            // window_post_message( active_window->id, GWS_Paint, 0, 0 );
             wmNotifyKernel(active_window, 8000, 8000);
         }
     }

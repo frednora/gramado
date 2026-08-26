@@ -177,7 +177,8 @@ struct gws_window_info_d
     unsigned long ca_canvas_pitch;
 
 
-// The address for the base of a shared buffer between the client and the server.
+// The address for the base of a shared buffer 
+// between the client and the server.
     unsigned long sh_flags;
 };
 

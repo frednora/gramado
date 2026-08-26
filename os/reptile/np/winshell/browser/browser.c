@@ -39,6 +39,7 @@ unsigned char *small_buffer;
 
 struct dccanvas_d *dc00;  // shared dc
 struct dccanvas_d *small_dc;
+static unsigned long __sh_flags = 0;
 // ...
 
 #define CANVAS_CLIENTAREA  0
@@ -206,7 +207,8 @@ static void editorHandleKey(int key);
 
 static void browserSetStatus(const char *url, const char *state);
 static void browserDrawStatusBar(void);
-static int editorDrawInSmallBuffer(void);
+static int browserDrawInSmallBuffer(void);
+static void browserRenderViewport(struct dccanvas_d *dc);
 
 static int 
 browserProcedure(
@@ -822,7 +824,7 @@ static void browserDrawStatusBar(void)
     );
 }
 
-static int editorDrawInSmallBuffer(void)
+static int browserDrawInSmallBuffer(void)
 {
     const char *msg = "URL";  // Example string
 
@@ -867,6 +869,24 @@ static int editorDrawInSmallBuffer(void)
 fail:
     return (int) -1;
 }
+
+static void browserRenderViewport(struct dccanvas_d *dc) 
+{
+    if (!dc) 
+        return;
+
+    // Clear viewport
+    lingui_draw_rectangle0_dc(dc,
+        cwText.l, cwText.t, cwText.w, cwText.h,
+        COLOR_WHITE, ROP_COPY);
+
+    // Example: draw placeholder text
+    libgui_drawstring_dc(dc,
+        cwText.l + 8, cwText.t + 8,
+        COLOR_BLACK, COLOR_WHITE,
+        0, "Rendering page...");
+}
+
 
 static int 
 browserProcedure(
@@ -1412,16 +1432,21 @@ fail:
 
 // Create a canvas_information_d from a dc
 static struct canvas_information_d *
-editorCreateCanvasInfo(struct dccanvas_d *dc, int owner_wid, int is_frame)
+editorCreateCanvasInfo(
+    struct dccanvas_d *dc, 
+    int owner_wid, 
+    int is_frame )
 {
-    if (!dc) return NULL;
+    if (!dc)
+        return NULL;
 
     struct canvas_information_d *ci =
         (struct canvas_information_d *) malloc(sizeof(struct canvas_information_d));
-    if (!ci) return NULL;
+    if (!ci)
+        return NULL;
 
-    ci->used        = TRUE;
-    ci->magic       = 1234;
+    ci->used = TRUE;
+    ci->magic = 1234;
     ci->initialized = TRUE;
     ci->dirty       = TRUE;   // mark dirty so compositor will flush
     ci->is_frame    = is_frame;
@@ -1681,6 +1706,14 @@ static int __editor_initialize(void)
 
 // ----------------------------------------
 
+// ============================================================
+// #test
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) lWi.sh_flags;
+
+// ============================================================
+
 //
 // dc
 //
@@ -1849,8 +1882,8 @@ static int __editor_initialize(void)
         exit (1);
     }
 
-// Draw something inside the small buffer and blit.
-    editorDrawInSmallBuffer();
+// Draw something inside the small buffer and blit
+    browserDrawInSmallBuffer();
 
 // ============================================
     gws_set_active( client_fd, main_window );
@@ -1903,6 +1936,31 @@ static int __editor_initialize(void)
     {
         if (isTimeToQuit == TRUE)
             break;
+
+
+        // #test It's working
+        // But its dangeours.
+        // Get value inside the shared area
+
+        //char *p;
+        if (__sh_flags != 0)
+        {
+            char *flags_ptr = (char *) __sh_flags;
+            if (*flags_ptr & 0x0008)
+            {
+                // Clear BLIT bit
+                *flags_ptr &= ~0x0008;
+                // Redraw
+                update_clients(client_fd);
+            }
+            //if (*p == 1)
+            //{
+            //    printf("power: FLAGS\n");
+            //    exit(0);
+            //}
+        }
+
+        browserRenderViewport(dc00);
 
         // 1. Pump events from Display Server
         pump(client_fd, main_window);
@@ -2082,8 +2140,14 @@ int browser_initialize(int argc, char *argv[])
     // We need a structure to handle the document
     // loaded by the editor.
 
-    if (argc >= 2){
+    const char *loading_status = "Loading ...";
+
+    if (argc >= 2)
+    {
         __open_document( (char *) argv[1] );
+        
+        // #test
+        //browserSetStatus(argv[1], loading_status);
         //while(1){}
     }
 

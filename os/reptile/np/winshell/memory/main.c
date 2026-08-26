@@ -17,13 +17,18 @@
 // The client-side library
 #include <libgui.h>
 
-
 #include "memory.h" // Optional: define colors or prototypes if you like
+
+
+
+
 
 // Global display pointer
 struct gws_display_d *Display;
 
 struct dccanvas_d *dc00;  // shared dc
+
+static unsigned long __sh_flags = 0;
 
 struct ui_component_d *uic_button_refresh;
 struct ui_component_d *uic_button_close;
@@ -749,7 +754,7 @@ int main(int argc, char *argv[])
 
     sc80( 48, &m[0], &m[0], &m[0] );
 
-
+   
 // ================================================
 
 // After creating main_window (second time)
@@ -759,6 +764,13 @@ int main(int argc, char *argv[])
         main_window,
         (struct gws_window_info_d *) &wi );
 
+
+
+// ============================================================
+// #test
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) wi.sh_flags;
 
     dc00 = (struct dccanvas_d *) libgui_create_dc(
         wi.ca_canvas_base_address,
@@ -1003,6 +1015,29 @@ int main(int argc, char *argv[])
 //
 
     while (1){
+
+        // #test It's working
+        // But its dangeours.
+        // Get value inside the shared area
+
+    //char *p;
+    if (__sh_flags != 0)
+    {
+        char *flags_ptr = (char *) __sh_flags;
+        if (*flags_ptr & 0x0008)
+        {
+            // Clear BLIT bit
+             *flags_ptr &= ~0x0008;
+            // Redraw
+            update_children(client_fd);
+        }
+            //if (*p == 1)
+            //{
+            //    printf("power: FLAGS\n");
+            //    exit(0);
+            //}
+    }
+
 
     // 1. Pump events from Display Server
     pump(client_fd);

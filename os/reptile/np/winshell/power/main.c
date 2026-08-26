@@ -24,6 +24,7 @@
 
 #include "power.h"
 
+static int toggle_flag = 0;
 
 static int isTimeToQuit = FALSE;
 
@@ -31,6 +32,7 @@ static int isTimeToQuit = FALSE;
 struct gws_display_d *Display;
 
 struct dccanvas_d *dc00;  // shared dc
+
 static unsigned long __sh_flags = 0;
 
 
@@ -200,11 +202,33 @@ static void update_children(int fd)
     unsigned long shutdown_x = (3 * wi.cr_width / 4) - (button_w / 2);
 
 
+/*
     // #test It's working
     // But its dangeours.
     // Update the address for the shared flags.
     // printf("sh_flags: %x\n", wi.sh_flags);
-    // __sh_flags = (unsigned long) wi.sh_flags;
+    __sh_flags = (unsigned long) wi.sh_flags;
+    uint32_t *flags = (uint32_t*) __sh_flags;
+    //flags[0] = 1;  // YES
+    //flags[0] = 2;  // NOT
+
+    //static int toggle_flag = 0;
+    if (toggle_flag == 0) {
+        flags[0] = 1;  // YES
+        toggle_flag = 1;
+    } else {
+        flags[0] = 2;  // NO
+        toggle_flag = 0;
+    }
+*/
+
+// #test: We are still thinking about the bits configuration
+//#define FLAG_DIRTY  0x0001  // client started drawing
+//#define FLAG_READY  0x0002  // client finished drawing
+//#define FLAG_ACK    0x0004  // server acknowledged
+
+
+// -----------------
 
     if ((void*)dc00 == NULL)
         return;
@@ -686,6 +710,12 @@ int main(int argc, char *argv[])
 
 // ============================================================
 // #test
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) wi.sh_flags;
+
+// ============================================================
+// #test
 // Changing the libgui device context
 // Create a new one using the values provided by the server.
 
@@ -905,17 +935,24 @@ int main(int argc, char *argv[])
         // #test It's working
         // But its dangeours.
         // Get value inside the shared area
-        /*
-        char *p;
+
+        //char *p;
         if (__sh_flags != 0)
         {
-            p = (char *) __sh_flags;
-            if (*p == 1){
-                printf("power: FLAGS\n");
-                exit(0);
+            char *flags_ptr = (char *) __sh_flags;
+            if (*flags_ptr & 0x0008)
+            {
+                // Clear BLIT bit
+                 *flags_ptr &= ~0x0008;
+                  // Redraw
+                update_children(client_fd);
             }
+            //if (*p == 1)
+            //{
+            //    printf("power: FLAGS\n");
+            //    exit(0);
+            //}
         }
-        */
 
         // 1. Pump events from Display Server
         // #bugbug:

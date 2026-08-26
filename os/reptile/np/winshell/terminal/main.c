@@ -52,6 +52,9 @@ struct gws_display_d *Display;
 
 struct dccanvas_d *dc00 = NULL;  // shared dc
 
+static unsigned long __sh_flags = 0;
+
+
 FILE *__terminal_input_fp;
 
 // Windows
@@ -3986,6 +3989,15 @@ int terminal_init(unsigned short flags)
     sc80( 48, &m[0], &m[0], &m[0] );
 // ============================================================
 
+
+// ============================================================
+// #test
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) lWi.sh_flags;
+
+// ============================================================
+
     dc00 = (struct dccanvas_d *) libgui_create_dc(
         lWi.ca_canvas_base_address,
         lWi.ca_canvas_width,
@@ -4333,6 +4345,28 @@ int terminal_init(unsigned short flags)
     char coolCharBuffer[4];
     int ch_read=0;
     while (1){
+
+        // #test It's working
+        // But its dangeours.
+        // Get value inside the shared area
+
+        //char *p;
+        if (__sh_flags != 0)
+        {
+            char *flags_ptr = (char *) __sh_flags;
+            if (*flags_ptr & 0x0008)
+            {
+                // Clear BLIT bit
+                *flags_ptr &= ~0x0008;
+                // Redraw
+                update_clients(client_fd);
+            }
+            //if (*p == 1)
+            //{
+            //    printf("power: FLAGS\n");
+            //    exit(0);
+            //}
+        }
 
         // 1. Pump events from Input Broker (system events)
         for (nSysMsg=0; nSysMsg<32; nSysMsg++)

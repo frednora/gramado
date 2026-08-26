@@ -347,9 +347,9 @@ process_response:
 // ------------------------------------
 // Extra fields 1
 // Window frame: l,t,w,h
-    window_info->left   = (unsigned long) message_buffer[4];   // left 
-    window_info->top    = (unsigned long) message_buffer[5];   // top
-    window_info->width  = (unsigned long) message_buffer[6];   // width
+    window_info->left   = (unsigned long) message_buffer[4];  // left 
+    window_info->top    = (unsigned long) message_buffer[5];  // top
+    window_info->width  = (unsigned long) message_buffer[6];  // width
     window_info->height = (unsigned long) message_buffer[7];  // height
 
     //#debug
@@ -364,7 +364,6 @@ process_response:
 // ------------------------------------
 // Extra fields 2
     // 8 and 9 are unused for now.
-
 
     window_info->sh_flags = (unsigned long) message_buffer[8];
     //window_info->??   = (unsigned long) message_buffer[9];
