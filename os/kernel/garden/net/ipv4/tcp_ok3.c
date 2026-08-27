@@ -755,8 +755,6 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
         return -ENOTCONN;
     if (conn->magic != 1234)
         return -ENOTCONN;
-
-/*
 // That state means: the peer has finished sending, but 
 // you can still read whatever is buffered locally.
     if (conn->status != CONN_STATUS_CLOSE_WAIT)
@@ -764,27 +762,6 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
         printk("tcp_socket_recv: conn->state\n");
         return -ENOTCONN;
     }
-*/
-
-    // Local server
-    if (conn->is_local_server == TRUE) {
-        // Server: allow reading once ESTABLISHED
-        if (conn->status != CONN_STATUS_ESTABLISHED &&
-            conn->status != CONN_STATUS_CLOSE_WAIT) {
-            printk("tcp_socket_recv: server not ready\n");
-            return -ENOTCONN;
-        }
-
-    // Not a local server (remote server?)
-    } else {
-        // Client: old behavior, only read in CLOSE_WAIT
-        if (conn->status != CONN_STATUS_CLOSE_WAIT) {
-            printk("tcp_socket_recv: client not ready\n");
-            return -ENOTCONN;
-        }
-    }
-
-
 
 
 // file
@@ -2753,7 +2730,6 @@ network_handle_tcp (
 
 // General case: fallback
 // It is probing in conn->ep_pair->s_ep->socket.
-// In this case the server is the remote.
     c_conn = tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
 
 // Specific case: SYN+ACK (client side connect)
@@ -2797,15 +2773,15 @@ network_handle_tcp (
        if ((void*) c_conn != NULL)
        {
            if ( c_conn->magic == 1234 && 
-                c_conn->status == CONN_STATUS_SYN_RECEIVED && 
-                c_conn->is_local_server == TRUE )
+                c_conn->status == CONN_STATUS_SYN_RECEIVED)
            {
-               printk("Bingo: Receiving an ACK in CONN_STATUS_SYN_RECEIVED\n");
+               printk("Bingo: REceiving an ACK in CONN_STATUS_SYN_RECEIVED\n");
                //panic("bingo");
            }
        }        
     }
 */
+
 
 // --------------
 // The connection is not valid.
@@ -3362,9 +3338,6 @@ network_handle_tcp (
 
     if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
     {
-
-        //panic ("Received something during CONN_STATUS_SYN_RECEIVED");
-
         if (fRST == 1){
             printk("RST received during CONN_STATUS_SYN_RECEIVED\n");
             // Abort the half-open connection
@@ -3451,25 +3424,6 @@ network_handle_tcp (
 
             printk("TCP_ACK: [ACK match] Connection {%d} ESTABLISHED  :)\n", 
                 cur_conn->id );
-
-            // #test
-            // Local server
-            if (cur_conn->is_local_server == TRUE)
-            {
-                // #todo
-                // In this case we need to change the 
-                // status for the sockets. Putting them in the 
-                // connected state, necessary for io operationg
-                //cur_conn->ep_pair->s_ep->socket->state == SS_CONNECTED;
-                //cur_conn->ep_pair->c_ep->socket->state == SS_CONNECTED;
-
-                // #todo:
-                //struct socket_d *sk_c;
-                //struct socket_d *sk_s;
-                //sk_c = get_client_socket_from_connection(cur_conn);
-                //sk_s = get_server_socket_from_connection(cur_conn);
-            
-            }
 
             return;
         }
