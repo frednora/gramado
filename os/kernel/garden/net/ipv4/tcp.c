@@ -2520,7 +2520,7 @@ Retransmissions or duplicate ACKs confuse the state machine
     //
 }
 
-
+// Local serververs only. (except kernel debugger)
 static void __handle_tcp_for_local_servers ( 
     const unsigned char *buffer, 
     ssize_t size,
@@ -2556,11 +2556,14 @@ static void __handle_tcp_for_local_servers (
     //printk("TCP Packet: [receiving] s=%u (sport), d=%u (dport)\n", 
         //sport, dport);
 
-// Target is kernel debugger
-    //if (dport == 11888){
-        //__handle_tcp_for_kd_server(buffer, size, s_ipv4_int, d_ipv4_int);
-        //return;
     //}
+
+// ------------------------------------
+// Target is kernel debugger local server
+    if (dport == 11888){
+        printk("__handle_tcp_for_local_servers: 11888 is not allowed here\n");
+        return;
+    }
 
 //
 // Super drop
@@ -3499,7 +3502,7 @@ static void __handle_tcp_for_local_servers (
     return;
 }
 
-
+// Non local servers. (Local clients and error conditions)
 static void __handle_tcp_for_non_local_servers ( 
     const unsigned char *buffer, 
     ssize_t size,
@@ -3517,11 +3520,11 @@ static void __handle_tcp_for_non_local_servers (
     dummy_payload[1] = 0;
 
     // #debug
-    //printk("network_handle_tcp: #todo\n");
+    //printk("__handle_tcp_for_non_local_servers: #todo\n");
 
 // Parameters
     if ((void*) buffer == NULL){
-        printk("network_handle_tcp: buffer\n");
+        printk("__handle_tcp_for_non_local_servers: buffer\n");
         return;
     }
     //if (size < 0){
@@ -3539,31 +3542,13 @@ static void __handle_tcp_for_non_local_servers (
 // ------------------------------------
 // Target is kernel debugger local server
     if (dport == 11888){
-        __handle_tcp_for_kd_server(buffer, size, s_ipv4_int, d_ipv4_int);
+        printk("__handle_tcp_for_non_local_servers: 11888 is not allowed here\n");
         return;
     }
-
-// ------------------------------------
-// Target is some local server (except the kd)
-
-    // #test
-    // #todo
-    // For now we only have one local srever.
-    // But we will lookup the table considering only the
-    // target port. The port for the local server.
-    // Probably serverList[]
-
-    if (dport == 22888){
-        __handle_tcp_for_local_servers(buffer, size, s_ipv4_int, d_ipv4_int);
-        return;
-    }
-
 
 // ------------------------------------
 // Target is probably a local client
 // ...
-
-
 
 
 //
@@ -4534,6 +4519,7 @@ static void __handle_tcp_for_non_local_servers (
  */
 
 // Main handler for TCP
+// Dispatcher!
 void 
 network_handle_tcp ( 
     const unsigned char *buffer, 
@@ -4589,21 +4575,7 @@ network_handle_tcp (
 // ------------------------------------
 // Target is some local server (except the kd)
 
-    // #test
-    // #todo
-    // For now we only have one local srever.
-    // But we will lookup the table considering only the
-    // target port. The port for the local server.
-    // Probably serverList[]
-
-/*
-    if (dport == 22888){
-        __handle_tcp_for_local_servers(buffer, size, s_ipv4_int, d_ipv4_int);
-        return;
-    }
-*/
-
-//#test
+    //#test
     int IsLocalServer = FALSE;
     IsLocalServer = is_it_a_local_server(dport);
     if (IsLocalServer == TRUE)
