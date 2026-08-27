@@ -272,6 +272,10 @@ struct connection_d
     // #test
     //struct network_buffer_d  *n_buf;
 
+// 1 = we are the server, 
+// 0 = we are the client
+    int is_local_server;
+
     unsigned int packets_sent;
     unsigned int packets_received;
 };

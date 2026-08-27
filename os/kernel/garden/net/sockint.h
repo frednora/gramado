@@ -5,7 +5,6 @@
 #ifndef __NET_SOCKLIB_H
 #define __NET_SOCKLIB_H    1
 
-
 // Internal
 #define SYS_SOCKET_IP(a, b, c, d) \
     (a << 24 | b << 16 | c << 8 | d)
@@ -91,6 +90,7 @@ struct server_d
     struct socket_d *socket; // Direct pointer to the listening socket
 };
 
+extern unsigned long serverList[SERVER_COUNT_MAX];
 
 //=====================================================
 

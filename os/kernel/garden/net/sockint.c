@@ -357,6 +357,14 @@ struct connection_d *tcp_find_connection_client_side(
 // Server‑side lookup (used when receiving SYN during accept): 
 // Emphasizes that this is for the local server listening, 
 // matching remote client IP/port against the local server IP/port.
+//
+// What’s happening:
+// Bind phase: 
+//     Local server socket gets ip_ipv4 = 127.0.0.1 or 0.
+// SYN arrives from remote client: 
+//     Destination IP in packet = dhcp_info.your_ipv4_int.
+//
+
 struct connection_d *tcp_find_connection_server_side(
     unsigned int local_ip,
     unsigned short local_port,

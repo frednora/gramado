@@ -819,7 +819,8 @@ sys_bind (
 
         // #test: Register our new AF_INET server
         int slot = socket_find_empty_tcpserver_slot();
-        if (slot >= 0) {
+        if (slot >= 0) 
+        {
             struct server_d *srv = kmalloc(sizeof(struct server_d));
             memset(srv, 0, sizeof(struct server_d));
 
@@ -833,11 +834,15 @@ sys_bind (
             srv->socket  = s;       // direct pointer to socket_d
 
             // Validation
-            srv->used =  TRUE;
+            srv->used = TRUE;
             srv->magic = 1234;
 
+            serverList[slot] = (unsigned long) srv;
+
+            // #important:
             printk("AF_INET server registered: pid=%d port=%d slot=%d\n",
                current_process, s->port, slot);
+
         } else {
             printk("sys_bind: No free TCP server slots\n");
         }
@@ -3231,7 +3236,8 @@ fail:
 // Called directly by sys_connect() when addr->sa_family == AF_INET.
 // ============================================================
 // Connect using AF_INET.
-// We have two options. One for local server and another one for remote servers.
+// We have two options. One for local server and 
+// another one for remote servers.
 static int __connect_inet(
     int sockfd,
     const struct sockaddr *addr,

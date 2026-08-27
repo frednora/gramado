@@ -218,16 +218,8 @@
 #define SO_DOMAIN    0x1024  // get socket domain
 #define SO_PROTOCOL  0x1025  // get socket protocol
 
-// #bugbug: Moved to 'in.h'
-// See:
-// https://man7.org/linux/man-pages/man7/ip.7.html
-// Any IP address.
-//#define  INADDR_ANY        (unsigned long) 0x00000000  
-// Broadcast IP address.
-//#define  INADDR_BROADCAST  (unsigned long) 0xffffffff  
 
 
- 
 // Read using getsockopt() with SOL_SOCKET, SO_PEERCRED 
 
 struct sockpeercred 

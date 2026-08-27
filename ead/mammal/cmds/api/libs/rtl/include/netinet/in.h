@@ -241,8 +241,13 @@ struct sockaddr_in {
 #define   IN_CLASSC_NSHIFT     8
 #define   IN_CLASSC_HOST       0x000000ff
 
-#define   INADDR_ANY           0x00000000
-#define   INADDR_BROADCAST     0xffffffff
+
+// See:
+// https://man7.org/linux/man-pages/man7/ip.7.html
+
+#define INADDR_ANY          0x00000000
+#define INADDR_BROADCAST    0xffffffff
+#define INADDR_LOOPBACK     0x7f000001
 
 
 /*

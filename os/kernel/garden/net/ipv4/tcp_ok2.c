@@ -851,11 +851,6 @@ tcp_client_connect(
     conn->status = CONN_STATUS_NONE;
     conn->tcp_conn->state = TCP_CLOSED;
 
-// #test
-// This function is called only when a local client
-// is trying to connect with a remote server
-    conn->is_local_server = FALSE;
-
 // ------------------------------
 // Create endpoint pair
     struct endpoint_pair_d *pair = create_endpoint_pair_object();
@@ -1431,9 +1426,6 @@ __remote_client_sent_syn(
         // #ps: Status: Receiving a SYN from a remoter client
         conn->status = CONN_STATUS_SYN_RECEIVED;
 
-        // #test: it means we are the local server
-        conn->is_local_server = TRUE;
-
         // tcp connection structure
         if ((void*) conn->tcp_conn == NULL){
             printk("Failed to create TCP connection structure\n");
@@ -1543,9 +1535,6 @@ __remote_client_sent_syn(
         server_ep->socket = NULL;
         struct socket_d *sk_listener; 
         sk_listener = (struct socket_d *) socket_get_tcpserver_socket_by_port(dport);
-        if ((void*) sk_listener == NULL)
-            panic("TCP: Invalid sk_listener");
-
         if ((void*) sk_listener != NULL)
         {
             if (sk_listener->magic == 1234)
@@ -1567,25 +1556,13 @@ __remote_client_sent_syn(
 
                 server_ep->socket = sk_listener;   // Save into the ep
             
-
-                if (sk_listener->ip_ipv4 == 0x7F000001)
-                {
-                    // panic("Server is localhost #breakpoint");
-
-                    // #test Normalize IP/port to NIC address
-                    // #important: Updating with the destination ip.
-                    // the destination is our local server running in ring3
-                    printk("TCP: Updating ip for the local server\n");
-                    update_socket(
-                        sk_listener, 
-                        d_ipv4_int, 
-                        dport );
-                }
-
-                //#test
-                // Not reached. its ok
-                //if ((void*)sk_listener->private_file == NULL)
-                    //panic ("NO private file for the sk_listener");
+                // #test
+                // #important
+                // Normalize IP/port to NIC address
+                //update_socket(
+                    //sk_listener, 
+                    //s_ipv4_int, 
+                    //dport );
             }
         }
 
@@ -1882,9 +1859,6 @@ __kd_handle_tcp(
             }
             conn->type = CONN_TYPE_TCP;
             conn->status = CONN_STATUS_SYN_RECEIVED;
-
-            // #test: it means we are the local server
-            conn->is_local_server = TRUE;
 
             // tcp connection structure
             if ((void*) conn->tcp_conn == NULL){
@@ -2752,11 +2726,7 @@ network_handle_tcp (
     }
 
 
-
 /*
-// #bugbug: (>>> IMPORTANT <<<) 
-// This is good for the case we are the local server
-// but it can break the logic in the case we are the local client
 // #test:
 // Specific case: 
 // 3rd step when we are the server.
@@ -2774,12 +2744,13 @@ network_handle_tcp (
            if ( c_conn->magic == 1234 && 
                 c_conn->status == CONN_STATUS_SYN_RECEIVED)
            {
-               printk("Bingo: REceiving an ACK in CONN_STATUS_SYN_RECEIVED\n");
-               //panic("bingo");
+               //printk("Bingo!");
+               panic("bingo");
            }
        }        
     }
 */
+
 
 
 // --------------
@@ -3132,12 +3103,8 @@ network_handle_tcp (
             // injecting incoming data into the socket buffer.
             // see: net.c
             struct socket_d *sk;
-
-            if (cur_conn->is_local_server == TRUE){
-                sk = (struct socket_d *) get_server_socket_from_connection(cur_conn);
-            } else {
-                sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
-            }
+            sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
+            // sk = (struct socket_d *) cur_conn->ep_pair->c_ep->socket;
 
             if ((void*) sk == NULL){
                 panic("TCP: invalid sk\n");

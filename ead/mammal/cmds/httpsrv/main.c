@@ -31,10 +31,15 @@ static void handle_connection(int connfd)
     bzero(buffer, sizeof(buffer));
 
     // Read from the socket
-    n = read(connfd, buffer, sizeof(buffer)-1);
-    if (n < 0) {
-        perror("read failed");
-        return;
+    while (1){
+        rtl_sleep_until(40000);
+        n = read(connfd, buffer, sizeof(buffer)-1);
+        //if (n < 0) {
+        //    perror("read failed");
+        //    return;
+        //}
+        if (n>0)
+            break;
     }
 
     // Null-terminate and print
@@ -61,15 +66,17 @@ int main( int argc, char *argv[])
     socklen_t addrlen=0;
     int sockfd;
 
-    printf("HTTPSRV: Hello from Gramado OS ring 3 server. Port%d\n", 
+    printf("HTTPSRV: Hello from Gramado OS ring 3 server. Port=%d\n", 
         HTTP_PORT );
 
 // Setup structure
     bzero(&addr, sizeof(struct sockaddr_in));
     addr.sin_family = AF_INET;
     // IP:PORT
-    addr.sin_addr.s_addr = htonl(INADDR_ANY); 
     //addr.sin_addr.s_addr = inet_addr("127.0.0.1")
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    //addr.sin_addr.s_addr = htonl(INADDR_ANY); 
+
     addr.sin_port = htons(HTTP_PORT);
 
     addrlen = sizeof(addr);
