@@ -457,6 +457,8 @@ int socket_set_tcpserver_pid(int port, pid_t pid);
 
 int socket_find_empty_tcpserver_slot(void);
 
+int is_it_a_local_server(unsigned short target_port);
+
 struct socket_d *socket_get_tcpserver_socket_by_port(unsigned short port);
 
 struct connection_d *tcp_find_connection_client_side(

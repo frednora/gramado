@@ -281,6 +281,51 @@ int socket_find_empty_tcpserver_slot(void)
     return (int) -1;  // no free slot
 }
 
+
+/*
+ * is_it_a_local_server:
+ *   Check if the given TCP port belongs to a registered local server.
+ *
+ *   IN:  target_port (unsigned short)
+ *   OUT: TRUE (1) if the port is registered in serverList[],
+ *        FALSE (0) otherwise.
+ *
+ *   Usage:
+ *     if (is_it_a_local_server(dport)) {
+ *         __handle_tcp_for_local_servers(...);
+ *     } else {
+ *         __handle_tcp_for_non_local_servers(...);
+ *     }
+ *
+ *   Importance:
+ *     - This abstracts away the probing logic.
+ *     - Keeps network_handle_tcp clean and readable.
+ *     - Ensures that any server registered in serverList[] is
+ *       automatically recognized, without hard‑coding port numbers.
+ */
+int is_it_a_local_server(unsigned short target_port)
+{
+    struct server_d *srv;
+    int i;
+
+    for (i = 0; i < SERVER_COUNT_MAX; i++) 
+    {
+        srv = (struct server_d *) serverList[i];
+        if ((void*) srv != NULL) {
+            if (srv->magic == 1234) 
+            {
+                if (srv->port == target_port) 
+                {
+                    return TRUE;  // Found a registered local server
+                }
+            }
+        }
+    };
+
+    return FALSE;  // Not found
+}
+
+
 /*
  * socket_get_tcpserver_socket_by_port:
  *     Retrieve the listening socket_d pointer for a TCP server
