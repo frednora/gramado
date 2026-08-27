@@ -1555,6 +1555,14 @@ __remote_client_sent_syn(
                 sk_listener->ep = server_ep;  // Belongs to this ep
 
                 server_ep->socket = sk_listener;   // Save into the ep
+            
+                // #test
+                // #important
+                // Normalize IP/port to NIC address
+                //update_socket(
+                    //sk_listener, 
+                    //s_ipv4_int, 
+                    //dport );
             }
         }
 
@@ -2716,6 +2724,34 @@ network_handle_tcp (
            s_ipv4_int, sport    // remote client side
        );
     }
+
+
+/*
+// #test:
+// Specific case: 
+// 3rd step when we are the server.
+// The remote client sent us a syn,
+// we sent back a syn_ack and now we need
+// to receive the ack to stablish the connection.
+    if (fSYN == 0 && fACK == 1)
+    {
+        c_conn = tcp_find_connection_server_side(
+           d_ipv4_int, dport,   // local server side
+           s_ipv4_int, sport    // remote client side
+       );
+       if ((void*) c_conn != NULL)
+       {
+           if ( c_conn->magic == 1234 && 
+                c_conn->status == CONN_STATUS_SYN_RECEIVED)
+           {
+               //printk("Bingo!");
+               panic("bingo");
+           }
+       }        
+    }
+*/
+
+
 
 // --------------
 // The connection is not valid.

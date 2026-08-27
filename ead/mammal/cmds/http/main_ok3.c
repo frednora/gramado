@@ -28,10 +28,6 @@
 
 // http://httpbin.org
 #define __DEFAULT_TARGET_IP  "100.60.124.177"
-
-// http://wttr.in/
-//#define __DEFAULT_TARGET_IP  "5.9.243.187"
-
 #define HTTP_PORT 80
 
 static char __http_response_buffer[4096];
@@ -62,12 +58,8 @@ static void do_request(int sockfd)
 
 // Building the request:
 
-    //strcat(request, "GET /index.html HTTP/1.1\r\n");
-    strcat(request, "GET /status/500 HTTP/1.1\r\n");
-
+    strcat(request, "GET /html HTTP/1.1\r\n");
     strcat(request, "Host: httpbin.org\r\n");
-    //strcat(request, "Host: wttr.in\r\n");
-
     strcat(request,
         "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
     );
