@@ -639,6 +639,7 @@ tcp_socket_send(
     local_sk = sk;
     remote_sk = NULL;
 
+// Parameters:
     if ((void *) local_sk == NULL)
         return -EINVAL;
     if (local_sk->magic != 1234)
@@ -647,6 +648,8 @@ tcp_socket_send(
         return -EINVAL;
     if (len == 0)
         return 0;
+    if (len < 0)
+        return -EINVAL;
 
     // Only AF_INET stream sockets that finished the handshake
     if (local_sk->family != AF_INET)
@@ -751,9 +754,13 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
     //#debug
     printk("tcp_socket_recv: READING ...\n");
 
-// socket
-    if (!sk || sk->magic != 1234) {
+// Parameters:
+    if (!sk){
         printk("tcp_socket_recv: sk\n");
+        return -EINVAL;
+    }
+    if (sk->magic != 1234) {
+        printk("tcp_socket_recv: sk magic\n");
         return -EINVAL;
     }
     if (sk->state != SS_CONNECTED){
@@ -764,6 +771,11 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
         printk("tcp_socket_recv: buf\n");
         return -EINVAL;
     }
+    if (len == 0)
+        return 0;
+    if (len < 0)
+        return -EINVAL;
+
 
 // connection
     conn = sk->conn;
@@ -869,6 +881,21 @@ tcp_client_connect(
 
     if (!sk)
         return -EINVAL;
+
+
+// #todo: 
+// We can't connect to broadcast o 0 values.
+    if (dst_ip_ipv4_int == 0xFFFFFFFF)
+        return -EINVAL;
+    if (dst_ip_ipv4_int == 0)
+        return -EINVAL;
+    if (dst_port == 0)
+        return -EINVAL;
+
+
+// #todo: 
+// We can't connect to the caller's socket.
+// in this case, local socket (ip:port) can't be the target.
 
     sk_local = sk;
     sk_remote = NULL;
@@ -1544,6 +1571,50 @@ __remote_client_sent_syn(
         sk_client->pending_server_count = 0;
         // magic string? It indicates pending connection?
         // sk_client->magic_string[0] = 'C';
+        file * fp_client = (void *) kmalloc( sizeof(file) );
+        if ((void*)fp_client == NULL){
+            panic("SYN: fp_client");
+        }
+        fp_client->used = TRUE;
+        fp_client->magic = 1234;
+        fp_client->____object = ObjectTypeSocket;
+        fp_client->sync.sender_pid = (pid_t) -1;
+        fp_client->sync.receiver_pid = (pid_t) -1;
+        fp_client->sync.action = ACTION_NULL;
+        fp_client->sync.can_read    = TRUE;
+        fp_client->sync.can_write   = TRUE;
+        fp_client->sync.can_execute = FALSE;
+        fp_client->sync.can_accept  = TRUE;
+        fp_client->sync.can_connect = TRUE;
+
+        fp_client->sync.block_on_read = FALSE;
+        fp_client->sync.block_on_read_empty = TRUE;
+
+        fp_client->sync.block_on_write = TRUE;
+        fp_client->sync.block_on_write_full = TRUE;
+
+        // Is it blocked?
+        fp_client->sync.is_blocked = FALSE;
+        // flags
+        fp_client->_flags = __SWR;  // OK to write.
+        // No name for now.
+        fp_client->_tmpfname = NULL;
+        //fp_client->_tmpfname = "socket";
+        // Buffer
+        fp_client->_base = (void*) kmalloc(BUFSIZ);
+        if ((void*) fp_client->_base == NULL)
+            panic("SYN: fp_client->_base");
+        fp_client->_p = fp_client->_base;
+        fp_client->_lbfsize = BUFSIZ;
+        fp_client->_cnt = fp_client->_lbfsize;  // The empty space
+        // Offsets
+        fp_client->_r = 0;
+        fp_client->_w = 0;
+        // Status do buffer do socket
+        fp_client->socket_buffer_full = 0;
+
+        sk_client->private_file = fp_client;
+
 
         // Plug the socket into the client ep
         client_ep->socket = sk_client;
@@ -3288,6 +3359,8 @@ static void __handle_tcp_for_local_servers (
             // and allow the ring 3 client to read it.
             if (data_len > 0) 
             {
+                // #ps: This part is working fine!
+
                 printk("TCP Payload (%d bytes):\n%s\n", 
                     (int)data_len, __tcp_payload );
                 //int _i;
@@ -3302,18 +3375,20 @@ static void __handle_tcp_for_local_servers (
             //if (cur_conn->ep_pair->c_ep->is_remote == TRUE)
                 //panic("No expected remote ep\n");
 
+            // ---- socket ----
             // #todo:
             // We can create a worker that do this routine,
             // injecting incoming data into the socket buffer.
             // see: net.c
-            struct socket_d *sk;
-
-            if (cur_conn->is_local_server == TRUE){
-                sk = (struct socket_d *) get_server_socket_from_connection(cur_conn);
-            } else {
-                sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
+            if (cur_conn->is_local_server != TRUE) {
+                panic("TCP: handler invoked but not local server");
+                return;
             }
-
+            // #ps: We need to inject data into the file associated
+            // with the remote client.
+            struct socket_d *sk;
+            //sk = (struct socket_d *) get_server_socket_from_connection(cur_conn);
+            sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
             if ((void*) sk == NULL){
                 panic("TCP: invalid sk\n");
                 return;
@@ -3321,8 +3396,13 @@ static void __handle_tcp_for_local_servers (
             if (sk->magic != 1234){
                 panic("TCP: sk validation\n");  return;
             }
-            //sk->state = SS_CONNECTED;
+            // #todo: We need to do it earlier
+            // probably during the handshake.
+            // Its necessary for io operations
+            sk->state = SS_CONNECTED;
+            printk("#debug: Valid socket <<<\n");
 
+            // ---- file ----
             file *fp = sk->private_file;
             if ((void*) fp == NULL){
                 panic("TCP: invalid fp\n");  return;
@@ -3330,6 +3410,7 @@ static void __handle_tcp_for_local_servers (
             if (fp->magic != 1234){
                 panic("TCP: fp validation\n");  return;
             }
+            printk("#debug: Valid file <<<\n");
             size_t room = (fp->_cnt > 0) ? (size_t) fp->_cnt : 0;
             if (data_len > room){
                 // Can't buffer this segment yet — refuse it entirely.
@@ -3374,9 +3455,9 @@ static void __handle_tcp_for_local_servers (
                 //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
 
                 //fp->_flags |= __SRD;
-                fp->sync.can_read = FALSE;
+                fp->sync.can_read = TRUE;
                 fp->sync.can_write = FALSE;
-                fp->sync.action = ACTION_NULL;
+                fp->sync.action = ACTION_REPLY;
             }
 
             if (fFIN){
@@ -3427,8 +3508,12 @@ static void __handle_tcp_for_local_servers (
             //Flags |= TH_RST;    
             //Flags |= TH_FIN;   // only if you want to close your side too
         }
-        // Send ACK.
-        // Acknoledgind the received data.
+
+        /*
+        // #ps
+        // As a server we do not ack the request.
+        // We send it to the ring 3 process,
+        // and the process will send the response.
         int rv = 
             network_send_tcp(
                 dhcp_info.your_ipv4,
@@ -3448,8 +3533,8 @@ static void __handle_tcp_for_local_servers (
             return;  // leave state as-is; a retransmitted FIN can retry
         }
         printk(": acked\n");
-
         cur_conn->packets_sent++;
+        */
 
         if (fFIN == 1){
             printk("TCP: Change state to CLOSE_WAIT ...\n");

@@ -114,7 +114,7 @@ int main( int argc, char *argv[])
         );
 
         if (newconn > 0){
-            printf("HTTP.BIN: newconn={%d} Accepted\n", newconn);
+            //printf("HTTP.BIN: newconn={%d} Accepted\n", newconn);
             handle_connection(newconn);
         }
     };
