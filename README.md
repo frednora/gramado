@@ -6,6 +6,8 @@ Fred Nora: gramado
 
 ```
 docs/  - Documentation for Gramado 
+ead/   - Posix-like commands,
+         Compositor and client-side GUI applications.
 os/    - Gramado OS
 tools/ - Gramado Tools 
 ```

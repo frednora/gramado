@@ -31,29 +31,26 @@ NOT resolve IP routing
 // frame_pointer should point to a contiguous buffer containing 
 // Ethernet header + IP header + payload. 
 
+// #todo
+// We are wiring the Ethernet layer into the network interface abstraction.
+
+// Buffers: [ethernet, data]
 int 
 ethernet_send(
     size_t frame_size, 
     const char *frame_pointer )
 {
-// Buffers: [ethernet, data]
+    struct net_interface_d *iface; 
 
-// #todo
-// We are wiring the Ethernet layer into the network interface abstraction.
-
-// Grab the current interface 
-    struct net_interface_d *iface;
-
+// Get current network interface
     iface = CurrentNetworkInterface;
-
-// #test #debug
     if ((void*)iface == NULL){
-        printk("Invalid interface pointer\n");
+        printk("ETH: iface\n");
     }
     if (iface->magic != 1234)
-        printk("Invalid interface\n");
+        printk("ETH: iface magic\n");
     if (iface->initialized != TRUE)
-        printk("Interface not initialized\n");
+        printk("ETH: iface not initialized\n");
 
 // Telling to the network manager that we're gonna send something 
 // a a nic device driver.
@@ -122,25 +119,20 @@ network_handle_ethernet (
 {
     struct ether_header *eth = (struct ether_header *) frame;
     uint16_t Type=0;
-    // #test:
     unsigned char *payload_base;
     ssize_t PayloadSize;
-
     int UseFirewall = FALSE;
     int FirewallStatus = FALSE;
 
-
-    // Drop it!
-    // Set this flag using the command "net-on" on terminal.bin.
+// The network interface needs to be initialized and unlocked.
     if (NetworkInitialization.initialized != TRUE)
     {
-        //#debug
-        //printk("Packet: Network is OFF\n");
         goto fail;
     }
-    // If the network is locked
     if (NetworkInitialization.locked == TRUE)
+    {
         goto fail;
+    }
 
 // Parameters:
 // Frame validation

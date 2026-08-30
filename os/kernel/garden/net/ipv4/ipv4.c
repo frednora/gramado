@@ -9,6 +9,7 @@ static unsigned int ipv4_counter = 0;
 
 // ======================================================
 
+// Buffers: [ethernet, ipv4, data]
 int 
 ipv4_send (
     unsigned char protocol, 
@@ -18,9 +19,12 @@ ipv4_send (
     const char *data_buffer,  // IPV4 payload
     size_t data_lenght )      // IPV4 payload size
 {
-// Buffers: [ethernet, ipv4, data]
-
     int Status = -1;
+
+    // Local headers
+    struct ether_header  Leh;
+    struct ip_d  Lipv4;
+
 
 //
 // The frame
@@ -62,7 +66,6 @@ ipv4_send (
 // Ethernet base
 // Destination MAC, Our MAC and Type of protocol.
 
-    struct ether_header  Leh;
     for (i=0; i<6; i++){
         Leh.mac_src[i] = (uint8_t) currentNIC->mac_address[i];  // source 
         Leh.mac_dst[i] = (uint8_t) target_mac[i];               // dest
@@ -80,8 +83,6 @@ ipv4_send (
 //
 // IPV4 header
 //
-
-    struct ip_d  Lipv4;  // IPV4 base
 
     // The Ipv4 header
     //hdr->ihl = 5;
