@@ -31,17 +31,17 @@ static void handle_connection(int connfd)
     bzero(buffer, sizeof(buffer));
 
     // Read from the socket
-    //while (1){
-        //rtl_sleep_until(20000);
+    while (1){
+        rtl_sleep_until(20000);
         n = read(connfd, buffer, sizeof(buffer)-1);
         if (n <= 0) {
             //perror("HTTPSRV: read failed\n");
-            printf("HTTPSRV: read failed\n");
-            return;
+            //printf("HTTPSRV: read failed\n");
+            //return;
         }
-        //if (n>0)
-            //break;
-    //}
+        if (n>0)
+            break;
+    }
 
     // Null-terminate and print
     buffer[n] = '\0';

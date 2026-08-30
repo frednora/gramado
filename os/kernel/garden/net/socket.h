@@ -176,6 +176,7 @@ struct socket_d
 // 1=LOCAL | 2=REMOTE
     int connection_type;
     int is_client_connecting_with_remote_server;
+    int is_remote_client_connecting_with_local_server;
 
     struct connection_d *conn;  // Belongs to this connection
     struct endpoint_d *ep;      // Belongs to this ep

@@ -720,6 +720,12 @@ tcp_socket_send(
 
     Flags = (TH_ACK | TH_PUSH);
 
+// #todo
+// #bugbug
+// NetworkSaved.gateway_mac is used to send packets to 
+// a peer outside the LAN ... but if the peer is inside the LAN,
+// we need to plug another mac here.
+
     rv = 
     network_send_tcp(
         dhcp_info.your_ipv4,       // source IP
@@ -796,23 +802,32 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
 
     // Local server
     if (conn->is_local_server == TRUE) {
+
+        /*
         // Server: allow reading once ESTABLISHED
         if (conn->status != CONN_STATUS_ESTABLISHED &&
-            conn->status != CONN_STATUS_CLOSE_WAIT) {
+            conn->status != CONN_STATUS_CLOSE_WAIT) 
+        {
+            printk("tcp_socket_recv: server not ready\n");
+            return -ENOTCONN;
+        }*/
+
+        // Server: allow reading once ESTABLISHED
+        if (conn->status != CONN_STATUS_ESTABLISHED) 
+        {
             printk("tcp_socket_recv: server not ready\n");
             return -ENOTCONN;
         }
 
     // Not a local server (remote server?)
     } else {
+
         // Client: old behavior, only read in CLOSE_WAIT
         if (conn->status != CONN_STATUS_CLOSE_WAIT) {
             printk("tcp_socket_recv: client not ready\n");
             return -ENOTCONN;
         }
     }
-
-
 
 
 // file
@@ -851,6 +866,18 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
         fp->_r = fp->_fsize;
         fp->_w = fp->_fsize;
         fp->sync.can_read = FALSE;
+    }
+
+// Permissions:
+// #test
+// When we are the local server. Let's allow the ring 3 server
+// to send the response.
+// #ps: We dont wanna mess the case we are a client
+    if (conn->is_local_server == TRUE)
+    {
+        fp->sync.action = ACTION_REPLY;  // Maybe this is necessary too
+        fp->sync.can_write = TRUE;
+        fp->_flags |= __SWR;
     }
 
     return (int) to_copy;
@@ -1560,6 +1587,8 @@ __remote_client_sent_syn(
         sk_client->ip_ipv4 = s_ipv4_int;  //NetworkSaved.caller_ip_int;
         sk_client->port = sport;
 
+        sk_client->is_remote_client_connecting_with_local_server = TRUE;
+
         // Connection state
         sk_client->state = SS_CONNECTING;
         sk_client->flags = 0;
@@ -1578,6 +1607,7 @@ __remote_client_sent_syn(
         fp_client->used = TRUE;
         fp_client->magic = 1234;
         fp_client->____object = ObjectTypeSocket;
+        fp_client->socket = sk_client;
         fp_client->sync.sender_pid = (pid_t) -1;
         fp_client->sync.receiver_pid = (pid_t) -1;
         fp_client->sync.action = ACTION_NULL;
