@@ -659,6 +659,14 @@ network_handle_dhcp(
         // Save info
         network_fill_ipv4( dhcp_info.your_ipv4, your_ipv4 );
         network_fill_ipv4( dhcp_info.server_ipv4, server_ipv4 );
+
+        // Convert to host-order int
+        dhcp_info.your_ipv4_int = 
+            ((unsigned int) dhcp_info.your_ipv4[0] << 24) |
+            ((unsigned int) dhcp_info.your_ipv4[1] << 16) |
+            ((unsigned int) dhcp_info.your_ipv4[2] << 8)  |
+            ((unsigned int) dhcp_info.your_ipv4[3] );
+
         dhcp_info.initialized = TRUE;
         // Set online status 
         networkSetOnlineStatus(ONLINE);

@@ -35,6 +35,10 @@ static unsigned short __new_client_port_number = 32768; // Inicial
 //static char __tcp_payload[1024];
 static char __tcp_payload[1400];   // or 1460
 
+static int __is_same_subnet(unsigned int ip1,
+                            unsigned int ip2,
+                            unsigned int netmask);
+
 static unsigned int __get_random_32bit(void);
 static unsigned int __generate_ISN(void);
 
@@ -75,7 +79,27 @@ static void __handle_tcp_for_non_local_servers (
     unsigned int s_ipv4_int,
     unsigned int d_ipv4_int );
 
+
+
 // ===================================================
+
+
+// Check if two IPv4 addresses are in the same subnet.
+// All values are host byte order integers.
+static int __is_same_subnet(unsigned int ip1,
+                            unsigned int ip2,
+                            unsigned int netmask)
+{
+    unsigned int __ip1 = (ip1 & netmask);
+    unsigned int __ip2 = (ip2 & netmask);
+
+    if (__ip1 == __ip2)
+    {
+        return TRUE;   // same subnet
+    }
+
+    return FALSE;       // different subnet
+}
 
 
 static unsigned int __get_random_32bit(void)
@@ -636,6 +660,9 @@ tcp_socket_send(
     uint16_t Flags = 0;
     int rv;
 
+    unsigned short source_port;
+    unsigned short dest_port;
+
     local_sk = sk;
     remote_sk = NULL;
 
@@ -681,7 +708,30 @@ tcp_socket_send(
     if ((void *) conn->ep_pair->s_ep == NULL)
         return -ENOTCONN;
 
-    remote_sk = conn->ep_pair->s_ep->socket;
+
+    // #bugbug
+    // Probably the IPs and PORTs we are getting from the
+    // connection structure are not the same of those we are
+    // getting from the function parameters.
+    // #ps: The values in the connection structure are correct.
+
+    if (conn->is_local_server == TRUE) {
+        // Local process is SERVER → peer is the client
+        remote_sk = conn->ep_pair->c_ep->socket;
+
+        // Local process is SERVER
+        source_port = conn->ep_pair->s_ep->socket->port;  // server port (22888)
+        dest_port   = conn->ep_pair->c_ep->socket->port;  // 
+
+    } else {
+        // Local process is CLIENT → peer is the server
+        remote_sk = conn->ep_pair->s_ep->socket;
+
+        // Local process is CLIENT
+        source_port = conn->ep_pair->c_ep->socket->port;  // client ephemeral
+        dest_port   = conn->ep_pair->s_ep->socket->port;  // server port (22888)
+    }
+
     if ((void *) remote_sk == NULL)
         return -ENOTCONN;
     if (remote_sk->magic != 1234)
@@ -689,6 +739,8 @@ tcp_socket_send(
 
 // Target ip (array)
 // Host-order IP → dotted octets
+// Network byte order.
+
     target_ip[0] = (uint8_t) ((remote_sk->ip_ipv4 >> 24) & 0xFF);
     target_ip[1] = (uint8_t) ((remote_sk->ip_ipv4 >> 16) & 0xFF);
     target_ip[2] = (uint8_t) ((remote_sk->ip_ipv4 >>  8) & 0xFF);
@@ -720,19 +772,51 @@ tcp_socket_send(
 
     Flags = (TH_ACK | TH_PUSH);
 
+
+    unsigned int my_ip   = dhcp_info.your_ipv4_int;   // host-order int
+    unsigned int peer_ip = remote_sk->ip_ipv4;        // host-order int;
+    //unsigned int netmask = NetworkSaved.netmask_int;  // host-order int
+    // Hardcode a /24 mask (255.255.255.0)
+    unsigned int netmask = 0xFFFFFF00;  
+
+    int IsSameSubnet = FALSE;
+    IsSameSubnet = 
+        __is_same_subnet(
+            dhcp_info.your_ipv4_int,
+            remote_sk->ip_ipv4,
+            netmask );
+
 // #todo
 // #bugbug
 // NetworkSaved.gateway_mac is used to send packets to 
 // a peer outside the LAN ... but if the peer is inside the LAN,
 // we need to plug another mac here.
 
+    // Default: Peer is outside the LAN
+    char target_mac[6];
+    //char *target_mac = (char *) NetworkSaved.gateway_mac;
+    // #todo
+    // When the target ip is inside the LAN,
+    // the target MAC is not the gateway's MAC.
+
+    if (IsSameSubnet == TRUE){
+
+        // #ps: Network byte order
+        memcpy(target_mac, conn->peer_mac, 6);
+
+    } else {
+
+        // #ps: Network byte order
+        memcpy(target_mac, NetworkSaved.gateway_mac, 6);
+    }
+
     rv = 
     network_send_tcp(
-        dhcp_info.your_ipv4,       // source IP
-        target_ip,                 // destination IP
-        NetworkSaved.gateway_mac,  // next-hop MAC (gateway for WAN)
-        local_sk->port,
-        remote_sk->port,
+        dhcp_info.your_ipv4,       // source IP - Network byte order
+        target_ip,                 // destination IP - Network byte order
+        target_mac,                // target MAC - Network byte order
+        source_port,  //local_sk->port,        
+        dest_port,  //remote_sk->port,
         seq,
         ack,
         (uint16_t) Flags,
@@ -1526,6 +1610,10 @@ __remote_client_sent_syn(
 
         // #test: it means we are the local server
         conn->is_local_server = TRUE;
+
+        // Copy caller MAC into the connection
+        // The ethernet handler gave us this thing
+        memcpy(conn->peer_mac, NetworkSaved.caller_mac, 6);
 
         // tcp connection structure
         if ((void*) conn->tcp_conn == NULL){
@@ -2566,11 +2654,11 @@ Retransmissions or duplicate ACKs confuse the state machine
             // Acknoledgind the received data.
             int rv = 
             network_send_tcp(
-                dhcp_info.your_ipv4,
-                NetworkSaved.caller_ipv4,
-                NetworkSaved.caller_mac,
-                11888,
-                sport,
+                dhcp_info.your_ipv4,       // Network byte order
+                NetworkSaved.caller_ipv4,  // Network byte order
+                NetworkSaved.caller_mac,   // Network byte order
+                11888,                     // We are the source now
+                sport,                     // Target is the caller
                 cur_conn->tcp_conn->snd_nxt,
                 cur_conn->tcp_conn->rcv_nxt,
                 Flags,

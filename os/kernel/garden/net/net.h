@@ -278,6 +278,8 @@ struct connection_d
 
     unsigned int packets_sent;
     unsigned int packets_received;
+
+    uint8_t peer_mac[6];   // MAC of the remote peer
 };
 
 

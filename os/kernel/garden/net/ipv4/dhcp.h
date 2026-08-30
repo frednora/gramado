@@ -47,10 +47,18 @@ struct dhcp_info_d
     uint8_t server_ipv4[4];  // The server IP.
     uint8_t server_mac[6];   // The server MAC.
 
+
+// Integer. Host byte order
+    unsigned int your_ipv4_int;
+
     // Lease management
     uint32_t lease_time;    // Option 51: seconds
     uint32_t renew_time;    // T1 (usually 50% of lease)
     uint32_t rebind_time;   // T2 (usually 87.5% of lease)
+
+
+    unsigned int subnet_mask_int;
+    unsigned int gateway_ipv4_int;
 
     // Network configuration
     uint8_t subnet_mask[4];   // Option 1
