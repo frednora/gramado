@@ -101,7 +101,8 @@ static void __e1000_handle_link_down(struct intel_nic_info_d *d);
 
 // =====================
 
-void e1000_show_info(void)
+
+void e1000hw_show_info(void)
 {
     printk("e1000 NIC info:\n");
 

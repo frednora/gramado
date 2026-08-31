@@ -336,8 +336,10 @@ extern int system_state;
 #include "../halls/dev/per/netdev/common/nic00.h"
 
 // e1000 - nic intel
+#include "../halls/dev/per/netdev/e1000/e1000hw.h"
 #include "../halls/dev/per/netdev/e1000/e1000.h"
 // ...
+
 
 // #ps: needs to be after the devices
 #include "../halls/dev/per/netdev/nic.h"

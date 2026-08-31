@@ -809,8 +809,8 @@ void network_test_NIC(void)
     //network_test_udp();
     // ...
 
-// Show NIC info.
-    e1000_show_info();
+    // Show NIC hw info
+    e1000hw_show_info();
 
     // #debug
     //printk("testNIC: done\n");
