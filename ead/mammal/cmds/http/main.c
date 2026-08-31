@@ -26,13 +26,18 @@
 // Definitions and prototypes
 //
 
+// Windows
+//#define __DEFAULT_TARGET_IP  "192.168.1.2"
+
 // http://httpbin.org
 #define __DEFAULT_TARGET_IP  "100.60.124.177"
 
 // http://wttr.in/
-//#define __DEFAULT_TARGET_IP  "5.9.243.187"
+// #define __DEFAULT_TARGET_IP  "5.9.243.187"
+
 
 #define HTTP_PORT 80
+//#define HTTP_PORT 5233
 
 static char __http_response_buffer[4096];
 

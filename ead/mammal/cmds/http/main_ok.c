@@ -27,8 +27,14 @@
 //
 
 // http://httpbin.org
-#define TARGET_IP  "100.60.124.177"
+#define __DEFAULT_TARGET_IP  "100.60.124.177"
+
+// http://wttr.in/
+//#define __DEFAULT_TARGET_IP  "5.9.243.187"
+
 #define HTTP_PORT 80
+
+static char __http_response_buffer[4096];
 
 static void do_request(int sockfd);
 
@@ -38,11 +44,11 @@ static void do_request(int sockfd);
 // Send a request and wait for a response.
 static void do_request(int sockfd)
 {
-    //char response_buffer[4096];
-    //char response_buffer[512];
-    char response_buffer[4096];  // 5120 + 1 for null terminator
+    size_t BufferSize = sizeof(__http_response_buffer);
+    int fd_output = fileno(stdout);
 
 // HTTP request
+/*
     const char *request =
     "GET /html HTTP/1.1\r\n"
     "Host: httpbin.org\r\n"
@@ -50,169 +56,89 @@ static void do_request(int sockfd)
     "Accept: text/html\r\n"
     "Connection: close\r\n"
     "\r\n";
+*/
+    char request[1024];
+    memset(request, 0, sizeof(request));
+
+// Building the request:
+
+    //strcat(request, "GET /index.html HTTP/1.1\r\n");
+    strcat(request, "GET /status/500 HTTP/1.1\r\n");
+
+    strcat(request, "Host: httpbin.org\r\n");
+    //strcat(request, "Host: wttr.in\r\n");
+
+    strcat(request,
+        "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
+    );
+    strcat(request, "Accept: text/html\r\n");
+    strcat(request, "Connection: close\r\n");
+    strcat(request, "\r\n");
+
+    // strcat(request, body);  // No body
+
+    size_t RequestSize = strlen(request);
 
 // ------------------------
 // Send
 
-    int r_number = (int) write(sockfd, request, strlen(request));
-    if (r_number < 0) 
+    int w_count;
+    w_count = (int) write(sockfd, request, RequestSize);
+    if (w_count < 0) 
     {
         perror(":: write failed\n");
-        if (r_number == (-107))  //ENOTCONN
+        if (w_count == (-107))  //ENOTCONN
         {
             printf("client: ENOTCONN Exited\n");
             exit(1);
         }
         return;
     }
-    printf("HTTP_CLIENT.BIN: Sent %d bytes\n", r_number);
+    printf("HTTP_CLIENT.BIN: Sent %d bytes\n", w_count);
 
-// ------------------------
-// Waiting for a reply
-// The kernel is setting the action flag when some data comes from the server
-
-    //while (1) {
-  
-/*
-    // Wait until kernel signals data ready
-    int Count = 200;
-    while (1) 
-    {
-        // rtl_yield(); // yield CPU until reply arrives
-        int ActionState = rtl_get_file_sync(sockfd, SYNC_REQUEST_GET_ACTION);
-        if (ActionState == ACTION_REPLY){
-            printf("HTTP.BIN: Reply received\n");
-            break;
-        }
-        // Disconnecting. Let's connect again.
-        if (ActionState == 200000)
-        {
-            printf("HTTP.BIN: We are disconnected\n");
-            goto fail;
-        }
-
-        Count++;
-        if (Count<=0)
-            goto fail;
-    };
-    printf("HTTP.BIN: Reply received\n");
-*/
 
 // ------------------------
 // Receive
 
-    memset( response_buffer, 0, sizeof(response_buffer) );
+    memset( __http_response_buffer, 0, sizeof(__http_response_buffer) );
 
-/*
-    // #test: Lets read always the first part of the file (for now)
-    lseek(sockfd, 0, SEEK_SET);   // rewind to beginning
-    int n = read(sockfd, response_buffer, sizeof(response_buffer)-1);
-    printf("HTTP.BIN: %d bytes received\n", n);
-    if (n <= 0){
-        printf ("read() failed: rv=%d\n", n);
-        goto fail;
-    }
-    response_buffer[n] = '\0';
-*/
-
-/*
-    int total = 0;
-    while (1) {
-        int n = read(sockfd, response_buffer + total, sizeof(response_buffer) - 1 - total);
-        if (n <= 0) 
-            break;  // no more data
-        total += n;
-        if (total >= sizeof(response_buffer)-1) 
-            break;  // avoid overflow
-    };
-*/
-
-// Print response buffer
-    //printf("RESPONSE BUFFER: {%s}\n", response_buffer);
-
-    // }
-
-/*
-    printf("Reading ...\n");
-    //rtl_sleep_until(20000);
-
-    char buf[512];
-    //int total = 0;
-    int n;
-    while (1) {
-        printf("r ...\n");
-        rtl_sleep_until(40000);
-        n = read(sockfd, buf, sizeof(buf));
-        //if (n <= 0) 
-            //break;
-        if (n > 0){
-            printf("r after ...\n");
-            //fwrite(buf, 1, n, stdout);
-            //total += n;
-            break;
-        }
-    }
-    printf("RESPONSE: \n");
-    //buf[511] = 0;
-    //printf("%s\n", buf);
-    //printf("Total bytes read: %d\n", n);
-
-    // #debug:
-    // Print from base up to write offset
-    size_t i;
-    for (i=0; i < 512; i++) {
-        char c = buf[i];
-        if (c >= 32 && c <= 126) {
-            printf("%c", c);  // printable ASCII
-        } else {
-            printf(".");      // non-printable placeholder
-        }
-    }
-    printf("\n");
-    //printf("Total bytes read: %d\n", n);
-*/
-
-
-// Allocate a buffer big enough for the expanded socket
-//char response_buffer[5*1024 + 1];  // 5120 + 1 for null terminator
-    //int total = 0;
-    int n;
-
+// #ps:
+// We will hang we untill we get some data.
+// This is temporary.
+    int r_count;
     while (1) {
         rtl_sleep_until(40000);
-        n = read(
+        r_count = read(
                 sockfd, 
-                response_buffer,
-                sizeof(response_buffer));
-        //if (n <= 0) 
+                __http_response_buffer,
+                sizeof(__http_response_buffer) );
+        //if (r_count <= 0) 
             //break;   // EOF after FIN
-        if (n > 0) 
+        if (r_count > 0) 
             break;
-    }
-    size_t BufferSize = sizeof(response_buffer);
-    response_buffer[BufferSize -1] = '\0';
+    };
+    __http_response_buffer[BufferSize -1] = '\0';
 
-    //printf("HTTP_CLIENT.BIN: total %d bytes received\n", total);
-    //printf("RESPONSE:\n");
-    //printf("%s\n", response_buffer);
 
+// ------------------------
+// Show received message
 
     printf("Show message:\n");
 
-// #test #todo
-// This is because we have a limitation of 1KB in the write() 
-// implementation for now.
+// #ps: This is because maybe we still we have a limitation of 1KB 
+// in the write() implementation for now.
 
-    int fd_output = fileno(stdout);
     int total = 0;
+    char *tmp_buf;
     while (total < BufferSize) 
     {
         int chunk = (BufferSize - total > 1024) ? 1024 : (BufferSize - total);
-        int nw = write(fd_output, response_buffer + total, chunk);
+        tmp_buf = (__http_response_buffer + total); 
+        int nw = write( fd_output, tmp_buf, chunk );
         if (nw <= 0) 
             break;
         total += nw;
-    }
+    };
 
 done:
     // Reset sync state so kernel can send more
@@ -226,16 +152,15 @@ fail:
 }
 
 
-// IN: target IP
+// IN: target IP (string format)
 int main(int argc, char *argv[])
 {
     struct sockaddr_in addr;
     int sockfd;
-    const char *target_ip = TARGET_IP;
-    int Try = 8;
+    const char *target_ip = __DEFAULT_TARGET_IP;
+    int Try = 4;
 
 // Allow overriding the target IP from the command line:
-// http_client.bin 203.0.113.7
     if (argc > 1){
         target_ip = argv[1];
     }
@@ -257,15 +182,13 @@ int main(int argc, char *argv[])
         sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
         if (sockfd < 0){
             printf("HTTP_CLIENT.BIN: socket creation failed...\n");
-            exit(0);
+            exit(1);
         }
         // Reset the sync state
         rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
 
         printf("\n");
         printf("SOCKET fd={ %d } <<<< \n", sockfd);
-        printf("\n");
-
         printf("HTTP_CLIENT.BIN [%d]: Connecting to %s:%d\n", 
             Try, target_ip, HTTP_PORT );
 
@@ -300,6 +223,11 @@ int main(int argc, char *argv[])
             // We are fully connected now.
             // Lets call the request and get a response.
             do_request(sockfd);
+            rtl_set_file_sync(sockfd, SYNC_REQUEST_SET_ACTION, ACTION_NULL);
+
+            // #test:
+            // It's simply closing the connection based on its status.
+            close(sockfd);
 
         } else if (ConnectStatus < 0) {
             printf("HTTP_CLIENT.BIN: connect failed\n");
@@ -308,7 +236,6 @@ int main(int argc, char *argv[])
         Try--;
     };  // end of while
 
-    // close(sockfd);
 
     printf("HTTP_CLIENT.BIN: EXIT_SUCCESS\n");
     return EXIT_SUCCESS;
