@@ -4,7 +4,7 @@
 // Created by Fred Nora.
 
 // Credits: 
-// Chicago OS, Italo Matias.
+// Chicago OS 32bit, (BSD 2 LICENSE), Italo Matias.
 // ...
 
 // #ps:
@@ -91,7 +91,13 @@ static void __e1000_setup_irq (int irq_line);
 static void __initialize_tx_support(struct intel_nic_info_d *d);
 static void __initialize_rx_support(struct intel_nic_info_d *d);
 static int __e1000_reset_controller(struct intel_nic_info_d *d);
+
+// Link state
+static void __e1000_detect_link_info(struct intel_nic_info_d *d);
 static void __e1000_linkup(struct intel_nic_info_d *d);
+static void __e1000_linkdown(struct intel_nic_info_d *d);
+static void __e1000_handle_link_up(struct intel_nic_info_d *d);
+static void __e1000_handle_link_down(struct intel_nic_info_d *d);
 
 // =====================
 
@@ -277,23 +283,157 @@ static void __e1000_enable_interrupt(struct intel_nic_info_d *nic_info)
     value = (uint32_t) __E1000ReadCommand(nic_info, 0xC0);
 }
 
+static void __e1000_detect_link_info(struct intel_nic_info_d *d)
+{
+    uint32_t status;
+    uint32_t val;
+
+    if (!d)
+        return;
+    if (d->magic != 1234)
+        return;
+
+    status = __E1000ReadCommand(d, REG_STATUS);
+
+// -------------------------------
+// Bit 1 = Link Up
+    val = status & (1 << 1);
+    // Bit 1 in STATUS = Link Up
+    // d->link_state = (status & (1 << 1)) ? 1 : 0; 
+    if (val) {
+        d->link_state = 1;
+        //printk("Link state: UP\n");
+    } else {
+        d->link_state = 0;
+        //printk("Link state: DOWN\n");
+    }
+
+// -------------------------------
+// Bits 6-7 = Speed
+    val = (status >> 6) & 0x3;
+    switch (val) 
+    {
+        case 0: d->speed = 10;    break;
+        case 1: d->speed = 100;   break;
+        case 2: d->speed = 1000;  break;
+        default: 
+            d->speed = 0; 
+            break;
+    }
+
+// -------------------------------
+// Bit 8 = Duplex
+    val = status & (1 << 8); 
+    // d->duplex = (status & (1 << 8)) ? 1 : 0;
+    if (status & (1 << 8)){
+        d->duplex = 1;
+    } else {
+        d->duplex = 0;
+    }
+
+    // #debug
+    //printk("Link=%s, Speed=%d Mbps, Duplex=%s\n",
+        //d->link_state ? "UP" : "DOWN",
+        //d->speed,
+        //d->duplex ? "Full" : "Half");
+}
+
+
+// __e1000_linkup:
+// Reads the CTRL register (offset 0x0).
+// Sets bit 6 (SLU – Set Link Up).
+// This is the software telling the NIC: “force link up if possible.”
+// But the PHY (physical layer) decides if 
+// the cable is present and negotiation succeeds.
+// If the cable is plugged, the PHY reports carrier, and 
+// the NIC transitions to link up. 
+// If not, the bit is set but the link won’t actually come up.
+
 static void __e1000_linkup(struct intel_nic_info_d *d)
 {
     uint32_t val=0;
 
-    printk("__e1000_linkup:\n");
+    //printk("__e1000_linkup:\n");
 
-    if ((void*)d == NULL){
-        panic("__e1000_linkup: d\n");
-    }
+    if ((void*) d == NULL)
+        return;
+    if (d->magic != 1234)
+        return;
+
 
 // CTRL - Device Control Register
-    val = (uint32_t) __E1000ReadCommand(d,0);
-    __E1000WriteCommand (d, 0, (val | 0x40));
+// 0x40 = bit 6 = SLU
 
-// #debug
-    printk("__e1000_linkup: Done\n");
+    val = (uint32_t) __E1000ReadCommand(d, REG_CTRL);
+    __E1000WriteCommand (d, REG_CTRL, (val | 0x40));
+
+    //printk("__e1000_linkup: Done\n");
 }
+
+// __e1000_linkdown:
+// Reads the CTRL register (offset 0x0).
+// Clears bit 6 (SLU – Set Link Up).
+// This tells the NIC: “force link down.”
+static void __e1000_linkdown(struct intel_nic_info_d *d)
+{
+    uint32_t val=0;
+
+    //printk("__e1000_linkdown:\n");
+
+    if ((void*) d == NULL)
+        return;
+    if (d->magic != 1234)
+        return;
+
+
+// CTRL - Device Control Register
+// 0x40 = bit 6 = SLU
+
+    val = (uint32_t) __E1000ReadCommand(d, REG_CTRL);
+    __E1000WriteCommand(d, REG_CTRL, val & ~0x40);
+
+    //printk("__e1000_linkdown: Done\n");
+}
+
+static void __e1000_handle_link_up(struct intel_nic_info_d *d)
+{
+    if ((void*) d == NULL)
+        return;
+    if (d->magic != 1234)
+        return;
+
+    // Update state
+    d->link_state = 1;
+    printk("__e1000_handle_link_up: Link is UP\n");
+
+    // Reuse existing linkup routine
+    __e1000_linkup(d);
+
+// #todo:
+// We can do some system notification now
+
+}
+
+static void __e1000_handle_link_down(struct intel_nic_info_d *d)
+{
+    if ((void*) d == NULL)
+        return;
+    if (d->magic != 1234)
+        return;
+
+    d->link_state = 0;
+    printk("__e1000_handle_link_down: Link is DOWN\n");
+
+    __e1000_linkdown(d);
+
+
+// #todo:
+// We can do some system notification now
+
+    // Optional: stop TX queues safely
+    // d->tx_cur = 0;
+}
+
 
 // 00400h - Transmit Control Register
 static void __initialize_tx_support(struct intel_nic_info_d *d)
@@ -833,6 +973,19 @@ e1000hw_send(
         goto fail;
     }
 
+    if (dev->link_state == 0) 
+    {
+        printk("e1000hw_send: Link is DOWN, cannot send\n");
+
+        // #todo
+        // This is a work in progress
+        printk("e1000hw_send: [debug] Force link up\n");
+        __e1000_handle_link_up(dev);
+
+        //return -EIO;  // or -1
+    }
+
+
 // len
     if (len <= 0)
         panic("e1000hw_send: len=0\n");
@@ -974,8 +1127,12 @@ static void __e1000_on_receive(void)
     };
 }
 
+// __e1000hw_service_procedure:
+// Interrupt handler
 // Procedure called by the DeviceInterface_e1000() 
-// interrupt handler
+// + Reads the ICR (Interrupt Cause Register) at offset 0xC0.
+// 
+
 static int
 __e1000hw_service_procedure(
     struct intel_nic_info_d *dev )
@@ -1042,9 +1199,40 @@ __e1000hw_service_procedure(
     // 0x04 - Linkup
     // INTERRUPT_LSC
     // Start link.
+    // Bit 2 (LSC – Link Status Change) is the one that 
+    // fires when the cable is plugged/unplugged.
+    // When the NIC detects a change (carrier lost or gained), 
+    // it raises an interrupt. This handler sees bit 0x04 set, 
+    // logs “Start link,” and calls __e1000_linkup().
+
     } else if (InterruptCause & 0x04){
-        printk("__e1000hw_service_procedure: Start link\n");
-        __e1000_linkup(target_dev);
+
+        printk("__e1000hw_service_procedure: Link status change\n");
+
+        // Get link state
+        __e1000_detect_link_info(target_dev);
+
+        // If PHY says “up”,  we set SLU.
+        // If PHY says “down”, we clear SLU.
+        // + If STATUS says link is up: 
+        //   We force link up again by setting SLU.
+        // + If STATUS says link is down:
+        //   We force link down by clearing SLU.
+        // It’s a bit redundant, but it keeps 
+        // the driver’s internal state (link_state) 
+        // synchronized with the hardware.
+
+        if (target_dev->link_state == 1) {
+            __e1000_handle_link_up(target_dev);
+        } else {
+            __e1000_handle_link_down(target_dev);
+
+            // #ps:
+            // Brute force for now
+            printk("e1000: Force link up\n");
+            __e1000_linkup(target_dev);
+        }
+
         goto done;
 
     // 0x80 - Reveive.
@@ -1375,6 +1563,10 @@ DDINIT_e1000 (
     currentNIC->used = TRUE;
     currentNIC->magic = 1234;
     currentNIC->initialized = FALSE;
+
+    currentNIC->link_state = 0;
+    currentNIC->speed = 0;
+    currentNIC->duplex = 0;
 
     currentNIC->interrupt_count = 0;
     currentNIC->pci = (struct pci_device_d *) pci_device;
