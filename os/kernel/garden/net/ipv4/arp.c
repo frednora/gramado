@@ -248,15 +248,14 @@ network_send_arp(
     uint8_t target_ip[4], 
     int op )
 {
-// Send ARP.
-
     register int i=0;
 
-    // #debug
-    //printk("network_send_arp:\n");
-    //refresh_screen();
+    struct ethernet_d  Leh;
+    struct ether_arp  Larp;
 
-// The structure for the Intel NIC device.
+    //printk("network_send_arp:\n");
+
+// The structure for the Intel NIC device
     if ((void*) currentNIC == NULL){
         printk("network_send_arp: currentNIC fail\n");
         goto fail;
@@ -264,23 +263,14 @@ network_send_arp(
 
 // A given IP number for Gramado.
 // Saving it into the NIC structure.
-// 192.168.1.12
-    currentNIC->ip_address[0] = source_ip[0];  //192;
-    currentNIC->ip_address[1] = source_ip[1];  //168;
-    currentNIC->ip_address[2] = source_ip[2];  //1;
-    currentNIC->ip_address[3] = source_ip[3];  //12;
+
+    currentNIC->ip_address[0] = source_ip[0];
+    currentNIC->ip_address[1] = source_ip[1];
+    currentNIC->ip_address[2] = source_ip[2];
+    currentNIC->ip_address[3] = source_ip[3];
 
 //==============================================
 // # ethernet header #
-    struct ether_header  Leh;
-    /*
-    struct ether_header *eh;
-    eh = (void *) kmalloc( sizeof(struct ether_header) );
-    if ( (void *) eh == NULL){
-        printk ("network_send_arp: eh struct fail\n");
-        goto fail;
-    }
-    */
 
 // MAC
 // Save the source and the destination mac into the ethernet header.
@@ -294,15 +284,6 @@ network_send_arp(
 
 //==============================================
 // # arp header #
-    struct ether_arp  Larp;
-    /*
-    struct ether_arp *h;
-    h = (void *) kmalloc ( sizeof(struct  ether_arp) );
-    if ((void *) h == NULL){
-        printk ("network_send_arp: struct h fail");
-        goto fail;
-    }
-    */
 
 //
 // Header

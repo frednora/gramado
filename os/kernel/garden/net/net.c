@@ -883,7 +883,7 @@ network_on_receiving (
 //-----------------
 
 /*
-    struct ether_header *eth = (struct ether_header *) frame;
+    struct ethernet_d *eth = (struct ethernet_d *) frame;
     uint16_t Type=0;
 
 // Drop it!

@@ -76,10 +76,42 @@ EtherType values for some notable protocols[8] EtherType 	Protocol
 
 // See: 
 // https://en.wikipedia.org/wiki/EtherType
+
+// Core: IPv4, IPv6, ARP, RARP
+// Networking stacks: IPv4, IPv6, ARP are essential for any OS.
 #define ETH_TYPE_IPV4  0x0800
 #define ETH_TYPE_ARP   0x0806
+#define ETH_TYPE_RARP  0x8035
 #define ETH_TYPE_IPV6  0x86DD
-// ...
+
+// Networking extras: VLAN (802.1Q), PPPoE (discovery/session)
+// Enterprise networks: 
+// VLAN tagging, MPLS, PPPoE are common in ISPs and datacenters.
+#define ETH_TYPE_VLAN_802_1Q      0x8100
+#define ETH_TYPE_MPLS_unicast     0x8847
+#define ETH_TYPE_MPLS_multicast   0x8848
+#define ETH_TYPE_PPPoE_discovery  0x8863
+#define ETH_TYPE_PPPoE_session    0x8864
+
+// Modern essentials: LLDP, EAPOL
+// Discovery & security: 
+// LLDP and EAPOL are critical for device discovery and authentication.
+// (Link Layer Discovery Protocol)
+#define ETH_TYPE_LLDP   0x88CC
+// (802.1X authentication)
+#define ETH_TYPE_EAPOL  0x888E
+
+// Optional advanced: MPLS, FCoE, RoCE
+// Storage & HPC: 
+// FCoE and RoCE are widely used in SANs and high‑performance computing clusters.
+// (Fibre Channel over Ethernet)
+#define ETH_TYPE_FCoE  0x8906
+// (RDMA over Converged Ethernet)
+#define ETH_TYPE_RoCE  0x8915
+
+// ------------------------------
+
+// Aliases
 #define ETHERTYPE_IPV4 0x0800
 #define ETHERTYPE_ARP  0x0806
 #define ETHERTYPE_IPV6 0x86DD
@@ -90,12 +122,13 @@ EtherType values for some notable protocols[8] EtherType 	Protocol
 #define ETHERNET_HEADER_LENGHT  14
 
 // Ethernet header (14 bytes)
-struct ether_header 
+struct ethernet_d 
 {
     uint8_t mac_dst[ETH_ALEN];  // destination mac
     uint8_t mac_src[ETH_ALEN];  // source mac
     uint16_t type;              // type of protocol: ARP/IP ...
 } __attribute__ ((packed));
+
 
 //---------------------
 

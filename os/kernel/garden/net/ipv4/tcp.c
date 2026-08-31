@@ -294,7 +294,7 @@ network_send_tcp (
     char *data = (char *) data_buffer;  // TCP payload
 
     // Local headers
-    struct ether_header  Leh;
+    struct ethernet_d  Leh;
     struct ip_d  Lipv4;
     struct tcp_d  Ltcp;
 

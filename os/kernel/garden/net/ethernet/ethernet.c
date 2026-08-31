@@ -117,7 +117,7 @@ network_handle_ethernet (
     const unsigned char *frame, 
     ssize_t frame_size )
 {
-    struct ether_header *eth = (struct ether_header *) frame;
+    struct ethernet_d *eth = (struct ethernet_d *) frame;
     uint16_t Type=0;
     unsigned char *payload_base;
     ssize_t PayloadSize;
@@ -147,7 +147,7 @@ network_handle_ethernet (
         goto fail;
     }
     // #test: Smaller than ethernet header
-    if ( frame_size < sizeof(struct ether_header) )
+    if ( frame_size < sizeof(struct ethernet_d) )
     {
         goto fail;
     }
@@ -230,14 +230,12 @@ network_handle_ethernet (
     Type = (uint16_t) FromNetByteOrder16(eth->type);
     switch (Type){
 
-    // #todo
-    case ETHERTYPE_IPV6:
+    case ETH_TYPE_IPV6:
         // network_handle_ipv6(payload_base, PayloadSize); 
-        return (int) -1;
-        // goto fail;  // Drop it
+        goto fail;
         break;
 
-    case ETHERTYPE_IPV4:
+    case ETH_TYPE_IPV4:
         if (UseFirewall == TRUE)
         {
             FirewallStatus = firewall_apply_ipv4_filters(payload_base, PayloadSize);
@@ -251,9 +249,13 @@ network_handle_ethernet (
         return 0;  // OK
         break;
 
-    case ETHERTYPE_ARP:
+    case ETH_TYPE_ARP:
         network_handle_arp(payload_base, PayloadSize);
         return 0;  // OK
+        break;
+
+    case ETH_TYPE_RARP:
+        goto fail;
         break;
 
     // ...

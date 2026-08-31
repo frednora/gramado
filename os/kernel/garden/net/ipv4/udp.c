@@ -194,6 +194,10 @@ network_send_udp (
     int j=0;
     char *data = (char *) data_buffer;  // UDP payload.
 
+    struct ethernet_d  Leh;
+    struct ip_d  Lipv4;
+    struct udp_d  Ludp;
+
 //==============================================
 
 // #todo
@@ -204,9 +208,7 @@ network_send_udp (
         goto fail;
     }
 
-// #ps:
-// Saving the sender IP into the NIC structure.
-// Why are we doing this?
+// Saving the sender IP into the NIC structure
     currentNIC->ip_address[0] = source_ip[0];
     currentNIC->ip_address[1] = source_ip[1];
     currentNIC->ip_address[2] = source_ip[2];
@@ -221,8 +223,6 @@ network_send_udp (
 // ==============================================
 // ethernet header:
 
-    struct ether_header  Leh;
-
     for (i=0; i<6; i++){
         Leh.mac_dst[i] = (uint8_t) target_mac[i];               // dest
         Leh.mac_src[i] = (uint8_t) currentNIC->mac_address[i];  // source 
@@ -231,8 +231,6 @@ network_send_udp (
 
 // ==============================================
 // ipv4 header:
-
-    struct ip_d  Lipv4;
 
     Lipv4.v_hl = 0x45;    // Version (8bits)
 
@@ -311,8 +309,6 @@ network_send_udp (
 
 // ==============================================
 // udp header:
-
-    struct udp_d  Ludp;
 
     // Ports
     Ludp.uh_sport = (uint16_t) ToNetByteOrder16(source_port);

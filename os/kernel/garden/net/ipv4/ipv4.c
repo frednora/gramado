@@ -22,7 +22,7 @@ ipv4_send (
     int Status = -1;
 
     // Local headers
-    struct ether_header  Leh;
+    struct ethernet_d  Leh;
     struct ip_d  Lipv4;
 
 

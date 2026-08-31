@@ -102,6 +102,9 @@ static void handle_connection(int connfd)
     // Body
     strcat(response, body);
 
+
+    printf("Sending response ...\n");
+
 // Send
     write(connfd, response, strlen(response));
 
