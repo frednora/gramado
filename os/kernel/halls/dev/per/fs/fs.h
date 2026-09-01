@@ -568,7 +568,7 @@ fsSaveFile (
     unsigned long dir_address,
     int dir_entries,
     const char *file_name, 
-    unsigned long file_size,
+    unsigned long size_in_sectors,
     unsigned long size_in_bytes,
     char *file_address,
     char flag );
@@ -600,15 +600,16 @@ sys_read_file_from_disk (
 int
 do_write_file_to_disk ( 
     char *file_name, 
-    unsigned long file_size,
+    unsigned long size_in_sectors,
     unsigned long size_in_bytes,
     char *file_address,
     char flag );
+
 // Wrapper
 int
 sys_write_file_to_disk ( 
     const char *file_name, 
-    unsigned long file_size,
+    unsigned long size_in_sectors,
     unsigned long size_in_bytes,
     char *file_address,
     char flag );

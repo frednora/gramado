@@ -2234,11 +2234,10 @@ physically stored on the underlying disk, use fsync(2).  (It will
 depend on the disk hardware at this point.)
 */
 
+// #: It needs to be used only as a worker for syscalls.
 int __close_imp(int fd)
 {
-// #: It needs to be used only as a worker for syscalls.
-
-    file *object;
+    file *fp;  // Object: file pointer
     struct te_d *p;
     pid_t current_process = -1;
     int Done=FALSE;
@@ -2246,7 +2245,7 @@ int __close_imp(int fd)
 // Invalid fd
     if (fd < 0 || fd >= OPEN_MAX)
     {
-        debug_print("__close_imp: bad fd\n");
+        debug_print("__close_imp: fd\n");
         return (int) (-EBADF);
     }
 
@@ -2260,12 +2259,9 @@ int __close_imp(int fd)
         return (int) (-EBADF);
 
 // Process
-
-    // Get PID for the current process for a given core.
-    // IN: core id
-
+// Get PID for the current process for a given core.
+// IN: core id
     current_process = (pid_t) get_current_process(0);
-
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
     {
         debug_print("__close_imp: current_process\n");
@@ -2282,13 +2278,13 @@ int __close_imp(int fd)
     }
 
 // The object is a file structure
-    object = (file *) p->Objects[fd];
-    if ((void *) object == NULL){
-        debug_print("__close_imp: object\n");
+    fp = (file *) p->Objects[fd];
+    if ((void *) fp == NULL){
+        debug_print("__close_imp: fp\n");
         goto fail;
     }
-    if (object->used != TRUE || object->magic != 1234){
-        debug_print("__close_imp: object validation\n");
+    if (fp->used != TRUE || fp->magic != 1234){
+        debug_print("__close_imp: fp validation\n");
         goto fail;
     }
 
@@ -2299,12 +2295,12 @@ int __close_imp(int fd)
 
 // ===============================================
 // socket
-// Do NOT save it into the disk.
-    if (object->____object == ObjectTypeSocket)
+// Do NOT save it into the disk
+    if (fp->____object == ObjectTypeSocket)
     {
         debug_print("__close_imp: Trying to close a socket object\n");
 
-        struct socket_d *sk = object->socket;
+        struct socket_d *sk = fp->socket;
         if ((void*)sk == NULL){
             goto fail;
         }
@@ -2315,22 +2311,24 @@ int __close_imp(int fd)
 
 // ==============================================
 // pipe
-    if (object->____object == ObjectTypePipe){
+// #todo
+    if (fp->____object == ObjectTypePipe){
         debug_print("__close_imp: Trying to close a pipe object\n");
         Done = TRUE;
     }
 
 // ====================================================
-// virtual console.
+// virtual console
 // #todo
-    if (object->____object == ObjectTypeVirtualConsole){
+    if (fp->____object == ObjectTypeVirtualConsole){
         debug_print("__close_imp: Trying to close a virtual console object\n");
         return 0;
     }
 
 // =====================================================
 // tty
-    if (object->____object == ObjectTypeTTY){
+// #todo
+    if (fp->____object == ObjectTypeTTY){
         debug_print("__close_imp: Trying to close a tty object\n");
         Done = TRUE;
     }
@@ -2345,15 +2343,18 @@ int __close_imp(int fd)
 // ===========================================
 // regular file
 // Save the file if it is a regular file.
-    if (object->____object == ObjectTypeFile)
+// #todo: This is a good time to handle 
+// the reference counter.
+
+    if (fp->____object == ObjectTypeFile)
     {
         debug_print("__close_imp: [FIXME] trying to close a regular file\n");
         //debug_print("__close_imp: [FIXME] fsSaveFile\n");
 
         // #fixme: buffer limit
-        if (object->_lbfsize < 512){  
+        if (fp->_lbfsize < 512){  
             debug_print("__close_imp: [FIXME] Ajusting file size\n");
-            object->_lbfsize = 512; 
+            fp->_lbfsize = 512; 
         }
 
         // Save file in the root dir.
@@ -2364,18 +2365,18 @@ int __close_imp(int fd)
             VOLUME1_FAT_ADDRESS, 
             VOLUME1_ROOTDIR_ADDRESS, 
             FAT16_ROOT_ENTRIES,
-            (char *)         object->_tmpfname, 
-            (unsigned long) (object->_lbfsize/512),  // file_size, in sectors       
-            (unsigned long)  object->_lbfsize,       // size_in_bytes,  
-            (char *)         object->_base,          // buffer address          
-            (char)           0x20 );                 // flag ??
+            (char *)         fp->_tmpfname, 
+            (unsigned long) (fp->_lbfsize/512),  // File size in sectors       
+            (unsigned long)  fp->_lbfsize,       // File size in bytes  
+            (char *)         fp->_base,          // buffer address          
+            (char)           0x20 );             // flags
 
         Done = TRUE;
     }
 
     // ...
 
-// Object type not supported.
+// Object type not supported
     if (Done != TRUE){
         debug_print("__close_imp:[FAIL] Object type not supported\n");
         goto fail;
@@ -2383,12 +2384,15 @@ int __close_imp(int fd)
 
 // Close it!
 // Everything was done.
-// Let's destroy the object pointer, empty the spot in the list
-// and return 0.
+// Let's destroy the object pointer, 
+// empty the spot in the list and return 0.
+// + Clear local pointer
+// + clear FD slot in process table
+// + return 0 (OK)
     if (Done == TRUE)
     {
-        object = NULL;  // clear local pointer
-        p->Objects[fd] = (unsigned long) 0;  // clear FD slot in process table
+        fp = NULL;
+        p->Objects[fd] = (unsigned long) 0;
         return 0;
     }
 
@@ -2409,7 +2413,6 @@ fail:
 // Return the file pointer.
 file *get_file_from_fd(int fd)
 {
-// File pointer
     file *fp;
 // Current process
     struct te_d *p;
@@ -2421,12 +2424,10 @@ file *get_file_from_fd(int fd)
     }
 
 // Current PID and process pointer
-
-    // Get PID for the current process for a given core.
-    // IN: core id
+// Get PID for the current process for a given core.
+// IN: core id
 
     current_pid = (pid_t) get_current_process(0);
-
     if ( current_pid < 0 || current_pid >= PROCESS_COUNT_MAX )
     {
         return NULL;
@@ -2444,7 +2445,7 @@ file *get_file_from_fd(int fd)
         return NULL;
     }
 
-// File pointer.
+// File pointer
     fp = (file *) p->Objects[fd];
     if ((void*) fp == NULL){
         //#debug
@@ -2473,10 +2474,11 @@ int get_free_slots_in_the_file_table(void)
         panic("get_free_slots_in_the_file_table: FileTableInfo not initialized\n");
     }
 
+    // Get a free slot in the file_table[]
+    // #ps: reference counter is 0.
     for (i=0; i<NUMBER_OF_FILES; i++)
     {
         tmp = (void*) file_table[i];
-        // Nenhum file descritor está usando essa estrutura.
         if (tmp->used == TRUE && 
             tmp->magic == 1234 && 
             tmp->fd_counter == 0)
@@ -2494,11 +2496,11 @@ int get_free_slots_in_the_inode_table(void)
     struct inode_d *tmp;
     register int i=0;
 
+    // Get a free slot in the inode_table[]
+    // #ps: reference counter is 0.
     for (i=0; i<32; i++)
     {
         tmp = (void*) inode_table[i];
-        // Se nenhum descritor de estrutura de arquivo 
-        // está usando essa estrutura inode.
         if (tmp->used == TRUE && 
             tmp->magic == 1234 && 
             tmp->filestruct_counter == 0)
@@ -2534,7 +2536,7 @@ void set_filesystem_type (int type)
 // Counting path levels.
 // Credits: Sirius OS.
 // return 'int'?
-unsigned long fs_count_path_levels (unsigned char *path)
+unsigned long fs_count_path_levels(unsigned char *path)
 {
     unsigned long Counter=0;
     register int i=0;
@@ -2549,10 +2551,16 @@ unsigned long fs_count_path_levels (unsigned char *path)
         return 0;
     }
 
-    for ( i=0; i < MaxChars; ++i )
+    for (i=0; i < MaxChars; i++)
     {
-        if (path[i] == '/') { Counter++; }
-        if (path[i] == '\0'){ break; }
+        if (path[i] == '/')
+        {
+            Counter++;
+        }
+        if (path[i] == '\0')
+        {
+            break;
+        }
     };
 
     return (unsigned long) Counter;
@@ -2571,7 +2579,7 @@ void *get_file (int Index)
 }
 
 // Set a file pointer into the global file table.
-void set_file ( void *file, int Index )
+void set_file(void *file, int Index)
 {
 // #todo:
 // Limite máximo da lista.
@@ -2586,7 +2594,7 @@ void set_file ( void *file, int Index )
         return;
     }
 
-// Include pointer into the list.
+// Include pointer into the list
     file_table[Index] = (unsigned long) file;
 }
 
@@ -2629,20 +2637,18 @@ void fs_init_structures (void)
 // Se o volume do vfs ainda não foi criado 
 // então não podemos prosseguir.
 
-        //if ( (void *) volume_vfs == NULL )
-        //{
-        //    debug_print("fs_init_structures: [FAIL] volume_vfs not initialized");
-        //    panic      ("fs_init_structures: [FAIL] volume_vfs not initialized");
-        //}
-        //volume_vfs->fs = root;
- 
+    //if ( (void *) volume_vfs == NULL )
+    //{
+    //    debug_print("fs_init_structures: [FAIL] volume_vfs not initialized");
+    //    panic      ("fs_init_structures: [FAIL] volume_vfs not initialized");
+    //}
+    //volume_vfs->fs = root;
 
 // Save is in the 'storage' low level structure.
 
     if ((void*) storage == NULL){
         panic("fs_init_structures: storage");
     }
-
     storage->fs = (void*) root;
     // ...
 
@@ -2675,23 +2681,23 @@ void fs_init_structures (void)
         // #bugbug: Specific for fat16.
         
         // root dir
-        root->rootdir_address   = VOLUME1_ROOTDIR_ADDRESS;
+        root->rootdir_address = VOLUME1_ROOTDIR_ADDRESS;
         root->rootdir_first_lba = VOLUME1_ROOTDIR_LBA;
         //root->rootdir_last_lba = 0;  //#todo 
         root->rootdir_size_in_sectors = 0;  //#todo
-        
+
         // fat1
-        root->fat_address     = VOLUME1_FAT_ADDRESS;
-        root->fat_first_lba   = VOLUME1_FAT_LBA;
+        root->fat_address = VOLUME1_FAT_ADDRESS;
+        root->fat_first_lba = VOLUME1_FAT_LBA;
         //root->fat_last_lba = 0;  //#todo
         root->fat_size_in_sectors = 0;  //#todo
-        
+
         // fat2
         // ...
-        
+
         // dataarea
         //filesystem->dataarea_address = ??;
-        root->dataarea_first_lba    = VOLUME1_DATAAREA_LBA; 
+        root->dataarea_first_lba = VOLUME1_DATAAREA_LBA; 
         //root->dataarea_last_lba = 0;  //#todo
         //root->dataarea_size_in_sectors = 0;  //#todo
  
@@ -2704,7 +2710,7 @@ void fs_init_structures (void)
         //root->fs_size_in_sectors = 0;
 
         // Root dir.
-            
+
         // Number of entries in the root dir.
         // #bugbug: Specific for fat16.
         root->dir_entries = FAT16_ROOT_ENTRIES;
@@ -2855,9 +2861,8 @@ int fsInitTargetDir (unsigned long dir_address, char *dir_name)
     for ( i=0; i<8; i++ ){
         current_target_dir.name[i] = dir_name[i];
     };
-// done:
-    current_target_dir.initialized = TRUE;
 
+    current_target_dir.initialized = TRUE;
     return 0;
 }
 
@@ -2886,7 +2891,7 @@ int fsList(const char *dir_name)
 // Limits: 
 // Copy 8 bytes only
 
-    for ( i=0; i<8; i++ ){
+    for (i=0; i<8; i++){
         current_target_dir.name[i] = dir_name[i];
     };
     current_target_dir.name[i] = '\0';
@@ -2924,7 +2929,6 @@ int fsList(const char *dir_name)
         current_target_dir.name[1] = '\0'; 
     }
 
-
 // #bugbug
 // We are using the current directory address,
 // not the directory provide by the user.
@@ -2953,9 +2957,9 @@ int fsList(const char *dir_name)
 
     // Well, the root dir has 512 entries.
     int n=256;
-    if ( current_target_dir.current_dir_address == VOLUME1_ROOTDIR_ADDRESS )
+    if (current_target_dir.current_dir_address == VOLUME1_ROOTDIR_ADDRESS)
     {
-        n=512;
+        n = 512;
     }
 
     fsFAT16ListFiles ( 
@@ -2963,7 +2967,6 @@ int fsList(const char *dir_name)
         (unsigned short *) current_target_dir.current_dir_address, 
         (int) n );
 
-    //debug_print ("fsList: done\n");
     return 0;
 
 fail:
@@ -2971,14 +2974,12 @@ fail:
     return (int) -1;
 }
 
-/*
- * fsListFiles:
- *     Lista os arquivos em um diretório, 
- * dados os índices de disco, 
- * volume e diretório.
- */
+// fsListFiles:
+// List files in a directory given the disk, volume and directory indices.
 // #bugbug
-// Do not list this in ring0.
+// #todo: 
+// Do not list this in ring0 but it has been useful for
+// our ring 0 embedded shell.
 
 void 
 fsListFiles ( 
@@ -2992,7 +2993,9 @@ fsListFiles (
     // Checar mais limites.
     // Use this: if ( disk_id < 0 || volume_id < 0 || directory_id < 0 )
 
-    if ( disk_id == -1 || volume_id == -1 || directory_id == -1 )
+    if ( disk_id == -1 || 
+         volume_id == -1 || 
+         directory_id == -1 )
     {
         debug_print ("fsListFiles: [FAIL] parameters\n");
         goto fail;
@@ -3001,8 +3004,8 @@ fsListFiles (
     printk ("fsListFiles: disk={%d} vol={%d} dir={%d}\n", 
         disk_id, volume_id, directory_id );
 
-// Show!
-// Se o diret�rio selecionado � o diret�rio raiz do VFS.
+// Show it:
+// Root dir for VFS.
 
     if ( current_disk == 0 && 
          current_volume == 0 && 
@@ -3025,14 +3028,12 @@ done:
     return;
 }
 
-/*
- * fsUpdateWorkingDiretoryString:
- *     +Atualiza o pathname na estrutura do processo atual.
- *     +Atualiza o pathname na string global. 
- */ 
+// fsUpdateWorkingDiretoryString:
+// + Update the pathname in the current process structure.
+// + Update the pathname in the global string.
 // Used by the service 175, cd command.
 
-void fsUpdateWorkingDiretoryString (char *string)
+void fsUpdateWorkingDiretoryString(char *string)
 {
     struct te_d  *p;
     pid_t current_process = -1;
@@ -3070,12 +3071,10 @@ void fsUpdateWorkingDiretoryString (char *string)
     }
 
 // Current process
-
-    // Get PID for the current process for a given core.
-    // IN: core id
+// Get PID for the current process for a given core.
+// IN: core id
 
     current_process = (pid_t) get_current_process(0);
-
     if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
     {
         panic ("fsUpdateWorkingDiretoryString: current_process\n");
@@ -3083,55 +3082,51 @@ void fsUpdateWorkingDiretoryString (char *string)
     p = (struct te_d *) teList[current_process];
     if ((void *) p == NULL){
         panic ("fsUpdateWorkingDiretoryString: p\n");
-    }else{
-        if ( p->used != 1 || p->magic != 1234 ){
-            panic ("fsUpdateWorkingDiretoryString: p validation\n");
-        }
+    }
+    if (p->used != TRUE || p->magic != 1234)
+    {
+        panic ("fsUpdateWorkingDiretoryString: p validation\n");
+    }
 
-        // Atualiza a string do processo atual. 
-        // Concatenando.
+// Atualiza a string do processo atual. 
+// Concatenando.
 
-        if ((void *) string != NULL)
+    if ((void *) string != NULL)
+    {
+        // #bugbug
+        // We need to handle the string size limit.
+
+        // Concatenate string and separator.
+        strcat(p->cwd_string, string);
+        strcat(p->cwd_string, FS_PATHNAME_SEPARATOR);
+
+        // Atualiza a string global usando a string do 
+        // processo atual.
+        // #bugbug: nao precisamos disso ...
+        // so precismos de cwd na estrutura de processo.
+            
+        // #importante
+        // Respeitar o limite.
+
+        for (i=0; i<32; i++){
+            CWD.path[i] = p->cwd_string[i];
+        };
+        CWD.path[31] = 0;  // finalize
+
+        // #bugbug: rever isso.
+        // Nome do diretório alvo atual.
+            
+        // nao precismos disso ...
+        // ou usamos o cwd do processo ou
+        // o diretorio raiz para paths absolutos.
+            
+        for (i=0; i< 11; i++)
         {
-            // #bugbug
-            // We need to handle the string size limit.
-            
-            // Concatena string.
-            strcat ( p->cwd_string, string );
-
-            // Concatena separador.
-            strcat ( p->cwd_string, FS_PATHNAME_SEPARATOR );
-
-            // Atualiza a string global usando a string do 
-            // processo atual.
-            // #bugbug: nao precisamos disso ...
-            // so precismos de cwd na estrutura de processo.
-            
-            // #importante
-            // Respeitar o limite.
-            
-            for ( i=0; i<32; i++ ){
-                CWD.path[i] = p->cwd_string[i];
-            };
-            CWD.path[31] = 0; //finaliza
-
-            // #bugbug: rever isso.
-            // Nome do diretório alvo atual.
-            
-            // nao precismos disso ...
-            // ou usamos o cwd do processo ou
-            // o diretorio raiz para paths absolutos.
-            
-            for ( i=0; i< 11; i++ )
-            {
-                current_target_dir.name[i] = *tmp;
-                tmp++;
-            };
-            current_target_dir.name[11] = 0; //finaliza
-        }
-    };
-
-    //debug_print ("fsUpdateWorkingDiretoryString: done\n"); 
+            current_target_dir.name[i] = *tmp;
+            tmp++;
+        };
+        current_target_dir.name[11] = 0;  // finalize
+    }
 }
 
 /*
@@ -3151,6 +3146,7 @@ void fsUpdateWorkingDiretoryString (char *string)
 // #bugbug
 // const char * tornaria esse endereço em apenas leitura.
 // Allowed in fat16: $ % ' - _ @ ~ ` ! ( ) { } ^ # &
+
 void fs_fntos(char *name)
 {
     int i=0;
@@ -3497,16 +3493,20 @@ AddExt:
 
 int fs_duplicate_fd(int oldfd, int start) 
 {
-    struct te_d *p;
     file *fp;
+    int newfd = -1;
+    struct te_d *p;
     pid_t current_process = get_current_process(0);
 
-    if (oldfd < 0 || oldfd >= OPEN_MAX) return -EBADF;
-    if (start < 0 || start >= OPEN_MAX) return -EINVAL;
+    if (oldfd < 0 || oldfd >= OPEN_MAX)
+        return -EBADF;
+    if (start < 0 || start >= OPEN_MAX)
+        return -EINVAL;
 
 // process
     p = (struct te_d *) teList[current_process];
-    if (!p || p->magic != 1234) return -EBADF;
+    if (!p || p->magic != 1234)
+        return -EBADF;
 
 // file pointer
     fp = (file *) p->Objects[oldfd];
@@ -3516,18 +3516,18 @@ int fs_duplicate_fd(int oldfd, int start)
         return -EBADF;
 
     // Find next free slot >= start
-    int newfd;
     for (newfd = start; newfd < OPEN_MAX; newfd++) 
     {
-        if (p->Objects[newfd] == 0){
+        if (p->Objects[newfd] == 0)
+        {
             p->Objects[newfd] = (unsigned long) fp;
-            return newfd;
+
+            return (int) newfd;  // Done
         }
     }
 
-    return -EMFILE; // no free slots
+    return (int) -EMFILE;  // no free slots
 }
-
 
 // Pega um fd na lista de arquivos do processo, dado o PID.
 // Objects[i]
@@ -3537,7 +3537,7 @@ int fs_get_free_fd_from_pid (pid_t pid)
     struct te_d *p;
 
 // Parameter
-    if ( pid<0 || pid >= PROCESS_COUNT_MAX ){
+    if (pid<0 || pid >= PROCESS_COUNT_MAX){
         debug_print ("fs_get_free_fd_from_pid: pid\n");
         goto fail;
     }
@@ -3548,7 +3548,7 @@ int fs_get_free_fd_from_pid (pid_t pid)
         debug_print ("fs_get_free_fd_from_pid: p\n");
         goto fail;
     }
-    if ( p->used != TRUE || p->magic != 1234 ){
+    if (p->used != TRUE || p->magic != 1234){
         debug_print ("fs_get_free_fd_from_pid: p validation\n");
         goto fail;
     }
@@ -3566,14 +3566,13 @@ fail:
     return (int) -1;
 }
 
-/*
- * fs_initialize_process_cwd:
- *     Cada processo deve inicialiar seus dados aqui. 
- */
+// fs_initialize_process_cwd:
+// Each process must initialize its data here.
 // #todo:
 // handle return value ...
 // What functions is calling us?
-int fs_initialize_process_cwd ( pid_t pid, char *string )
+
+int fs_initialize_process_cwd(pid_t pid, char *string)
 {
     struct te_d *p;
     register int i=0;
@@ -3620,20 +3619,15 @@ int fs_initialize_process_cwd ( pid_t pid, char *string )
     return 0;
 }
 
-/* 
- * fs_pathname_backup:
- *     Remove n nomes de diret�rio do pathname do processo indicado no 
- * argumento.
- *     Copia o nome para a string global.
- *     Remove the last N directories from PATH.  
- *     Do not leave a blank path.
- *     PATH must contain enough space for MAXPATHLEN characters. 
- *     #obs: O PID costuma ser do processo atual mesmo. 
- *     Credits: bash 1.05 
- */
-// #todo: Describe 'n'.
+// fs_pathname_backup:
+// Remove n directory names from 
+// the pathname of the process indicated in the argument.
+// Copy the name to the global string.
+// Remove the last N directories from PATH.
+// Do not leave a blank path.
+// PATH must contain enough space for MAXPATHLEN characters.
 
-void fs_pathname_backup ( pid_t pid, int n )
+void fs_pathname_backup(pid_t pid, int n)
 {
     struct te_d *p;
     register int i=0;
@@ -3694,8 +3688,7 @@ int fs_print_process_cwd(pid_t pid)
 {
     struct te_d *p;  // Process structure
 
-    //debug_print ("fs_print_process_cwd:\n");
-    printk      ("fs_print_process_cwd:\n");
+    printk("fs_print_process_cwd:\n");
 
 // Parameter
     if (pid<0 || pid>=PROCESS_COUNT_MAX){
@@ -3818,7 +3811,6 @@ void fs_show_inode_table(void)
 
 void fs_show_root_fs_info(void)
 {
-    //printk ("\n");
     printk ("fs_show_root_fs_info:\n");
 
 // root fs structure.
@@ -3826,36 +3818,29 @@ void fs_show_root_fs_info(void)
     if ((void *) root == NULL){
         printk ("No root structure\n");
         goto fail;
-    
-    }else{
+    }
+    if (root->used != 1 || root->magic != 1234)
+    {
+        printk ("Validation fail\n");
+        goto fail;
+    }
 
-        if ( root->used != 1 || root->magic != 1234 ){
-            printk ("Validation fail\n");
-            goto fail;
-        }
-
-        printk ("name = %s \n",       root->name );
-        printk ("Object type %d \n",  root->kobj._type );
-        printk ("Object class %d \n", root->kobj._class );
-        printk ("type = %d \n",       root->type );
-        printk ("Dir entries %d \n",  root->dir_entries );
-        printk ("Entry size %d \n",   root->entry_size );
-        // ...
-        goto done;
-    }; 
+    printk("name = %s\n",       root->name );
+    printk("Object type %d\n",  root->kobj._type );
+    printk("Object class %d\n", root->kobj._class );
+    printk("type = %d\n",       root->type );
+    printk("Dir entries %d\n",  root->dir_entries );
+    printk("Entry size %d\n",   root->entry_size );
+    // ...
+    return;  // done
 
 fail:
     printk("fail\n");
-
-done:
-    return;
 }
 
-/*
- * fsSaveFile:
- *     Salva um arquivo no disco.
- *     Somente no diretório raiz.
- */
+// fsSaveFile:
+// Salva um arquivo no disco.
+// Somente no diretório raiz.
 // It was called by sys_write_file() in fs.c.
 // It was called by sys_read_file when the file does not exist.
 // #obs
@@ -3877,14 +3862,19 @@ done:
 // is dir_address virtual or physical?
 // Change this name to dir_pa or dir_va.
 
-// Low level worker.
+// dir_address → Directory buffer address where the file entry will be created.
+// dir_entries → Number of entries in that directory buffer.
+// file_name → The name of the file to be saved.
+// size_in_sectors → Size of the file in sectors (not bytes).
+// file_buffer → Pointer to the memory buffer containing the file’s contents.
+
 int
 fsSaveFile ( 
     unsigned long fat_address,
     unsigned long dir_address,
     int dir_entries,
     const char *file_name, 
-    unsigned long file_size,   // number of sectors
+    unsigned long size_in_sectors,
     unsigned long size_in_bytes,
     char *file_address,
     char flag )  
@@ -3934,11 +3924,9 @@ fsSaveFile (
     }
 
 // Ex: VOLUME1_FAT_ADDRESS
-    unsigned short *fat = 
-        (unsigned short *) fat_address;
+    unsigned short *fat = (unsigned short *) fat_address;
 // Ex: VOLUME1_ROOTDIR_ADDRESS
-    unsigned short *__dir = 
-        (unsigned short *) dir_address;
+    unsigned short *__dir = (unsigned short *) dir_address;
 
 // #debug
 // #todo
@@ -3946,8 +3934,7 @@ fsSaveFile (
 
     if (fat_address != VOLUME1_FAT_ADDRESS)
     {
-        //panic("fsSaveFile: [FIXME] We only support ONE fat address for now!\n");
-        panic ("fsSaveFile: fat_address\n");
+        panic("fsSaveFile: fat_address\n");
     }
 
 // Filename
@@ -3970,7 +3957,7 @@ fsSaveFile (
 /*
     printk ("name address = %x \n", &file_name );
     printk ("name    = %s \n", file_name ); 
-    printk ("size    = %d \n", file_size );       // Size in sectors.
+    printk ("size    = %d \n", size_in_sectors );
     printk ("nbytes  = %d \n", size_in_bytes );
     printk ("address = %x \n", file_address );
     printk ("flag    = %x \n", flag );
@@ -3984,7 +3971,7 @@ fsSaveFile (
         panic ("fsSaveFile: [FAIL] max dir entries");
     }
 
-// file_size
+// size_in_sectors
 // #todo: 
 // precisamos implementar um limite para o tamanho do arquivo,
 // principamente nessa fase de teste.
@@ -3992,16 +3979,16 @@ fsSaveFile (
 // #bugbug
 // Limite provisorio
 // Size in sectors.
-    if (file_size > MaxFileSizeInSectors)
+
+    if (size_in_sectors > MaxFileSizeInSectors)
     {
         debug_print("fsSaveFile: [FIXME] Size in sectors\n");
-        printk     ("fsSaveFile: [FIXME] Size in sectors = %d \n", 
-            file_size ); 
+        printk     ("fsSaveFile: [FIXME] Size in sectors = %d\n", 
+            size_in_sectors ); 
         goto fail;
     }
 
 // Load root dir and FAT.
-// see: dev/blkdev/disk_r.c
     fs_load_rootdir( VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32 );
     fs_load_fat( VOLUME1_FAT_ADDRESS, VOLUME1_FAT_LBA, 246 );
 
@@ -4035,7 +4022,7 @@ fsSaveFile (
             // Se der certo, saímos do loop.
             // #bugbug: Esse size deve ter um limite.
             // file_size = file size in sectors, (clusters??)
-            if (file_size == 0){
+            if (size_in_sectors == 0){
                 fat16ClustersToSave[j] = (unsigned short) 0xfff8; 
                 goto save_file;
             }
@@ -4047,8 +4034,8 @@ fsSaveFile (
             fat16ClustersToSave[j] = (unsigned short) c; 
             j++; 
 
-            // Decrementa o tamanho do arquivo!
-            file_size--; 
+            // Decrement the number of sectors we need to find
+            size_in_sectors--; 
         };
 
         c++;    // Incrementa o deslocamento na fat. 
@@ -4145,7 +4132,6 @@ save_file:
     //if (IsVolumeLabel)
     //    DirEntry[11] = (char) DirEntry[11] | 0x08;
 
-
 // Reserved
     DirEntry[12] = 0; 
 
@@ -4207,7 +4193,6 @@ save_file:
         DirEntry[31] = (char) 0;
     }
 
-
 // #importante:
 // Vamos encontrar uma entrada livre no diretório para
 // salvarmos o nome do arquivo.
@@ -4229,10 +4214,10 @@ save_file:
     
     FreeIndex = 
         (int) findEmptyDirectoryEntry ( 
-                  dir_address, 
-                  dir_entries );
+                dir_address, 
+                dir_entries );
 
-    if ( FreeIndex == -1 ){
+    if (FreeIndex == -1){
         printk ("fsSaveFile: [FAIL] No empty entry\n");
         goto fail;
     }
@@ -4251,7 +4236,7 @@ save_file:
 // Copia 32 bytes.
  
     EntrySize = (FAT16_ENTRY_SIZE/2);
-    Offset = (int) ( FreeIndex * EntrySize );
+    Offset = (int) (FreeIndex * EntrySize);
 
 // FAT16_DIRENTRY_SIZE = 32
     memcpy ( &__dir[Offset], DirEntry, 32 );
@@ -4292,7 +4277,6 @@ save_file:
     //next = list[0];
     //if (next == 0xFFF8)
         //what??
-
 
     unsigned int L_current_ide_port = 
         (unsigned int) ata_get_current_ide_port_index();
@@ -4337,6 +4321,7 @@ save_file:
             // ata_get_current_ide_port_index()
             disk_ata_wait_irq( ATACurrentPort.g_current_ide_port_index );
 
+            // Low level worker
             //grava - Aqui next esta certo!
             //write_lba ( (unsigned long) address, VOLUME1_DATAAREA_LBA + next -2 );
             ataWriteSector ( 
@@ -4349,8 +4334,7 @@ save_file:
             address += 512;
         }; 
 
-        //Próximo valor da lista.
-        i++;
+        i++;  // next value in the list
 
         // #bugbug
         // Limitando o tamanho do arquivo a 16 entradas.
@@ -4392,8 +4376,6 @@ do_save_dir_and_fat:
     //debug_print ("fsSaveFile: [DEBUG] do_save_dir_and_fat\n");
     //printk("fsSaveFile: do_save_dir_and_fat:\n"); 
 
-
-
 // Save rootdir into the disk
 // #ps: ATA disk only
 // #bugbug: We need to save a directory, not the root.
@@ -4406,10 +4388,9 @@ do_save_dir_and_fat:
         32
     );
 
-// Sinalizando que o cache de fat precisa ser salvo.
+// Sinalizing that the fat cache needs to be saved
     fs_fat16_cache_not_saved();
 
-    // #debug
     //debug_print ("fsSaveFile: done\n");
     //printk      ("fsSaveFile: done\n");
 
@@ -4418,6 +4399,8 @@ do_save_dir_and_fat:
 fail:
     debug_print("fsSaveFile: fail\n");
     printk     ("fsSaveFile: fail\n");
+
+    // #todo: Return value
     return (int) 1;  // Why 1?
     //return -1;
 }
@@ -4839,14 +4822,14 @@ __OK:
         goto fail;
     }
 
-// Load.
-// Load the file into the memory.
+// Load the file into the memory
     //printk("Load ....\n");
+
     Status = 
         (int) fsLoadFile ( 
                 VOLUME1_FAT_ADDRESS, 
                 TargetDirAddress, 
-                NumberOfEntries,  //#bugbug: Number of entries
+                NumberOfEntries,
                 file_name, 
                 (unsigned long) fp->_base,
                 fp->_lbfsize );
@@ -4866,21 +4849,21 @@ __OK:
 // See:
 // https://linux.die.net/man/2/open
 
-           /*
-           O_RDONLY        open for reading only
-           O_WRONLY        open for writing only
-           O_RDWR          open for reading and writing
-           O_NONBLOCK      do not block on open or for data to become available
-           O_APPEND        append on each write
-           O_CREAT         create file if it does not exist
-           O_TRUNC         truncate size to 0
-           O_EXCL          error if O_CREAT and the file exists
-           O_SHLOCK        atomically obtain a shared lock
-           O_EXLOCK        atomically obtain an exclusive lock
-           O_NOFOLLOW      do not follow symlinks
-           O_SYMLINK       allow open of symlinks
-           O_FSYNC         write will save into the disk. :)
-           */
+    /*
+        O_RDONLY        open for reading only
+        O_WRONLY        open for writing only
+        O_RDWR          open for reading and writing
+        O_NONBLOCK      do not block on open or for data to become available
+        O_APPEND        append on each write
+        O_CREAT         create file if it does not exist
+        O_TRUNC         truncate size to 0
+        O_EXCL          error if O_CREAT and the file exists
+        O_SHLOCK        atomically obtain a shared lock
+        O_EXLOCK        atomically obtain an exclusive lock
+        O_NOFOLLOW      do not follow symlinks
+        O_SYMLINK       allow open of symlinks
+        O_FSYNC         write will save into the disk. :)
+    */
 
 // Saving into de disk ?
 // You can use the O_FSYNC open mode to make write always 
@@ -4962,7 +4945,7 @@ fail:
 int
 do_write_file_to_disk ( 
     char *file_name, 
-    unsigned long file_size,
+    unsigned long size_in_sectors,
     unsigned long size_in_bytes,
     char *file_address,
     char flag )  
@@ -5007,7 +4990,7 @@ do_write_file_to_disk (
                 TargetDirAddress, 
                 NumberOfEntries,
                 (char *) file_name,
-                (unsigned long) file_size,
+                (unsigned long) size_in_sectors,
                 (unsigned long) size_in_bytes,
                 (char *) file_address,
                 (char) flag );
@@ -5536,8 +5519,6 @@ int __fs_initialize_imp (void)
     return 0;
 }
 
-
 //
 // End
 //
-

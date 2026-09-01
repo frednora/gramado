@@ -103,21 +103,24 @@ ssize_t sys_write(int fd, const char *ubuf, size_t count)
     return (ssize_t) __write_imp(fd, ubuf, count);
 }
 
+// Limits:
+// Probably BUFSIZ (1024 for now) is the limit for this routine.
+// To improve this we need to allocate a bigger buffer 
+// in the file structure.
 int 
 sys_open(
     const char *pathname, 
     int flags, 
     mode_t mode )
 {
-// Limits:
-// Probably BUFSIZ (1024 for now) is the limit for this routine.
-// To improve this we need to allocate a bigger buffer 
-// in the file structure.
 
+// Parameters:
+// Is this the right error code for this?
     if ((void*) pathname == NULL)
-        return (int) -EFAULT;  // Bad address. Is it the right error code?
+        return (int) -EFAULT;
     if (*pathname == 0)
-        return (int) -EFAULT;  // Bad address. Is it the right error code?
+        return (int) -EFAULT;
+
     return (int) __open_imp( pathname, flags, mode );
 }
 
@@ -823,7 +826,7 @@ sys_read_file_from_disk (
 int
 sys_write_file_to_disk ( 
     const char *file_name, 
-    unsigned long file_size,
+    unsigned long size_in_sectors,
     unsigned long size_in_bytes,
     char *file_address,
     char flag )
@@ -846,11 +849,11 @@ sys_write_file_to_disk (
     // Coping more than we need, 
     // this way we're coping the 0x00 byte at the and of string
     // and some extra bytes.
-    strncpy(pathname_local_copy,file_name,256);
+    strncpy(pathname_local_copy, file_name, 256);
 
     return (int) do_write_file_to_disk(
                      (char *) pathname_local_copy,
-                     (unsigned long) file_size,
+                     (unsigned long) size_in_sectors,
                      (unsigned long) size_in_bytes,
                      (char *) file_address,
                      (char) flag );

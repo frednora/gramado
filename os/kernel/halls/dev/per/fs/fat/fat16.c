@@ -43,6 +43,31 @@ struct fat16_directory_entry_d *vol_label_directory_entry;
 
 // -------------------------------
 
+/*
+// #todo
+// Returns 1 if entry is a directory, 0 otherwise.
+int fat16_is_directory(struct fat16_directory_entry_d *entry);
+int fat16_is_directory(struct fat16_directory_entry_d *entry)
+{
+    if ((void*) entry == NULL) return 0;
+    return (entry->Attributes & FILE_ATTRIBUTE_DIRECTORY) ? 1 : 0;
+}
+*/
+
+
+/*
+// #todo
+// Returns 1 if entry is a regular file, 0 otherwise.
+int fat16_is_regular_file(struct fat16_directory_entry_d *entry);
+int fat16_is_regular_file(struct fat16_directory_entry_d *entry)
+{
+    if ((void*) entry == NULL) return 0;
+    return (!(entry->Attributes & FILE_ATTRIBUTE_DIRECTORY) &&
+            !(entry->Attributes & FILE_ATTRIBUTE_VOLUME_LABEL));
+}
+*/
+
+
 // #test
 // #bugbug
 // We're using the pointer 'vol_label_directory_entry' for
@@ -222,7 +247,8 @@ from_FAT_name (
     };
 }
 
-// Converts a human string into FAT16 8.3 format (pads with spaces, splits extension).
+// Converts a human string into FAT16 8.3 format 
+// (pads with spaces, splits extension).
 // Credits: Hoppy OS
 void 
 to_FAT_name (
@@ -255,12 +281,17 @@ to_FAT_name (
         };
 
         // Completa com ' ' ate 8.
-        while (i<8){ dst[i++] = 0x20; };
-        
-        if (*ptr == '.') { ptr++; }
+        while (i<8){
+            dst[i++] = 0x20;
+        };
+
+        if (*ptr == '.') { 
+            ptr++;
+        }
         
         // Agora a extensao
-        while (i<11 && *ptr){
+        while (i<11 && *ptr)
+        {
             dst[i++] = *ptr++;
         };
     };
