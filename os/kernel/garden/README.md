@@ -14,7 +14,7 @@ The entry point for the kernel.
 ```
 ap/      - AP processors
 bsp/     - BSP processors
-gramnet/ - Top level protocols
+gramnet/ - Top level protocols (API)
 net/     - Low level network infrastructure.
            (firewall, protocols and sockets)
 ```

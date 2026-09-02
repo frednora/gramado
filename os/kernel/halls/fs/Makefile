@@ -2,7 +2,7 @@
 # Compile all the files and create p3_fs.o
 # Makefile for the kernel filesystems.
 
-INCLUDE = ../../../../include
+INCLUDE = ../../include
 
 AS	= as
 LD	= ld
@@ -12,16 +12,15 @@ MAKE	= make
 NASM	= nasm
 OBJCOPY	= objcopy
 OBJDUMP	= objdump
-LEX	= flex
-YACC	= bison
-PERL	= perl
+#LEX	= flex
+#YACC	= bison
+#PERL	= perl
 PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
-RUBY	= ruby
+#RUBY	= ruby
 
 
-# test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
 CFLAGS := \
 	-Wall \
@@ -89,7 +88,7 @@ all:
 
 # link
 	$(LD) -r -o p3_fs.o $(OBJS)
-	cp p3_fs.o ../../../../
+	cp p3_fs.o ../../
 	rm *.o
 
 clean:

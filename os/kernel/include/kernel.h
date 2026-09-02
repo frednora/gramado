@@ -397,20 +397,17 @@ extern int system_state;
 
 // ==================================
 // fs/
-// File system
-// ----------------------
-// Depois de devices.
-// fs
-#include "../halls/dev/per/fs/path.h"      // path.
+// File system (After the devices)
 
-#include "../halls/dev/per/fs/fat/fatlib.h"    // fat16 library.
-#include "../halls/dev/per/fs/fat/fat.h"       // fat16.
+#include "../halls/fs/path.h"
+#include "../halls/fs/fat/fatlib.h"  // fat16 library
+#include "../halls/fs/fat/fat.h"     // fat16
+#include "../halls/fs/inode.h"
+#include "../halls/fs/exec_elf.h"
+#include "../halls/fs/pipe.h"
+#include "../halls/fs/files.h"
+#include "../halls/fs/fs.h"
 
-#include "../halls/dev/per/fs/inode.h"
-#include "../halls/dev/per/fs/exec_elf.h"
-#include "../halls/dev/per/fs/pipe.h"
-#include "../halls/dev/per/fs/files.h"
-#include "../halls/dev/per/fs/fs.h"
 
 // ==================================
 #include "../halls/res.h"

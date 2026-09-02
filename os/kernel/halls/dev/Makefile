@@ -19,12 +19,12 @@ all:
 	make -C req/mm/
 
 # AIH: Application Interaction Hall
-# -- app::disk --------------------
+# -- app::disk+net --------------------
 # Interrupt origin: irq
 
 	make -C per/blkdev/
 	make -C per/netdev/
-	make -C per/fs/
+#	make -C per/fs/
 	make -C per/
 
 clean:

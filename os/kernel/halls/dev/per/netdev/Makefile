@@ -1,4 +1,4 @@
-# dev/
+# devdev/
 # Compile all the files and create ar_dev.o
 # Makefile for the kernel device drivers.
 
