@@ -169,9 +169,16 @@ struct socket_d
     // maybe
     //struct sockpeercred  peercred;
 
+// The file necessary to handle the data transfer 
+// between the socket and the process.
+    file *private_file;
+
 //
 // == Connections ========
 //
+
+// See: sockint.h
+    int state;
 
 // 1=LOCAL | 2=REMOTE
     int connection_type;
@@ -233,9 +240,6 @@ struct socket_d
 // Link to the current connection.
     struct socket_d *link;
 
-// See: sockint.h
-    int state;
-
 // TRUE = available for reuse, FALSE = occupied.
     int free;
 
@@ -250,9 +254,6 @@ struct socket_d
     int clientfd_on_server;
 // ====================================
 
-// Is this a socket file?
-// Associated File Data (if sockets are file objects in your system)
-    file *private_file;
 // Debugging magic string
     char magic_string[8];
 

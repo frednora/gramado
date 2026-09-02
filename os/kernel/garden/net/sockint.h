@@ -21,12 +21,12 @@ extern unsigned long socketList[SOCKET_COUNT_MAX];
 
 // Socket state
 #define SS_NULL           0
-#define SS_LISTENING      1  // Server.  Waiting for SYN
-#define SS_UNCONNECTED    2  // Client
+#define SS_LISTENING      1  // Server-side: Waiting for SYN.
+#define SS_UNCONNECTED    2
 #define SS_CONNECTING     3  // Handshake in progress
 #define SS_CONNECTED      4  // Established
 #define SS_DISCONNECTING  5  // Tear‑down in progress
-#define SS_CLOSED         6  // Socket is closed, ready for reuse
+#define SS_CLOSED         6  // Socket is closed, ready for reuse.
 // ...
 
 // Ports

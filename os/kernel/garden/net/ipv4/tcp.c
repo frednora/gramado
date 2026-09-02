@@ -849,10 +849,6 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
         printk("tcp_socket_recv: sk magic\n");
         return -EINVAL;
     }
-    if (sk->state != SS_CONNECTED){
-        printk("tcp_socket_recv: socket not connected\n");
-        return -ENOTCONN;
-    }
     if ((void*) buf == NULL){
         printk("tcp_socket_recv: buf\n");
         return -EINVAL;
@@ -862,6 +858,12 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
     if (len < 0)
         return -EINVAL;
 
+
+// Socket state
+    if (sk->state != SS_CONNECTED){
+        printk("tcp_socket_recv: socket not connected\n");
+        return -ENOTCONN;
+    }
 
 // connection
     conn = sk->conn;
@@ -1349,9 +1351,7 @@ __remote_client_sent_syn(
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    uint16_t flags=0;
     size_t data_len = 0;
-    //register int i=0;
 
     // No payload for handshake
     char dummy_payload[2];
@@ -1372,9 +1372,16 @@ __remote_client_sent_syn(
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
-// Ports:
+
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     printk("TCP: [Receiving] s=%u (sport), d=%u (dport)\n", 
         sport, dport );
 
@@ -1392,9 +1399,6 @@ __remote_client_sent_syn(
 // “I have successfully received everything up to this byte number minus one.”
 // Ex: If _ack_number = 5099, it means the receiver has received 
 // all bytes up to 5098 and is expecting 5099 next.
-
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
@@ -1433,7 +1437,6 @@ __remote_client_sent_syn(
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     //if (peer_window == 0)
         //return;
 
@@ -1441,7 +1444,6 @@ __remote_client_sent_syn(
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -1566,6 +1568,9 @@ __remote_client_sent_syn(
     }
 
     // 1 :: SYN from remote client to a local server
+    // #todo:
+    // If the client sent a SYN, so it's trying to connect with a server.
+    // We need to find this server and check if it is listening.
     if (fSYN == 1 && fACK == 0)
     {
         printk("-- Step 1 --------\n");
@@ -1600,24 +1605,24 @@ __remote_client_sent_syn(
             //kfree(conn);
             return; // do not respond
         }
+        // SYN received from remote client
+        // We're local server
         conn->type = CONN_TYPE_TCP;
-        // #ps: Status: Receiving a SYN from a remoter client
-        conn->status = CONN_STATUS_SYN_RECEIVED;
-
-        // #test: it means we are the local server
+        conn->status = CONN_STATUS_SYN_RECEIVED;  
         conn->is_local_server = TRUE;
+        conn->packets_received++;
 
         // Copy caller MAC into the connection
         // The ethernet handler gave us this thing
         memcpy(conn->peer_mac, NetworkSaved.caller_mac, 6);
 
         // tcp connection structure
+
         if ((void*) conn->tcp_conn == NULL){
             printk("Failed to create TCP connection structure\n");
             return; // do not respond
         }
         conn->tcp_conn->state = TCP_SYN_RECEIVED;
-        conn->packets_received++;
         // IRS → Initial Receive Sequence number
         conn->tcp_conn->irs     = _seq_number;      // client's ISN
         conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
@@ -1780,18 +1785,15 @@ __remote_client_sent_syn(
                     sk_listener->pending_client_count = 0;
                 }
                 int backlog_tail = sk_listener->pending_client_count;
-
                 sk_listener->pending_client_endpoints[backlog_tail] = 
                     client_ep->socket;
 
                 sk_listener->state = SS_CONNECTING;
-
                 sk_listener->conn = conn;     // Belongs to this connection
                 sk_listener->ep = server_ep;  // Belongs to this ep
 
                 server_ep->socket = sk_listener;   // Save into the ep
             
-
                 if (sk_listener->ip_ipv4 == 0x7F000001)
                 {
                     // panic("Server is localhost #breakpoint");
@@ -1826,7 +1828,7 @@ __remote_client_sent_syn(
         // Building the response
 
         // Flags: SYN + ACK
-        uint16_t flags = TH_SYN | TH_ACK;
+        uint16_t ResponseFlags = TH_SYN | TH_ACK;
 
         printk("__remote_client_sent_syn: Sending SYN/ACK\n");
 
@@ -1839,7 +1841,7 @@ __remote_client_sent_syn(
             sport,    // client port (target) (remote)
             conn->tcp_conn->iss,      // seq = our ISN
             conn->tcp_conn->rcv_nxt,  // ack = client's ISN + 1
-            flags,
+            ResponseFlags,
             dummy_payload,  // No tcp payload
             0               // No tcp payload lenght char=0x00
         );
@@ -1869,9 +1871,7 @@ __handle_tcp_for_kd_server(
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    uint16_t flags=0;
     size_t data_len = 0;
-    //register int i=0;
 
     // No payload for handshake
     char dummy_payload[2];
@@ -1892,9 +1892,16 @@ __handle_tcp_for_kd_server(
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
-// Ports:
+
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     printk("TCP: [Receiving] s=%u (sport), d=%u (dport)\n", 
         sport, dport );
 
@@ -1918,9 +1925,6 @@ __handle_tcp_for_kd_server(
 // “I have successfully received everything up to this byte number minus one.”
 // Ex: If _ack_number = 5099, it means the receiver has received 
 // all bytes up to 5098 and is expecting 5099 next.
-
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
@@ -1960,7 +1964,6 @@ __handle_tcp_for_kd_server(
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     // #test:
     //if (peer_window == 0)
         //return;
@@ -1969,7 +1972,6 @@ __handle_tcp_for_kd_server(
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -2724,8 +2726,6 @@ static void __handle_tcp_for_local_servers (
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    //register int i=0;
-    uint16_t flags=0;
     size_t data_len = 0;
 
     // No payload for handshake
@@ -2747,11 +2747,17 @@ static void __handle_tcp_for_local_servers (
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     //printk("TCP Packet: [receiving] s=%u (sport), d=%u (dport)\n", 
         //sport, dport);
-
     //}
 
 //
@@ -2808,9 +2814,6 @@ static void __handle_tcp_for_local_servers (
 
    printk("TCP Packet: [Receiving] s=%u (sport), r=%u (dport)\n", 
         sport, dport );
-   
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
@@ -2839,7 +2842,6 @@ static void __handle_tcp_for_local_servers (
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     //if (peer_window == 0)
         //return;
 
@@ -2847,7 +2849,6 @@ static void __handle_tcp_for_local_servers (
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -3633,7 +3634,6 @@ static void __handle_tcp_for_non_local_servers (
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    uint16_t flags=0;
     size_t data_len = 0;
 
     // No payload for handshake
@@ -3655,8 +3655,15 @@ static void __handle_tcp_for_non_local_servers (
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     //printk("TCP Packet: [receiving] s=%u (sport), d=%u (dport)\n", 
         //sport, dport);
 
@@ -3710,9 +3717,6 @@ static void __handle_tcp_for_non_local_servers (
    printk("TCP Packet: [Receiving] s=%u (sport), r=%u (dport)\n", 
         sport, dport );
    
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
-
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
 
@@ -3740,7 +3744,6 @@ static void __handle_tcp_for_non_local_servers (
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     //if (peer_window == 0)
         //return;
 
@@ -3748,7 +3751,6 @@ static void __handle_tcp_for_non_local_servers (
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -4651,8 +4653,8 @@ network_handle_tcp (
         printk("network_handle_tcp: buffer\n");
         return;
     }
-    //if (size < 0){
-    //}
+    if (size < TCP_HEADER_LENGHT)
+        return;
 
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
