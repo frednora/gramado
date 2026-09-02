@@ -198,6 +198,7 @@ struct intel_nic_info_d
     int magic;
 
     int initialized;
+    int busy;
 
 // The base address for the registers
     unsigned long registers_base_address;

@@ -948,46 +948,33 @@ static void __e1000_on_transmit(void)
     networkUpdateCounter(1);
 }
 
-// Worker for sending
-// #ps: 
-// Structure only for Intel NIC device.
+// e1000hw_send:
+// Send a packet using the Intel e1000 NIC.
+// Prepares a transmit descriptor, copies the data into the NIC buffer,
+// and updates the hardware registers to trigger transmission.
+
 int 
 e1000hw_send(
     struct intel_nic_info_d *dev, 
     size_t len, 
     const char *data )
 {
+    // #ps: Structure only for Intel NIC device
+    struct intel_nic_info_d *target_dev;
     uint16_t old=0;
 
-// #ps: 
-// Structure only for Intel NIC device.
-    struct intel_nic_info_d *d;
-
-// Device structure
-    d = (struct intel_nic_info_d *) dev;
-    if ((void*) d == NULL){
-        printk("e1000hw_send: d\n");
+// Validate device pointer
+    if ((void*) dev == NULL){
+        printk("e1000hw_send: dev\n");
         goto fail;
     }
-    if (d->magic != 1234){
-        printk("e1000hw_send: d validation\n");
+    if (dev->magic != 1234){
+        printk("e1000hw_send: dev validation\n");
         goto fail;
     }
+    target_dev = (struct intel_nic_info_d *) dev;
 
-    if (dev->link_state == 0) 
-    {
-        printk("e1000hw_send: Link is DOWN, cannot send\n");
-
-        // #todo
-        // This is a work in progress
-        printk("e1000hw_send: [debug] Force link up\n");
-        __e1000_handle_link_up(dev);
-
-        //return -EIO;  // or -1
-    }
-
-
-// len
+    // Validate packet length
     if (len <= 0)
         panic("e1000hw_send: len=0\n");
     // #test
@@ -999,43 +986,87 @@ e1000hw_send(
         panic("e1000:_send: data\n");
     }
 
-// current descriptor
-    old = d->tx_cur;
+/*
+// #todo: This is a work in progress!
+// Let do not send if the adapter is busy.
+    if (target_dev->busy == TRUE) {
+        printk("e1000hw_send: Adapter busy, try later\n");
+        return -EBUSY;
+    }
+*/
+
+    target_dev->busy = TRUE;
+
+// Check link state before sending
+// #todo
+// This is a work in progress
+    if (target_dev->link_state == 0) 
+    {
+        printk("e1000hw_send: Link is DOWN, cannot send\n");
+        printk("e1000hw_send: [debug] Force link up\n");
+        __e1000_handle_link_up(target_dev);
+        //return -EIO;  // or -1
+    }
+
+// Current descriptor index
+    old = target_dev->tx_cur;
     if (old >= SEND_BUFFER_MAX){
         panic("e1000hw_send: old\n");
     }
 
-// Usando o ponteiro virtual de 64bit.
-// Buffer, data, len
+// Copy packet data into NIC’s transmit buffer (VA)
+// IN: Buffer, data, len
     memcpy(
-        (void *) d->tx_buffers_virt[old],  // device buffer 
-        (const void *) data,               // application buffer (read only)
+        (void *) target_dev->tx_buffers_virt[old],  // NIC buffer (virtual address)
+        (const void *) data,               // Application buffer
         (size_t) len );
 
-// lenght
-// #todo:
-// What is the correct size when sending?
-    d->legacy_tx_descs[old].length = (uint16_t) len;
-// cmd
-// CMD_EOP | CMD_IFCS | CMD_RS;
-    d->legacy_tx_descs[old].cmd = (uint8_t) 0x1B;
-// status
-    d->legacy_tx_descs[old].status = (uint8_t) 0;
+// Fill in descriptor fields:
+// lenght:  What is the correct size when sending?
+// cmd:     CMD_EOP | CMD_IFCS | CMD_RS;
+// status:  Clear status (not done yet)
 
-// Circula
-// Configura qual vai ser o proximo
-    d->tx_cur = (uint16_t) ((d->tx_cur + 1) % 8);
-    __E1000WriteCommand( d, 0x3818, d->tx_cur );
+    target_dev->legacy_tx_descs[old].length = (uint16_t) len;
+    target_dev->legacy_tx_descs[old].cmd    = (uint8_t) 0x1B;    
+    target_dev->legacy_tx_descs[old].status = (uint8_t) 0;
 
-// Espera no antigo
-// #hang
-    while ( !(d->legacy_tx_descs[old].status & 0xFF) )
-    {
-        // Nothing
+// Advance tx_cur (circular buffer)
+// It says who will be the next descriptor to use for transmission.
+    target_dev->tx_cur = (uint16_t) ((target_dev->tx_cur + 1) % 8);
+
+// Updates hardware register: 
+// Write tail pointer register (TDT) to notify hardware.
+// Writes to the Transmit Descriptor Tail (TDT) register 
+// at offset 0x3818. This tells the NIC there’s a new packet ready.
+
+    __E1000WriteCommand( target_dev, 0x3818, target_dev->tx_cur );
+
+// Wait until hardware sets "Descriptor Done" in status.
+// Wait on the old descriptor, which is the one we just filled and sent.
+
+/*
+    while ( !(target_dev->legacy_tx_descs[old].status & 0xFF) ){
+        // Busy wait — hardware will update status when TX completes
     };
+*/
+
+    while (1){
+        if ( (target_dev->legacy_tx_descs[old].status & 0xFF) != 0 ) 
+        {
+            break;  // TX complete
+        }
+        // Optionally: add a small pause or yield here
+    };
+
+    target_dev->busy = FALSE;
     return 0;
 
 fail:
+    if ((void*) target_dev != NULL)
+    {
+        if (target_dev->magic == 1234)
+            target_dev->busy = FALSE;
+    }
     return (int) -1;
 }
 
@@ -1141,11 +1172,15 @@ __e1000hw_service_procedure(
     struct intel_nic_info_d *target_dev;
     uint32_t InterruptCause=0;
 
+// Validate pointer
+    if ((void*) dev == NULL)
+        panic("__e1000hw_service_procedure: dev\n");
+    if (dev->magic != 1234){
+        panic("__e1000hw_service_procedure: dev validation\n");
+    }
     target_dev = dev;
-    if ((void*) target_dev == NULL)
-        panic("__e1000hw_service_procedure: target_dev\n");
-    if (target_dev->magic != 1234)
-        panic("__e1000hw_service_procedure: target_dev validation\n");
+
+    target_dev->busy = TRUE;
 
 // Status
 // 0xC0 - Interrupt Cause Read Register
@@ -1265,9 +1300,15 @@ done:
     // #maybe: Clear all the bits.( Write 1b, clear the bit.)
     // __E1000WriteCommand( target_dev, 0xC0, 0xffffffff );
 
+    target_dev->busy = FALSE;
     return 0;
 
 fail:
+    if ((void*) target_dev != NULL)
+    {
+        if (target_dev->magic == 1234)
+            target_dev->busy = FALSE;
+    }
     return (int) -1;
 }
 
@@ -1276,7 +1317,7 @@ fail:
 static void DeviceInterface_e1000(void)
 {
     int rv = -1;
-    struct intel_nic_info_d *target_dev; // Local
+    struct intel_nic_info_d *target_dev;  // Local
 
 // The current NIC.
 // (Intel structure?)
