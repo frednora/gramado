@@ -10,6 +10,57 @@
 extern int e1000_irq_count;
 
 
+// =====================================================================
+
+/*
+0x01: TXDW
+Transmit Descriptor Written Back: 
+Hardware completed packet transmission.
+
+0x02: TXQE
+Transmit Queue Empty: 
+No descriptors left in the transmit ring.
+
+0x04: LSC
+Link Status Change: 
+Network cable connected/disconnected or speed altered.
+
+0x08: RXSEQ
+Receive Sequence Error: 
+Ethernet frame sequencing error detected.
+
+0x10: RXDMT0
+Receive Descriptor Minimum Threshold: 
+Free space in the receive queue is critically low.
+
+0x20: 
+Not used on 82540/82543, leave as “reserved.”
+
+0x40: RXO
+Receiver Overrun: 
+Hardware FIFO filled up; incoming data is dropped.
+
+0x80: RXT0
+Receiver Timer Interrupt: 
+Packets received and the hardware throttling timer expired.
+
+0x100: Reserved — not used.
+0x200: MDAC (0x200) — MDIO/EEPROM access complete.
+0x400: RXCFG (0x400) — RX configuration event.
+0x800:  EN0 (0x0800) → General Purpose Interrupt 0 (PHYINT)
+
+0x1000: EN1 (0x1000) → General Purpose Interrupt 1
+0x2000: EN2 (0x2000) → General Purpose Interrupt 2
+0x4000: EN3 (0x4000) → General Purpose Interrupt 3
+0x8000: TXD_LOW
+The transmit descriptor count has fallen below a configured low threshold
+
+0x10000: SRPD
+Small Receive Packet Detect Interrupt
+The receive descriptor count has fallen below a configured low threshold
+
+*/
+
 // Interrupt Masks
 // The handler uses this.
 
@@ -23,15 +74,22 @@ extern int e1000_irq_count;
 #define INTERRUPT_RXO     (1 << 6)  // 0x40
 #define INTERRUPT_RXT0    (1 << 7)  // 0x80
 
-#define INTERRUPT_MDAC    (1 <<  9)  // 0x100
-#define INTERRUPT_RXCFG   (1 << 10)  // 0x200
-                                     // 0x400
-#define INTERRUPT_PHYINT  (1 << 12)  // 0x800
+                                     // 0x100
+#define INTERRUPT_MDAC    (1 <<  9)  // 0x200
+#define INTERRUPT_RXCFG   (1 << 10)  // 0x400
+                                     // 0x800
 
-                                     // 0x1000
+#define INTERRUPT_PHYINT  (1 << 12)  // 0x1000
                                      // 0x2000
-#define INTERRUPT_TXD_LOW (1 << 15)  // 0x4000
-#define INTERRUPT_SRPD    (1 << 16)  // 0x8000
+                                     // 0x4000
+#define INTERRUPT_TXD_LOW (1 << 15)  // 0x8000
+
+#define INTERRUPT_SRPD    (1 << 16)  // 0x10000
+
+
+// =====================================================================
+
+
 
 
 #define TDESC_STA_DD    0x01  // Indicates hardware done with descriptor

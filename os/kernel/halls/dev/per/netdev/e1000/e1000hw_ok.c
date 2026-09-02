@@ -1170,15 +1170,7 @@ __e1000hw_service_procedure(
     struct intel_nic_info_d *dev )
 {
     struct intel_nic_info_d *target_dev;
-
-// Interrupt cause register (ICR) at offset 0xC0
     uint32_t InterruptCause=0;
-    int fTXDW = FALSE;
-    int fTXQE = FALSE;
-    int fLSC  = FALSE;
-    int fRXT0 = FALSE;
-    int fTXD_LOW = FALSE;
-    int fRXDMT0 = FALSE;
 
 // Validate pointer
     if ((void*) dev == NULL)
@@ -1260,14 +1252,9 @@ The receive descriptor count has fallen below a configured low threshold
 
 */
 
-// About this new logic:
-// Logically it fits the old style ... 
-// but now, inside the if statements we can check 
-// more than one flag if we want.
-
-//
-// == Detection phase ====
-//
+// #bugbug
+// In reality, the ICR register can have multiple bits 
+// asserted simultaneously. 
 
 
     if (InterruptCause == 0){
@@ -1277,14 +1264,14 @@ The receive descriptor count has fallen below a configured low threshold
     // 0x01 - Transmit completed.
     // INTERRUPT_TXDW
     if (InterruptCause & 0x01){
-        fTXDW = TRUE;
-    } 
+        __e1000_on_transmit();
+        goto done;
 
     // 0x02
     // INTERRUPT_TXQE
-    if (InterruptCause & 0x02){
-        fTXQE = TRUE;
-    } 
+    } else if (InterruptCause & 0x02){
+        printk("__e1000hw_service_procedure: Transmit queue empty\n");
+        goto done;
 
     // 0x04 - Linkup
     // INTERRUPT_LSC
@@ -1294,56 +1281,9 @@ The receive descriptor count has fallen below a configured low threshold
     // When the NIC detects a change (carrier lost or gained), 
     // it raises an interrupt. This handler sees bit 0x04 set, 
     // logs “Start link,” and calls __e1000_linkup().
-    if (InterruptCause & 0x04){
-        fLSC = TRUE;
-    } 
 
-    // 0x80 - Reveive.
-    // INTERRUPT_RXT0
-    if (InterruptCause & 0x80){
-        fRXT0 = TRUE;
-    } 
+    } else if (InterruptCause & 0x04){
 
-    // INTERRUPT_RXDMT0
-    if (InterruptCause & 0x10){
-        fRXDMT0 = TRUE;
-    } 
-
-    // TXD_LOW
-    if (InterruptCause & 0x8000){
-        fTXD_LOW = TRUE;
-    } 
-
-
-//
-// == Dispatch phase ====
-//
-
-
-// ---------------------------
-    if (fTXDW == TRUE){
-        __e1000_on_transmit();
-        goto done;
-   }
-
-// ---------------------------
-    if (fTXQE == TRUE){
-        printk("__e1000hw_service_procedure: Transmit queue empty\n");
-        goto done;
-    }
-
-// ---------------------------
-// 0x04 - Linkup
-// INTERRUPT_LSC
-// Start link.
-// Bit 2 (LSC – Link Status Change) is the one that 
-// fires when the cable is plugged/unplugged.
-// When the NIC detects a change (carrier lost or gained), 
-// it raises an interrupt. This handler sees bit 0x04 set, 
-// logs “Start link,” and calls __e1000_linkup().
-
-    if (fLSC == TRUE)
-    {
         printk("__e1000hw_service_procedure: Link status change\n");
 
         // Get link state
@@ -1371,26 +1311,30 @@ The receive descriptor count has fallen below a configured low threshold
         }
 
         goto done;
-    }
 
-// --------------------------------
-    if (fRXT0 == TRUE){
+
+    // 0x80 - Reveive.
+    // INTERRUPT_RXT0
+    } else if (InterruptCause & 0x80){
         __e1000_on_receive();
         goto done;
-    }
 
-// ---------------------------
-    if (fRXDMT0 == TRUE){
+    // INTERRUPT_RXDMT0
+    } else if (InterruptCause & 0x10){
         printk("__e1000hw_service_procedure: low threshold\n");
         goto done;
-    }
 
-// ---------------------------
-    if (fTXD_LOW == TRUE){
+
+    // ??
+    } else if (InterruptCause & 0x8000){
         printk ("__e1000hw_service_procedure: status = 0x8000\n");
         goto done;
-    }
 
+    } else {
+        printk("__e1000hw_service_procedure: Unknown interrupt cause {%x}\n",
+            InterruptCause);
+        goto fail;
+    };
 
 done:
 
