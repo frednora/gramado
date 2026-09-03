@@ -1490,6 +1490,34 @@ irq_E1000(void)
 // as interrupções antes do momento em que o
 // init habilita as interrupções.
 
+/*
+Important distinction:
+PHY setup: 
+The PHY (physical layer) handles auto‑negotiation, speed, duplex, and 
+carrier detection. The code doesn’t directly program PHY registers here, 
+it relies on the MAC’s link control bits and the PHY’s default negotiation.
+
+MAC setup: 
+The code is programming the MAC 
+(controller registers, descriptor rings, control logic).
+*/
+
+// Steps:
+// So what is DDINIT_e1000 doing?
+//
+// + Resetting the controller.
+//   It is resetting the MAC controller (not a full PHY reset).
+//
+// + Setting up TX support and Setting up RX support:  
+//   It is setting up the MAC datapaths (TX and RX rings, control registers).
+//
+// + Link management:
+//   It is requesting link up from the PHY (via SLU).  
+//
+// + Interrupts  
+//   It is enabling interrupts so the driver can react to events.
+//
+
 int 
 DDINIT_e1000 ( 
     unsigned char bus, 
@@ -1580,9 +1608,13 @@ DDINIT_e1000 (
     if (ValidIntelDevice != TRUE)
         panic("DDINIT_e1000: Invalid device\n");
 
-// pci_device structure.
-// pci device struct
-// passado via argumento. 
+
+//
+// == pci_device structure ========
+//
+
+// Let's fill the pci_device structure with the information 
+// we got from the PCI configuration space.
 
     if ((void *) pci_device == NULL){
         panic("DDINIT_e1000: pci_device\n");
@@ -1640,6 +1672,8 @@ DDINIT_e1000 (
 
 // PCI-X Register Access Split?
 
+// ==============================================
+
 // ---------------------
 // The physical address!
 // #importante:
@@ -1696,48 +1730,66 @@ DDINIT_e1000 (
 // == NIC =========================
 //
 
-// #todo: 
-// Checar essa estrutura.
-// see: nicintel.h
+// Creating the NIC structure for the Intel device.
+// see: e1000hw.h
 
-    currentNIC = (void *) kmalloc( sizeof(struct intel_nic_info_d) );
-    if ((void *) currentNIC ==  NULL){
-        panic("DDINIT_e1000: currentNIC\n");
+    struct intel_nic_info_d *nic;
+    nic = (void *) kmalloc( sizeof(struct intel_nic_info_d) );
+    if ((void *) nic ==  NULL){
+        panic("DDINIT_e1000: nic\n");
     }
-    currentNIC->used = TRUE;
-    currentNIC->magic = 1234;
-    currentNIC->initialized = FALSE;
+    nic->used = TRUE;
+    nic->magic = 1234;
+    nic->initialized = FALSE;
+    nic->busy = FALSE;
 
-    currentNIC->link_state = 0;
-    currentNIC->speed = 0;
-    currentNIC->duplex = 0;
+    // #todo: We can check against the values from the PCI and 
+    // set this field up.
+    nic->chip_family = E1000_CHIP_UNKNOWN;
 
-    currentNIC->interrupt_count = 0;
-    currentNIC->pci = (struct pci_device_d *) pci_device;
+    nic->link_state = 0;
+    nic->speed = 0;
+    nic->duplex = 0;
 
-// The base address for the registers.
-    currentNIC->registers_base_address = 
-        (unsigned long) &base_address[0];
+    nic->pci = (struct pci_device_d *) pci_device;
 
-    currentNIC->use_io = FALSE;
-    //currentNIC->io_base = ?;  // i/o base port.
+    nic->interrupt_count = 0;
+    // We will check it later
+    nic->irq_line = (unsigned char) pci_device->irq_line;
+    nic->irq_pin  = (unsigned char) pci_device->irq_pin;
+
+    nic->input_time = 0;
+    nic->output_time = 0;
+
+// The base address for the registers
+    nic->registers_base_address = (unsigned long) &base_address[0];
+
+    nic->use_io = FALSE;
+    //nic->io_base = ?;  // i/o base port.
 
 //
-// Get info.
+// Get info
 //
 
-// EEPROM
-// Como ainda não sabemos, vamos dizer que não.
-    currentNIC->has_eeprom = FALSE; 
+// We still don't know if we have eeprom
+    nic->has_eeprom = FALSE;
+
+    nic->mac_address[0] = 0;
+    nic->mac_address[1] = 0;
+    nic->mac_address[2] = 0;
+    nic->mac_address[3] = 0;
+    nic->mac_address[4] = 0;
+    nic->mac_address[5] = 0;
+
 // Let's try to discover reading the status field!
     for ( i=0; 
-          i < 1000 && !currentNIC->has_eeprom; 
+          i < 1000 && !nic->has_eeprom; 
           ++i ) 
     {
-        Val = (uint32_t) __E1000ReadCommand( currentNIC, 0x14 );
-        // We have? Yes!.
+        Val = (uint32_t) __E1000ReadCommand(nic, 0x14);
+        // We have? Yes!
         if ( (Val & 0x10) == 0x10 ){
-            currentNIC->has_eeprom = TRUE; 
+            nic->has_eeprom = TRUE; 
         }
     };
 
@@ -1747,28 +1799,32 @@ DDINIT_e1000 (
     uint32_t tmp=0;
     
 // We can use the EEPROM!
-// Get info inside the eeprom memory.
-    if (currentNIC->has_eeprom == TRUE) {
-        tmp = __E1000ReadEEPROM ( currentNIC, 0 );
-        currentNIC->mac_address[0] = (uint8_t)(tmp & 0xFF);
-        currentNIC->mac_address[1] = (uint8_t)(tmp >> 8);
-        tmp = __E1000ReadEEPROM ( currentNIC, 1);
-        currentNIC->mac_address[2] = (uint8_t)(tmp & 0xFF);
-        currentNIC->mac_address[3] = (uint8_t)(tmp >> 8);
-        tmp = __E1000ReadEEPROM ( currentNIC, 2);
-        currentNIC->mac_address[4] = (uint8_t)(tmp & 0xFF);
-        currentNIC->mac_address[5] = (uint8_t)(tmp >> 8);
+// Get info inside the eeprom memory
+    if (nic->has_eeprom == TRUE) {
+
+        tmp = __E1000ReadEEPROM (nic, 0);
+        nic->mac_address[0] = (uint8_t)(tmp & 0xFF);
+        nic->mac_address[1] = (uint8_t)(tmp >> 8);
+
+        tmp = __E1000ReadEEPROM (nic, 1);
+        nic->mac_address[2] = (uint8_t)(tmp & 0xFF);
+        nic->mac_address[3] = (uint8_t)(tmp >> 8);
+
+        tmp = __E1000ReadEEPROM (nic, 2);
+        nic->mac_address[4] = (uint8_t)(tmp & 0xFF);
+        nic->mac_address[5] = (uint8_t)(tmp >> 8);
+
 // We can't use the EEPROM :(
 // Get info inside the registers.
 // MAC - Get the mac address directly in the registers.
 // One byte each per time.
-    } else if (currentNIC->has_eeprom == FALSE){
-        currentNIC->mac_address[0] = (uint8_t) base_address[ 0x5400 +0 ];
-        currentNIC->mac_address[1] = (uint8_t) base_address[ 0x5400 +1 ];
-        currentNIC->mac_address[2] = (uint8_t) base_address[ 0x5400 +2 ];
-        currentNIC->mac_address[3] = (uint8_t) base_address[ 0x5400 +3 ];
-        currentNIC->mac_address[4] = (uint8_t) base_address[ 0x5400 +4 ];
-        currentNIC->mac_address[5] = (uint8_t) base_address[ 0x5400 +5 ];
+    } else if (nic->has_eeprom == FALSE){
+        nic->mac_address[0] = (uint8_t) base_address[ 0x5400 +0 ];
+        nic->mac_address[1] = (uint8_t) base_address[ 0x5400 +1 ];
+        nic->mac_address[2] = (uint8_t) base_address[ 0x5400 +2 ];
+        nic->mac_address[3] = (uint8_t) base_address[ 0x5400 +3 ];
+        nic->mac_address[4] = (uint8_t) base_address[ 0x5400 +4 ];
+        nic->mac_address[5] = (uint8_t) base_address[ 0x5400 +5 ];
     }
 
 // BUS Mastering.
@@ -1795,35 +1851,50 @@ DDINIT_e1000 (
             (int) 0x04, (int) cmd ); 
     }
 
-// irq line:
-    unsigned char irq_line = 
-        (unsigned char) pciGetInterruptLine(bus,dev);
+//
+// Interrupt
+//
 
-    // The value we get above
+// irq line:
+// Getting the irq line again and 
+// checking if it matches the value we got early.
+
+    unsigned char irq_line = (unsigned char) pciGetInterruptLine(bus, dev);
     if (irq_line != pci_device->irq_line)
         panic("e1000: irq_line");
 
     //#debug
-    //printk("Done irqline %d\n",irq_line);   
+    //printk("irqline %d\n", irq_line);   
+    //printk("pci_device->irq_line %d\n", pci_device->irq_line);   
 
-    __e1000_setup_irq(irq_line);  // irq line
+    // #ps
+    // We are using a worker in assembly
+    // to create a new entry in the IDT for the Intel NIC.
+    // But maybe we can use a worker in C to do the same thing.
 
-// Saving in the Intel NIC structure.
-    currentNIC->irq_line = (unsigned char) pci_device->irq_line;
-    currentNIC->irq_pin  = (unsigned char) pci_device->irq_pin;
+    __e1000_setup_irq(irq_line);
 
-// Reset the controller.
-    __e1000_reset_controller(currentNIC);
+// Saving in the Intel NIC structure
+    nic->irq_line = (unsigned char) pci_device->irq_line;
+    nic->irq_pin  = (unsigned char) pci_device->irq_pin;
 
-// Flags
-    currentNIC->initialized = TRUE;
+//
+// Reset the controller
+//
+
+    __e1000_reset_controller(nic);
+
+// This structure is initialized
+    nic->initialized = TRUE;
+// Let's save the pointer for the current nic
+    currentNIC = nic;
+
+// Global flag
     e1000_initialized = TRUE;
 
-    //#debug
     //printk ("e1000_init_nic: Test #breakpoint\n");
     //while(1){ asm("hlt"); }
 
-// 0 = no errors
-    return 0;
+    return 0;  // OK
 }
 

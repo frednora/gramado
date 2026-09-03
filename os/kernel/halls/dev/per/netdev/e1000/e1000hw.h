@@ -254,16 +254,18 @@ struct intel_nic_info_d
     struct kobject_d kobj;
     int used;
     int magic;
-
     int initialized;
+   
     int busy;
 
 // The base address for the registers
     unsigned long registers_base_address;
 
 // Which physical/emulated chip is this?
-// See: e1000ids.h -> enum e1000_chip_family_t
     enum e1000_chip_family_t chip_family;
+
+    // If we have eeprom, we can get MAC from it.
+    int has_eeprom;
 
     uint8_t mac_address[6];
     //uint8_t ipv6_address[6];
@@ -272,7 +274,6 @@ struct intel_nic_info_d
     uint16_t rx_cur;
     uint16_t tx_cur;
 
-    int has_eeprom;
 
 // i/o ports support.
     int use_io;
@@ -300,11 +301,9 @@ struct intel_nic_info_d
 // The structure for this device.
     struct pci_device_d *pci;
 
-// Counting the interrupts.
-    int interrupt_count;
-
-    unsigned char irq_line;    // Qual IRQ será usada pelo PIC.
-    unsigned char irq_pin;     // ??
+    unsigned char irq_line;  // What IRQ will ne used by NIC?
+    unsigned char irq_pin;   // ??
+    int interrupt_count;     // Counting the interrupts
 
     int link_state;   // 0 = down, 1 = up
     int speed;        // optional: negotiated speed (10/100/1000)
