@@ -17,7 +17,9 @@
 #include <netinet/tcp.h>
 
 
-#define RESPONSE_BUFFER_SIZE 1024
+static int IsTimeToQuit = FALSE;
+
+#define RESPONSE_BUFFER_SIZE  1024
 
 #define HTTP_PORT    22888
 static void handle_connection(int connfd);
@@ -49,27 +51,6 @@ static void handle_connection(int connfd)
     buffer[n] = '\0';
     printf("HTTPSRV.BIN: Received request:\n%s\n", buffer);
 
-    /*
-    const char *response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 12\r\n"
-        "\r\n"
-        "Hello World!";
-    */
-
-/*
-    const char *response =
-    "HTTP/1.1 200 OK\r\n"
-    "Content-Type: text/html\r\n"
-    "Content-Length: 85\r\n"
-    "\r\n"
-    "<!DOCTYPE html>\n"
-    "<html>\n"
-    "<head><title>Gramado Server</title></head>\n"
-    "<body><h1>Hello from Gramado OS!</h1></body>\n"
-    "</html>\n";
-*/
 
 // --- HTML body ---
     const char *body =
@@ -156,9 +137,17 @@ int main( int argc, char *argv[])
 
 // Accept
     printf("HTTPSRV.BIN: accepting ...\n");
-    int IsTimeToQuit = FALSE;
+    IsTimeToQuit = FALSE;
     int newconn = -1;
     while (1){
+
+        if (IsTimeToQuit == TRUE){
+            break;
+        }
+
+        // #todo:
+        // Get system events for the case we need to quit the server.
+
         newconn = (int) accept( 
             sockfd, 
             (struct sockaddr *) &addr, 
@@ -171,7 +160,10 @@ int main( int argc, char *argv[])
         }
     };
 
-    printf("HTTPSRV.BIN: done\n");
+// Quit the server
+
+    //close(sockfd);
+    printf("HTTPSRV.BIN: quitting ...\n");
     return EXIT_SUCCESS;
 }
 

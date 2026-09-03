@@ -306,10 +306,14 @@ struct intel_nic_info_d
     unsigned char irq_line;    // Qual IRQ será usada pelo PIC.
     unsigned char irq_pin;     // ??
 
-
     int link_state;   // 0 = down, 1 = up
     int speed;        // optional: negotiated speed (10/100/1000)
     int duplex;       // optional: 0 = half, 1 = full
+
+// Time in ticks when the last input was received
+    unsigned long input_time;  
+// Time in ticks when the last output was sent
+    unsigned long output_time;
 
     //struct network_info_d *network;
     //struct device_d     *device;

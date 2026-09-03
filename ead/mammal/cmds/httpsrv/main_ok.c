@@ -17,6 +17,10 @@
 #include <netinet/tcp.h>
 
 
+static int IsTimeToQuit = FALSE;
+
+#define RESPONSE_BUFFER_SIZE 1024
+
 #define HTTP_PORT    22888
 static void handle_connection(int connfd);
 
@@ -47,13 +51,42 @@ static void handle_connection(int connfd)
     buffer[n] = '\0';
     printf("HTTPSRV.BIN: Received request:\n%s\n", buffer);
 
-    // Optionally send a response
-    const char *response =
-        "HTTP/1.1 200 OK\r\n"
-        "Content-Type: text/plain\r\n"
-        "Content-Length: 12\r\n"
-        "\r\n"
-        "Hello World!";
+
+// --- HTML body ---
+    const char *body =
+        "<!DOCTYPE html>\n"
+        "<html>\n"
+        "<head><title>Gramado Server</title></head>\n"
+        "<body>\n"
+        "<h1>Hello from Gramado OS!</h1>\n"
+        "<p>This is a tiny HTML page served from ring 3.</p>\n"
+        "</body>\n"
+        "</html>\n";
+    int body_len = strlen(body);
+
+    // --- Response buffer ---
+    char response[RESPONSE_BUFFER_SIZE];
+    bzero(response, sizeof(response));
+
+    // Headers
+    strcat(response, "HTTP/1.1 200 OK\r\n");
+    strcat(response, "Server: Gramado/0.1\r\n");
+    strcat(response, "Content-Type: text/html; charset=utf-8\r\n");
+    char lenbuf[32];
+    sprintf(lenbuf, "%d", body_len);
+    strcat(response, "Content-Length: ");
+    strcat(response, lenbuf);
+    strcat(response, "\r\n");
+    strcat(response, "Connection: close\r\n");
+    strcat(response, "\r\n");
+
+    // Body
+    strcat(response, body);
+
+
+    printf("Sending response ...\n");
+
+// Send
     write(connfd, response, strlen(response));
 
     // Close connection
@@ -104,9 +137,17 @@ int main( int argc, char *argv[])
 
 // Accept
     printf("HTTPSRV.BIN: accepting ...\n");
-    int IsTimeToQuit = FALSE;
+    IsTimeToQuit = FALSE;
     int newconn = -1;
     while (1){
+
+        if (IsTimeToQuit == TRUE){
+            break;
+        }
+
+        // #todo:
+        // Get system events for the case we need to quit the server.
+
         newconn = (int) accept( 
             sockfd, 
             (struct sockaddr *) &addr, 
@@ -119,7 +160,10 @@ int main( int argc, char *argv[])
         }
     };
 
-    printf("HTTPSRV.BIN: done\n");
+// Quit the server
+
+    //close(sockfd);
+    printf("HTTPSRV.BIN: quitting ...\n");
     return EXIT_SUCCESS;
 }
 

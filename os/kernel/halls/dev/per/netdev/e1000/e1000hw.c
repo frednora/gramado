@@ -43,6 +43,7 @@ struct intel_nic_info_d  *currentNIC;
 
 int e1000_irq_count=0;
 unsigned long gE1000InputTime=0;
+unsigned long gE1000OutputTime=0;
 
 // Counters.
 static unsigned long e1000_tx_counter=0;
@@ -54,7 +55,7 @@ static void __e1000_on_transmit(void);
 static void __e1000_on_receive(void);
 
 static int
-__e1000hw_service_procedure (
+__e1000hw_ISR_imp (
     struct intel_nic_info_d *dev );
 
 // NIC device handler.
@@ -974,6 +975,10 @@ e1000hw_send(
     }
     target_dev = (struct intel_nic_info_d *) dev;
 
+    // Time in ticks
+    gE1000OutputTime = (unsigned long) get_ticks();
+    target_dev->output_time = gE1000OutputTime;
+
     // Validate packet length
     if (len <= 0)
         panic("e1000hw_send: len=0\n");
@@ -1043,12 +1048,6 @@ e1000hw_send(
 
 // Wait until hardware sets "Descriptor Done" in status.
 // Wait on the old descriptor, which is the one we just filled and sent.
-
-/*
-    while ( !(target_dev->legacy_tx_descs[old].status & 0xFF) ){
-        // Busy wait — hardware will update status when TX completes
-    };
-*/
 
     while (1){
         if ( (target_dev->legacy_tx_descs[old].status & 0xFF) != 0 ) 
@@ -1159,14 +1158,14 @@ static void __e1000_on_receive(void)
     };
 }
 
-// __e1000hw_service_procedure:
+// __e1000hw_ISR_imp:
 // Interrupt handler
 // Procedure called by the DeviceInterface_e1000() 
 // + Reads the ICR (Interrupt Cause Register) at offset 0xC0.
 // 
 
 static int
-__e1000hw_service_procedure(
+__e1000hw_ISR_imp(
     struct intel_nic_info_d *dev )
 {
     struct intel_nic_info_d *target_dev;
@@ -1182,9 +1181,9 @@ __e1000hw_service_procedure(
 
 // Validate pointer
     if ((void*) dev == NULL)
-        panic("__e1000hw_service_procedure: dev\n");
+        panic("__e1000hw_ISR_imp: dev\n");
     if (dev->magic != 1234){
-        panic("__e1000hw_service_procedure: dev validation\n");
+        panic("__e1000hw_ISR_imp: dev validation\n");
     }
     target_dev = dev;
 
@@ -1328,7 +1327,7 @@ The receive descriptor count has fallen below a configured low threshold
 
 // ---------------------------
     if (fTXQE == TRUE){
-        printk("__e1000hw_service_procedure: Transmit queue empty\n");
+        printk("__e1000hw_ISR_imp: Transmit queue empty\n");
         goto done;
     }
 
@@ -1344,7 +1343,7 @@ The receive descriptor count has fallen below a configured low threshold
 
     if (fLSC == TRUE)
     {
-        printk("__e1000hw_service_procedure: Link status change\n");
+        printk("__e1000hw_ISR_imp: Link status change\n");
 
         // Get link state
         __e1000_detect_link_info(target_dev);
@@ -1381,13 +1380,13 @@ The receive descriptor count has fallen below a configured low threshold
 
 // ---------------------------
     if (fRXDMT0 == TRUE){
-        printk("__e1000hw_service_procedure: low threshold\n");
+        printk("__e1000hw_ISR_imp: low threshold\n");
         goto done;
     }
 
 // ---------------------------
     if (fTXD_LOW == TRUE){
-        printk ("__e1000hw_service_procedure: status = 0x8000\n");
+        printk ("__e1000hw_ISR_imp: status = 0x8000\n");
         goto done;
     }
 
@@ -1417,6 +1416,9 @@ static void DeviceInterface_e1000(void)
     int rv = -1;
     struct intel_nic_info_d *target_dev;  // Local
 
+    // Time in ticks
+    gE1000InputTime = (unsigned long) get_ticks();
+
 // The current NIC.
 // (Intel structure?)
 // #bugbug:
@@ -1426,11 +1428,16 @@ static void DeviceInterface_e1000(void)
     target_dev = currentNIC;
     if ((void*) target_dev == NULL)
         return;
+    if (target_dev->magic != 1234)
+        return;
+    target_dev->input_time = (unsigned long) gE1000InputTime;
 
-    rv = (int) __e1000hw_service_procedure(target_dev);
+    rv = (int) __e1000hw_ISR_imp(target_dev);
+
+    // #todo
+    // Maybe we can handle the rv here.
 
     return;
-    //return (int) rv;
 }
 
 /*
@@ -1455,9 +1462,6 @@ irq_E1000(void)
     if (e1000_initialized != TRUE){
         return;
     }
-
-    // Time in ticks
-    gE1000InputTime = (unsigned long) get_ticks();
 
     // Call the handler
     DeviceInterface_e1000();
