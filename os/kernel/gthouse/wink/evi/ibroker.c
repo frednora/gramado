@@ -1159,7 +1159,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
 // console:
     if ( gramado_strncmp( cmdline, "console", 7 ) == 0 )
     {
-        printk("Console number: {%d}\n",fg_console);
+        printk("Console number: {%d}\n", fg_console);
         goto exit_cmp;
     }
 
@@ -1181,8 +1181,9 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
     }
 
 // display:
-    if ( gramado_strncmp( cmdline, "display", 7 ) == 0 ){
-        bldisp_show_info();  //bl display device.
+    if ( gramado_strncmp( cmdline, "display", 7 ) == 0 )
+    {
+        bldisp_show_info();  // bl display device
         goto exit_cmp;
     }
 

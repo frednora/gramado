@@ -29,6 +29,7 @@ struct display_device_d
 {
     int used;
     int magic;
+    int initialized;  // Structure initialization
 
 // PID of the owner.
 // It means that only this process is able to 
@@ -38,9 +39,6 @@ struct display_device_d
 // The file to handle this device.
     file *_file;
     //char name[64];
-
-// Structure initialization.
-    int initialized;
 
 // LFB - Linear Frame Buffer
     unsigned long framebuffer_pa;
@@ -83,13 +81,19 @@ struct display_device_d
 // #test
 // We can use only an area of the screen.
 // Or multiple areas.
-    struct virtual_screen_d virtual_screen;
+    struct virtual_screen_d  virtual_screen;
 
     struct display_device_d *next;
 };
 
+// Primary display device
+// This is the official term in most 
+// operating systems (Windows, Linux, macOS).
+// 'System display device'
+extern struct display_device_d *primary_display_device;
+
 //
-// Graphic mode support.
+// Graphic mode support
 //
  
 struct tagGraphics
@@ -131,6 +135,8 @@ struct video_d  VideoBlock;
 //
 // == prototypes =================================
 //
+
+int display_set_primary_display_device(struct display_device_d *dev);
 
 int 
 display_putpixel0 ( 

@@ -4,6 +4,13 @@
 
 #include <kernel.h>
 
+// Primary display device
+// This is the official term in most 
+// operating systems (Windows, Linux, macOS).
+// 'System display device'
+struct display_device_d *primary_display_device;
+
+
 int gKernelOwnsDisplay = TRUE;
 
 
@@ -15,6 +22,24 @@ struct dc_d *dc_frontbuffer;
 // Local
 static unsigned long __CurrentBackbufferPA = 0;
 static unsigned long __CurrentBackbufferVA = 0;
+
+
+
+// -----------------------------------------------
+
+// Set the primary display device
+// 'System display device'
+int display_set_primary_display_device(struct display_device_d *dev)
+{
+    if ((void*)dev == NULL)
+        return -1;
+    if (dev->magic != 1234)
+        return -1;
+
+    primary_display_device = dev;
+    return 0;  // OK
+}
+
 
 
 // This is the kernel-side interface that 

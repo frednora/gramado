@@ -7,7 +7,6 @@
 #include <kernel.h>
 
 struct pci_device_d *PCIDeviceQemuDisplay;
-struct qemudisp_info_d  qemudisp_info;
 
 
 // #todo ioctl
@@ -68,14 +67,7 @@ int DDINIT_qemudisp(void)
 
 
     // #todo
-    // Initialize cntroller.
-    // ...
-
-// #test
-// Initialize structure
-    qemudisp_info.used = TRUE;
-    qemudisp_info.magic = 1234;
-    qemudisp_info.initialized = TRUE;
+    // Initialize controller
     // ...
 
     return 0;

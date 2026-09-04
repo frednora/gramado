@@ -505,17 +505,17 @@ network_register_ring3_display_server(
 // Save
 //
 
-// The current display device:
-// The bootloader dislay device.
-// Is it the current display device?
-// Register new owner for this display device.
+// Let's setup who own the primary display device.
+// 'System display device'
+// The owner pid.
 
-    if ((void*) bl_display_device != NULL)
+    if ((void*) primary_display_device != NULL)
     {
-        if (bl_display_device->magic == 1234){
-            bl_display_device->owner_pid = (pid_t) current_process;
+        if (primary_display_device->magic == 1234){
+            primary_display_device->owner_pid = (pid_t) current_process;
         }
     }
+
 
 // Saving the display server PID into the cgroup structure.
 // Register_ws_process(current_process);
@@ -638,23 +638,6 @@ network_register_ring3_browser(
     if (caller_pid != current_process){
         panic("network_register_ring3_display_server: caller_pid\n");
     }
-
-//
-// Save
-//
-
-// The bootloader dislay device.
-// Is it the current display device?
-// Register new owner for this display device.
-
-    /*
-    if ((void*) bl_display_device != NULL)
-    {
-        if (bl_display_device->magic == 1234){
-            bl_display_device->owner_pid = (pid_t) current_process;
-        }
-    }
-    */
 
 // Saving the browser PID into the cgroup structure.
 // Register_ws_process(current_process);

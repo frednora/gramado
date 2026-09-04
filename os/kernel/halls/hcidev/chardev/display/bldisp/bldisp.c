@@ -50,8 +50,6 @@ See:
 
 #include <kernel.h>
 
-struct bldisp_info_d  bldisp_info;
-
 
 // Screen sizes and bpp.
 unsigned long g_device_screen_width=0;
@@ -86,7 +84,7 @@ static unsigned long screen_bpp=0;
 static unsigned long screen_pitch=0;
 //...
 
-// The info comes from the gramado boot loader.
+// The info comes from the gramado boot loader
 struct display_device_d *bl_display_device;
 
 
@@ -1176,7 +1174,11 @@ static int __videoInit(void)
 // ?
     g_device_screen_width  = (unsigned long) gSavedX;
     g_device_screen_height = (unsigned long) gSavedY;
-    g_device_screen_bpp    = (unsigned long) gSavedBPP;
+    g_device_screen_bpp    = (unsigned long) gSavedBPP;  // Bits Per Pixel
+
+//
+// Font
+//
 
     // gwsSetCurrentFontAddress ( VIDEO_BIOS_FONT8X8_ADDRESS );
 
@@ -1286,8 +1288,12 @@ int DDINIT_bldisp(void)
 // validation
     bl_display_device->used = TRUE;
     bl_display_device->magic = 1234;
-// Structure initialization.
+// Structure initialization
     bl_display_device->initialized = TRUE;
+
+// Set the primary display device
+// 'System display device'
+    display_set_primary_display_device(bl_display_device);
 
     Initialization.is_bldisp_initialized = TRUE;
 
@@ -1346,12 +1352,6 @@ int DDINIT_bldisp(void)
     // current
     __new_mouse_x=0;
     __new_mouse_y=0;
-
-
-// Initialize structure
-    bldisp_info.used = TRUE;
-    bldisp_info.magic = 1234;
-    bldisp_info.initialized = TRUE;
 
     return 0;
 }
