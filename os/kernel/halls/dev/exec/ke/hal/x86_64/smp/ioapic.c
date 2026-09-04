@@ -308,6 +308,7 @@ static int __setup_ioapic(void)
 //
 
 // IRQ1  → vector 33 (PS/2 Keyboard)
+// IRQ9  →           (NIC)
 // IRQ12 → vector 44 (PS/2 Mouse)
 // IRQ14 → vector 46 (Primary IDE)
 // IRQ15 → vector 47 (Secondary IDE)
@@ -320,8 +321,25 @@ static int __setup_ioapic(void)
         ioapic_umasked(14);
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
         ioapic_umasked(15);
-
     // ... 
+
+
+    // #test (Probably 9)
+    // If the NIC device is already initialized.
+    if ((void*) currentNIC != NULL)
+    {
+        if (currentNIC->magic == 1234)
+        {
+            if (CONFIG_INITIALIZE_IOAPIC_UNMASK_NIC == 1)
+            {
+                printk("IOAPIC: Unmasking NIC IRQ line %d\n", 
+                    currentNIC->irq_line );
+                ioapic_umasked(currentNIC->irq_line);
+            }
+        }
+    }
+// ---------------------------
+
 
 // #todo:
 // Do we need to redirect the NIC device too?

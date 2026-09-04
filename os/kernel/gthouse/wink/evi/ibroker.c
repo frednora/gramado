@@ -913,7 +913,12 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         network_initialize_dhcp();
         goto exit_cmp;
     }
-
+    // net: Show network info
+    if ( gramado_strncmp(cmdline, "net", 3) == 0 )
+    {
+        e1000hw_show_info();
+        goto exit_cmp;
+    }
     // net-on (same as term00)
     if ( gramado_strncmp(cmdline,"net-on",6) == 0 )
     {
@@ -933,6 +938,7 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         network_show_connections();
         goto exit_cmp;
     }
+
 
 // string: Testing string functions.
     if ( gramado_strncmp(cmdline,"string",6) == 0 )

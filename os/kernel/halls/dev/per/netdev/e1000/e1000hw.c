@@ -129,7 +129,10 @@ void e1000hw_show_info(void)
     {
         if (currentNIC->magic != 1234)
             printk ("currentNIC validation\n");
-        
+
+        if (currentNIC->link_state == TRUE)
+            printk("Link is UP\n");
+
         // ...
     }
 
@@ -1498,6 +1501,11 @@ irq_E1000(void)
 
     // Call the handler
     DeviceInterface_e1000();
+
+    // #test
+    // apic eoi
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_NIC == 1)
+        local_apic_eoi(0);  // BSP
 }
 
 //

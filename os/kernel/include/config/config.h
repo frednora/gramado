@@ -127,6 +127,11 @@
 #define CONFIG_NO_FRED  1
 #define CONFIG_NO_NUMA  1
 
+
+//
+// == SMP ========
+//
+
 // ------------------------------------------------------
 // lapic/ioapic debug.
 // see: kmain.c, apic.c, ioapic.c.
@@ -140,25 +145,36 @@
 // >> It works only on Virtualbox using ICH9 chipset. <<
 // # set to 1 to test it.
 
+// #important:
+// Normally to have the SMP working we need to set
+// all the flags bellow.
+
 #define CONFIG_INITIALIZE_SECOND_PROCESSOR  0
+// APIC and APICTIMER
 #define CONFIG_INITIALIZE_APIC  0  // Enable apic and timer
 #define CONFIG_UNMASK_APICTIMER  0
+// IOAPIC and unmask devices
 #define CONFIG_INITIALIZE_IOAPIC  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE  0
+#define CONFIG_INITIALIZE_IOAPIC_UNMASK_NIC  0
 // ...
-// BSP's LAPIC
-#define CONFIG_USE_LAPIC_TIMER_FOR_TS  0
+// Using LAPIC TIMER for Task Switching
+#define CONFIG_USE_LAPIC_TIMER_FOR_TS  0  // BSP's LAPIC
 // ...
 
 
+
+//
+// == DPC ========
+//
 
 // #test: >>> DPC <<<
 // Queue feeder (deferred work model)
 // interrupt deferral model 
-// IRQ needs to return queckly. 
+// IRQ needs to return quickly. 
 // Avoiding to touch sensitive data structures.
 // Using the first AP as dedicated core. 
 // #ps: That is not a good use for an AP.
@@ -168,11 +184,6 @@
 // #todo: Maybe the BSP can to this job 
 // during the ZeroGravity phase, when the context was fully saved.
 // But this idea of using a dedicated AP is kinda fancy. (and dangerous)
-
-
-//
-// DPC
-//
 
 // Two possible dispatchers for deferred work (DPC‑style jobs):
 // 1) via AP processor
