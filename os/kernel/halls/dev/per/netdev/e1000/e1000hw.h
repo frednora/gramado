@@ -97,43 +97,81 @@ The receive descriptor count has fallen below a configured low threshold
 #define TDESC_CMD_IFCS  0x02  // Insert frame checksum (FCS)
 #define TDESC_CMD_RS    0x08  // Requests status report
 
-// Registers offsets:
-#define REG_CTRL  0x0000
-#define REG_STATUS  0x0008
-#define REG_EEPROM  0x0014
-#define REG_CTRL_EXT  0x0018
-#define REG_INTERRUPT_CAUSE_READ  0x00C0
-#define REG_INTERRUPT_RATE  0x00C4
-#define REG_INTERRUPT_MASK_SET  0x00D0
-#define REG_INTERRUPT_MASK_CLEAR  0x00D8
 
+// ----------------------------------------------------
+// Registers offsets:
+
+// -- Control --------
+#define REG_CTRL  0x0000
+
+// -- Status --------
+#define REG_STATUS  0x0008
+
+// -- EEPROM access --------
+// EECD      = 0x0010;      // EECD
+#define REG_EEPROM  0x0014  // EERD
+// FLA       = 0x001c;      // FLA
+
+#define REG_CTRL_EXT  0x0018
+
+
+// -- DMA --------
+// PBA  = 0x1000;
+
+// -- Interrupts --------
+#define REG_INTERRUPT_CAUSE_READ  0x00C0  // ICR
+#define REG_INTERRUPT_RATE        0x00C4  // ITR
+#define REG_INTERRUPT_ICS         0x00C8  // ICS
+#define REG_INTERRUPT_MASK_SET    0x00D0  // IMS
+#define REG_INTERRUPT_MASK_CLEAR  0x00D8  // IMC
+
+// -- Receive --------
 #define REG_RCTRL  0x0100
-#define REG_RXDESCLO    0x2800
-#define REG_RXDESCHI    0x2804
-#define REG_RXDESCLEN   0x2808
+// FLOW_CTRL_RECV_LO   = 0x2160;
+// FLOW_CTRL_RECV_HI   = 0x2168;
+#define REG_RXDESCLO    0x2800  // Base low
+#define REG_RXDESCHI    0x2804  // Base high
+#define REG_RXDESCLEN   0x2808  // Lenght
 #define REG_RXDESCHEAD  0x2810
 #define REG_RXDESCTAIL  0x2818
-
-#define REG_TCTRL  0x0400
-#define REG_TXDESCLO    0x3800
-#define REG_TXDESCHI    0x3804
-#define REG_TXDESCLEN   0x3808
-#define REG_TXDESCHEAD  0x3810
-#define REG_TXDESCTAIL  0x3818
-
 #define REG_RDTR    0x2820    // RX Delay Timer Register
-#define REG_RXDCTL  0x3828    // RX Descriptor Control
+#define REG_RXDCTL  0x2828    // RX Descriptor Control
 #define REG_RADV    0x282C    // RX Int. Absolute Delay Timer
 #define REG_RSRPD   0x2C00    // RX Small Packet Detect Interrupt
 
-#define REG_TIPG  0x0410    // Transmit Inter Packet Gap
+// -- Transmit --------
+#define REG_TCTRL    0x0400
+#define REG_TIPG     0x0410    // Transmit Inter Packet Gap
+#define REG_TX_IFS_THROTTLE  0x0458
+#define REG_TXDESCLO      0x3800  // Base low
+#define REG_TXDESCHI      0x3804  // Base high
+#define REG_TXDESCLEN     0x3808  // Lenght
+#define REG_TXDESCHEAD    0x3810  // Transmit Descriptor Head
+#define REG_TXDESCTAIL    0x3818  // Transmit Descriptor Tail
+#define REG_TX_INT_DELAY  0x3820
+#define REG_TXDCTL        0x3828  // TX Descriptor Control
 
-// Aliases
-#define REG_TDH    0x3810  // Transmit Descriptor Head
-#define REG_TDT    0x3818  // Transmit Descriptor Tail
+// -- Stats --------
+// RX_ERR_COUNT        = 0x400c;
+// TOTAL_RECV_PACKETS  = 0x40d0;
+// TOTAL_TSMT_PACKETS  = 0x40d4;
+
+// --
+// RECV_CHECKSUM       = 0x5000;
+// MTA_START           = 0x5200;
+// RAL0                = 0x5400;
+// RAH0                = 0x5404;
+
+// -- Flow Control Registers --------
+#define REG_FCAL   0x2160   // Flow Control Address Low
+#define REG_FCAH   0x2168   // Flow Control Address High
+#define REG_FCT    0x216C   // Flow Control Type (usually 0x8808)
+#define REG_FCTTV  0x2170   // Flow Control Transmit Timer Value
 
 
-// How many buffers.
+// ----------------------------------------------------
+
+// How many buffers
 #define SEND_BUFFER_MAX       8
 #define RECEIVE_BUFFER_MAX   32
 // #define E1000_NUM_TX_DESC 8
@@ -222,7 +260,7 @@ struct e1000_arp_cache_item_d
 {
     int used;
     int magic;
-    int id;  // Index.
+    int id;  // Index
 
 // Pinned during the whole session?
 //    int pinned;
@@ -337,6 +375,8 @@ extern struct intel_nic_info_d  *currentNIC;
 //
 // == Prototypes ========
 //
+
+unsigned char *e1000hw_get_mac_address(struct intel_nic_info_d *dev);
 
 void e1000hw_show_info(void);
 

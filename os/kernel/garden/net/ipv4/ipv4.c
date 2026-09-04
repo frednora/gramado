@@ -25,7 +25,6 @@ ipv4_send (
     struct ethernet_d  Leh;
     struct ip_d  Lipv4;
 
-
 //
 // The frame
 //
@@ -53,9 +52,14 @@ ipv4_send (
         goto fail;
     }
 
-    // #todo
-    //if ( (void*) currentNIC == NULL )
-        //goto fail;
+    // The current Intel NIC device
+    if ((void*) currentNIC == NULL){
+        panic ("ipv4_send: currentNIC");
+    }
+    if (currentNIC->magic != 1234){
+        panic ("ipv4_send: currentNIC magic");
+    }
+
 
 // ==============================================
 

@@ -544,6 +544,10 @@ network_register_ring3_browser(
 // Networking
 //
 
+// Get the MAC address for a given Intel NIC. (only Intel for now)
+// Return pointer to NIC's MAC address
+unsigned char *net_get_mac_address(void);
+
 void 
 network_fill_mac(
     unsigned char *to, 

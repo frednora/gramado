@@ -692,6 +692,16 @@ fail:
 }
 
 
+// Get the MAC address for a given Intel NIC. (only Intel for now)
+// Return pointer to NIC's MAC address
+unsigned char *net_get_mac_address(void)
+{
+    struct intel_nic_info_d *target_intel_nic;
+
+    target_intel_nic = currentNIC;
+
+    return (unsigned char *) e1000hw_get_mac_address(target_intel_nic);
+}
 
 
 void 
