@@ -26,13 +26,18 @@
 // Definitions and prototypes
 //
 
+// Windows
+//#define __DEFAULT_TARGET_IP  "192.168.1.2"
+
 // http://httpbin.org
 #define __DEFAULT_TARGET_IP  "100.60.124.177"
 
 // http://wttr.in/
-//#define __DEFAULT_TARGET_IP  "5.9.243.187"
+// #define __DEFAULT_TARGET_IP  "5.9.243.187"
+
 
 #define HTTP_PORT 80
+//#define HTTP_PORT 5233
 
 static char __http_response_buffer[4096];
 
@@ -107,7 +112,16 @@ static void do_request(int sockfd)
 // This is temporary.
     int r_count;
     while (1) {
-        rtl_sleep_until(40000);
+
+        // #bugbug:
+        // We are facing a problem that the thread
+        // is losing the processing time for ever.
+        // Maybe its related with the nic interrupts
+        // during the sleep time. Lets avoid it for now.
+        // It was keeping the thread blocked forever!
+
+        // rtl_sleep_until(40000);   // #bugbug
+    
         r_count = read(
                 sockfd, 
                 __http_response_buffer,
@@ -123,8 +137,10 @@ static void do_request(int sockfd)
 // ------------------------
 // Show received message
 
-    printf("Show message:\n");
-
+    printf("\n");
+    printf("R3 - Show message: - R3\n");
+    printf("\n");
+    
 // #ps: This is because maybe we still we have a limitation of 1KB 
 // in the write() implementation for now.
 

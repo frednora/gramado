@@ -294,7 +294,7 @@ struct thread_d *create_init_thread(void)
 
 // Usado pelo scheduler.
 // See: sched.c
-    currentq = (struct thread_d *) t;
+    lapic_info[0].currentq = (struct thread_d *) t;
 
 // The Idle thread for this processor.
     UPProcessorBlock.IdleThread = (struct thread_d *) t;

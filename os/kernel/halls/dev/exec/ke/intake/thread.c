@@ -3,7 +3,8 @@
 
 #include <kernel.h>
 
-// List of all threads
+// List of all threads.
+// The master registry of all threads.
 unsigned long threadList[THREAD_COUNT_MAX];
 
 

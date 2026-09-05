@@ -11,7 +11,7 @@ unsigned long qList[SCHEQ_QUEUE_COUNT_MAX];
 // The current list
 // Global queue.
 // This one is used by the taskswitching to peek the next thread.
-struct thread_d  *currentq;
+// struct thread_d  *currentq;
 
 // ========================================
 
@@ -27,13 +27,13 @@ int set_currentq(struct thread_d *thread)
         return (int) -1;
 
 // Set
-    currentq = thread;  
+    lapic_info[0].currentq = thread;  
     return 0;
 }
 
 struct thread_d *get_currentq(void)
 {
-    return (struct thread_d *) currentq;
+    return (struct thread_d *) lapic_info[0].currentq;
 }
 
 int qlist_set_element(int index, struct thread_d *head_thread)
@@ -55,7 +55,7 @@ int qlist_set_element(int index, struct thread_d *head_thread)
     if (index == SCHED_DEFAULT_QUEUE)
     {
         qList[SCHED_DEFAULT_QUEUE] = (unsigned long) head_thread;
-        currentq = (void *) head_thread; // Also the current
+        lapic_info[0].currentq = (void *) head_thread; // Also the current
         return 0;
     }
 // P1 ~ P6

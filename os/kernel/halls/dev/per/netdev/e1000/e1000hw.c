@@ -1231,16 +1231,34 @@ __e1000hw_ISR_imp(
 // bit 0 - TXDW - Sets mask for Transmit Descriptor Written Back.
     __E1000WriteCommand( target_dev, 0xD0, 1 );
 
+
+//
+// Read and clear 0xC0
+//
+
 // Status
-// ICR - Interrupt Cause Read register.
-    InterruptCause = (uint32_t) __E1000ReadCommand( target_dev, 0xC0 );
+// ICR - Interrupt Cause Read register
+// #important: This is really necessary. 
+// Without this the controller can stop generating interrupts.
+    InterruptCause = (uint32_t) __E1000ReadCommand(target_dev, 0xC0);
 
 // Status
 // 0xC0 - Interrupt Cause Read Register
-
     //__E1000WriteCommand( target_dev, 0xC0, InterruptCause );
+
 // Clear all the bits.
-    __E1000WriteCommand( target_dev, 0xC0, 0xffffffff );
+// We’ve already acknowledged by reading, but 
+// explicitly clearing ensures no stale bits remain.
+// #ps: 
+// Double clearing: 
+// On Intel docs, reading ICR is usually enough to clear it. 
+// Writing 0xffffffff is not strictly required, and 
+// in some emulators (like VirtualBox) it can behave oddly. 
+// On the e1000, failing to clear ICR is one 
+// of the most common reasons for “interrupt starvation,” 
+// especially in emulators like VirtualBox.
+
+    // __E1000WriteCommand( target_dev, 0xC0, 0xffffffff );
 
 //
 // Check the interrupt cause in ICR.

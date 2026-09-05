@@ -502,3 +502,4 @@ extern int system_state;
 // It controls the resorces in halls/.
 #include "../gthouse/core.h"
 
+

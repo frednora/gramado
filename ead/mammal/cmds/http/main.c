@@ -112,7 +112,16 @@ static void do_request(int sockfd)
 // This is temporary.
     int r_count;
     while (1) {
-        rtl_sleep_until(40000);
+
+        // #bugbug:
+        // We are facing a problem that the thread
+        // is losing the processing time for ever.
+        // Maybe its related with the nic interrupts
+        // during the sleep time. Lets avoid it for now.
+        // It was keeping the thread blocked forever!
+
+        // rtl_sleep_until(40000);   // #bugbug
+    
         r_count = read(
                 sockfd, 
                 __http_response_buffer,
@@ -128,8 +137,10 @@ static void do_request(int sockfd)
 // ------------------------
 // Show received message
 
-    printf("Show message:\n");
-
+    printf("\n");
+    printf("R3 - Show message: - R3\n");
+    printf("\n");
+    
 // #ps: This is because maybe we still we have a limitation of 1KB 
 // in the write() implementation for now.
 

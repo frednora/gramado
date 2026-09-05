@@ -3396,14 +3396,17 @@ static void __handle_tcp_for_local_servers (
                 printk("fp1 va = %x\n", &fp);
                 printk("\n");
 
-                // Inject at this position
-                memcpy(
-                    fp->_base + fp->_w, 
-                    __tcp_payload,  //buffer + TCP_HEADER_LENGHT, 
-                    to_copy );
-                fp->_w += (int) to_copy;
-                fp->_fsize = fp->_w;
-                fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                if (to_copy > 0)
+                {
+                    // Inject at this position
+                    memcpy(
+                        fp->_base + fp->_w, 
+                        __tcp_payload,  //buffer + TCP_HEADER_LENGHT, 
+                        to_copy );
+                    fp->_w += (int) to_copy;
+                    fp->_fsize = fp->_w;
+                    fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                }
 
                 // Permissions
                 //fp->_flags &= ~__SRD;         // Cant read for now
@@ -4004,6 +4007,7 @@ static void __handle_tcp_for_non_local_servers (
         }
         printk(": Acked with rst\n");
 
+        // socket
         struct socket_d *sk;
         sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
         if ((void*) sk == NULL){
@@ -4014,6 +4018,8 @@ static void __handle_tcp_for_non_local_servers (
             panic("TCP: sk validation\n");  return;
         }
         sk->state = SS_UNCONNECTED; // cant read anymore
+
+        // file
         file *fp = sk->private_file;
         if ((void*) fp == NULL){
             panic("TCP: invalid fp\n");  return;
@@ -4257,7 +4263,7 @@ static void __handle_tcp_for_non_local_servers (
             if (data_len > 0) 
             {
                 // #debug
-                printk("TCP Payload (%d bytes):\n%s\n", 
+                printk("TCP Payload (%d bytes) R0:\n%s\n", 
                     (int)data_len, __tcp_payload );
             }
 
@@ -4319,29 +4325,44 @@ static void __handle_tcp_for_non_local_servers (
                 printk("fp1 va = %x\n", &fp);
                 printk("\n");
 
-                // Inject at this position
-                memcpy(
-                    fp->_base + fp->_w, 
-                    __tcp_payload,  // (buffer + TCP_HEADER_LENGHT)
-                    to_copy );
+                if (to_copy > 0)
+                {
+                    // Inject at this position
+                    memcpy(
+                        fp->_base + fp->_w, 
+                        __tcp_payload,  // (buffer + TCP_HEADER_LENGHT)
+                        to_copy );
 
-                fp->_w += (int) to_copy;
-                fp->_fsize = fp->_w;
-                fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                    fp->_w += (int) to_copy;
+                    fp->_fsize = fp->_w;
+                    fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                }
 
-                // Permissions
-                //fp->_flags &= ~__SRD;         // Cant read for now
-                //fp->_flags &= ~__SWR;         // optional: clear write-only
-                //fp->sync.can_read = TRUE;      // allow read
-                //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
+                //if (fFIN != TRUE)
+                //{
 
-                //fp->_flags |= __SRD;
-                fp->sync.can_read = FALSE;
-                fp->sync.can_write = FALSE;
-                fp->sync.action = ACTION_NULL;
+                    // Permissions
+                    //fp->_flags &= ~__SRD;         // Cant read for now
+                    //fp->_flags &= ~__SWR;         // optional: clear write-only
+                    //fp->sync.can_read = TRUE;      // allow read
+                    //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
+
+                    //fp->_flags |= __SRD;
+                    fp->sync.can_read = FALSE;
+                    fp->sync.can_write = FALSE;
+                    fp->sync.action = ACTION_NULL;
+                //}
             }
 
+            // #bugbug
+            // We we received a FIN but the ring 3 client still
+            // didnt read the payload, it will be stopped to read.
+            // we cant do this.
+            // Changing the connection to the state CLOSE_WAIT 
+            // is a good move.
+            // #ps: The read routine needs to be allowed in this state too.
             if (fFIN){
+
                 fp->sync.can_read = TRUE;    // allow read
                 fp->_r = 0;                  // Read from the beginning when afte FIN
                 fp->_flags |= __SRD;         // mark readable

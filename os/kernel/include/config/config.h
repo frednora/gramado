@@ -165,7 +165,6 @@
 // #test: This is a work in progress.
 // We need a way for testing the serial input.
 // #define CONFIG_INITIALIZE_IOAPIC_UNMASK_DUMMY_SERIAL  0
-
 // ...
 // Using LAPIC TIMER for Task Switching
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0  // BSP's LAPIC

@@ -28,13 +28,13 @@
 struct scheduler_info_d  SchedulerInfo;
 
 // Normal priorities
-static struct thread_d  *p1q;  // Lower
-static struct thread_d  *p2q;
-static struct thread_d  *p3q;
+//static struct thread_d  *p1q;  // Lower
+//static struct thread_d  *p2q;
+//static struct thread_d  *p3q;
 // System priorities
-static struct thread_d  *p4q;
-static struct thread_d  *p5q;
-static struct thread_d  *p6q;  // Higher
+//static struct thread_d  *p4q;
+//static struct thread_d  *p5q;
+//static struct thread_d  *p6q;  // Higher
 
 // ----------------------------------------
 // Event responter thread
@@ -264,6 +264,27 @@ int has_pending_event(struct thread_d *thread)
 void sched_show_info(void)
 {
     int i=0;
+
+    if (SchedulerInfo.initialized == TRUE){
+
+        if (SchedulerInfo.is_locked == LOCKED)
+            printk("LOCKED\n");
+
+        switch (SchedulerInfo.policy){
+        case __SCHED_POLICY_RR:
+            printk("RR\n");
+            break;
+        case __SCHED_POLICY_PRIORITY_INTERLEAVING:
+            printk("INTERLEAVING\n");
+            break;
+        default:
+            printk("UNDEFINED POLICY\n");
+            break;
+        };
+
+    } else {
+        printk("SchedulerInfo not initialized\n");
+    }
 
     for (i=0; i<=6; i++)
     {
@@ -534,7 +555,7 @@ For each thread:
    adjusts quantum if credits are high.
 */
 // + Build the p1q queue.
-// + Setup p1q as the currentq, used by the task switcher.
+// + Setup p1q as the lapic_info[0].currentq, used by the task switcher.
 // 
 // Steps:
 // + Initialization checks
@@ -554,16 +575,16 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
 // These are the queues,
 // But RR will build only the p1q, the one with lower priority.
-    p1q = NULL;  // Lower priority
-    p2q = NULL;
-    p3q = NULL;
-    p4q = NULL;
-    p5q = NULL;
-    p6q = NULL;  // Higher priority
+    lapic_info[0].p1q = NULL;  // Lower priority
+    lapic_info[0].p2q = NULL;
+    lapic_info[0].p3q = NULL;
+    lapic_info[0].p4q = NULL;
+    lapic_info[0].p5q = NULL;
+    lapic_info[0].p6q = NULL;  // Higher priority
 
 // No current queue for the task switching.
 // This is the conductor.
-    currentq = NULL;
+    lapic_info[0].currentq = NULL;
 
 // BSP - bootstrap processor
 // The linked list for the BSP will always start with the
@@ -629,24 +650,24 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
 // Setup Idle as the head of all queues.
 
-    p1q = (void*) Idle;
-    qlist_set_element(SCHED_P1_QUEUE,p1q);
-    p2q = (void*) Idle;
-    qlist_set_element(SCHED_P2_QUEUE,p2q);
-    p3q = (void*) Idle;
-    qlist_set_element(SCHED_P3_QUEUE,p3q);
-    p4q = (void*) Idle;
-    qlist_set_element(SCHED_P4_QUEUE,p4q);
-    p5q = (void*) Idle;
-    qlist_set_element(SCHED_P5_QUEUE,p5q);
-    p6q = (void*) Idle;
-    qlist_set_element(SCHED_P6_QUEUE,p6q);
+    lapic_info[0].p1q = (void*) Idle;
+    qlist_set_element(SCHED_P1_QUEUE, lapic_info[0].p1q);
+    lapic_info[0].p2q = (void*) Idle;
+    qlist_set_element(SCHED_P2_QUEUE, lapic_info[0].p2q);
+    lapic_info[0].p3q = (void*) Idle;
+    qlist_set_element(SCHED_P3_QUEUE, lapic_info[0].p3q);
+    lapic_info[0].p4q = (void*) Idle;
+    qlist_set_element(SCHED_P4_QUEUE, lapic_info[0].p4q);
+    lapic_info[0].p5q = (void*) Idle;
+    qlist_set_element(SCHED_P5_QUEUE, lapic_info[0].p5q);
+    lapic_info[0].p6q = (void*) Idle;
+    qlist_set_element(SCHED_P6_QUEUE, lapic_info[0].p6q);
 
-// This is the head of the currentq.
-// Setup Idle as the head of the currentq queue, used by the task switcher.
+// This is the head of the lapic_info[0].currentq.
+// Setup Idle as the head of the lapic_info[0].currentq queue, used by the task switcher.
 
-    currentq = (void *) p1q; // Not necessary.
-    qlist_set_element(SCHED_DEFAULT_QUEUE,p1q);
+    lapic_info[0].currentq = (void *) lapic_info[0].p1q;  // Not necessary
+    qlist_set_element(SCHED_DEFAULT_QUEUE, lapic_info[0].p1q);
 
 // ---------------------------------------------
 // The loop below is gonna build this list.
@@ -656,7 +677,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // Walking
 // READY threads in the threadList[].
 
-// The Idle as the head of the p1q queue, 
+// The Idle as the head of the lapic_info[0].p1q queue, 
 // The loop below is gonna build this list.
 // The idle is the TID 0, so the loop starts at 1.
 
@@ -665,7 +686,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     if (Idle->tid != INIT_TID)
         panic("sched: Idle->tid != INIT_TID\n");
 
-// Wake up init thread.
+// Wake up init thread
     do_thread_ready(Idle->tid);
     //if (jiffies >= Idle->wake_jiffy)
         //do_thread_ready(TmpThread->tid);
@@ -680,10 +701,11 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 // Threads in other state will be checked and the 
 // structure will be updated properlly. For example: 
 // we will check if it's time wo wake up a thread.
-// The Idle as the head of the p1q queue.
+// The Idle as the head of the lapic_info[0].p1q queue.
 // The idle is the TID 0, so the loop starts at 1.
 
-    for (i=Start; i<Max; ++i){
+    for (i=Start; i<Max; i++){
+
         TmpThread = (void *) threadList[i];
 
         // #test: I don't like this.
@@ -916,16 +938,16 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                  TmpThread->state == READY )
             {
                 // Recreate the linked list.
-                // The p1q and it's next.
+                // The lapic_info[0].p1q and it's next.
 
-                p1q->next = (void *) TmpThread;
-                p1q       = (void *) p1q->next;
+                lapic_info[0].p1q->next = (void *) TmpThread;
+                lapic_info[0].p1q = (void *) lapic_info[0].p1q->next;
 
-                // Initialize counters.
+                // Initialize counters
                 TmpThread->runningCount = 0;
                 TmpThread->runningCount_ms = 0;
 
-                // How many times it was scheduled.
+                // How many times it was scheduled
                 TmpThread->scheduledCount++;
 
                 // Balance priority levels.
@@ -989,14 +1011,14 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
 
 // Finalizing the list.
 // This way we need to re-scheduler at the end of each round.
-    p1q->next = NULL;
+    lapic_info[0].p1q->next = NULL;
 
 // #todo
 // Let's try some other lists.
 
 // Increment the counter for rr.
     SchedulerInfo.rr_round_counter++;
-// Start with the idle thread.
+// Start with the idle thread
     return (tid_t) FirstTID;
 }
 
@@ -1049,24 +1071,30 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
         printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
         FirstTID = Init->tid;
 
-        p1q = p2q = p3q = p4q = p5q = p6q = NULL; 
+        //p1q = p2q = p3q = p4q = p5q = p6q = NULL; 
+        lapic_info[0].p1q = NULL;
+        lapic_info[0].p2q = NULL;
+        lapic_info[0].p3q = NULL;
+        lapic_info[0].p4q = NULL;
+        lapic_info[0].p5q = NULL;
+        lapic_info[0].p6q = NULL;
 
         // Put init thread in all queues
-        p1q = Init;
-        qlist_set_element(SCHED_P1_QUEUE, p1q);
-        p2q = Init;
-        qlist_set_element(SCHED_P2_QUEUE, p2q);
-        p3q = Init;
-        qlist_set_element(SCHED_P3_QUEUE, p3q);
-        p4q = Init;
-        qlist_set_element(SCHED_P4_QUEUE, p4q);
-        p5q = Init;
-        qlist_set_element(SCHED_P5_QUEUE, p5q);
-        p6q = Init;
-        qlist_set_element(SCHED_P6_QUEUE, p6q);
+        lapic_info[0].p1q = Init;
+        qlist_set_element(SCHED_P1_QUEUE, lapic_info[0].p1q);
+        lapic_info[0].p2q = Init;
+        qlist_set_element(SCHED_P2_QUEUE, lapic_info[0].p2q);
+        lapic_info[0].p3q = Init;
+        qlist_set_element(SCHED_P3_QUEUE, lapic_info[0].p3q);
+        lapic_info[0].p4q = Init;
+        qlist_set_element(SCHED_P4_QUEUE, lapic_info[0].p4q);
+        lapic_info[0].p5q = Init;
+        qlist_set_element(SCHED_P5_QUEUE, lapic_info[0].p5q);
+        lapic_info[0].p6q = Init;
+        qlist_set_element(SCHED_P6_QUEUE, lapic_info[0].p6q);
         
-        currentq = p1q;
-        currentq->next = NULL;
+        lapic_info[0].currentq = lapic_info[0].p1q;
+        lapic_info[0].currentq->next = NULL;
 
         // Counter
         stage_selection_count[0] = stage_selection_count[0] + 1;
@@ -1089,43 +1117,43 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
     {
         case 1:
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
-            p6q = __build_stage_queue(6, PRIORITY_P6);
-            currentq = p6q;
-            SchedulerInfo.stage = 2; 
+            lapic_info[0].p6q = __build_stage_queue(6, PRIORITY_P6);
+            lapic_info[0].currentq = lapic_info[0].p6q;
+            SchedulerInfo.stage = 2;
             break;
 
         case 2: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
-            p5q = __build_stage_queue(5, PRIORITY_P5);
-            currentq = p5q;
+            lapic_info[0].p5q = __build_stage_queue(5, PRIORITY_P5);
+            lapic_info[0].currentq = lapic_info[0].p5q;
             SchedulerInfo.stage = 3;
             break;
 
         case 3: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
-            p4q = __build_stage_queue(4, PRIORITY_P4);
-            currentq = p4q;
+            lapic_info[0].p4q = __build_stage_queue(4, PRIORITY_P4);
+            lapic_info[0].currentq = lapic_info[0].p4q;
             SchedulerInfo.stage = 4;
             break;
 
         case 4: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
-            p3q = __build_stage_queue(3, PRIORITY_P3);
-            currentq = p3q;
+            lapic_info[0].p3q = __build_stage_queue(3, PRIORITY_P3);
+            lapic_info[0].currentq = lapic_info[0].p3q;
             SchedulerInfo.stage = 5;
             break;
 
         case 5: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
-            p2q = __build_stage_queue(2, PRIORITY_P2);
-            currentq = p2q;
+            lapic_info[0].p2q = __build_stage_queue(2, PRIORITY_P2);
+            lapic_info[0].currentq = lapic_info[0].p2q;
             SchedulerInfo.stage = 6;
             break;
 
         case 6: 
             //printk("scheduler: stage={ %d }\n", SchedulerInfo.stage);
-            p1q = __build_stage_queue(1, PRIORITY_P1);
-            currentq = p1q;
+            lapic_info[0].p1q = __build_stage_queue(1, PRIORITY_P1);
+            lapic_info[0].currentq = lapic_info[0].p1q;
             SchedulerInfo.stage = 1;
             break;
 
@@ -1134,22 +1162,20 @@ static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags)
         default:
             //printk("scheduler: stage={ Default }\n");
             FirstTID = Init->tid;
-            p1q = Init;
-            p1q->next = NULL;
-            //qlist_set_element(SCHED_P1_QUEUE, p1q);
-            currentq = p1q;
+            lapic_info[0].p1q = Init;
+            lapic_info[0].p1q->next = NULL;
+            //qlist_set_element(SCHED_P1_QUEUE, lapic_info[0].p1q);
+            lapic_info[0].currentq = lapic_info[0].p1q;
             // Next will be 0 for reconfiguration.
             SchedulerInfo.stage = 0;
 
-            return (tid_t) currentq->tid;
+            return (tid_t) lapic_info[0].currentq->tid;
             break;
     }
 
-// done
-// Always returns the init thread’s TID (currentq->tid).
-    return (tid_t) currentq->tid;
+// Always returns the init thread’s TID (lapic_info[0].currentq->tid).
+    return (tid_t) lapic_info[0].currentq->tid;
 }
-
 
 // Wrapper for __scheduler_rr(), __scheduler_priorityinterleaving()
 //  or other types.
@@ -1270,7 +1296,7 @@ tid_t psScheduler(void)
     }
 
 // There is only one thread in the uniprocessor.
-// Put it into the currentq queue.
+// Put it into the lapic_info[0].currentq queue.
 // It needs to become the current_tid and return it.
 /*
     if (UPProcessorBlock.threads_counter == 1)
@@ -1278,8 +1304,8 @@ tid_t psScheduler(void)
         // #debug
         //debug_print("psScheduler: Idle $\n");
         
-        currentq = (struct thread_d *) UPProcessorBlock.IdleThread;
-        current_tid = (tid_t) currentq->tid;
+        lapic_info[0].currentq = (struct thread_d *) UPProcessorBlock.IdleThread;
+        current_tid = (tid_t) lapic_info[0].currentq->tid;
         return (tid_t) current_tid;
     }
 */

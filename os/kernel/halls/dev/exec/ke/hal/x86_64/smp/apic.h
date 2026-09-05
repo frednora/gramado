@@ -303,6 +303,28 @@ struct lapic_info_d
     pid_t current_pid;  // PID
 
 //
+// Head of READY threads
+//
+
+    struct thread_d *currentq;
+    // int ready_count;
+
+//
+// Head of READY threads based on priority
+//
+
+    // Normal priorities
+    struct thread_d  *p1q;  // Lower
+    struct thread_d  *p2q;
+    struct thread_d  *p3q;
+
+    // System priorities
+    struct thread_d  *p4q;
+    struct thread_d  *p5q;
+    struct thread_d  *p6q;  // Higher
+
+
+//
 // GDT support
 //
 

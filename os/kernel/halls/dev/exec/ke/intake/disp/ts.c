@@ -569,8 +569,8 @@ static unsigned long __task_switch(int lapic_info_id)
             //show_reg( CurrentThread->tid );
             //panic("ts: debug cpl 0\n");
 
-            //currentq = (void *) InitThread;
-            //currentq->next = NULL;
+            //lapic_info[0].currentq = (void *) InitThread;
+            //lapic_info[0].currentq->next = NULL;
             //CurrentThread = NULL;
             //asm ("cli");
             //lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
@@ -688,9 +688,9 @@ ZeroGravity:
             panic("ts: Invalid idle thread for up\n");
         }
         // Let's run the init thread for Uniprocessor
-        currentq = (void *) UPProcessorBlock.IdleThread;
+        lapic_info[0].currentq = (void *) UPProcessorBlock.IdleThread;
         // No next ?
-        // currentq->next = NULL;
+        // lapic_info[0].currentq->next = NULL;
         goto go_ahead;
     }
     */
@@ -730,8 +730,8 @@ ZeroGravity:
             ev_responder_thread->has_pending_event = FALSE;
 
             // Rebuild a queue with only one thread
-            currentq = (void *) ev_responder_thread;
-            currentq->next = NULL;
+            lapic_info[0].currentq = (void *) ev_responder_thread;
+            lapic_info[0].currentq->next = NULL;
             goto go_ahead;
         }
     }
@@ -743,8 +743,9 @@ ZeroGravity:
 
 // ----------------------------------------
 // The queue is NOT over, get the next into the linked list
-    if ((void *) currentq->next != NULL){
-        currentq = (void *) currentq->next;
+    if ((void *) lapic_info[0].currentq->next != NULL)
+    {
+        lapic_info[0].currentq = (void *) lapic_info[0].currentq->next;
         goto go_ahead;
     }
 
@@ -759,7 +760,7 @@ ZeroGravity:
     // Round‑Robin Policy: End of round.
     // Priority Interleaving Policy: 
     // End of queue = end of stage, not round.
-    if ((void *) currentq->next == NULL)
+    if ((void *) lapic_info[0].currentq->next == NULL)
     {
 
         //
@@ -814,7 +815,7 @@ go_ahead:
 // #bugbug
 // Jumping to ZeroGravity can put us into an infinity loop.
 
-    TargetThread = (void *) currentq;
+    TargetThread = (void *) lapic_info[0].currentq;
     // #ps: This is dangerous. Possible loop.
     if ((void *) TargetThread == NULL)
     {

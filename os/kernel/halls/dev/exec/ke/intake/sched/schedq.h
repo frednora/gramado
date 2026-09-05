@@ -30,7 +30,7 @@ extern unsigned long qList[SCHEQ_QUEUE_COUNT_MAX];
 // The current list
 // Global queue.
 // This one is used by the taskswitching to peek the next thread.
-extern struct thread_d  *currentq;
+// extern struct thread_d  *currentq;
 
 //
 // == Prototypes =================================

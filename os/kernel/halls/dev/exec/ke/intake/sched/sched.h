@@ -15,9 +15,10 @@ extern struct thread_d  *ev_responder_thread;
 //#define FIRST_TASK ?
 //#define LAST_TASK ? 
 
-// Status do scheduler.
+// Status do scheduler
 #define LOCKED    0
-#define UNLOCKED  1  
+#define UNLOCKED  1
+
 
 /*
  * Scheduling policies

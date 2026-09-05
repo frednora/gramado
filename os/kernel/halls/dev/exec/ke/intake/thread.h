@@ -863,6 +863,9 @@ extern struct thread_d  *InitThread;
 
 #define THREAD_COUNT_MAX  1024 
 //#define THREAD_COUNT_MAX  4096
+
+// List of all threads.
+// The master registry of all threads.
 extern unsigned long threadList[THREAD_COUNT_MAX];
 
 //

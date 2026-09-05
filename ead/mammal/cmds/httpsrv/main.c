@@ -36,7 +36,16 @@ static void handle_connection(int connfd)
 
     // Read from the socket
     while (1){
-        rtl_sleep_until(20000);
+
+        // #bugbug:
+        // We are facing a problem that the thread
+        // is losing the processing time for ever.
+        // Maybe its related with the nic interrupts
+        // during the sleep time. Lets avoid it for now.
+        // It was keeping the thread blocked forever!
+
+        // rtl_sleep_until(40000);   // #bugbug
+
         n = read(connfd, buffer, sizeof(buffer)-1);
         if (n <= 0) {
             //perror("HTTPSRV.BIN: read failed\n");
