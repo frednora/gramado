@@ -408,7 +408,7 @@ network_send_tcp (
     // Flags (3bits) (Do we have fragments?)
     // Fragment offset (13bits) (fragment position)
     // Don't fragment for now.
-    Lipv4.ip_off = ToNetByteOrder16(0x4000);  //DF bit 
+    Lipv4.ip_off = ToNetByteOrder16(0x4000);  // DF bit 
 
     Lipv4.ip_ttl = 255;  // Time to live (8bits)
     Lipv4.ip_p = 0x06;   // Protocol is TCP (8bit)

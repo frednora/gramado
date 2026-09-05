@@ -79,14 +79,13 @@ void udp_save_mac(uint8_t mac[6])
 
 // -----------------
 
-void network_test_udp(void)
-{
 // Called by the command "test-udp" in console.c.
 // Called by the syscall 22003 in sci.c
 // The terminal.bin command is "n2".
 
+void network_test_udp(void)
+{
     unsigned short SourcePort = 11888;
-
 
     uint8_t google_ip[4] = {142, 250, 190, 46};
 
@@ -171,6 +170,7 @@ void network_test_udp2(void)
 // UDP = 0x11 (ip protocol)
 
 // (Ethernet + IP + UDP)
+// Buffers: [ethernet, ipv4, udp, data]
 int
 network_send_udp ( 
     uint8_t source_ip[4], 
@@ -181,8 +181,6 @@ network_send_udp (
     char *data_buffer,   // UDP payload
     size_t data_lenght )
 {
-// Buffers: [ethernet, ipv4, udp, data]
-
     register int i=0;
     int j=0;
     char *data = (char *) data_buffer;  // UDP payload
@@ -277,15 +275,10 @@ network_send_udp (
     // Flags (3bits) (Do we have fragments?)
     // Fragment offset (13bits) (fragment position)
     // Don't fragment for now.
+    Lipv4.ip_off = ToNetByteOrder16(0x4000);  // DF bit
 
-    Lipv4.ip_off = ToNetByteOrder16(0x4000); 
-
-    // Time to live (8bits)
-    Lipv4.ip_ttl = 255;  // 64
-
-    // Protocol (8bit)
-    Lipv4.ip_p = 0x11;  // 0x11 = 17 (UDP)
-
+    Lipv4.ip_ttl = 255;  // Time to live (8bits)
+    Lipv4.ip_p = 0x11;   // Protocol is UDP (0x11 = 17) (8bit)
 
 // Addresses
 
