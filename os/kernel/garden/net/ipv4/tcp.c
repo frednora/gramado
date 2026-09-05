@@ -4672,12 +4672,12 @@ static void __handle_tcp_for_non_local_servers (
 // Dispatcher!
 void 
 network_handle_tcp ( 
-    const unsigned char *buffer, 
-    ssize_t size,
+    const unsigned char *tcp_payload_base, 
+    ssize_t tcp_payload_size,
     unsigned int s_ipv4_int,
     unsigned int d_ipv4_int )
 {
-    struct tcp_d *tcp;  // The buffer
+    struct tcp_d *tcp;  // The tcp_payload_base
     //register int i=0;
     uint16_t flags=0;
     size_t data_len = 0;
@@ -4691,15 +4691,15 @@ network_handle_tcp (
     //printk("network_handle_tcp: #todo\n");
 
 // Parameters
-    if ((void*) buffer == NULL){
-        printk("network_handle_tcp: buffer\n");
+    if ((void*) tcp_payload_base == NULL){
+        printk("network_handle_tcp: tcp_payload_base\n");
         return;
     }
-    if (size < TCP_HEADER_LENGHT)
+    if (tcp_payload_size < TCP_HEADER_LENGHT)
         return;
 
     // Pointer for the TCP header. Pre-allocated.
-    tcp = (struct tcp_d *) buffer;
+    tcp = (struct tcp_d *) tcp_payload_base;
 
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
@@ -4721,7 +4721,11 @@ network_handle_tcp (
 // ------------------------------------
 // Target is kernel debugger local server
     if (dport == 11888){
-        __handle_tcp_for_kd_server(buffer, size, s_ipv4_int, d_ipv4_int);
+        __handle_tcp_for_kd_server(
+            tcp_payload_base, 
+            tcp_payload_size, 
+            s_ipv4_int, 
+            d_ipv4_int );
         return;
     }
 
@@ -4735,7 +4739,11 @@ network_handle_tcp (
     {
         //#test: Its working!!!
         //panic ("LOCAL SERVER <<<<<<");
-        __handle_tcp_for_local_servers(buffer, size, s_ipv4_int, d_ipv4_int);
+        __handle_tcp_for_local_servers( 
+            tcp_payload_base, 
+            tcp_payload_size, 
+            s_ipv4_int, 
+            d_ipv4_int );
         return;
     }
 
@@ -4743,7 +4751,11 @@ network_handle_tcp (
 // Target is probably a local client
 // ...
 
-    __handle_tcp_for_non_local_servers(buffer, size, s_ipv4_int, d_ipv4_int);
+    __handle_tcp_for_non_local_servers(
+        tcp_payload_base, 
+        tcp_payload_size, 
+        s_ipv4_int, 
+        d_ipv4_int );
 
     return;
 }

@@ -485,36 +485,27 @@ fail:
 
 // When receving UDP packet from NIC device.
 // IN:
-// buffer = udp header base address.
-// size   = udp packet size. (header + data)
+// udp_payload_base = udp header base address.
+// udp_payload_size = udp packet size. (header + data)
 void 
 network_handle_udp( 
-    const unsigned char *buffer, 
-    ssize_t size )
+    const unsigned char *udp_payload_base, 
+    ssize_t udp_payload_size )
 {
     struct udp_d *udp;  // The buffer
-    //register int i=0;
 
-    // #debug
     // printk ("UDP: Received\n");
 
 // Parameters:
-    if ((void*) buffer == NULL){
-        printk("network_handle_udp: buffer\n");
+    if ((void*) udp_payload_base == NULL){
+        printk("network_handle_udp: udp_payload_base\n");
         return;
     }
-    if (size < 0){
-        //
-    }
-// The minimum size.
-// Only the udp header.
-    //if (size < UDP_HEADER_LENGHT){
-    //    printk("network_handle_udp: size\n");
-    //    return;
-    //}
+    if (udp_payload_size < UDP_HEADER_LENGHT)
+        return;
 
     // Pointer for the UDP header. Pre-allocated.
-    udp = (struct udp_d *) buffer;
+    udp = (struct udp_d *) udp_payload_base;
 
     uint16_t sport = (uint16_t) FromNetByteOrder16(udp->uh_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(udp->uh_dport);
@@ -549,7 +540,7 @@ network_handle_udp(
 //
 
     char *p2; 
-    p2 = (buffer + UDP_HEADER_LENGHT);
+    p2 = (udp_payload_base + UDP_HEADER_LENGHT);
     size_t p_size = strlen(p2);
     //size_t p_size = udp->uh_ulen - UDP_HEADER_LENGHT;
 
@@ -562,7 +553,7 @@ network_handle_udp(
     /*
     strncpy(
         udp_payload,
-        (buffer + UDP_HEADER_LENGHT),
+        (udp_payload_base + UDP_HEADER_LENGHT),
         1020 );
     */
     udp_payload[1021] = 0;
@@ -587,7 +578,7 @@ network_handle_udp(
     {
         printk("UDP: on DHCP port %d\n", dport);
         network_handle_dhcp(
-            (buffer + UDP_HEADER_LENGHT),
+            (udp_payload_base + UDP_HEADER_LENGHT),
             (udp->uh_ulen - UDP_HEADER_LENGHT) );
 
         //__udp_clear_payload_buffer();
@@ -608,7 +599,6 @@ network_handle_udp(
 // see: network.c
     //int PushPayloadIntoTheQueue = TRUE;
     int PushPayloadIntoTheQueue = FALSE;
-
     int NoReply = TRUE;
 
     if (dport == 11888)

@@ -199,8 +199,8 @@ int tcp_change_socket_buffer(struct socket_d *sk, size_t desired_size);
 // This is called by the IP support when a TCP payload is found.
 void 
 network_handle_tcp( 
-    const unsigned char *buffer, 
-    ssize_t size,
+    const unsigned char *tcp_payload_base, 
+    ssize_t tcp_payload_size,
     unsigned int s_ipv4_int,
     unsigned int d_ipv4_int );
 

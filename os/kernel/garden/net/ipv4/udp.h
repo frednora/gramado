@@ -60,8 +60,8 @@ network_send_udp (
 // This is called by the IP support when a UDP payload is found.
 void 
 network_handle_udp( 
-    const unsigned char *buffer, 
-    ssize_t size );
+    const unsigned char *udp_payload_base, 
+    ssize_t udp_payload_size );
 
 
 #endif   
