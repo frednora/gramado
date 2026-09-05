@@ -35,6 +35,10 @@ static unsigned short __new_client_port_number = 32768; // Inicial
 //static char __tcp_payload[1024];
 static char __tcp_payload[1400];   // or 1460
 
+static int __is_same_subnet(unsigned int ip1,
+                            unsigned int ip2,
+                            unsigned int netmask);
+
 static unsigned int __get_random_32bit(void);
 static unsigned int __generate_ISN(void);
 
@@ -75,7 +79,27 @@ static void __handle_tcp_for_non_local_servers (
     unsigned int s_ipv4_int,
     unsigned int d_ipv4_int );
 
+
+
 // ===================================================
+
+
+// Check if two IPv4 addresses are in the same subnet.
+// All values are host byte order integers.
+static int __is_same_subnet(unsigned int ip1,
+                            unsigned int ip2,
+                            unsigned int netmask)
+{
+    unsigned int __ip1 = (ip1 & netmask);
+    unsigned int __ip2 = (ip2 & netmask);
+
+    if (__ip1 == __ip2)
+    {
+        return TRUE;   // same subnet
+    }
+
+    return FALSE;       // different subnet
+}
 
 
 static unsigned int __get_random_32bit(void)
@@ -251,6 +275,7 @@ void test_sending_tcp(void)
 }
 
 // Low level worker
+// Buffers: [ethernet, ipv4, tcp, data]
 int
 network_send_tcp ( 
     uint8_t source_ip[4], 
@@ -264,11 +289,15 @@ network_send_tcp (
     char *data_buffer, 
     size_t data_lenght )
 {
-// Buffers: [ethernet, ipv4, tcp, data]
-
     register int i=0;
     int j=0;
     char *data = (char *) data_buffer;  // TCP payload
+
+    // Local headers
+    struct ethernet_d  Leh;
+    struct ip_d  Lipv4;
+    struct tcp_d  Ltcp;
+
 
 //==============================================
 
@@ -296,16 +325,16 @@ network_send_tcp (
         return -1;
     }
 
+/*
     // #debug
     printk("TCP SEND: %d.%d.%d.%d:%d -> %d.%d.%d.%d:%d flags=%x seq=%u ack=%u\n",
        source_ip[0],source_ip[1],source_ip[2],source_ip[3],source_port,
        target_ip[0],target_ip[1],target_ip[2],target_ip[3],target_port,
        flags, seq, ack );
+*/
 
 // ==============================================
 // ethernet header:
-
-    struct ether_header  Leh;
 
     for (i=0; i<6; i++){
         Leh.mac_dst[i] = (uint8_t) target_mac[i];               // dest
@@ -315,8 +344,6 @@ network_send_tcp (
 
 // ==============================================
 // ipv4 header:
-
-    struct ip_d  Lipv4;
 
     Lipv4.v_hl = 0x45;    // Version (8bits)
 
@@ -388,8 +415,6 @@ network_send_tcp (
 
 // ==============================================
 // tcp header:
-
-    struct tcp_d  Ltcp;
 
     // Ports (16,16)
     Ltcp.th_sport = (uint16_t) ToNetByteOrder16(source_port);
@@ -469,7 +494,6 @@ network_send_tcp (
     Ltcp.checksum = (uint16_t) ToNetByteOrder16(Ltcp.checksum);
 
     //printk ("size %d\n", sizeof (struct  udp_d) );
-    //refresh_screen();
     //while(1){}
 
 // ----------------------------------------------------
@@ -606,7 +630,7 @@ network_send_tcp (
 
 fail:
     printk ("TCP: Fail\n");  // #debug
-    return -1;
+    return (int) -1;
 }
 
 
@@ -635,6 +659,9 @@ tcp_socket_send(
     tcp_ack ack;
     uint16_t Flags = 0;
     int rv;
+
+    unsigned short source_port;
+    unsigned short dest_port;
 
     local_sk = sk;
     remote_sk = NULL;
@@ -681,7 +708,30 @@ tcp_socket_send(
     if ((void *) conn->ep_pair->s_ep == NULL)
         return -ENOTCONN;
 
-    remote_sk = conn->ep_pair->s_ep->socket;
+
+    // #bugbug
+    // Probably the IPs and PORTs we are getting from the
+    // connection structure are not the same of those we are
+    // getting from the function parameters.
+    // #ps: The values in the connection structure are correct.
+
+    if (conn->is_local_server == TRUE) {
+        // Local process is SERVER → peer is the client
+        remote_sk = conn->ep_pair->c_ep->socket;
+
+        // Local process is SERVER
+        source_port = conn->ep_pair->s_ep->socket->port;  // server port (22888)
+        dest_port   = conn->ep_pair->c_ep->socket->port;  // 
+
+    } else {
+        // Local process is CLIENT → peer is the server
+        remote_sk = conn->ep_pair->s_ep->socket;
+
+        // Local process is CLIENT
+        source_port = conn->ep_pair->c_ep->socket->port;  // client ephemeral
+        dest_port   = conn->ep_pair->s_ep->socket->port;  // server port (22888)
+    }
+
     if ((void *) remote_sk == NULL)
         return -ENOTCONN;
     if (remote_sk->magic != 1234)
@@ -689,6 +739,8 @@ tcp_socket_send(
 
 // Target ip (array)
 // Host-order IP → dotted octets
+// Network byte order.
+
     target_ip[0] = (uint8_t) ((remote_sk->ip_ipv4 >> 24) & 0xFF);
     target_ip[1] = (uint8_t) ((remote_sk->ip_ipv4 >> 16) & 0xFF);
     target_ip[2] = (uint8_t) ((remote_sk->ip_ipv4 >>  8) & 0xFF);
@@ -720,19 +772,47 @@ tcp_socket_send(
 
     Flags = (TH_ACK | TH_PUSH);
 
+
+    unsigned int my_ip   = dhcp_info.your_ipv4_int;   // host-order int
+    unsigned int peer_ip = remote_sk->ip_ipv4;        // host-order int;
+    //unsigned int netmask = NetworkSaved.netmask_int;  // host-order int
+    // Hardcode a /24 mask (255.255.255.0)
+    unsigned int netmask = 0xFFFFFF00;  
+
+    int IsSameSubnet = FALSE;
+    IsSameSubnet = 
+        __is_same_subnet(
+            dhcp_info.your_ipv4_int,
+            remote_sk->ip_ipv4,
+            netmask );
+
 // #todo
 // #bugbug
 // NetworkSaved.gateway_mac is used to send packets to 
 // a peer outside the LAN ... but if the peer is inside the LAN,
 // we need to plug another mac here.
 
+    // Default: Peer is outside the LAN
+    char target_mac[6];
+    //char *target_mac = (char *) NetworkSaved.gateway_mac;
+    // #todo
+    // When the target ip is inside the LAN,
+    // the target MAC is not the gateway's MAC.
+
+    // #ps: using Network byte order
+    if (IsSameSubnet == TRUE){
+        memcpy(target_mac, conn->peer_mac, 6);
+    } else {
+        memcpy(target_mac, NetworkSaved.gateway_mac, 6);
+    }
+
     rv = 
     network_send_tcp(
-        dhcp_info.your_ipv4,       // source IP
-        target_ip,                 // destination IP
-        NetworkSaved.gateway_mac,  // next-hop MAC (gateway for WAN)
-        local_sk->port,
-        remote_sk->port,
+        dhcp_info.your_ipv4,  // source IP - Network byte order
+        target_ip,            // destination IP - Network byte order
+        target_mac,           // target MAC - Network byte order
+        source_port,          // local        
+        dest_port,            // remote
         seq,
         ack,
         (uint16_t) Flags,
@@ -750,7 +830,7 @@ tcp_socket_send(
     return (int) len;
 }
 
-// #test: Getting the last payload available...
+// Getting the last payload available...
 // allowing the ring 3 process to read it.
 int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
 {
@@ -769,10 +849,6 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
         printk("tcp_socket_recv: sk magic\n");
         return -EINVAL;
     }
-    if (sk->state != SS_CONNECTED){
-        printk("tcp_socket_recv: socket not connected\n");
-        return -ENOTCONN;
-    }
     if ((void*) buf == NULL){
         printk("tcp_socket_recv: buf\n");
         return -EINVAL;
@@ -782,6 +858,12 @@ int tcp_socket_recv(struct socket_d *sk, char *buf, size_t len)
     if (len < 0)
         return -EINVAL;
 
+
+// Socket state
+    if (sk->state != SS_CONNECTED){
+        printk("tcp_socket_recv: socket not connected\n");
+        return -ENOTCONN;
+    }
 
 // connection
     conn = sk->conn;
@@ -1269,9 +1351,7 @@ __remote_client_sent_syn(
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    uint16_t flags=0;
     size_t data_len = 0;
-    //register int i=0;
 
     // No payload for handshake
     char dummy_payload[2];
@@ -1292,9 +1372,16 @@ __remote_client_sent_syn(
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
-// Ports:
+
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     printk("TCP: [Receiving] s=%u (sport), d=%u (dport)\n", 
         sport, dport );
 
@@ -1312,9 +1399,6 @@ __remote_client_sent_syn(
 // “I have successfully received everything up to this byte number minus one.”
 // Ex: If _ack_number = 5099, it means the receiver has received 
 // all bytes up to 5098 and is expecting 5099 next.
-
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
@@ -1353,7 +1437,6 @@ __remote_client_sent_syn(
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     //if (peer_window == 0)
         //return;
 
@@ -1361,7 +1444,6 @@ __remote_client_sent_syn(
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -1486,6 +1568,9 @@ __remote_client_sent_syn(
     }
 
     // 1 :: SYN from remote client to a local server
+    // #todo:
+    // If the client sent a SYN, so it's trying to connect with a server.
+    // We need to find this server and check if it is listening.
     if (fSYN == 1 && fACK == 0)
     {
         printk("-- Step 1 --------\n");
@@ -1520,20 +1605,24 @@ __remote_client_sent_syn(
             //kfree(conn);
             return; // do not respond
         }
+        // SYN received from remote client
+        // We're local server
         conn->type = CONN_TYPE_TCP;
-        // #ps: Status: Receiving a SYN from a remoter client
-        conn->status = CONN_STATUS_SYN_RECEIVED;
-
-        // #test: it means we are the local server
+        conn->status = CONN_STATUS_SYN_RECEIVED;  
         conn->is_local_server = TRUE;
+        conn->packets_received++;
+
+        // Copy caller MAC into the connection
+        // The ethernet handler gave us this thing
+        memcpy(conn->peer_mac, NetworkSaved.caller_mac, 6);
 
         // tcp connection structure
+
         if ((void*) conn->tcp_conn == NULL){
             printk("Failed to create TCP connection structure\n");
             return; // do not respond
         }
         conn->tcp_conn->state = TCP_SYN_RECEIVED;
-        conn->packets_received++;
         // IRS → Initial Receive Sequence number
         conn->tcp_conn->irs     = _seq_number;      // client's ISN
         conn->tcp_conn->rcv_nxt = _seq_number + 1;  // SYN consumes 1 seq number
@@ -1696,18 +1785,15 @@ __remote_client_sent_syn(
                     sk_listener->pending_client_count = 0;
                 }
                 int backlog_tail = sk_listener->pending_client_count;
-
                 sk_listener->pending_client_endpoints[backlog_tail] = 
                     client_ep->socket;
 
                 sk_listener->state = SS_CONNECTING;
-
                 sk_listener->conn = conn;     // Belongs to this connection
                 sk_listener->ep = server_ep;  // Belongs to this ep
 
                 server_ep->socket = sk_listener;   // Save into the ep
             
-
                 if (sk_listener->ip_ipv4 == 0x7F000001)
                 {
                     // panic("Server is localhost #breakpoint");
@@ -1742,7 +1828,7 @@ __remote_client_sent_syn(
         // Building the response
 
         // Flags: SYN + ACK
-        uint16_t flags = TH_SYN | TH_ACK;
+        uint16_t ResponseFlags = TH_SYN | TH_ACK;
 
         printk("__remote_client_sent_syn: Sending SYN/ACK\n");
 
@@ -1755,7 +1841,7 @@ __remote_client_sent_syn(
             sport,    // client port (target) (remote)
             conn->tcp_conn->iss,      // seq = our ISN
             conn->tcp_conn->rcv_nxt,  // ack = client's ISN + 1
-            flags,
+            ResponseFlags,
             dummy_payload,  // No tcp payload
             0               // No tcp payload lenght char=0x00
         );
@@ -1785,9 +1871,7 @@ __handle_tcp_for_kd_server(
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    uint16_t flags=0;
     size_t data_len = 0;
-    //register int i=0;
 
     // No payload for handshake
     char dummy_payload[2];
@@ -1808,9 +1892,16 @@ __handle_tcp_for_kd_server(
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
-// Ports:
+
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     printk("TCP: [Receiving] s=%u (sport), d=%u (dport)\n", 
         sport, dport );
 
@@ -1834,9 +1925,6 @@ __handle_tcp_for_kd_server(
 // “I have successfully received everything up to this byte number minus one.”
 // Ex: If _ack_number = 5099, it means the receiver has received 
 // all bytes up to 5098 and is expecting 5099 next.
-
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
@@ -1876,7 +1964,6 @@ __handle_tcp_for_kd_server(
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     // #test:
     //if (peer_window == 0)
         //return;
@@ -1885,7 +1972,6 @@ __handle_tcp_for_kd_server(
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -1976,8 +2062,8 @@ __handle_tcp_for_kd_server(
 // ----------------------------------------------------
 // Step 1:
 
-    // #test
     struct connection_d *c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
+
     if (c_conn){
         cur_conn = c_conn;
     }
@@ -1995,7 +2081,7 @@ __handle_tcp_for_kd_server(
         // It means the server here needs to respond.
         if (fSYN == 1 && fACK == 0)
         {
-            printk("\n");
+            //printk("\n");
             printk("Step 1: Client sent SYN\n");
             printk("TCP_SYN: SEQ={%d} | ACK={%d}\n", _seq_number, _ack_number );
 
@@ -2022,10 +2108,7 @@ __handle_tcp_for_kd_server(
             }
             conn->type = CONN_TYPE_TCP;
             conn->status = CONN_STATUS_SYN_RECEIVED;
-
-            // #test: it means we are the local server
             conn->is_local_server = TRUE;
-
             // tcp connection structure
             if ((void*) conn->tcp_conn == NULL){
                 printk("Failed to create TCP connection structure\n");
@@ -2040,9 +2123,9 @@ __handle_tcp_for_kd_server(
             conn->tcp_conn->iss     = seq;  //1000;  //__generate_ISN();  // our ISN (or randomize later)
             conn->tcp_conn->snd_una = seq;  //conn->tcp_conn->iss;
             conn->tcp_conn->snd_nxt = seq + 1;  //conn->tcp_conn->iss + 1; // our SYN will consume 1
-
             conn->tcp_conn->snd_wnd = peer_window;  // Client's window size?
             //conn->tcp_conn->rcv_wnd -= 1;         // Maybe
+
             printk("Connection %d created, state=SYN_RECEIVED\n", id);                 
 
             // -- ep pair -----------
@@ -2177,8 +2260,8 @@ __handle_tcp_for_kd_server(
                 dhcp_info.your_ipv4,       // server IP
                 NetworkSaved.caller_ipv4,  // client IP (Array)
                 NetworkSaved.caller_mac,   // client MAC
-                11888,           // server port (source=we)
-                sport,           // client port (target)
+                dport,                     // server port (source=we)
+                sport,                     // client port (target)
                 conn->tcp_conn->iss,      // seq = our ISN
                 conn->tcp_conn->rcv_nxt,  // ack = client's ISN + 1
                 flags,
@@ -2199,10 +2282,7 @@ __handle_tcp_for_kd_server(
 // ------------------------------------------------------
 // Step 2:
 
-    // #test
-    //struct connection_d *c_conn =
     c_conn = tcp_find_connection_by_remote_peer(s_ipv4_int, sport);
-    //struct connection_d *
     //c_conn = tcp_find_connection_by_client(s_ipv4_int, sport);  
     if (!c_conn){
         printk("step2: [WARNING] No connection based on remote peer\n"); 
@@ -2255,7 +2335,7 @@ __handle_tcp_for_kd_server(
                 dhcp_info.your_ipv4,        // our IP
                 NetworkSaved.caller_ipv4,   // remote IP (whoever this packet came from)
                 NetworkSaved.caller_mac,    // remote MAC
-                11888,                      // our local port (source)
+                dport,                      // our local port (source)
                 sport,                      // remote port (target) — 80 or 443
                 final_seq,
                 final_ack,
@@ -2566,11 +2646,11 @@ Retransmissions or duplicate ACKs confuse the state machine
             // Acknoledgind the received data.
             int rv = 
             network_send_tcp(
-                dhcp_info.your_ipv4,
-                NetworkSaved.caller_ipv4,
-                NetworkSaved.caller_mac,
-                11888,
-                sport,
+                dhcp_info.your_ipv4,       // Network byte order
+                NetworkSaved.caller_ipv4,  // Network byte order
+                NetworkSaved.caller_mac,   // Network byte order
+                dport,                     // We are the source now
+                sport,                     // Target is the caller
                 cur_conn->tcp_conn->snd_nxt,
                 cur_conn->tcp_conn->rcv_nxt,
                 Flags,
@@ -2646,8 +2726,6 @@ static void __handle_tcp_for_local_servers (
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    //register int i=0;
-    uint16_t flags=0;
     size_t data_len = 0;
 
     // No payload for handshake
@@ -2669,11 +2747,17 @@ static void __handle_tcp_for_local_servers (
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     //printk("TCP Packet: [receiving] s=%u (sport), d=%u (dport)\n", 
         //sport, dport);
-
     //}
 
 //
@@ -2730,9 +2814,6 @@ static void __handle_tcp_for_local_servers (
 
    printk("TCP Packet: [Receiving] s=%u (sport), r=%u (dport)\n", 
         sport, dport );
-   
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
 
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
@@ -2761,7 +2842,6 @@ static void __handle_tcp_for_local_servers (
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     //if (peer_window == 0)
         //return;
 
@@ -2769,7 +2849,6 @@ static void __handle_tcp_for_local_servers (
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -3005,8 +3084,6 @@ static void __handle_tcp_for_local_servers (
         return;
     }
 
-
-
 // ++
 // -------------------------------------------
 // Connection state: CONN_STATUS_SYN_RECEIVED
@@ -3157,156 +3234,6 @@ static void __handle_tcp_for_local_servers (
 
         return;  // Drop
     }  // End of CONN_STATUS_SYN_RECEIVED
-
-
-// ++
-// -------------------------------------------
-// Connection state: CONN_STATUS_SYN_SENT
-// Step 2 when we are the client
-// Step 2: SYN/ACK  
-// Step 2 – Server replies with SYN+ACK (We are the client)
-// We received a SYN/ACK because we sent a syn to a remote server.
-// (2) SYN/ACK
-// A server accepted the connection.
-// We received a syn/ack as a response to
-// our syn sent by a process in this machine.
-// #todo: Apply the connection structure that handles this connection.
-// host   → remote : SYN
-// Remote → host   : SYN-ACK
-// host   → remote : ACK
-
-// CONN_STATUS_SYN_SENT → only accept SYN+ACK (or RST)
-
-// #ps:
-// The routine does not belongs to this handler anymore.
-// This handler is only for the case we are a local server.
-
-/*
-    if (cur_conn->status == CONN_STATUS_SYN_SENT)
-    {
-        printk("Step 2: Waiting syn_ack in CONN_STATUS_SYN_SENT\n");
-
-        // #debug
-        //if (cur_conn->ep_pair->c_ep->is_remote == TRUE)
-            //panic("No expected remote ep on CONN_STATUS_SYN_SENT\n");
-
-        if (fRST){
-            printk("[WARNING] RST received during during CONN_STATUS_SYN_SENT\n");
-            // Optional: clean up the half-open connection
-            cur_conn->status = CONN_STATUS_CLOSED;
-            // free resources...
-            return;
-        }
-
-        if (fSYN != 1 || fACK != 1){
-            printk("[WARNING] Not a syn_ack\n");
-            return;
-        }
-
-        if (fFIN){
-            printk("[WARNING] FIN received during during CONN_STATUS_SYN_SENT\n");
-            return;
-        }
-
-        // 2 :: SYN_ACK from remote server to a local client
-        if (fSYN == 1 && fACK == 1)
-        {
-            printk("TCP_SYN_ACK: SEQ={%d} | ACK={%d}\n", 
-                _seq_number, _ack_number );
-            //printk("TCP_SYN_ACK: seq=%u (offset=%u) ack=%u (offset=%u)\n",
-                //_seq_number,
-                //_seq_number - conn->tcp_conn->iss,
-                //_ack_number,
-                //_ack_number - conn->tcp_conn->irs );
-
-            printk("TCP_SYN_ACK: Sending final ACK\n");
-
-            // We're the client here — the remote side acked our SYN and sent
-            // its own SYN. Complete the handshake with the final ACK.
-            tcp_seq final_seq = _ack_number;       // = our ISN + 1, given by the server's ack
-            tcp_ack final_ack = _seq_number + 1;   // acknowledge the server's ISN
-
-            // Send ACK after receiving sys_ack
-            network_send_tcp(
-                dhcp_info.your_ipv4,        // our IP
-                NetworkSaved.caller_ipv4,   // remote IP (whoever this packet came from)
-                NetworkSaved.caller_mac,    // remote MAC
-                dport,                      // our local port (source) 
-                sport,                      // remote port (target) — 80 or 443
-                final_seq,
-                final_ack,
-                TH_ACK,                     // ACK only, no SYN
-                dummy_payload,              // No payload
-                0                           // no payload — pure ACK doesn't consume a seq number
-            );
-
-            cur_conn->packets_sent++;
-
-            printk("TCP_SYN_ACK: ACK Sent\n");
-
-            // #test: Update sequence numbers
-            //cur_conn->tcp_conn->snd_una = ack;        // server acknowledged our SYN
-            cur_conn->tcp_conn->snd_una = cur_conn->tcp_conn->iss + 1; // SYN acknowledged
-            cur_conn->tcp_conn->snd_nxt = cur_conn->tcp_conn->iss + 1; // still next to send
-            // IRS is the sequence number the server chose
-            cur_conn->tcp_conn->irs     = _seq_number;
-            cur_conn->tcp_conn->rcv_nxt = _seq_number + 1;   // SYN consumes one sequence number
-
-            // Optional but useful
-            // cur_conn->ep_pair->c_ep->socket->state = SS_CONNECTED;
-            // cur_conn->ep_pair->s_ep->socket->state = SS_CONNECTED;
-
-            if ( cur_conn->ep_pair && 
-                 cur_conn->ep_pair->c_ep && 
-                 cur_conn->ep_pair->s_ep ) 
-            {
-                struct socket_d *c_sock = cur_conn->ep_pair->c_ep->socket;
-                struct socket_d *s_sock = cur_conn->ep_pair->s_ep->socket;
-
-                if ( c_sock && 
-                     c_sock->magic == 1234 &&
-                     s_sock && 
-                     s_sock->magic == 1234 )
-                {
-                    c_sock->state = SS_CONNECTED;
-                    s_sock->state = SS_CONNECTED;
-
-                    // Let's allow the client to send the first request
-                    file *fp = c_sock->private_file;
-                    if ((void*) fp == NULL){
-                        panic("TCP step 2: invalid fp\n");  return;
-                    }
-                    if (fp->magic != 1234){
-                        panic("TCP step 2: fp validation\n");  return;
-                    }
-                    fp->sync.action = ACTION_NULL;
-                    fp->sync.can_write = TRUE;  // Can send a request
-                    fp->_flags |= __SWR;        // flags: can write
-                    //fp->_r = 0;
-                    //fp->_w = 0;
-
-                    // Enlarge the socket buffer for the client
-                    int ok = tcp_change_socket_buffer(c_sock, 5*1024); // 5KB
-                    if (ok != 0)
-                        printk("TCP: [FAIL] couldin't enlarge the socket buffer\n");
-                }
-            }
-
-            // Connection
-            cur_conn->status = CONN_STATUS_ESTABLISHED;
-            // TCP connection
-            cur_conn->tcp_conn->state = TCP_ESTABLISHED;
-            printk("TCP_SYN_ACK: ACK Sent ESTABLISHED    :)\n");
-            return;  // Established
-        }
-
-        return;
-
-    } // End of CONN_STATUS_SYN_SENT
-*/
-
-// -------------------------------------------
-// --
 
 // ++
 // -----------------------------------------
@@ -3469,14 +3396,17 @@ static void __handle_tcp_for_local_servers (
                 printk("fp1 va = %x\n", &fp);
                 printk("\n");
 
-                // Inject at this position
-                memcpy(
-                    fp->_base + fp->_w, 
-                    __tcp_payload,  //buffer + TCP_HEADER_LENGHT, 
-                    to_copy );
-                fp->_w += (int) to_copy;
-                fp->_fsize = fp->_w;
-                fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                if (to_copy > 0)
+                {
+                    // Inject at this position
+                    memcpy(
+                        fp->_base + fp->_w, 
+                        __tcp_payload,  //buffer + TCP_HEADER_LENGHT, 
+                        to_copy );
+                    fp->_w += (int) to_copy;
+                    fp->_fsize = fp->_w;
+                    fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                }
 
                 // Permissions
                 //fp->_flags &= ~__SRD;         // Cant read for now
@@ -3690,15 +3620,16 @@ static void __handle_tcp_for_local_servers (
 // -------------------------------------------
 // --
 
-// -----------------------------------------
-// --
-
     printk("TCP: drop. Unknown state #todo\n");
     return;
 }
 
 // Non local servers. (Local clients and error conditions)
 // Now we are the local clients.
+// + Send SYN
+// + Receives SYN_ACK
+// + Send ACK
+// + Receives data
 static void __handle_tcp_for_non_local_servers ( 
     const unsigned char *buffer, 
     ssize_t size,
@@ -3706,8 +3637,6 @@ static void __handle_tcp_for_non_local_servers (
     unsigned int d_ipv4_int )
 {
     struct tcp_d *tcp;  // The buffer
-    //register int i=0;
-    uint16_t flags=0;
     size_t data_len = 0;
 
     // No payload for handshake
@@ -3729,16 +3658,21 @@ static void __handle_tcp_for_non_local_servers (
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
 
+// Get and convert the fields from the TCP header.
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
+    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
+    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
+    uint16_t flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
+    uint16_t peer_window    = (uint16_t) FromNetByteOrder16(tcp->window_size);
+    uint16_t urgent_pointer = (uint16_t) FromNetByteOrder16(tcp->urgent_pointer);
+
     //printk("TCP Packet: [receiving] s=%u (sport), d=%u (dport)\n", 
         //sport, dport);
-
 
 // ------------------------------------
 // Target is probably a local client
 // ...
-
 
 //
 // Super drop
@@ -3786,9 +3720,6 @@ static void __handle_tcp_for_non_local_servers (
    printk("TCP Packet: [Receiving] s=%u (sport), r=%u (dport)\n", 
         sport, dport );
    
-    tcp_seq _seq_number = (tcp_seq) FromNetByteOrder32(tcp->th_seq);
-    tcp_ack _ack_number = (tcp_ack) FromNetByteOrder32(tcp->th_ack);
-
     // Clear the payload local buffer
     memset(__tcp_payload, 0, sizeof(__tcp_payload));
 
@@ -3816,7 +3747,6 @@ static void __handle_tcp_for_non_local_servers (
     }
 
     // Window: The client can only accept this n bytes
-    uint16_t peer_window = (uint16_t) FromNetByteOrder16(tcp->window_size);
     //if (peer_window == 0)
         //return;
 
@@ -3824,7 +3754,6 @@ static void __handle_tcp_for_non_local_servers (
 // Flags
 //
 
-    flags = (uint16_t) FromNetByteOrder16(tcp->do_res_flags);
     //printk("Flags={%x}\n",flags);
 
 // FIN  - graceful close,
@@ -3903,7 +3832,6 @@ static void __handle_tcp_for_non_local_servers (
 
     printk("TCP: dport=%d SYN={%d} ACK={%d} FIN={%d}\n", 
         dport, fSYN, fACK, fFIN);
-
 
 //
 // Drop
@@ -4079,6 +4007,7 @@ static void __handle_tcp_for_non_local_servers (
         }
         printk(": Acked with rst\n");
 
+        // socket
         struct socket_d *sk;
         sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
         if ((void*) sk == NULL){
@@ -4089,6 +4018,8 @@ static void __handle_tcp_for_non_local_servers (
             panic("TCP: sk validation\n");  return;
         }
         sk->state = SS_UNCONNECTED; // cant read anymore
+
+        // file
         file *fp = sk->private_file;
         if ((void*) fp == NULL){
             panic("TCP: invalid fp\n");  return;
@@ -4305,8 +4236,7 @@ static void __handle_tcp_for_non_local_servers (
             return;
         }
 
-        cur_conn->tcp_conn->snd_una = _ack_number;   // Las unacknowledged byte
-
+        cur_conn->tcp_conn->snd_una = _ack_number;  // Last unacknowledged byte
         cur_conn->packets_received++;
 
         // -------------------------------------------------
@@ -4318,8 +4248,9 @@ static void __handle_tcp_for_non_local_servers (
 
             // In-order data segment
             cur_conn->tcp_conn->rcv_nxt += data_len;
+            // FIN consumes one sequence number
             if (fFIN)
-                cur_conn->tcp_conn->rcv_nxt += 1;   // FIN consumes one sequence number
+                cur_conn->tcp_conn->rcv_nxt += 1;
 
             // #debug: Display payload
             // #todo: Here we are receiving the data,
@@ -4331,15 +4262,9 @@ static void __handle_tcp_for_non_local_servers (
             // and allow the ring 3 client to read it.
             if (data_len > 0) 
             {
-                printk("TCP Payload (%d bytes):\n%s\n", 
+                // #debug
+                printk("TCP Payload (%d bytes) R0:\n%s\n", 
                     (int)data_len, __tcp_payload );
-                //int _i;
-                //for (_i = 0; _i < 5; _i++)
-                //{
-                //    printk("%s\n", (__tcp_payload + _i));
-                //    _i = _i+200; 
-                //}
-                //printk("\n");
             }
 
             //if (cur_conn->ep_pair->c_ep->is_remote == TRUE)
@@ -4349,14 +4274,14 @@ static void __handle_tcp_for_non_local_servers (
             // We can create a worker that do this routine,
             // injecting incoming data into the socket buffer.
             // see: net.c
-            struct socket_d *sk;
 
+            // socket
+            struct socket_d *sk;
             if (cur_conn->is_local_server == TRUE){
                 sk = (struct socket_d *) get_server_socket_from_connection(cur_conn);
             } else {
                 sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
             }
-
             if ((void*) sk == NULL){
                 panic("TCP: invalid sk\n");
                 return;
@@ -4366,6 +4291,7 @@ static void __handle_tcp_for_non_local_servers (
             }
             //sk->state = SS_CONNECTED;
 
+            // file
             file *fp = sk->private_file;
             if ((void*) fp == NULL){
                 panic("TCP: invalid fp\n");  return;
@@ -4393,36 +4319,50 @@ static void __handle_tcp_for_non_local_servers (
                     ? data_len 
                     : fp->_cnt;
 
-
+                // #debug
                 printk("\n");
-                printk("\n");
-                printk("TCP: COPY COPY COPY    :) <<<\n");
                 printk("TCP RX: writing into fd=%d\n", fp->_file);
                 printk("fp1 va = %x\n", &fp);
                 printk("\n");
 
-                // Inject at this position
-                memcpy(
-                    fp->_base + fp->_w, 
-                    __tcp_payload,  //buffer + TCP_HEADER_LENGHT, 
-                    to_copy );
-                fp->_w += (int) to_copy;
-                fp->_fsize = fp->_w;
-                fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                if (to_copy > 0)
+                {
+                    // Inject at this position
+                    memcpy(
+                        fp->_base + fp->_w, 
+                        __tcp_payload,  // (buffer + TCP_HEADER_LENGHT)
+                        to_copy );
 
-                // Permissions
-                //fp->_flags &= ~__SRD;         // Cant read for now
-                //fp->_flags &= ~__SWR;         // optional: clear write-only
-                //fp->sync.can_read = TRUE;      // allow read
-                //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
+                    fp->_w += (int) to_copy;
+                    fp->_fsize = fp->_w;
+                    fp->_cnt = (fp->_lbfsize - fp->_fsize);
+                }
 
-                //fp->_flags |= __SRD;
-                fp->sync.can_read = FALSE;
-                fp->sync.can_write = FALSE;
-                fp->sync.action = ACTION_NULL;
+                //if (fFIN != TRUE)
+                //{
+
+                    // Permissions
+                    //fp->_flags &= ~__SRD;         // Cant read for now
+                    //fp->_flags &= ~__SWR;         // optional: clear write-only
+                    //fp->sync.can_read = TRUE;      // allow read
+                    //fp->sync.action = ACTION_REPLY;  // signal to client that data is ready
+
+                    //fp->_flags |= __SRD;
+                    fp->sync.can_read = FALSE;
+                    fp->sync.can_write = FALSE;
+                    fp->sync.action = ACTION_NULL;
+                //}
             }
 
+            // #bugbug
+            // We we received a FIN but the ring 3 client still
+            // didnt read the payload, it will be stopped to read.
+            // we cant do this.
+            // Changing the connection to the state CLOSE_WAIT 
+            // is a good move.
+            // #ps: The read routine needs to be allowed in this state too.
             if (fFIN){
+
                 fp->sync.can_read = TRUE;    // allow read
                 fp->_r = 0;                  // Read from the beginning when afte FIN
                 fp->_flags |= __SRD;         // mark readable
@@ -4498,6 +4438,7 @@ static void __handle_tcp_for_non_local_servers (
             printk("TCP: Change state to CLOSE_WAIT ...\n");
             cur_conn->status = CONN_STATUS_CLOSE_WAIT;
 
+            // socket
             struct socket_d *sk;
             sk = (struct socket_d *) get_client_socket_from_connection(cur_conn);
             if ((void*) sk == NULL){
@@ -4510,6 +4451,7 @@ static void __handle_tcp_for_non_local_servers (
             //sk->state = SS_UNCONNECTED;
             sk->state = SS_CONNECTED;  // Because maybe we still need to read
 
+            // file
             file *fp = sk->private_file;
             if ((void*) fp == NULL){
                 panic("TCP: invalid fp\n");  return;
@@ -4555,7 +4497,6 @@ static void __handle_tcp_for_non_local_servers (
 
     if (cur_conn->status == CONN_STATUS_SYN_RECEIVED)
     {
-
         //panic ("Received something during CONN_STATUS_SYN_RECEIVED");
 
         if (fRST == 1){
@@ -4677,7 +4618,6 @@ static void __handle_tcp_for_non_local_servers (
     return;
 }
 
-
 /*
  * network_handle_tcp: Main TCP dispatcher
  *
@@ -4734,8 +4674,8 @@ network_handle_tcp (
         printk("network_handle_tcp: buffer\n");
         return;
     }
-    //if (size < 0){
-    //}
+    if (size < TCP_HEADER_LENGHT)
+        return;
 
     // Pointer for the TCP header. Pre-allocated.
     tcp = (struct tcp_d *) buffer;
@@ -4744,8 +4684,6 @@ network_handle_tcp (
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
     //printk("TCP Packet: [receiving] s=%u (sport), d=%u (dport)\n", 
         //sport, dport);
-
-
 
 // The main handler (network_handle_tcp) should only 
 // dispatch packets to the correct worker, and 
@@ -4785,7 +4723,7 @@ network_handle_tcp (
 // ...
 
     __handle_tcp_for_non_local_servers(buffer, size, s_ipv4_int, d_ipv4_int);
-    return;
 
+    return;
 }
 
