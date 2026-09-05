@@ -74,6 +74,7 @@ struct ip_d
 
 // - Version (8bits)
 // - IHL (4bits). Lenght of the header in chuncks of 4 bytes. 
+//  The lower 4 bits (IHL) must reflect the header length in 32‑bit words.
     u_int8_t v_hl;
 
 // Type of service (8bits)

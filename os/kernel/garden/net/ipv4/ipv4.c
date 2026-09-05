@@ -29,16 +29,29 @@ ipv4_send (
 // The frame
 //
 
+    // Getting the Options size!
+    // uint8_t header_length = (ip->v_hl & 0x0F) * 4;  // in bytes
+    // size_t OptionsSize = header_length - IP_HEADER_LENGHT;
+
+
+// #todo
+// The header can actually vary between 20 and 60 bytes 
+// depending on the presence of options.
+
+    size_t OptionsSize = 0;
+
+    size_t SizeOfIPHeader = IP_HEADER_LENGHT + OptionsSize;
+
     // Th whole frame, needed by ethernet_send()
     size_t FRAME_SIZE = 
                ( ETHERNET_HEADER_LENGHT +\
-                 IP_HEADER_LENGHT +\
+                 SizeOfIPHeader +\
                  data_lenght );
 
     // Ethernet MTU is usually 1500 bytes.
     // Add Ethernet + IPv4 headers for safety.
     size_t MAX_FRAME_SIZE = 
-        (ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT + 1500);
+        (ETHERNET_HEADER_LENGHT + SizeOfIPHeader + 1500);
 
     // Local buffer for the whole frame
     uint8_t frame[MAX_FRAME_SIZE];
@@ -93,8 +106,16 @@ ipv4_send (
     //hdr->ver = 4;
     //hdr->tos = 0;
 
-//>>>>
-    Lipv4.v_hl = 0x45;    // 8 bit
+
+// - Version (8bits)
+// - IHL (4bits). Lenght of the header in chuncks of 4 bytes. 
+//  The lower 4 bits (IHL) must reflect the header length in 32‑bit words.
+    //Lipv4.v_hl = 0x45;    // 8 bit
+    // #test
+    //uint8_t ihl_words = (IP_HEADER_LENGHT + OptionsSize) / 4;
+    uint8_t ihl_words = (SizeOfIPHeader / 4);
+    Lipv4.v_hl = (4 << 4) | (ihl_words & 0x0F);
+
 
 // Type of service (8bits)
 // - Differentiated Services Code Point (6bits)
@@ -115,7 +136,7 @@ ipv4_send (
 
     // Total length = IPv4 header + data_length
     // (data_length already includes protocol header + payload)
-    uint16_t __ip_len = IP_HEADER_LENGHT + (uint16_t)data_lenght;
+    uint16_t __ip_len = SizeOfIPHeader + (uint16_t) data_lenght;
     Lipv4.ip_len = ToNetByteOrder16(__ip_len);
 
 
@@ -168,7 +189,7 @@ ipv4_send (
     memcpy (
         frame + ETHERNET_HEADER_LENGHT,  // Right after the ethernet header
         &Lipv4, 
-        IP_HEADER_LENGHT 
+        SizeOfIPHeader 
     );
 
     // #debug
@@ -181,7 +202,7 @@ ipv4_send (
     // Payload
 
     memcpy (
-        frame + ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT,  // Right after the ip header
+        frame + ETHERNET_HEADER_LENGHT + SizeOfIPHeader,  // Right after the ip header
         data_buffer, 
         data_lenght
     );
@@ -319,17 +340,29 @@ network_handle_ipv4(
 
 // Show data.
 // Bytes: Net-style.
+// Header lenght: 5 = 20 bytes
+// header length in 32-bit words
 
     uint8_t v_hl = (uint8_t) ip->v_hl;
+    uint8_t Lenght  = (uint8_t) ((v_hl)      & 0x0F);  // IHL
     uint8_t Version = (uint8_t) ((v_hl >> 4) & 0x0F);
-    uint8_t Lenght  = (uint8_t) (v_hl & 0x0F);  // Header lenght. 5=20bytes.
+
+    // Convert IHL to bytes
+    // #important: It includes the Options size
+    uint8_t header_length = (Lenght * 4);
+
+    // For now, OptionsSize = 0
+    // size_t OptionsSize = 0;
+    size_t OptionsSize = header_length - IP_HEADER_LENGHT;
+    if (OptionsSize > 0) {
+        printk("IPv4: Options present, size=%d bytes\n", OptionsSize);
+    }
 
     //printk("IP Version: {%d}\n", Version);
     //printk("Header lenght: {%d}\n", Lenght);
 
     if (Version != 4){
-        printk("IP: Not version 4\n");
-        goto fail;
+        printk("IP: Not version 4\n");  goto fail;
     }
 
 // Total lenght (16bits)
@@ -353,8 +386,13 @@ network_handle_ipv4(
     }
 
 // Payload
-    payload_base = (buffer + IP_HEADER_LENGHT);
-    PayloadSize = (ip_lenght - IP_HEADER_LENGHT);
+
+    // payload_base = (buffer + IP_HEADER_LENGHT);
+    // PayloadSize = (ip_lenght - IP_HEADER_LENGHT);
+
+    payload_base = buffer + header_length;
+    PayloadSize  = ip_lenght - header_length;
+
 
     //printk ("target: %d.%d.%d.%d \n",
     //    dst_ipv4[0],dst_ipv4[1],dst_ipv4[2],dst_ipv4[3]);
