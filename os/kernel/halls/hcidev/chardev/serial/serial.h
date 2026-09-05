@@ -82,6 +82,8 @@ void serial1_handler (void);
 void serial2_handler (void);
 void serial3_handler (void);
 void serial4_handler (void);
+void DUMMY_SERIAL_HANDLER(void);
+
 
 char serial_read_char (unsigned int port);
 void serial_write_char (unsigned int port, char data);

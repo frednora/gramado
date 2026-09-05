@@ -125,12 +125,11 @@ irq1_KEYBOARD (void)
     }
 
 
-
-
 // If ps2 keyboard isn't initialized yet.
-    if (PS2.keyboard_initialized != TRUE){
+    if (PS2.keyboard_initialized != TRUE)
+    {
         in8(0x60);
-        return;
+        goto ExitIRQ;
     }
     PS2Keyboard.irq_is_working = TRUE;
     PS2Keyboard.last_jiffy = (unsigned long) get_ticks();
@@ -165,7 +164,7 @@ irq1_KEYBOARD (void)
         panic ("K");
 */
 
-
+ExitIRQ:
     // #test
     // apic eoi
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD == 1)

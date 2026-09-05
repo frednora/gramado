@@ -313,18 +313,23 @@ static int __setup_ioapic(void)
 // IRQ14 → vector 46 (Primary IDE)
 // IRQ15 → vector 47 (Secondary IDE)
 
+    // 1 - Keyboard
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD == 1)
         ioapic_umasked(1);
-    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
-        ioapic_umasked(12);
-    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE == 1)
-        ioapic_umasked(14);
-    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
-        ioapic_umasked(15);
-    // ... 
 
+/*
+// #test: This is a work in progress.
+// We need a way for testing the serial input.
+    // 3 and 4 - Serial ports. (All the four serial ports)
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_DUMMY_SERIAL == 1)
+    {
+        ioapic_umasked(3);
+        ioapic_umasked(4);
+    }
+*/
 
-    // #test (Probably 9)
+    // (Probably 9) - NIC
+    // #test 
     // If the NIC device is already initialized.
     if ((void*) currentNIC != NULL)
     {
@@ -338,6 +343,19 @@ static int __setup_ioapic(void)
             }
         }
     }
+
+    // 12 - Mouse
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
+        ioapic_umasked(12);
+    // 14 - Primary IDE
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE == 1)
+        ioapic_umasked(14);
+    // 15 - Secondary IDE
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE == 1)
+        ioapic_umasked(15);
+
+    // ... 
+
 // ---------------------------
 
 

@@ -154,12 +154,18 @@
 #define CONFIG_INITIALIZE_APIC  0  // Enable apic and timer
 #define CONFIG_UNMASK_APICTIMER  0
 // IOAPIC and unmask devices
+// #see: ioapic.c
 #define CONFIG_INITIALIZE_IOAPIC  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_KBD  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_PRIMARY_IDE  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_SECONDARY_IDE  0
 #define CONFIG_INITIALIZE_IOAPIC_UNMASK_NIC  0
+// #test: For all the serial ports (provisory)
+// #test: This is a work in progress.
+// We need a way for testing the serial input.
+// #define CONFIG_INITIALIZE_IOAPIC_UNMASK_DUMMY_SERIAL  0
+
 // ...
 // Using LAPIC TIMER for Task Switching
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0  // BSP's LAPIC

@@ -1496,17 +1496,20 @@ irq_E1000(void)
 {
     // Is the driver initialized?
     if (e1000_initialized != TRUE){
-        return;
+        goto ExitIRQ;
     }
 
     // Call the handler
     DeviceInterface_e1000();
+
+ExitIRQ:
 
     // #test
     // apic eoi
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_NIC == 1)
         local_apic_eoi(0);  // BSP
 }
+
 
 //
 // $

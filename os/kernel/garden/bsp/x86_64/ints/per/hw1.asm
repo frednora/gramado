@@ -8,6 +8,11 @@
 ; Imports
 ;
 
+; see: serial.c
+; Shared with all the ports for now
+extern _DUMMY_SERIAL_HANDLER
+
+
 ;;
 ;; == Context =================
 ;;
@@ -623,6 +628,8 @@ _irq3:
 
     ;call _serial2_handler
     ;call _serial4_handler
+    ; Using this for now because we need the EOI in MP mode.
+    call _DUMMY_SERIAL_HANDLER
 
 ; EOI - Only the first PIC.
     mov al, 0x20
@@ -701,6 +708,8 @@ _irq4:
 
     ;call _serial1_handler
     ;call _serial3_handler
+    ; Using this for now because we need the EOI in MP mode.
+    call _DUMMY_SERIAL_HANDLER
 
 ; EOI - Only the first PIC.
     mov al, 0x20

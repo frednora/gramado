@@ -14,6 +14,12 @@ static int __serial_init_port(uint16_t port, uint16_t divisor);
 
 // ---------------------------
 
+// Standard IRQ and Port Assignments:
+// COM1: Uses I/O port 0x3F8 and IRQ 4.
+// COM2: Uses I/O port 0x2F8 and IRQ 3.
+// COM3: Uses I/O port 0x3E8 and IRQ 4 (shared with COM1).
+// COM4: Uses I/O port 0x2E8 and IRQ 3 (shared with COM2).
+
 void serial1_handler(void)
 {
     debug_print("serial1_handler:\n");
@@ -33,6 +39,24 @@ void serial4_handler(void)
 {
     debug_print("serial4_handler:\n");
 }
+
+// All the ports are using only this handler for now.
+// Because we are testing the ioapic support that 
+// needs the eoi routine here
+void DUMMY_SERIAL_HANDLER(void)
+{
+    //printk("SERIAL\n");
+
+/*
+// #test: This is a work in progress.
+// We need a way for testing the serial input.
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_DUMMY_SERIAL == 1)
+        local_apic_eoi(0);  // BSP
+*/
+
+}
+
+
 
 unsigned int serial_in(unsigned int base, int offset)
 {

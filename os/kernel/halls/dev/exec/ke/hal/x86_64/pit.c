@@ -203,8 +203,6 @@ unsigned long irq0_TIMER(void)
     }
 
 
-
-
 // Calling the timer routine
     DeviceInterface_PIT();
 
@@ -257,7 +255,6 @@ unsigned long irq0_TIMER(void)
 // The assembly return sequence will handle EOI for us.
     spawn_reset_eoi_state();
 
-
 // #todo #bugbug
 // We gotta send it to the right core
 
@@ -266,7 +263,6 @@ unsigned long irq0_TIMER(void)
         local_apic_eoi_00();  // This one is valid for all the cores.
         //local_apic_eoi(0);  // BSP
     }
-
 
 
 // Return the flags to the assembly code.

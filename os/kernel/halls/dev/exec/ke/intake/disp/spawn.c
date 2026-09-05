@@ -97,6 +97,7 @@ __spawn_enter_kernelmode(
         }
     }
 
+
 // Running normal thread in ring 0
     lapic_info[0].irql = IRQL_R0_THREAD_IS_RUNNING;
 

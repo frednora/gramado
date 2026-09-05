@@ -122,11 +122,11 @@ irq12_MOUSE (void)
         panic("irq12_MOUSE: gszLastStackFrame\n");
     }
 
-
 // If ps2 mouse isn't initialized yet.
-    if (PS2.mouse_initialized != TRUE){
+    if (PS2.mouse_initialized != TRUE)
+    {
         in8(0x60);
-        return;
+        goto ExitIRQ;
     }
     PS2Mouse.irq_is_working = TRUE;
     PS2Mouse.last_jiffy = (unsigned long) get_ticks();
@@ -160,6 +160,7 @@ irq12_MOUSE (void)
         panic ("M");
 */
 
+ExitIRQ:
     // #test
     // apic eoi
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)
