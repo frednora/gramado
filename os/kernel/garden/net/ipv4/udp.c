@@ -30,13 +30,6 @@ network_send_udp(
 
 #include <kernel.h>
 
-/*
-#define __UDP_PACKET_SIZE  ETHERNET_HEADER_LENGHT +\
-IP_HEADER_LENGHT +\
-UDP_HEADER_LENGHT + 512  
-*/
-
-//char udp_packet[__UDP_PACKET_SIZE];
 static char udp_payload[1024];
 
 // source ip
@@ -192,11 +185,25 @@ network_send_udp (
 
     register int i=0;
     int j=0;
-    char *data = (char *) data_buffer;  // UDP payload.
+    char *data = (char *) data_buffer;  // UDP payload
 
     struct ethernet_d  Leh;
     struct ip_d  Lipv4;
     struct udp_d  Ludp;
+
+    // IPv4 options size (for now = 0)
+    size_t IpOptionsSize = 0;
+    size_t SizeOfIpHeader = IP_HEADER_LENGHT + IpOptionsSize;
+
+// Vamos configurar na estrutura do nic intel o tamanho do pacote.
+// Lenght de um pacote ipv4.
+// ethernet header, ipv4 header, udp header, data.
+// 14 + 20 + 6 + 512 = 552.
+    size_t FRAME_SIZE = 
+               ( ETHERNET_HEADER_LENGHT +\
+                 SizeOfIpHeader +\
+                 UDP_HEADER_LENGHT +\
+                 data_lenght );
 
 //==============================================
 
@@ -232,7 +239,11 @@ network_send_udp (
 // ==============================================
 // ipv4 header:
 
-    Lipv4.v_hl = 0x45;    // Version (8bits)
+    //Lipv4.v_hl = 0x45;    // Version (8bits)
+    // Set Version + IHL (IHL in 32-bit words)
+    uint8_t ihl_words = SizeOfIpHeader / 4;
+    Lipv4.v_hl = (4 << 4) | (ihl_words & 0x0F);
+
 
     // Type of service (8bits)
     // - Differentiated Services Code Point (6bits)
@@ -247,10 +258,9 @@ network_send_udp (
     // The minimum size is 20 bytes (header without data) and 
     // the maximum is 65,535 bytes.
 
+    // Total length = IPv4 header + UDP header + payload
     uint16_t DataLen = (uint16_t) (data_lenght & 0xFFFF);
-    uint16_t __ipheaderlen  = IP_HEADER_LENGHT;
-    uint16_t __ippayloadlen = (uint16_t) (UDP_HEADER_LENGHT + DataLen);
-    uint16_t _iplen = (uint16_t) (__ipheaderlen + __ippayloadlen); 
+    uint16_t _iplen = (uint16_t) (SizeOfIpHeader + UDP_HEADER_LENGHT + DataLen); 
     Lipv4.ip_len = (uint16_t) ToNetByteOrder16(_iplen);
 
     // Identification (16bits)
@@ -398,12 +408,12 @@ network_send_udp (
 
 // Step2: Inject ipv4 header
     int ipv4_offset = ETHERNET_HEADER_LENGHT;
-    for ( j=0; j<IP_HEADER_LENGHT; j++ ){
+    for ( j=0; j<SizeOfIpHeader; j++ ){
         frame[ipv4_offset +j] = src_ipv4[j];
     };
 
 // Step3: Inject udp header
-    int udp_offset = ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT;
+    int udp_offset = ETHERNET_HEADER_LENGHT + SizeOfIpHeader;
     for ( j=0; j<UDP_HEADER_LENGHT; j++ ){
         frame[udp_offset +j] = src_udp[j];
     };
@@ -411,7 +421,7 @@ network_send_udp (
 // Step4: Inject udp payload
     int data_offset = 
             ( ETHERNET_HEADER_LENGHT +
-              IP_HEADER_LENGHT +
+              SizeOfIpHeader +
               UDP_HEADER_LENGHT );
     for ( j=0; j<data_lenght; j++ ){
         frame[data_offset +j] = data[j];
@@ -420,16 +430,6 @@ network_send_udp (
 
 // ---------------------------------------
 // send
-// lenght:
-// Vamos configurar na estrutura do nic intel o tamanho do pacote.
-// Lenght de um pacote ipv4.
-// ethernet header, ipv4 header, udp header, data.
-// 14 + 20 + 6 + 512 = 552.
-    size_t FRAME_SIZE = 
-               ( ETHERNET_HEADER_LENGHT +\
-                 IP_HEADER_LENGHT +\
-                 UDP_HEADER_LENGHT +\
-                 data_lenght );
 
 
 //

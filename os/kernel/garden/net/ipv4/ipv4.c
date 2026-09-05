@@ -39,7 +39,6 @@ ipv4_send (
 // depending on the presence of options.
 
     size_t OptionsSize = 0;
-
     size_t SizeOfIPHeader = IP_HEADER_LENGHT + OptionsSize;
 
     // Th whole frame, needed by ethernet_send()
