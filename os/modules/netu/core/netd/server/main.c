@@ -246,9 +246,8 @@ void serviceHello(void)
     next_response[2] = 0;
     next_response[3] = 0;
     NoReply = FALSE;
-    rtl_yield();
+    // rtl_yield();
 }
-
 
 // Action
 int serviceInitializeNetwork(void)
@@ -666,16 +665,17 @@ static void ServerDispatch(int fd)
         message_buffer[1] = 0;
         message_buffer[2] = 0;
         message_buffer[3] = 0;
-        ServerYield(); 
+        // ServerYield(); 
         return;
     }
 
 // Check if we have a new request.
     int value = rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
-// Not a request.
-    if (value != ACTION_REQUEST){
+// Not a request
+    if (value != ACTION_REQUEST)
+    {
         //message_buffer[1] = 0;
-        ServerYield();
+        // ServerYield();
         return;
     }
 
@@ -692,7 +692,7 @@ static void ServerDispatch(int fd)
         message_buffer[1] = 0;
         message_buffer[2] = 0;
         message_buffer[3] = 0;
-        ServerYield(); 
+        // ServerYield(); 
         return; 
     }
 
@@ -709,7 +709,7 @@ static void ServerDispatch(int fd)
         message_buffer[1] = 0;
         message_buffer[2] = 0;
         message_buffer[3] = 0;
-        ServerYield();
+        // ServerYield();
         return;
     }
 
@@ -951,7 +951,7 @@ static int ServerLoop(void)
     }
 // Wait
     for (i=0; i<11; i++){
-        ServerYield();
+        // ServerYield();
     };
 
 //
@@ -986,7 +986,7 @@ static int ServerLoop(void)
 
         if (newconn < 0){
             debug_print("netd: on accept()\n");
-            ServerYield(); 
+            // ServerYield(); 
         } else {
             // Valid fd.
             if (newconn == 31){

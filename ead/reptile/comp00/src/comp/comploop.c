@@ -4405,7 +4405,7 @@ static int ServerLoop(int client_index)
         BindReentry--;
         if (BindReentry <= 0)
             break;
-        rtl_yield();
+        // rtl_yield();
     };
 
     if (bind_status < 0){
@@ -4445,7 +4445,6 @@ static int ServerLoop(int client_index)
     }
     */
 
-    // #debug
     //printf ("fd: %d\n", serverClient->fd);
     //while(1){}
 
@@ -4506,12 +4505,10 @@ static int ServerLoop(int client_index)
 // socket que usaremos ... por isso poderemos fecha-lo
 // para assim obtermos um novo da próxima vez.
 
-//#todo:
+// #todo:
 // No loop precisamos de accept() read() e write();
 
-    // Not used for now.
-    connection_status = 1;
-
+    connection_status = 1;  // Not used for now
     newconn_fd = -1;
 
 // ========================================================
@@ -4528,7 +4525,6 @@ static int ServerLoop(int client_index)
 
 // Set focus, this way we can get system events.
 
-    //#debug
     //server_debug_print("ds00: Entering main loop\n");
 
     rtl_focus_on_this_thread();
@@ -4549,7 +4545,7 @@ static int ServerLoop(int client_index)
 // o servidor estiver aceitando conexoes.
 
 // ==========================================
-// Finalize the ws structure initialization.
+// Finalize the ws structure initialization
     display_server->status = STATUS_RUNNING;
     display_server->initialized = TRUE;
     Initialization.ds_struct_checkpoint = TRUE;
@@ -4618,8 +4614,11 @@ static int ServerLoop(int client_index)
 // This is the loop for the compositor.
 // This is also the loop for the server.
     while (running == TRUE){
+
         start_jiffie = (unsigned long) rtl_jiffies();
-        if (IsTimeToQuit == TRUE){ break; };
+        if (IsTimeToQuit == TRUE){
+            break;
+        }
 
         // Get system messages via thread queue
         // See: wm/wminput.c
@@ -4674,9 +4673,16 @@ static int ServerLoop(int client_index)
             delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
             if (delta_jiffie < MainLoopIntervalMS)
             {
-                // #test: This function is still in test phase
-                if (UseSleep == TRUE)
-                    rtl_sleep(MainLoopIntervalMS - delta_jiffie);
+                // #test: 
+                // SUSPENDED!
+                // This function is still in test phase
+                // #bugbug
+                // In some cases sleep is causing problems
+                // when we have a lot of interrupts from devices
+                // like the NIC, blocking the thread forever.
+
+                //if (UseSleep == TRUE)
+                    //rtl_sleep(MainLoopIntervalMS - delta_jiffie);
             }    
         }
     };

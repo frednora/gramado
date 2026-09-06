@@ -76,7 +76,7 @@ char file_buffer[1024];
 
 // Divide the client area into equal portions horizontally.
 // Used for positioning child windows relative to the main window.
-#define CLIENT_AREA_DIVISIONS 8
+#define CLIENT_AREA_DIVISIONS  8
 
 
 struct button_info_d
@@ -118,6 +118,14 @@ static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
 
 
+#define STATUSBAR_HEIGHT  24
+
+// #test
+// Web page properties.
+// We can build a structure that will he filled with the data
+// that comes from the html and css.
+#define DEFAULT_BACKGROUND_COLOR  COLOR_WHITE
+
 //
 // Windows
 //
@@ -138,7 +146,10 @@ struct child_window_d
 };
 struct child_window_d cwAddressBar;
 //struct child_window_d cwButton;
-struct child_window_d cwText;
+
+// This si the viewport:
+// Where the page will be rendered
+struct child_window_d cwViewport;
 
 // #todo
 // int button_list[8];
@@ -369,7 +380,6 @@ static void update_clients(int fd)
     unsigned long ab_w = (( lWi.cr_width/8 )*3);
     unsigned long ab_h = 24;
 
-
     lingui_draw_rectangle0_dc (
         dc00,
         ab_l, ab_t, ab_w, ab_h,
@@ -409,11 +419,13 @@ static void update_clients(int fd)
 
 //-----------------------
 // The client window where we type the text.
+// This is the viewport.
+// #ps: Do not cover the statusbar at bottom.
 
-    cwText.l = 0;
-    cwText.t = (cwAddressBar.t + cwAddressBar.h + 2);
-    cwText.w = lWi.cr_width;
-    cwText.h = (lWi.cr_height - cwText.t);
+    cwViewport.l = 0;
+    cwViewport.t = (cwAddressBar.t + cwAddressBar.h + 4);   // Offset on top
+    cwViewport.w = lWi.cr_width;
+    cwViewport.h = (lWi.cr_height - cwViewport.t - STATUSBAR_HEIGHT);  // We need to consider the statubar too.
 
 // (Editbox)
 // Client window (White)
@@ -421,20 +433,20 @@ static void update_clients(int fd)
 // Lembre-se que temos uma status bar.
 
 // left:
-    unsigned long cw_left = 0;
+    unsigned long cw_left = cwViewport.l;
 // top: pad | address bar | pad
-    unsigned long cw_top =  (ab_t + ab_h + 4);
+    unsigned long cw_top = cwViewport.t;
 // width: Width - borders.
-    unsigned long cw_width = (lWi.cr_width);
+    unsigned long cw_width = cwViewport.w;
 // height:
 // #bugbug:
 // We gotta get the client window values.
-    unsigned long cw_height = (lWi.cr_height - cw_top);
+    unsigned long cw_height = cwViewport.h;
 
     lingui_draw_rectangle0_dc (
         dc00,
-        cw_left, cw_top, cw_width, cw_height,
-        COLOR_WHITE,
+        cwViewport.l, cwViewport.t, cwViewport.w, cwViewport.h,
+        DEFAULT_BACKGROUND_COLOR,
         0  // ROP
     );
 
@@ -452,6 +464,21 @@ static void update_clients(int fd)
             0, 0,                       // destination position
             StringSize +2+2, 8 +2+2 );  // size
     }
+
+    // #test
+    // Rendering the content
+    // #bugbug:
+    // The statusbar is overlapping the viewport area.
+    // It means the viewport are needs to be smaller.
+
+    browserRenderViewport(dc00);
+
+    // #test:
+    // #bugbug:
+    // The statusbar is overlapping the viewport area.
+    // It means the viewport are needs to be smaller.
+
+    browserDrawStatusBar();
 }
 
 static int editor_init_globals(void)
@@ -776,7 +803,6 @@ static void browserSetStatus(const char *url, const char *state)
         page_state = state;
 }
 
-
 // Draw status bar showing line/column
 static void browserDrawStatusBar(void)
 {
@@ -787,7 +813,7 @@ static void browserDrawStatusBar(void)
     if (!dc || !text_buffer) 
         return;
 
-    unsigned long sb_height = 24;
+    unsigned long sb_height = STATUSBAR_HEIGHT;
     unsigned long sb_left   = 0;
     unsigned long sb_top    = cr_height - sb_height;
     unsigned long sb_width  = cr_width;
@@ -810,7 +836,6 @@ static void browserDrawStatusBar(void)
     page_state = default_page_state;
 
     sprintf(status, "URL: %s | State: %s", current_url, page_state);
-
 
     // Draw string into the status bar
     libgui_drawstring_dc(
@@ -872,21 +897,43 @@ fail:
 
 static void browserRenderViewport(struct dccanvas_d *dc) 
 {
+    // #test:
+    // #bugbug:
+    // The statusbar is overlapping the viewport area.
+    // It means the viewport are needs to be smaller.
+
     if (!dc) 
         return;
 
     // Clear viewport
-    lingui_draw_rectangle0_dc(dc,
-        cwText.l, cwText.t, cwText.w, cwText.h,
-        COLOR_WHITE, ROP_COPY);
+    // Rendering background
+    lingui_draw_rectangle0_dc(
+        dc,
+        cwViewport.l, 
+        cwViewport.t, 
+        cwViewport.w, 
+        cwViewport.h,
+        DEFAULT_BACKGROUND_COLOR, 
+        ROP_COPY );
+
+
+    unsigned long TextLeft = cwViewport.l + 8;
+    unsigned long TextTop = cwViewport.t + 8;
+    unsigned int TextFGColor = COLOR_RED;
+    unsigned int TextBGColor = COLOR_GRAY;
+
+    const char *dummy_text = "My web page!";
 
     // Example: draw placeholder text
-    libgui_drawstring_dc(dc,
-        cwText.l + 8, cwText.t + 8,
-        COLOR_BLACK, COLOR_WHITE,
-        0, "Rendering page...");
+    libgui_drawstring_dc(
+        dc,
+        TextLeft, 
+        TextTop,
+        TextFGColor, 
+        TextBGColor,
+        0,              // ROP?
+        dummy_text );
 }
-
 
 static int 
 browserProcedure(
@@ -1829,32 +1876,34 @@ static int __editor_initialize(void)
 // Inside the mainwindow.
 // Lembre-se que temos uma status bar.
 
+    cwViewport.l = 0;
+    cwViewport.t = (cwAddressBar.t + cwAddressBar.h + 4);   // Offset on top
+    cwViewport.w = lWi.cr_width;
+    cwViewport.h = (lWi.cr_height - cwViewport.t - STATUSBAR_HEIGHT);  // We need to consider the statubar too.
+
 // left:
-    unsigned long cw_left = 0;
+    unsigned long cw_left = cwViewport.l;
 // top: pad | address bar | pad
-    unsigned long cw_top =  (cwAddressBar.t + cwAddressBar.h + 4);
+    unsigned long cw_top = cwViewport.t;
 // width: Width - borders.
-    unsigned long cw_width = (lWi.cr_width);
+    unsigned long cw_width = cwViewport.w;
 // height:
 // #bugbug:
 // We gotta get the client window values.
-    unsigned long cw_height = (lWi.cr_height - cw_top);
+    unsigned long cw_height = cwViewport.h;
 
-
+/*
 // Rectangle for the editor's client area.
 // This is the 'text area'.
     lingui_draw_rectangle0_dc (
         dc00,
         cw_left, cw_top, cw_width, cw_height,
-        COLOR_WHITE,
+        DEFAULT_BACKGROUND_COLOR,
         0  // ROP
     );
+*/
 
-    // Save
-    cwText.l = 0;
-    cwText.t = (cwAddressBar.t + cwAddressBar.h + 4);
-    cwText.w = lWi.cr_width;
-    cwText.h = (lWi.cr_height - cwText.t);
+    browserRenderViewport(dc00);
 
 // ============================================
 

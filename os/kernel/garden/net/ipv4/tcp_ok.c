@@ -298,17 +298,37 @@ network_send_tcp (
     struct ip_d  Lipv4;
     struct tcp_d  Ltcp;
 
+    // IPv4 options size (for now = 0)
+    size_t IpOptionsSize = 0;
+    size_t SizeOfIpHeader = IP_HEADER_LENGHT + IpOptionsSize;
+
+// Vamos configurar na estrutura do nic intel o tamanho do pacote.
+// Lenght de um pacote ipv4.
+// ethernet header, ipv4 header, udp header, data.
+// 14 + (20+options) + 6 + 512 = 552.
+    size_t FRAME_SIZE = 
+               ( ETHERNET_HEADER_LENGHT +\
+                 SizeOfIpHeader +\
+                 TCP_HEADER_LENGHT +\
+                 data_lenght );
 
 //==============================================
 
 // #todo
 // NIC Intel device structure.
 
-    if ((void *) currentNIC == NULL){
+    if ((void *) currentNIC == NULL)
+    {
         printk("network_send_tcp: currentNIC\n");
         //goto fail;
         return -1;
     }
+    //if (currentNIC->magic != 1234)
+    //{
+    //    printk("network_send_tcp: currentNIC magic\n");
+        //goto fail;
+    //    return -1;
+    //}
 
 // #ps:
 // Saving the sender IP into the NIC structure.
@@ -345,7 +365,16 @@ network_send_tcp (
 // ==============================================
 // ipv4 header:
 
-    Lipv4.v_hl = 0x45;    // Version (8bits)
+
+// - Version (8bits)
+// - IHL (4bits). Lenght of the header in chuncks of 4 bytes. 
+//  The lower 4 bits (IHL) must reflect the header length in 32‑bit words.
+
+    // Lipv4.v_hl = 0x45;    // Version (8bits)
+    // Set Version + IHL (IHL in 32-bit words)
+    uint8_t ihl_words = (SizeOfIpHeader / 4);
+    Lipv4.v_hl = (4 << 4) | (ihl_words & 0x0F);
+
 
     // Type of service (8bits)
     // - Differentiated Services Code Point (6bits)
@@ -360,8 +389,10 @@ network_send_tcp (
     // The minimum size is 20 bytes (header without data) and 
     // the maximum is 65,535 bytes.
 
-    uint16_t ip_total_len = IP_HEADER_LENGHT + TCP_HEADER_LENGHT + data_lenght;
+    // Total length = IPv4 header + TCP header + payload
+    uint16_t ip_total_len = SizeOfIpHeader + TCP_HEADER_LENGHT + data_lenght;
     Lipv4.ip_len = ToNetByteOrder16(ip_total_len);
+
 
     // Identification (16bits)
     // When the message is large and we have a lot of packets.
@@ -377,7 +408,7 @@ network_send_tcp (
     // Flags (3bits) (Do we have fragments?)
     // Fragment offset (13bits) (fragment position)
     // Don't fragment for now.
-    Lipv4.ip_off = ToNetByteOrder16(0x4000);  //DF bit 
+    Lipv4.ip_off = ToNetByteOrder16(0x4000);  // DF bit 
 
     Lipv4.ip_ttl = 255;  // Time to live (8bits)
     Lipv4.ip_p = 0x06;   // Protocol is TCP (8bit)
@@ -554,12 +585,12 @@ network_send_tcp (
 
 // Step2: Inject ipv4 header
     int ipv4_offset = ETHERNET_HEADER_LENGHT;
-    for ( j=0; j<IP_HEADER_LENGHT; j++ ){
+    for ( j=0; j<SizeOfIpHeader; j++ ){
         frame[ipv4_offset +j] = src_ipv4[j];
     };
 
 // Step3: Inject tcp header
-    int tcp_offset = ETHERNET_HEADER_LENGHT + IP_HEADER_LENGHT;
+    int tcp_offset = ETHERNET_HEADER_LENGHT + SizeOfIpHeader;
     for ( j=0; j<TCP_HEADER_LENGHT; j++ ){
         frame[tcp_offset +j] = src_tcp[j];
     };
@@ -567,7 +598,7 @@ network_send_tcp (
 // Step4: Inject tcp payload
     int data_offset = 
             ( ETHERNET_HEADER_LENGHT +
-              IP_HEADER_LENGHT +
+              SizeOfIpHeader +
               TCP_HEADER_LENGHT );
     for ( j=0; j<data_lenght; j++ ){
         frame[data_offset +j] = data[j];
@@ -576,16 +607,6 @@ network_send_tcp (
 
 // ---------------------------------------
 // send
-// lenght:
-// Vamos configurar na estrutura do nic intel o tamanho do pacote.
-// Lenght de um pacote ipv4.
-// ethernet header, ipv4 header, udp header, data.
-// 14 + 20 + 6 + 512 = 552.
-    size_t FRAME_SIZE = 
-               ( ETHERNET_HEADER_LENGHT +\
-                 IP_HEADER_LENGHT +\
-                 TCP_HEADER_LENGHT +\
-                 data_lenght );
 
 //
 // Check
@@ -4651,12 +4672,12 @@ static void __handle_tcp_for_non_local_servers (
 // Dispatcher!
 void 
 network_handle_tcp ( 
-    const unsigned char *buffer, 
-    ssize_t size,
+    const unsigned char *tcp_payload_base, 
+    ssize_t tcp_payload_size,
     unsigned int s_ipv4_int,
     unsigned int d_ipv4_int )
 {
-    struct tcp_d *tcp;  // The buffer
+    struct tcp_d *tcp;  // The tcp_payload_base
     //register int i=0;
     uint16_t flags=0;
     size_t data_len = 0;
@@ -4670,15 +4691,15 @@ network_handle_tcp (
     //printk("network_handle_tcp: #todo\n");
 
 // Parameters
-    if ((void*) buffer == NULL){
-        printk("network_handle_tcp: buffer\n");
+    if ((void*) tcp_payload_base == NULL){
+        printk("network_handle_tcp: tcp_payload_base\n");
         return;
     }
-    if (size < TCP_HEADER_LENGHT)
+    if (tcp_payload_size < TCP_HEADER_LENGHT)
         return;
 
     // Pointer for the TCP header. Pre-allocated.
-    tcp = (struct tcp_d *) buffer;
+    tcp = (struct tcp_d *) tcp_payload_base;
 
     uint16_t sport = (uint16_t) FromNetByteOrder16(tcp->th_sport);
     uint16_t dport = (uint16_t) FromNetByteOrder16(tcp->th_dport);
@@ -4700,7 +4721,11 @@ network_handle_tcp (
 // ------------------------------------
 // Target is kernel debugger local server
     if (dport == 11888){
-        __handle_tcp_for_kd_server(buffer, size, s_ipv4_int, d_ipv4_int);
+        __handle_tcp_for_kd_server(
+            tcp_payload_base, 
+            tcp_payload_size, 
+            s_ipv4_int, 
+            d_ipv4_int );
         return;
     }
 
@@ -4714,7 +4739,11 @@ network_handle_tcp (
     {
         //#test: Its working!!!
         //panic ("LOCAL SERVER <<<<<<");
-        __handle_tcp_for_local_servers(buffer, size, s_ipv4_int, d_ipv4_int);
+        __handle_tcp_for_local_servers( 
+            tcp_payload_base, 
+            tcp_payload_size, 
+            s_ipv4_int, 
+            d_ipv4_int );
         return;
     }
 
@@ -4722,7 +4751,11 @@ network_handle_tcp (
 // Target is probably a local client
 // ...
 
-    __handle_tcp_for_non_local_servers(buffer, size, s_ipv4_int, d_ipv4_int);
+    __handle_tcp_for_non_local_servers(
+        tcp_payload_base, 
+        tcp_payload_size, 
+        s_ipv4_int, 
+        d_ipv4_int );
 
     return;
 }
