@@ -120,6 +120,14 @@ struct gws_wm_config_d
 };
 
 // The window manager global structure.
+//
+// Window manager responsibilities:
+// + Input ownership: keyboard, mouse, hover, focus.
+// + Window policies: tiling, stacking, fullscreen, maximization.
+// + Z-order and hierarchy: parent/child, active window, top window.
+// + Logical state: minimized, maximized, hidden, visible.
+// + Event routing: hit-testing, posting messages to clients.
+//
 struct gws_windowmanager_d
 {
     int initialized;
@@ -136,8 +144,8 @@ struct gws_windowmanager_d
     struct gws_wm_config_d  Config;
 
 // The window manager mode:
-// 1: tiling.
-// 2: overlapped.
+// 1: tiling
+// 2: overlapped
 // ...
     int mode;
 
@@ -169,7 +177,14 @@ struct gws_windowmanager_d
 
 // Windows
 
-    struct gws_window_d *root;
+    struct gws_window_d *__root_window;
+    // #todo:
+    // Add the other pointer in here ...
+    /// for keyboard, mouse, active, etc ...
+
+
+
+    struct gws_window_d *root;     // #todo: Delete this
     //struct gws_window_d *taskbar;
     struct gws_window_d *fullscreen_window;
     // ...

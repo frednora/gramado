@@ -30,7 +30,7 @@ struct gws_color_scheme_d* GWSCurrentColorScheme;
 
 // Windows - (struct)
 
-struct gws_window_d *__root_window; 
+// struct gws_window_d *__root_window;
 struct gws_window_d *active_window;  // active
 
 //
@@ -285,7 +285,7 @@ void on_mouse_pressed(void)
     if (mouse_hover->magic != 1234){
         return;
     }
-    //if (mouse_hover == __root_window)
+    //if (mouse_hover == WindowManager.__root_window)
         //return;
 
 // Set the mouse_owner
@@ -1419,14 +1419,14 @@ void wmInitializeStructure(void)
     if (CONFIG_USE_WALLPAPER != 1)
         WindowManager.Config.has_wallpaper = FALSE;
 
-// Clear the structure.
-    WindowManager.mode = WM_MODE_TILED;  // Tiling
 
-// Orientation
+// Tiling: The mode and the orientation
+
+    WindowManager.mode = WM_MODE_TILED;  // Tiling
     WindowManager.vertical = FALSE;   // Horizontal is the default
     //WindowManager.vertical = TRUE;
 
-// How many frames until now.
+// How many frames until now
     WindowManager.frame_counter = 0;
     WindowManager.fps = 0;
 
@@ -1588,14 +1588,14 @@ void wm_reboot(void)
     gwssrv_broadcast_close();
 
 // Draw the root window using the desktop default color.
-    if ((void*) __root_window != NULL)
+    if ((void*) WindowManager.__root_window != NULL)
     {
-        if (__root_window->magic == 1234)
+        if (WindowManager.__root_window->magic == 1234)
         {
-            __root_window->bg_color = (unsigned int) get_color(csiDesktop);
-            redraw_window(__root_window,FALSE);
+            WindowManager.__root_window->bg_color = (unsigned int) get_color(csiDesktop);
+            redraw_window(WindowManager.__root_window, FALSE);
             yellowstatus0("Rebooting ...",FALSE);
-            wm_flush_window(__root_window);
+            wm_flush_window(WindowManager.__root_window);
 
             // #todo
             // Free resources
@@ -1617,7 +1617,7 @@ static void animate_window(struct gws_window_d *window)
     register int i=0;
     static int Times = 800;
 
-    if ((void*) window == __root_window){
+    if ((void*) window == WindowManager.__root_window){
         return;
     }
     if (window->magic != 1234){
@@ -1737,7 +1737,7 @@ static void wm_tile(void)
         return;
     }
 
-// Validate window manager mode.
+    // Validate window manager mode
     if (WindowManager.mode != WM_MODE_TILED)
         return;
 
@@ -2012,7 +2012,7 @@ void wm_update_desktop(int tile, int show)
 
 // ===========================================
 // Redraw root window, but do not show it yet.
-    redraw_window(__root_window,FALSE);
+    redraw_window(WindowManager.__root_window, FALSE);
 
 // ======================================
 // Redraw the whole stack of windows,
@@ -2039,7 +2039,7 @@ void wm_update_desktop(int tile, int show)
     if (InvalidFirstWindow == TRUE)
     {
         first_window = NULL;
-        flush_window(__root_window);
+        flush_window(WindowManager.__root_window);
         goto end;
     }
 
@@ -2132,19 +2132,19 @@ void wm_update_desktop(int tile, int show)
         }
     }
 
-// Inalid last window.
+// Inalid last window
     if ((void*) l == NULL)
     {
         last_window = NULL;
-        flush_window(__root_window);
+        flush_window(WindowManager.__root_window);
         goto end;
     }
 
-    yellowstatus0("Gramado",FALSE);
+    yellowstatus0("Gramado", FALSE);
 
 // Show the whole screen
     if (show){
-        flush_window(__root_window);
+        flush_window(WindowManager.__root_window);
     }
 
 // ------------------
@@ -2225,8 +2225,8 @@ void  wm_update_desktop2(void)
     WindowManager.is_fullscreen = FALSE;
 
 // Redraw the root window
-    if ((void*)__root_window != NULL){
-        redraw_window(__root_window,FALSE);
+    if ((void*)WindowManager.__root_window != NULL){
+        redraw_window(WindowManager.__root_window, FALSE);
     }
 
 // List
@@ -2270,8 +2270,8 @@ done:
 
 // Show root window.
 // It shows all the windows already painted in the desktop.
-    if ((void*)__root_window != NULL){
-        flush_window(__root_window);
+    if ((void*)WindowManager.__root_window != NULL){
+        flush_window(WindowManager.__root_window);
     }
 
 // If we're showing whole screen, so i need to validate 
@@ -2519,7 +2519,7 @@ void wm_update_window_by_id(int wid)
     struct gws_window_d *w;
 
 // Redraw and show the root window.
-    //redraw_window(__root_window,TRUE);
+    //redraw_window(WindowManager.__root_window, TRUE);
 
 // wid
     if (wid<0){
@@ -3053,7 +3053,7 @@ wm_add_child_window(
     struct gws_window_d  *tmp_w;
 
 // ========================
-    //if( window == __root_window )
+    //if (window == WindowManager.__root_window)
         //return;
 // ========================
 
@@ -3172,7 +3172,7 @@ void wm_add_window_to_top(struct gws_window_d *window)
     struct gws_window_d  *Next;
 
 // ========================
-    //if( window == __root_window )
+    //if (window == WindowManager.__root_window)
         //return;
 // ========================
 
@@ -3542,8 +3542,8 @@ wm_draw_char_into_the_window(
         return;
     }
 
-// Not on root window.
-    if (window == __root_window)
+// Not on root window
+    if (window == WindowManager.__root_window)
         return;
 
 // Invalid window type
@@ -3816,8 +3816,8 @@ wm_draw_char_into_the_window2(
         return;
     }
 
-// Not on root window.
-    if (window == __root_window)
+// Not on root window
+    if (window == WindowManager.__root_window)
         return;
 
 // Invalid window type
@@ -4071,8 +4071,8 @@ wmPostMessage(
         goto fail;
     }
 
-// No messages to root window.
-    if (window == __root_window)
+// No messages to root window
+    if (window == WindowManager.__root_window)
         goto fail;
 
 // Message code validation
@@ -4161,8 +4161,8 @@ wmNotifyKernel(
         goto fail;
     }
 
-// No messages to root window.
-    if (window == __root_window)
+// No messages to root window
+    if (window == WindowManager.__root_window)
         goto fail;
 
 // Message code validation
@@ -4534,7 +4534,7 @@ wm_hit_test_2(
 
     // Later: add overlapped windows and children checks here.
     // For now, fallback to root if nothing matched.
-    mouse_hover = __root_window;
+    mouse_hover = WindowManager.__root_window;
 }
 
 // Se o mouse esta passando sobre alguma janela de alguns tipos.
@@ -4672,7 +4672,7 @@ wm_hit_test_00(
 
 // This ensures that the previous hover state is canceled and 
 // that the root window becomes the default hover target.
-    mouse_hover = (void*) __root_window;
+    mouse_hover = (void*) WindowManager.__root_window;
 
 */
 
@@ -4894,17 +4894,17 @@ wm_change_bg_color(
     int tile, 
     int fullscreen )
 {
-// Change the custon background color.
+// Change the custon background color
     __set_custom_background_color(color);
 
-    if ((void*) __root_window == NULL){
+    if ((void*) WindowManager.__root_window == NULL){
         return;
     }
-    if (__root_window->magic != 1234){
+    if (WindowManager.__root_window->magic != 1234){
         return;
     }
-// Change
-    __root_window->bg_color = (unsigned int) color;
+    // Change
+    WindowManager.__root_window->bg_color = (unsigned int) color;
 
 // Validate
     if (fullscreen){
@@ -4946,8 +4946,8 @@ void wm_enter_fullscreen_mode(void)
     WindowManager.fullscreen_window = (struct gws_window_d *) w;
     WindowManager.is_fullscreen = TRUE;
 
-// Redraw bg
-    redraw_window(__root_window,FALSE);
+    // Redraw bg
+    redraw_window(WindowManager.__root_window, FALSE);
 
 // Update window (redraw)
     update_window(w,TRUE);
@@ -4988,7 +4988,7 @@ void destroy_window (struct gws_window_d *window);
 void destroy_window (struct gws_window_d *window)
 {
     // #todo
-    // if( window == __root_window)
+    // if (window == WindowManager.__root_window)
         // return;
     if ( (void*) window != NULL )
     {
@@ -5310,11 +5310,10 @@ int gwsDefineInitialRootWindow (struct gws_window_d *window)
     if (window->magic != 1234)
         return -1;
 
-// Set
-    __root_window      = (struct gws_window_d *) window;
+    // Set
+    WindowManager.__root_window = (struct gws_window_d *) window;
     WindowManager.root = (struct gws_window_d *) window;
-// OK.
-    return 0;
+    return 0;  // OK
 }
 
 // Dock a given window into a given corner.
@@ -5334,8 +5333,8 @@ int dock_window(struct gws_window_d *window, int position)
     if (position<0)
         goto fail;
 
-// Can't be the root window or the taskbar.
-    if (window == __root_window) { goto fail; }
+// Can't be the root window or the taskbar
+    if (window == WindowManager.__root_window) { goto fail; }
     if (window == taskbar_window){ goto fail; }
 // Can't be a button
     if (window->type == WT_BUTTON){
@@ -5463,7 +5462,7 @@ void dock_window_by_id(int wid, int position)
     struct gws_window_d *w;
 
 // Redraw and show the root window.
-    //redraw_window(__root_window,TRUE);
+    //redraw_window(WindowManager.__root_window, TRUE);
 
 // wid
     if (wid<0){
@@ -5515,8 +5514,8 @@ int dock_active_window(int position)
         goto fail;
     }
 
-// Can't be the root.
-    if (aw == __root_window){
+// Can't be the root
+    if (aw == WindowManager.__root_window){
         goto fail;
     }
 // Can't be the taskbar.
@@ -5524,8 +5523,7 @@ int dock_active_window(int position)
         goto fail;
     }
 
-// Dock
-    dock_window(aw, position);
+    dock_window(aw, position);  // dock
     return 0;
 fail:
     return (int) -1;
@@ -5680,8 +5678,8 @@ gws_resize_window (
         return (int) -1;
     }
 
-// #todo
-    //if(window == __root_window)
+    // #todo
+    //if (window == WindowManager.__root_window)
         //return -1;
 
 /*
@@ -5944,8 +5942,8 @@ gwssrv_change_window_position (
         goto fail;
     }
 
-// #todo
-    //if(window == __root_window)
+    // #todo
+    //if (window == WindowManager.__root_window)
         //return -1;
 
     /*

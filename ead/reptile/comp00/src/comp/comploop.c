@@ -1552,7 +1552,7 @@ int serviceCreateWindow(int client_fd)
 // Can create main window?
 // Allowed parent IDs:
 // + 0                   → bootstrap slot (before root is fully defined).
-// + __root_window->id   → canonical root (usually 1).
+// + WindowManager.__root_window->id   → canonical root (usually 1).
 // + Any other parent ID → invalid.
 
     if (my_style & WS_APP)
@@ -1560,7 +1560,7 @@ int serviceCreateWindow(int client_fd)
         // We can create main window when the root window is the parent
         if (pwid == 0)
             fCanCreateMainwindow = TRUE;
-        if (pwid == __root_window->id)
+        if (pwid == WindowManager.__root_window->id)
             fCanCreateMainwindow = TRUE;
 
         // We can NOT create main window 
@@ -2068,8 +2068,8 @@ int serviceChangeWindowPosition(void)
         return -1;
     }
 
-// can't change root
-    //if (window == __root_window)
+    // can't change root
+    //if (window == WindowManager.__root_window)
         //return -1;
 
 // see: wm.c
@@ -2127,8 +2127,8 @@ int serviceResizeWindow(void)
         return -1;
     }
 
-// can't change root window.
-    //if (window == __root_window)
+    // can't change root window
+    //if (window == WindowManager.__root_window)
         //return -1;
 
     gws_resize_window ( 
@@ -3307,7 +3307,7 @@ dsProcedure (
     // 1000
     // Hello!
     // Draw text inside the root window.
-    // screen_window = __root_window
+    // screen_window = WindowManager.__root_window
     case GWS_Hello:
         // #todo: Put this routine inside a worker.
         //server_debug_print ("gwssrv: Message number 1000\n");
@@ -3847,7 +3847,11 @@ static void __initializeBackground(void)
     unsigned int bg_color = 
         (unsigned int) get_color(csiDesktop);
 
-    __root_window = 
+    //
+    // The root window!
+    //
+
+    WindowManager.__root_window = 
         (struct gws_window_d *) CreateWindow ( 
             WT_SIMPLE, 
             0, //style
@@ -3861,26 +3865,26 @@ static void __initializeBackground(void)
     // #debug
     // asm ("int $3");
 
-    if ((void *) __root_window == NULL){
-        //server_debug_print("__initializeBackground: __root_window\n");
-        printf            ("__initializeBackground: __root_window\n");
+    if ((void *) WindowManager.__root_window == NULL){
+        printf("__initializeBackground: WindowManager.__root_window\n");
         exit(1);
     }
-    if ( __root_window->used != TRUE || __root_window->magic != 1234 ){
-        //server_debug_print ("__initializeBackground: __root_window validation\n");
-        printf             ("__initializeBackground: __root_window validation\n");
+    if ( WindowManager.__root_window->used != TRUE || 
+         WindowManager.__root_window->magic != 1234 )
+    {
+        printf("__initializeBackground: WindowManager.__root_window validation\n");
         exit(1);
     }
 
-// #test
-    //__root_window->locked = TRUE;
-    //__root_window->enabled = FALSE;
+    // #test
+    // WindowManager.__root_window->locked = TRUE;
+    // WindowManager.__root_window->enabled = FALSE;
 
-// Register the window.
-    WindowId = RegisterWindow(__root_window);
-    if (WindowId<0){
-        //server_debug_print ("__initializeBackground: Couldn't register window\n");
-        printf             ("__initializeBackground: Couldn't register window\n");
+    // Register the window
+    WindowId = RegisterWindow(WindowManager.__root_window);
+    if (WindowId < 0)
+    {
+        printf ("__initializeBackground: Couldn't register window\n");
         exit(1);
     }
 
@@ -4078,17 +4082,17 @@ static int __initialize_gui(void)
 // == checks ==============
 //
 
-// Check if we already have the root window.
+// Check if we already have the root window
 
-    if ((void*) __root_window == NULL){
-        printf ("__initialize_gui: __root_window\n");
+    if ((void*) WindowManager.__root_window == NULL)
+    {
+        printf ("__initialize_gui: WindowManager.__root_window\n");
         exit(1);
     }
-    keyboard_owner = (void*) __root_window;
-    mouse_owner    = (void*) __root_window;
+    keyboard_owner = (void*) WindowManager.__root_window;
+    mouse_owner    = (void*) WindowManager.__root_window;
 
-// ok, no errors.
-    return 0;
+    return 0;  // OK
 }
 
 /*

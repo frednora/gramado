@@ -49,10 +49,10 @@ void ServerShutdown(int server_fd)
 // Clear root window.
 // Show final message.
 
-    if ((void*) __root_window != NULL)
+    if ((void*) WindowManager.__root_window != NULL)
     {
         // Clean window
-        clear_window_by_id( __root_window->id, TRUE );
+        clear_window_by_id(WindowManager.__root_window->id, TRUE);
         
         yellow_status("Shutting down ...");
   
@@ -60,19 +60,19 @@ void ServerShutdown(int server_fd)
         strcat(shutdown_string,"ws: Shutting down ...");
         strcat(shutdown_string,"\0");
         dtextDrawText ( 
-            (struct gws_window_d *) __root_window,
+            (struct gws_window_d *) WindowManager.__root_window,
             8, 
             40, 
             (unsigned int) COLOR_WHITE, 
             shutdown_string );
         
-        // Show the window and the final message.
-        wm_flush_window(__root_window);
+        // Show the window and the final message
+        wm_flush_window(WindowManager.__root_window);
     }
 
     DestroyAllWindows();
 
-// Close the server's socket
+    // Close the server's socket
     if (server_fd > 0){
         close(server_fd);
     }

@@ -92,10 +92,10 @@ void invalidate_window_by_id(int wid)
 
 void invalidate_root_window(void)
 {
-    invalidate_window ((struct gws_window_d *) __root_window);
+    invalidate_window ((struct gws_window_d *) WindowManager.__root_window);
 }
 
-// Invalidate the titlebar window of a given pwindow.
+// Invalidate the titlebar window of a given pwindow
 void invalidate_titlebar(struct gws_window_d *pwindow)
 {
     if ((void*) pwindow == NULL)
@@ -1613,7 +1613,7 @@ redraw_window (
 
     unsigned int __tmp_color = COLOR_WINDOW;
 
-// Structure validation.
+// Structure validation:
     if ((void *) window == NULL){
         goto fail;
     }
@@ -1621,7 +1621,9 @@ redraw_window (
         goto fail;
     }
 
-    if (window == __root_window) {
+    // root
+    if (window == WindowManager.__root_window) 
+    {
         // Fill the entire screen with background color
         painterFillWindowRectangle(
         window->absolute_x,

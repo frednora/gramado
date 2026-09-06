@@ -509,7 +509,7 @@ void maximize_window(struct gws_window_d *window)
     }
 
 // Can't maximize root or taskbar
-    if (window == __root_window)
+    if (window == WindowManager.__root_window)
         return;
     if (window == taskbar_window)
         return;
@@ -622,8 +622,8 @@ void maximize_window(struct gws_window_d *window)
 // Root window, taskbar and the maximized window.
 //
 
-// Root
-    redraw_window(__root_window,TRUE);
+    // Root
+    redraw_window(WindowManager.__root_window, TRUE);
 
 // Taskbar
 // Send message to the app to repaint all the childs.

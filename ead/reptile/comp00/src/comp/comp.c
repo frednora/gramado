@@ -266,7 +266,7 @@ struct canvas_information_d *compCreateNewCanvas(struct dccanvas_d *dc)
     ci_new->dc = (struct dccanvas_d *) dc;
 
     // It belongs to the root window for now
-    ci_new->owner_window = __root_window; 
+    ci_new->owner_window = WindowManager.__root_window; 
 
     ci_new->used = TRUE;
     ci_new->magic = 1234;
@@ -517,7 +517,7 @@ struct gws_window_d *mouse_at(void)
                  __new_mouse_y < mouse_hover->absolute_bottom )
             {
                 // Not the root
-                if (mouse_hover != __root_window)
+                if (mouse_hover != WindowManager.__root_window)
                 {
                     //mouse_hover = (void *) w;
                     //redraw_window(w,TRUE);
@@ -551,7 +551,7 @@ struct gws_window_d *mouse_at(void)
                      __new_mouse_y < new_hover_window->absolute_bottom )
                 {
                     // Not the root. So accept this hover window.
-                    if (new_hover_window != __root_window)
+                    if (new_hover_window != WindowManager.__root_window)
                     {
                         mouse_hover = (void *) new_hover_window;
 
@@ -759,7 +759,7 @@ void reactRefreshDirtyWindows(void)
                     // but we can simple validate all the rest.
                     // Continue the loop,
                     // but now we will only validate the windows, not refresh.
-                    if (w == __root_window){
+                    if (w == WindowManager.__root_window){
                         fOnlyValidate = TRUE;
                     }
                 }
@@ -868,8 +868,8 @@ void compComposeDesktop(void)
 // #todo: 
 // Root window also needs its own canvas.
     //if (gCompositorUpdateDesktop == TRUE)
-    //redraw_window(__root_window, FALSE);
-    //refresh_window(__root_window);
+    //redraw_window(WindowManager.__root_window, FALSE);
+    //refresh_window(WindowManager.__root_window);
 
 // Walk the list of canvas
 // We only have frame canvas into the linked list.
@@ -991,8 +991,10 @@ void compComposeDesktop(void)
                 // ----------------------------------
                 // 1) chrome/frame canvas
                 ci_src = ci;
-                comp_blit_canvas_to_canvas_imp (
-                    ci_src, ci_dst, left, top, width, height );
+                if (Compositor.disable_frame_blit != TRUE){
+                    comp_blit_canvas_to_canvas_imp (
+                        ci_src, ci_dst, left, top, width, height );
+                }
 
                 // Prepering the parameters for the client area
                 if ((void*) ci->owner_window != NULL)
@@ -1089,10 +1091,9 @@ void comp_initialize_mouse(void)
     unsigned long w = gws_get_device_width();
     unsigned long h = gws_get_device_height();
 
-// #test
 // Initializing the cursor clipping region with the root window.
-    if ((void*) __root_window != NULL){
-        cursor_clip = __root_window;
+    if ((void*) WindowManager.__root_window != NULL){
+        cursor_clip = WindowManager.__root_window;
     }
 
     // #bugbug: harcoded limit
@@ -1170,6 +1171,10 @@ int compInitializeCompositor(void)
     } else {
         Compositor.is_composition_disabled = FALSE; 
     };
+
+// Don’t copy the chrome into the backbuffer
+    Compositor.disable_frame_blit = FALSE;
+    //Compositor.disable_frame_blit = TRUE;
 
 // The structure is initialized
     Compositor.used = TRUE;

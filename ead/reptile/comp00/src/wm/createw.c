@@ -37,17 +37,9 @@ int gUseFrame = TRUE;
 //int gUseShadow = TRUE;
 // ...
 
-// Windows - (struct)
-extern struct gws_window_d  *__root_window; 
-extern struct gws_window_d *active_window;
-
-// z-order ?
-// But we can use multiple layers.
-// ex-wayland: background, bottom, top, overlay.
-extern struct gws_window_d *first_window;
-extern struct gws_window_d *last_window;
 
 static const char *default_window_name = "Untitled window";
+
 
 //
 // == private functions: prototypes =============
@@ -156,10 +148,9 @@ int destroy_window_by_wid(int wid)
 // We can't destroy the root window.
 // #todo
 // The shutdown routine weill destroy it manually.
-    if (window == __root_window){
+    if (window == WindowManager.__root_window){
         goto fail;
     }
-
 
 // --------------------------------------
 // App window in compositor mode
