@@ -202,14 +202,6 @@ struct gws_windowmanager_d
 // not the whole window.
     struct gws_window_d *cursor_clip;
 
-    // #todo:
-    // Add the other pointer in here ...
-    /// for keyboard, mouse, active, etc ...
-
-
-
-    struct gws_window_d *root;     // #todo: Delete this
-    //struct gws_window_d *taskbar;
     struct gws_window_d *fullscreen_window;
     // ...
 

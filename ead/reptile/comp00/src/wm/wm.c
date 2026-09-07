@@ -1383,11 +1383,6 @@ void wmInitializeStructure(void)
     WindowManager.frame_counter = 0;
     WindowManager.fps = 0;
 
-// At this moment we don't have a root window.
-    WindowManager.root = NULL;
-// At this moment we don't have a taskbar window.
-    //WindowManager.taskbar = NULL;
-
 // #todo
 // Desktop composition.
 // #todo
@@ -5261,7 +5256,7 @@ int gwsDefineInitialRootWindow (struct gws_window_d *window)
 
     // Set
     WindowManager.__root_window = (struct gws_window_d *) window;
-    WindowManager.root = (struct gws_window_d *) window;
+
     return 0;  // OK
 }
 

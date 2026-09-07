@@ -4250,8 +4250,8 @@ static int ServerInitialization(void)
        // Ohhhh
     }
 
-    if ( (void*) WindowManager.root == NULL ){
-        printf("WindowManager.root fail\n");
+    if ( (void*) WindowManager.__root_window == NULL ){
+        printf("WindowManager.__root_window fail\n");
         goto fail;
     }
     /*
@@ -4268,11 +4268,12 @@ static int ServerInitialization(void)
 // Container.
     WindowManager.wa.left = 0;
     WindowManager.wa.top = 0;
-// #danger
+
+    // #danger
     WindowManager.wa.width = 
-        WindowManager.root->width;
+        WindowManager.__root_window->width;
     WindowManager.wa.height =
-        (WindowManager.root->height - 28); // menos taskbar height.
+        (WindowManager.__root_window->height - 28); // menos taskbar height.
     //WindowManager.wa.height =
         //(WindowManager.root->height - WindowManager.taskbar->height);
 
