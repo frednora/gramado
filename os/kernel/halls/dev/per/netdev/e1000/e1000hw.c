@@ -450,7 +450,6 @@ static void __e1000_handle_link_down(struct intel_nic_info_d *d)
     // d->tx_cur = 0;
 }
 
-
 // 00400h - Transmit Control Register
 static void __initialize_tx_support(struct intel_nic_info_d *d)
 {
@@ -477,12 +476,14 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 // Retorna um endereço virtual em tx_address e 
 // o físico no retorno da função.
 
-    uint32_t size_all_desc = 
+    uint32_t size_all_tx_desc = 
         (uint32_t) ((sizeof(struct legacy_tx_desc) * 8) +16);
 
+// VA in d->legacy_tx_descs.
+// PA in d->tx_descs_phys.
     d->tx_descs_phys = 
         (unsigned long) __E1000AllocCont ( 
-               size_all_desc, 
+               size_all_tx_desc, 
                (unsigned long *)(&d->legacy_tx_descs) );
 
     if (d->tx_descs_phys == 0){
@@ -495,7 +496,7 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 // tmp physical address.
     unsigned long tmp_txaddress_pa=0;
 
-    for ( i=0; i<8; i++ ) 
+    for ( i=0; i<E1000_NUM_TX_DESC; i++ )
     {
         // Alloc the phys/virt address of this transmit desc
         // alocamos memória para o buffer, 
@@ -520,14 +521,14 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
         // Two parts of 32bit each.
         // d->tx_buffers_virt[i] is for the VA.
 
-        d->legacy_tx_descs[i].addr = (unsigned int) tmp_txaddress_pa;  // LSB
-        d->legacy_tx_descs[i].addr2 = (unsigned int) (tmp_txaddress_pa >> 32);  // MSB
-        if (d->legacy_tx_descs[i].addr == 0){
-            panic ("__initialize_tx_support: d->legacy_tx_descs[i].addr\n");
+        d->legacy_tx_descs[i].addr_lsb = (unsigned int) tmp_txaddress_pa;  // LSB
+        d->legacy_tx_descs[i].addr_msb = (unsigned int) (tmp_txaddress_pa >> 32);  // MSB
+        if (d->legacy_tx_descs[i].addr_lsb == 0)
+        {
+            panic ("__initialize_tx_support: d->legacy_tx_descs[i].addr_lsb\n");
         }
 
-        // #test: 
-        // Configurando o tamanho do buffer
+        // Setup the buffer lenght
         d->legacy_tx_descs[i].length = (uint16_t) E1000_DEFAULT_BUFFER_SIZE;
 
         //cmd: bits
@@ -547,18 +548,7 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
         d->legacy_tx_descs[i].status = 1;
     };
 
-/*
-// #debug
-    for ( i=0; i<8; i++ ){
-        printk ("PA_LOW={%x} PA_HIGH={%x} VA={%x} \n",
-            d->legacy_tx_descs[i].addr,
-            d->legacy_tx_descs[i].addr2, 
-            d->tx_buffers_virt[i] );
-    };
-    while(1){}
-*/
-
-    d->tx_cur = 0;
+    d->tx_cur = 0;  // Current index
 
 //========================================
 // ## TX ##
@@ -590,14 +580,15 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 */
 
 // =================
-// Descriptor len. (8*16)
-    __E1000WriteCommand (d, 0x3808, 128);
+// Lenght for all TX descriptors: (8*16) = 128
+    size_t LenTX = (E1000_NUM_TX_DESC*16);
+    __E1000WriteCommand (d, 0x3808, LenTX);
 
 // =================
 
-// Head and tail for tx
-    __E1000WriteCommand (d, 0x3810, 0);  // head
-    __E1000WriteCommand (d, 0x3818, 7);  // tail
+// Head and tail indexes for tx
+    __E1000WriteCommand (d, 0x3810, E1000_TX_HEAD);
+    __E1000WriteCommand (d, 0x3818, E1000_TX_TAIL);
 
 	//#define E1000_TCTL     0x00400  /* TX Control - RW */
     //• CT = 0x0F (16d collision)
@@ -631,7 +622,6 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
         0x3828, 
         (0x01000000 | 0x003F0000) 
     );
-
 
 /*
 // 0x400
@@ -708,8 +698,7 @@ static void __initialize_tx_support(struct intel_nic_info_d *d)
 	//	  /* Enable transmitter */
 	//	  MAC_CONF_3_TX_EN |
 	//	  /* Enable receiver */
-	//	  MAC_CONF_2_RX_EN);	
-    
+	//	  MAC_CONF_2_RX_EN);	   
 	
 	//iow32(d, TCTL, TCTL_EN);
 
@@ -731,13 +720,15 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
 
 // And alloc the phys/virt address of the receive buffer.
 
-    uint32_t size_all_desc = 
+    uint32_t size_all_rx_desc = 
         (uint32_t) ((sizeof(struct legacy_rx_desc) * 32) +16);
 
+// VA in d->legacy_rx_descs.
+// PA in d->rx_descs_phys.
     d->rx_descs_phys = 
         __E1000AllocCont (
-            size_all_desc, 
-            (unsigned long *)(&d->legacy_rx_descs));
+            size_all_rx_desc, 
+            (unsigned long *)(&d->legacy_rx_descs) );
 
     if (d->rx_descs_phys == 0){
         panic ("__initialize_rx_support: d->rx_descs_phys\n");
@@ -747,7 +738,7 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
 // tmp physical address.
     unsigned long tmp_rxaddress_pa=0;
 
-    for ( i=0; i<32; i++ ) 
+    for ( i=0; i<E1000_NUM_RX_DESC; i++ )
     {
         // Alloc the phys/virt address of this transmit desc
         // IN:  size, return virtual address.
@@ -768,32 +759,20 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
         // Physical address for the buffer.
         // The address has two 32 bit parts.
         // d->rx_buffers_virt[i] is for a 64bit VA.
-        d->legacy_rx_descs[i].addr  = (unsigned int) tmp_rxaddress_pa;
-        d->legacy_rx_descs[i].addr2 = (unsigned int) (tmp_rxaddress_pa>>32);
-        if (d->legacy_rx_descs[i].addr == 0){
-            panic ("__initialize_rx_support: d->legacy_rx_descs[i].addr\n");
+
+        d->legacy_rx_descs[i].addr_lsb = (unsigned int) tmp_rxaddress_pa;
+        d->legacy_rx_descs[i].addr_msb = (unsigned int) (tmp_rxaddress_pa >> 32);
+        if (d->legacy_rx_descs[i].addr_lsb == 0)
+        {
+            panic ("__initialize_rx_support: d->legacy_rx_descs[i].addr_lsb\n");
         }
 
-        // #test: 
-        // Configurando o tamanho do buffer
+        // Setup the buffer lenght
         d->legacy_rx_descs[i].length = (uint16_t) E1000_DEFAULT_BUFFER_SIZE;
         d->legacy_rx_descs[i].status = 0;
     };
 
-/*
-// #debug 
-// Vamos imprimir os endereços edereços físicos dos buffers 
-// e os edereços virtuais dos descritores.
-    for ( i=0; i < 32; i++ ){
-        printk ("PA_LOW={%x} PA_HIGH={%x} VA={%x} \n",
-            d->legacy_rx_descs[i].addr,
-            d->legacy_rx_descs[i].addr2, 
-            d->rx_buffers_virt[i] );
-    };
-    while(1){}
-*/
-
-    d->rx_cur = 0;
+    d->rx_cur = 0;  // Current index
 
 // ===================================
 // ## RX ##
@@ -821,12 +800,13 @@ static void __initialize_rx_support(struct intel_nic_info_d *d)
     while(1){}
 */
 
-// Buffer (32*16)
-    __E1000WriteCommand (d, 0x2808, 512);
+// Lenght for all RX descriptors: (32*16) = 512
+    size_t LenRX = (E1000_NUM_RX_DESC*16);
+    __E1000WriteCommand (d, 0x2808, LenRX);
 
-// head and tail for rx.
-    __E1000WriteCommand (d, 0x2810, 0);   // head
-    __E1000WriteCommand (d, 0x2818, 31);  // tail
+// Set head and tail indexes for rx
+    __E1000WriteCommand (d, 0x2810, E1000_RX_HEAD);
+    __E1000WriteCommand (d, 0x2818, E1000_RX_TAIL);
 
 // receive control
 // RCTL = 0x0100, /* Receive Control */
@@ -880,8 +860,10 @@ static int __e1000_reset_controller(struct intel_nic_info_d *d)
         __E1000WriteCommand ( d, 0x5200 + (i * 4), 0 );
     };
 
+
     __initialize_tx_support(d);
     __initialize_rx_support(d);
+
     __e1000_linkup(d);
     __e1000_enable_interrupt(d);
 
@@ -1051,15 +1033,15 @@ e1000hw_send(
 
 // Current descriptor index
     old = target_dev->tx_cur;
-    if (old >= SEND_BUFFER_MAX){
-        panic("e1000hw_send: old\n");
+    if (old >= E1000_NUM_TX_DESC){
+        panic("e1000hw_send: [send] old\n");
     }
 
 // Copy packet data into NIC’s transmit buffer (VA)
 // IN: Buffer, data, len
     memcpy(
         (void *) target_dev->tx_buffers_virt[old],  // NIC buffer (virtual address)
-        (const void *) data,               // Application buffer
+        (const void *) data,  // Application buffer
         (size_t) len );
 
 // Fill in descriptor fields:
@@ -1145,13 +1127,11 @@ static void __e1000_on_receive(void)
 
         // Pega o atual e circula.
         old = currentNIC->rx_cur;
-        currentNIC->rx_cur = (currentNIC->rx_cur + 1) % RECEIVE_BUFFER_MAX; 
-
-        if (old >= RECEIVE_BUFFER_MAX){
+        if (old >= E1000_NUM_RX_DESC){
             panic("__e1000_on_receive: [receive] old\n");
         }
+        currentNIC->rx_cur = (currentNIC->rx_cur + 1) % E1000_NUM_RX_DESC; 
 
-        //#debug
         //printk ("BUFFER ID: gotten from %d\n", old);
 
         // Get the frame base address.
@@ -1944,6 +1924,7 @@ DDINIT_e1000 (
 // Reset the controller
 //
 
+// Actually we are only initializing with our preferences.
     __e1000_reset_controller(nic);
 
 // This structure is initialized

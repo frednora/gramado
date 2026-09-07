@@ -169,28 +169,6 @@ The receive descriptor count has fallen below a configured low threshold
 #define REG_FCTTV  0x2170   // Flow Control Transmit Timer Value
 
 
-// ----------------------------------------------------
-
-// How many buffers
-#define SEND_BUFFER_MAX       8
-#define RECEIVE_BUFFER_MAX   32
-// #define E1000_NUM_TX_DESC 8
-// #define E1000_NUM_RX_DESC 32
-
-//  Frame size?
-// ( 14 + 1500 + 4 ) = 1518.
-// + The standard Ethernet (IEEE 802.3) frame size is 1,518 bytes.
-// + Ethernet header (14 bytes).
-// + The payload (IP packet, usually 1,500 bytes).
-// + Frame Check Sequence (FCS) field (4 bytes).
-
-// #todo
-// The buffer size limit depends on the configuration
-// 16*512
-#define E1000_DEFAULT_BUFFER_SIZE  8192
-#define E1000_DEFAULT_RECEIVE_BUFFER_SIZE  E1000_DEFAULT_BUFFER_SIZE
-//#define E1000_DEFAULT_SEND_BUFFER_SIZE     E1000_DEFAULT_BUFFER_SIZE
-
 /*
 // Buffer Sizes
 // case 0
@@ -216,39 +194,6 @@ The receive descriptor count has fallen below a configured low threshold
 #define CMD_IDE  (1 << 7)  // Interrupt Delay Enable
 */
 
-// ====================================================
-
-// Transmit Descriptor
-struct legacy_tx_desc 
-{
-
-// The physical address of the buffer
-    uint32_t addr;   // 32 Least Significant Bit (LSB)
-    uint32_t addr2;  // 32 Most Significant Bit (MSB)
-    //uint64_t addr;
-
-    uint16_t length;
-    uint8_t cso;      // Checksum offset
-    uint8_t cmd;
-
-    uint8_t status;   // status and reserved
-    uint8_t css;      // checksum start
-    uint16_t special;
-};
-
-// Receive Descriptor
-struct legacy_rx_desc 
-{
-    //uint64_t buffer_addr;  // The physical address of the buffer. 
-    uint32_t addr;
-    uint32_t addr2;
-
-    uint16_t length;     // Length of data DMAed into data buffer 
-    uint16_t csum;       // Packet checksum 
-    uint8_t status;      // Descriptor status 
-    uint8_t errors;      // Descriptor Errors 
-    uint16_t special;
-};
 
 // ====================================================
 
@@ -281,6 +226,71 @@ enum e1000_chip_family_t {
     // room to grow: 82574L, ICH8/9 integrated, etc.
 };
 
+
+// ====================================================
+
+// Size of a descriptor
+// #define E1000_DESC_BYTES  16
+// How many buffers
+#define E1000_NUM_TX_DESC  8
+#define E1000_NUM_RX_DESC  32
+// Head and tail
+#define E1000_TX_HEAD  0
+#define E1000_TX_TAIL  (E1000_NUM_TX_DESC -1)
+#define E1000_RX_HEAD  0
+#define E1000_RX_TAIL  (E1000_NUM_RX_DESC -1)
+
+
+//  Frame size?
+// ( 14 + 1500 + 4 ) = 1518.
+// + The standard Ethernet (IEEE 802.3) frame size is 1,518 bytes.
+// + Ethernet header (14 bytes).
+// + The payload (IP packet, usually 1,500 bytes).
+// + Frame Check Sequence (FCS) field (4 bytes).
+
+// #todo
+// The buffer size limit depends on the configuration
+// 16*512
+#define E1000_DEFAULT_BUFFER_SIZE  8192
+#define E1000_DEFAULT_RECEIVE_BUFFER_SIZE  E1000_DEFAULT_BUFFER_SIZE
+//#define E1000_DEFAULT_SEND_BUFFER_SIZE     E1000_DEFAULT_BUFFER_SIZE
+
+// ----------------------------------------------------
+// Transmit Descriptor
+struct legacy_tx_desc 
+{
+
+// The physical address of the buffer.
+// It's a 64bit address divided into two parts.
+    uint32_t addr_lsb;  // 32 Least Significant Bit (LSB)
+    uint32_t addr_msb;  // 32 Most Significant Bit (MSB)
+
+    uint16_t length;
+    uint8_t cso;      // Checksum offset
+    uint8_t cmd;
+
+    uint8_t status;   // status and reserved
+    uint8_t css;      // checksum start
+    uint16_t special;
+};
+
+// ----------------------------------------------------
+// Receive Descriptor
+struct legacy_rx_desc 
+{
+
+// The physical address of the buffer.
+// It's a 64bit address divided into two parts.
+    uint32_t addr_lsb;  // 32 Least Significant Bit (LSB)
+    uint32_t addr_msb;  // 32 Most Significant Bit (MSB)
+
+    uint16_t length;     // Length of data DMAed into data buffer 
+    uint16_t csum;       // Packet checksum 
+    uint8_t status;      // Descriptor status 
+    uint8_t errors;      // Descriptor Errors 
+    uint16_t special;
+};
+
 // ============================================================
 // Device Info
 // #bugbug
@@ -309,27 +319,30 @@ struct intel_nic_info_d
     //uint8_t ipv6_address[6];
     uint8_t ip_address[4];
 
-    uint16_t rx_cur;
-    uint16_t tx_cur;
-
-
 // i/o ports support.
     int use_io;
     // uint16_t io_base;
 
+// ======================================
+
 // Estrutura de descritores 
 // Virtual address for the first descriptor.
-    struct legacy_rx_desc *legacy_rx_descs;  // rx ring virtual address
     struct legacy_tx_desc *legacy_tx_descs;  // tx ring virtual address
+    struct legacy_rx_desc *legacy_rx_descs;  // rx ring virtual address
 
 // Physical address of the first descriptor.
-    unsigned long rx_descs_phys;  // rx ring physical address
     unsigned long tx_descs_phys;  // tx ring physical address
+    unsigned long rx_descs_phys;  // rx ring physical address
 
 // Arrays de ponteiros de buffers.
 // Ponteiros virtuais de 64bit.
-    unsigned long rx_buffers_virt[32];  // Receive
     unsigned long tx_buffers_virt[8];   // Send
+    unsigned long rx_buffers_virt[32];  // Receive
+
+    uint16_t tx_cur;
+    uint16_t rx_cur;
+
+// ======================================
 
 // ARP cache
     struct e1000_arp_cache_item_d  arp_cache[32];
