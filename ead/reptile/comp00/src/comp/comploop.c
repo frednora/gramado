@@ -1217,8 +1217,8 @@ int serviceAsyncCommand(void)
 
     //
     case ASYNC_REQUEST_MAXIMIZE_ACTIVE_WINDOWS:  //1014:
-        if ((void*) active_window != NULL)
-            maximize_window(active_window);
+        if ((void*) WindowManager.active_window != NULL)
+            maximize_window(WindowManager.active_window);
         break;
     
     case 2000:
@@ -1757,12 +1757,12 @@ int serviceCreateWindow(int client_fd)
 
         //...
 
-        if ((void*) taskbar_window != NULL)
+        if ((void*) WindowManager.taskbar_window != NULL)
         {
-            if (taskbar_window->magic == 1234)
+            if (WindowManager.taskbar_window->magic == 1234)
             {
                 window_post_notification( 
-                    taskbar_window->id,    // target wid
+                    WindowManager.taskbar_window->id,    // target wid
                     GWS_ServerNotifyApp,   // msg code
                     APP_EVENT_CREATED,     // Sub-event 
                     wid,                   // the window that was created
@@ -1770,7 +1770,7 @@ int serviceCreateWindow(int client_fd)
                     Window->client_tid );  // creator's tid
 
                 //printf("Posting notification: target tid=%d msgcode=%d sub=%d wid=%d\n",
-                    //taskbar_window->id, GWS_ServerNotifyApp, APP_EVENT_CREATED,  wid );
+                    //WindowManager.taskbar_window->id, GWS_ServerNotifyApp, APP_EVENT_CREATED,  wid );
 
                 //printf("Posting notification: sub=%d wid=%d pid=%d tid=%d\n",
                     //APP_EVENT_CREATED, wid, Window->client_pid, Window->client_tid );
@@ -4089,8 +4089,8 @@ static int __initialize_gui(void)
         printf ("__initialize_gui: WindowManager.__root_window\n");
         exit(1);
     }
-    keyboard_owner = (void*) WindowManager.__root_window;
-    mouse_owner    = (void*) WindowManager.__root_window;
+    WindowManager.keyboard_owner = (void*) WindowManager.__root_window;
+    WindowManager.mouse_owner    = (void*) WindowManager.__root_window;
 
     return 0;  // OK
 }

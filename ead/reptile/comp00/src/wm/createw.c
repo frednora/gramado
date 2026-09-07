@@ -200,17 +200,15 @@ int destroy_window_by_wid(int wid)
         // windowList[window->id] = 0;
 
         /*
-        // #test
         if (window == keyboard_owner)
-            keyboard_owner = taskbar_window;
+            keyboard_owner = WindowManager.taskbar_window;
         if (window == mouse_owner)
-            mouse_owner = taskbar_window;
+            mouse_owner = WindowManager.taskbar_window;
 
-        set_focus(taskbar_window);
-        __set_foreground_tid(taskbar_window->client_tid);
+        set_focus(WindowManager.taskbar_window);
+        __set_foreground_tid(WindowManager.taskbar_window->client_tid);
         */
 
-        // #test
         // Send it to the kernel.
         // This thread will not be the foreground thread anymore.
         sc82(10012, window->client_tid, 0, 0);
@@ -307,17 +305,15 @@ int destroy_window_by_wid(int wid)
     // windowList[window->id] = 0;
 
     /*
-    // #test
     if (window == keyboard_owner)
-        keyboard_owner = taskbar_window;
+        keyboard_owner = WindowManager.taskbar_window;
     if (window == mouse_owner)
-        mouse_owner = taskbar_window;
+        mouse_owner = WindowManager.taskbar_window;
 
-    set_focus(taskbar_window);
-    __set_foreground_tid(taskbar_window->client_tid);
+    set_focus(WindowManager.taskbar_window);
+    __set_foreground_tid(WindowManager.taskbar_window->client_tid);
     */
 
-    // #test
     // Send it to the kernel.
     // This thread will not be the foreground thread anymore.
     sc82(10012, window->client_tid, 0, 0);
@@ -2690,7 +2686,7 @@ void *doCreateAndDrawWindow (
         if (window->style & WS_TASKBAR)
         {
             window->isTaskBar = TRUE;
-            taskbar_window = window;
+            WindowManager.taskbar_window = window;
 
             // #test:
             // ---- Update Working Area --------------------------------
@@ -2739,9 +2735,8 @@ void *doCreateAndDrawWindow (
         if (window->style & WS_TASKBAR)
         {
             window->isTaskBar = TRUE;
-            taskbar_window = window;
+            WindowManager.taskbar_window = window;
 
-            // #test:
             // ---- Update Working Area --------------------------------
             if (WindowManager.initialized == TRUE)
             {
@@ -3836,11 +3831,11 @@ draw_frame:
     int isKeyboardOwner = FALSE;  // wwf?
 
 // Is it the active window?
-    if (__w == active_window)
+    if (__w == WindowManager.active_window)
         isActiveWindow = TRUE;
 
 // Is it the keyboard owner? (wwf)
-    if (__w == keyboard_owner)
+    if (__w == WindowManager.keyboard_owner)
         isKeyboardOwner = TRUE;
 
 // == Normal windows =================================

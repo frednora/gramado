@@ -433,13 +433,13 @@ void minimize_window(struct gws_window_d *window)
 // If we are minimizing the active window,
 // we need to change the active window to the taskbar or root.
 /*
-    if (window == active_window) 
+    if (window == WindowManager.active_window) 
     {
         // Option 1: clear active window
-        active_window = NULL;
+        WindowManager.active_window = NULL;
 
         // Option 2: reassign to taskbar or root
-        //active_window = taskbar_window; 
+        // WindowManager.active_window = WindowManager.taskbar_window; 
     }
 */
 
@@ -447,7 +447,7 @@ void minimize_window(struct gws_window_d *window)
 // Is the wwf one of our childs?
 // Change the falg to 'not receiving input'.
     struct gws_window_d *wwf;
-    wwf = (struct gws_window_d *) keyboard_owner;
+    wwf = (struct gws_window_d *) WindowManager.keyboard_owner;
     if ((void*) wwf != NULL)
     {
         if (wwf->magic == 1234)
@@ -511,7 +511,7 @@ void maximize_window(struct gws_window_d *window)
 // Can't maximize root or taskbar
     if (window == WindowManager.__root_window)
         return;
-    if (window == taskbar_window)
+    if (window == WindowManager.taskbar_window)
         return;
 // We only maximize application windows
     if (window->type != WT_OVERLAPPED)
@@ -627,11 +627,11 @@ void maximize_window(struct gws_window_d *window)
 
 // Taskbar
 // Send message to the app to repaint all the childs.
-    redraw_window(taskbar_window,TRUE);
-    window_post_message( taskbar_window->id, GWS_Paint, 0, 0 );
+    redraw_window(WindowManager.taskbar_window, TRUE);
+    window_post_message( WindowManager.taskbar_window->id, GWS_Paint, 0, 0 );
 
     // Notify kernel to wake up the target thread if it is necessary
-    wmNotifyKernel(taskbar_window,8000,8000);
+    wmNotifyKernel(WindowManager.taskbar_window, 8000, 8000);
 
 // Our window
 // Set focus
@@ -718,14 +718,14 @@ int window_initialize(void)
 // At this moment we didn't create any window yet.
 
 // Active window
-    active_window = NULL;
+    WindowManager.active_window = NULL;
 // Input
-    keyboard_owner = NULL;
-    mouse_owner = NULL;
+    WindowManager.keyboard_owner = NULL;
+    WindowManager.mouse_owner = NULL;
 // Stack
-    first_window = NULL;
-    last_window = NULL;
-    top_window = NULL;
+    WindowManager.first_window = NULL;
+    WindowManager.last_window = NULL;
+    WindowManager.top_window = NULL;
 
 
 // Window list

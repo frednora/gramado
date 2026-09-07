@@ -168,7 +168,7 @@ void invalidate_statusbar(struct gws_window_d *pwindow)
 
 void invalidate_taskbar_window(void)
 {
-    //invalidate_window ( (struct gws_window_d *) taskbar_window );
+    //invalidate_window ( (struct gws_window_d *) WindowManager.taskbar_window );
 }
 
 void end_paint(struct gws_window_d *window)
@@ -1378,7 +1378,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
 
 // ------------------
 // Parent is active
-    if (parent == active_window)
+    if (parent == WindowManager.active_window)
     {
         tb_window->bg_color = 
             (unsigned int) get_color(csiActiveWindowTitleBar);
@@ -1390,7 +1390,7 @@ int redraw_titlebar_window(struct gws_window_d *window)
 
 // ------------------
 // Parent is NOT active
-    if (parent != active_window)
+    if (parent != WindowManager.active_window)
     {
         tb_window->bg_color = 
             (unsigned int) get_color(csiInactiveWindowTitleBar);
@@ -1819,9 +1819,9 @@ redraw_window (
     {
         if ((unsigned long) window->type == WT_OVERLAPPED)
         {
-            if (window == keyboard_owner){
+            if (window == WindowManager.keyboard_owner){
                 __tmp_color = xCOLOR_GRAY1;
-            } else if (window != keyboard_owner){
+            } else if (window != WindowManager.keyboard_owner){
                 __tmp_color = xCOLOR_GRAY2;
             }
 
@@ -2130,13 +2130,13 @@ redraw_window (
         }
 
         // Borders: 
-        // Let's repaint the borders for some types.
+        // Let's repaint the borders for some types
         // Normal windows
         // Border Color 1 = top/left      (Light)
         // Border Color 2 = right/bottom  (Dark)
         if (window->type == WT_OVERLAPPED)
         {
-            if (window == active_window){
+            if (window == WindowManager.active_window){
                 window->Border.border_color1 = HONEY_COLOR_BORDER_LIGHT_ACTIVE;  //get_color(csiActiveWindowBorder); 
                 window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_ACTIVE;  //get_color(csiActiveWindowBorder);
             } else {
@@ -2145,7 +2145,7 @@ redraw_window (
                 window->Border.border_color2 = HONEY_COLOR_BORDER_DARK_INACTIVE;  //get_color(csiActiveWindowBorder);
 
                 // Its a wwf
-                if (window == keyboard_owner){
+                if (window == WindowManager.keyboard_owner){
                     window->Border.border_color1 = (unsigned int) HONEY_COLOR_BORDER_LIGHT_WWF;  //get_color(csiWWFBorder);
                     window->Border.border_color2 = (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
                 } else {
@@ -2200,7 +2200,7 @@ redraw_window (
              window->type == WT_EDITBOX_MULTIPLE_LINES )
         {
             // focus
-            if (window == keyboard_owner){
+            if (window == WindowManager.keyboard_owner){
                 window->Border.border_color1 = 
                     (unsigned int) HONEY_COLOR_BORDER_DARK_WWF;  //get_color(csiWWFBorder);
                 window->Border.border_color2 = 

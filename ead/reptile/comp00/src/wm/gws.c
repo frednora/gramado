@@ -224,11 +224,10 @@ void gws_show_backbuffer(void)
     }
 
 //
-// Show window rect.
+// Show window rect
 //
 
-// See: wm.c
-    // #debug
+    // See: wm.c
     // debug_print("gws_show_backbuffer: Calling gws_show_window_rect\n");
 
     if ((void *) gui->screen_window == NULL)
@@ -715,9 +714,8 @@ int gwsInitGUI(void)
 // ==============
 
 // Let's start our z-order list
-    last_window = NULL;
+    WindowManager.last_window = NULL;
 
-    //#debug
     //debug_print(" $ \n");
     //asm("int $3");
 

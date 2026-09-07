@@ -41,13 +41,6 @@ struct dccanvas_d *bg_dccanvas;
 // Windows
 //
 
-// Mouse hover
-extern struct gws_window_d *mouse_hover;
-// The limits for the mouse pointer.
-// Normally it's the screen size (root window),
-// but it can be the client area of an application window 
-// when the mouse is captured by an application window.
-extern struct gws_window_d *cursor_clip;
 
 int need_rootwindow_redraw = FALSE;
 
@@ -1092,8 +1085,9 @@ void comp_initialize_mouse(void)
     unsigned long h = gws_get_device_height();
 
 // Initializing the cursor clipping region with the root window.
-    if ((void*) WindowManager.__root_window != NULL){
-        cursor_clip = WindowManager.__root_window;
+    if ((void*) WindowManager.__root_window != NULL)
+    {
+        WindowManager.cursor_clip = WindowManager.__root_window;
     }
 
     // #bugbug: harcoded limit

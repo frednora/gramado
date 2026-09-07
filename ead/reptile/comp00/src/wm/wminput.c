@@ -877,21 +877,20 @@ ProcessEvent:
 // Actually a combination also can genrate this message.
     if (msg == GWS_Close)
     {
-        if ((void*) active_window != NULL)
+        if ((void*) WindowManager.active_window != NULL)
         {
-            if (active_window->magic == 1234)
+            if (WindowManager.active_window->magic == 1234)
             {
                 yellow_status("Close window");
-                window_post_message ( active_window->id, GWS_Close, 0, 0 );
+                window_post_message(WindowManager.active_window->id, GWS_Close, 0, 0);
 
                 // #test
                 // Sending a notification to the kernel, saying the thread has
                 // an event from the server. Good opportonity to wakeup the thread if necessary.
-                wmNotifyKernel(active_window, 8000, 8000);
+                wmNotifyKernel(WindowManager.active_window, 8000, 8000);
             }
         }
     }
-
 
     //if (msg == GWS_UpdateDesktop)
     //    wm_update_desktop(TRUE,TRUE);

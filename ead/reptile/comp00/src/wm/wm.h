@@ -178,6 +178,30 @@ struct gws_windowmanager_d
 // Windows
 
     struct gws_window_d *__root_window;
+    struct gws_window_d *active_window;
+    struct gws_window_d  *taskbar_window;
+
+// z-order ?
+// But we can use multiple layers.
+// ex: background, bottom, top, overlay.
+    struct gws_window_d *first_window;
+    struct gws_window_d *last_window;
+    struct gws_window_d *top_window;     // z-order
+
+// Input
+    struct gws_window_d *keyboard_owner;
+    struct gws_window_d *mouse_owner;  // captured
+    struct gws_window_d *mouse_hover;  // hover
+
+// The limits for the mouse pointer.
+// Normally it's the screen size (root window),
+// but it can be the client area of an application window 
+// when the mouse is captured by an application window.
+// #important: 
+// Actually it needs to be confined to the clent area,
+// not the whole window.
+    struct gws_window_d *cursor_clip;
+
     // #todo:
     // Add the other pointer in here ...
     /// for keyboard, mouse, active, etc ...

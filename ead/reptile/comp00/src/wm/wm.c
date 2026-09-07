@@ -28,48 +28,6 @@ struct gws_color_scheme_d* GWSCurrentColorScheme;
 
 // -------------------------------------
 
-// Windows - (struct)
-
-// struct gws_window_d *__root_window;
-struct gws_window_d *active_window;  // active
-
-//
-// Input events
-//
-
-// Owner
-struct gws_window_d *keyboard_owner;
-struct gws_window_d *mouse_owner;  // captured
-// Mouse hover.
-struct gws_window_d *mouse_hover;  // hover
-// The limits for the mouse pointer.
-// Normally it's the screen size (root window),
-// but it can be the client area of an application window 
-// when the mouse is captured by an application window.
-// #important: 
-// Actually it needs to be confined to the clent area,
-// not the whole window.
-struct gws_window_d *cursor_clip;
-
-//
-// Taskbar
-// The Overview application. (Explorer)
-//
-
-// --------------------
-// Taskbar created by the user.
-// >>>> This is the "Overview" application.
-struct gws_window_d  *taskbar_window;
-
-// ...
-// z-order ?
-// But we can use multiple layers.
-// ex-wayland: background, bottom, top, overlay.
-struct gws_window_d *first_window;
-struct gws_window_d *last_window;
-struct gws_window_d *top_window;     // z-order
-// -------------------------------------
-
 static const char *app1_string = "terminal.bin";
 static const char *app2_string = "editor.bin";
 static const char *app3_string = "pubterm.bin";
@@ -279,13 +237,13 @@ void on_mouse_pressed(void)
     int obj_WID = -1;
 
 // Validating the window mouse_over
-    if ((void*) mouse_hover == NULL){
+    if ((void*) WindowManager.mouse_hover == NULL){
         return;
     }
-    if (mouse_hover->magic != 1234){
+    if (WindowManager.mouse_hover->magic != 1234){
         return;
     }
-    //if (mouse_hover == WindowManager.__root_window)
+    //if (WindowManager.mouse_hover == WindowManager.__root_window)
         //return;
 
 // Set the mouse_owner
@@ -293,20 +251,20 @@ void on_mouse_pressed(void)
 // Maybe we can send a message to this window,
 // and the client can make all the changes it wants.
 
-    mouse_owner = mouse_hover;
+    WindowManager.mouse_owner = WindowManager.mouse_hover;
 
 // Get the wid
 // Is it a button or something?
-    obj_WID = (int) mouse_hover->id;
+    obj_WID = (int) WindowManager.mouse_hover->id;
 
 // -------------------------
 // Button pressed
 // #test
 // Regular button and quick launch button.
 // Not a control, not the start menu, not the menuitem.
-    if (mouse_hover->type == WT_BUTTON)
+    if (WindowManager.mouse_hover->type == WT_BUTTON)
     {
-        if (mouse_hover->isControl != TRUE){
+        if (WindowManager.mouse_hover->isControl != TRUE){
             __button_pressed(obj_WID);
             return;
         }
@@ -316,7 +274,7 @@ void on_mouse_pressed(void)
 // Start menu button
 
     /*
-    if (mouse_hover->id == StartMenu.wid){
+    if (WindowManager.mouse_hover->id == StartMenu.wid){
         __button_pressed(obj_WID);
         return;
     }
@@ -327,10 +285,10 @@ void on_mouse_pressed(void)
 
     // The moment where the window becomes the target window for the drag
     // based on its child that is a titlebar.
-    if (mouse_hover->isTitleBar == TRUE)
+    if (WindowManager.mouse_hover->isTitleBar == TRUE)
     {
         /*
-        struct gws_window_d *tb_p = (struct gws_window_d *) mouse_hover->parent;
+        struct gws_window_d *tb_p = (struct gws_window_d *) WindowManager.mouse_hover->parent;
         if ((void*) tb_p != NULL && tb_p->magic == 1234)
         {
             if (tb_p->type == WT_OVERLAPPED)
@@ -352,9 +310,9 @@ void on_mouse_pressed(void)
 // ===================================
 // >> Minimize control
 // Redraw the button
-    if (mouse_hover->isMinimizeControl == TRUE)
+    if (WindowManager.mouse_hover->isMinimizeControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON){
+        if (WindowManager.mouse_hover->type == WT_BUTTON){
             __button_pressed(obj_WID);
             return;
         }
@@ -362,9 +320,9 @@ void on_mouse_pressed(void)
 // ===================================
 // >> Maximize control
 // Redraw the button
-    if (mouse_hover->isMaximizeControl == TRUE)
+    if (WindowManager.mouse_hover->isMaximizeControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON){
+        if (WindowManager.mouse_hover->type == WT_BUTTON){
             __button_pressed(obj_WID);
             return;
         }
@@ -372,9 +330,9 @@ void on_mouse_pressed(void)
 // ===================================
 // >> Close control
 // Redraw the button
-    if (mouse_hover->isCloseControl == TRUE)
+    if (WindowManager.mouse_hover->isCloseControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON){
+        if (WindowManager.mouse_hover->type == WT_BUTTON){
             __button_pressed(obj_WID);
             return;
         }
@@ -383,10 +341,10 @@ void on_mouse_pressed(void)
 
 void on_mouse_released(void)
 {
-    // Get these from event.
+    // Get these from event
     unsigned long saved_x=0;
     unsigned long saved_y=0;
-    // Relative to the mouse_hover.
+    // Relative to the mouse_hover
     unsigned long in_x=0;
     unsigned long in_y=0;
 
@@ -427,14 +385,14 @@ void on_mouse_released(void)
 // When the mouse is hover a tb button.
 
 // Validate mouse_hover
-    if ((void*) mouse_hover == NULL)
+    if ((void*) WindowManager.mouse_hover == NULL)
         return;
-    if (mouse_hover->magic != 1234)
+    if (WindowManager.mouse_hover->magic != 1234)
         return;
 
 // Get the wid
 // Is it an button or something?
-    obj_WID = (int) mouse_hover->id;
+    obj_WID = (int) WindowManager.mouse_hover->id;
 
 // Get position.
 // If the mouse is hover an editbox or something
@@ -447,11 +405,11 @@ void on_mouse_released(void)
 
     static int isInsideMouseHover=FALSE;
 
-// Check if we are inside the mouse hover.
-    if ( saved_x >= mouse_hover->absolute_x &&
-         saved_x <= mouse_hover->absolute_right &&
-         saved_y >= mouse_hover->absolute_y &&
-         saved_y <= mouse_hover->absolute_bottom )
+// Check if we are inside the mouse hover
+    if ( saved_x >= WindowManager.mouse_hover->absolute_x &&
+         saved_x <= WindowManager.mouse_hover->absolute_right &&
+         saved_y >= WindowManager.mouse_hover->absolute_y &&
+         saved_y <= WindowManager.mouse_hover->absolute_bottom )
     {
         // #debug
         // printf("Inside mouse hover window :)\n");
@@ -459,13 +417,12 @@ void on_mouse_released(void)
         isInsideMouseHover = TRUE;
 
         // Values inside the window.
-        in_x = (unsigned long) (saved_x - mouse_hover->absolute_x);
-        in_y = (unsigned long) (saved_y - mouse_hover->absolute_y);
+        in_x = (unsigned long) (saved_x - WindowManager.mouse_hover->absolute_x);
+        in_y = (unsigned long) (saved_y - WindowManager.mouse_hover->absolute_y);
 
-        mouse_hover->single_event.has_event = FALSE;
+        WindowManager.mouse_hover->single_event.has_event = FALSE;
     }
 
-    // #debug
     // printf("Outside mouse hover window\n");
 
 // -------------------------
@@ -486,8 +443,8 @@ void on_mouse_released(void)
 // the mousehover window is an editbox.
 // Let's change the input pointer inside the window editbox.
 
-    if ( mouse_hover->type == WT_EDITBOX || 
-         mouse_hover->type == WT_EDITBOX_MULTIPLE_LINES)
+    if ( WindowManager.mouse_hover->type == WT_EDITBOX || 
+         WindowManager.mouse_hover->type == WT_EDITBOX_MULTIPLE_LINES)
     {
         // It's NOT a released event, so we will
         // change the input pointer.
@@ -497,28 +454,27 @@ void on_mouse_released(void)
         // Yes, it's a released event,
         // let's finally change the input poitner.
         if (in_x > 0){
-            mouse_hover->ip_x = (unsigned long) (in_x/8);
+            WindowManager.mouse_hover->ip_x = (unsigned long) (in_x/8);
         }
         if (in_y > 0){
-            mouse_hover->ip_y = (unsigned long) (in_y/8);
+            WindowManager.mouse_hover->ip_y = (unsigned long) (in_y/8);
         }
 
         // #danger: It affects the forgraound thread selection in ring0. 
         // Set the new keyboard owner. (focus)
         // It also changes the foreground input thread.
-        if (mouse_hover != keyboard_owner){
-            set_focus(mouse_hover);
+        if (WindowManager.mouse_hover != WindowManager.keyboard_owner){
+            set_focus(WindowManager.mouse_hover);
         }
 
-        // Set the new mouse owner.
-        if (mouse_hover != mouse_owner){
-            mouse_owner = mouse_hover;
+        // Set the new mouse owner
+        if (WindowManager.mouse_hover != WindowManager.mouse_owner){
+            WindowManager.mouse_owner = WindowManager.mouse_hover;
         }
 
         // No events?
-        mouse_hover->single_event.has_event = FALSE;            
+        WindowManager.mouse_hover->single_event.has_event = FALSE;            
 
-        // #test
         // Post message to the target window.
         // #remember:
         // The app get events only for the main window.
@@ -540,11 +496,11 @@ void on_mouse_released(void)
     struct gws_window_d *p1;  // Parent
     struct gws_window_d *gp;  // Grand-parent
 
-    if (mouse_hover->type == WT_BUTTON)
+    if (WindowManager.mouse_hover->type == WT_BUTTON)
     {
         // We're NOT a control.
         // We're a regular button.
-        if (mouse_hover->isControl != TRUE)
+        if (WindowManager.mouse_hover->isControl != TRUE)
         {
             __button_released(obj_WID);
             
@@ -556,7 +512,7 @@ void on_mouse_released(void)
             // Its not valid on all cases,
             // because sometimes the button is a child of a child.
             // Get the parent
-            p1 = mouse_hover->parent;
+            p1 = WindowManager.mouse_hover->parent;
             if ((void*)p1 == NULL)
                 return;
             if (p1->magic != 1234)
@@ -565,17 +521,16 @@ void on_mouse_released(void)
             // Send to parent. (Overlapped?)
             // A barra de tarefas nao e' overlapped.
             // teremos que mandar mensagens pra ela tambem
-            if ( p1->type == WT_OVERLAPPED || p1 == taskbar_window )
+            if ( p1->type == WT_OVERLAPPED || 
+                 p1 == WindowManager.taskbar_window )
             {
-                // #debug
                 // printf ("server: Sending GWS_MouseClicked\n");
                 window_post_message( 
                     p1->id, 
                     GWS_MouseClicked, 
-                    mouse_hover->id, 
-                    mouse_hover->id );
+                    WindowManager.mouse_hover->id, 
+                    WindowManager.mouse_hover->id );
 
-                // #test
                 // Sending a notification to the kernel, saying the thread has
                 // an event from the server. Good opportonity to wakeup the thread if necessary.
                 wmNotifyKernel(p1, 8000, 8000);
@@ -593,10 +548,9 @@ void on_mouse_released(void)
                         window_post_message(
                             gp->id,                // send to grandparent
                             GWS_MouseClicked,
-                            mouse_hover->id,       // child button ID
-                            mouse_hover->id );
+                            WindowManager.mouse_hover->id,       // child button ID
+                            WindowManager.mouse_hover->id );
 
-                        // #test
                         // Sending a notification to the kernel, saying the thread has
                         // an event from the server. Good opportonity to wakeup the thread if necessary.
                         wmNotifyKernel(gp, 8000, 8000);
@@ -643,12 +597,12 @@ void on_mouse_released(void)
 // ===================================
 // Title bar
 // Release the titlebar.
-    if (mouse_hover->isTitleBar == TRUE)
+    if (WindowManager.mouse_hover->isTitleBar == TRUE)
     {
         //#suspended
         /*
         // Get parent.
-        p = (struct gws_window_d *) mouse_hover->parent;
+        p = (struct gws_window_d *) WindowManager.mouse_hover->parent;
         if ((void*) p != NULL)
         {
             if (p->magic == 1234)
@@ -693,46 +647,45 @@ void on_mouse_released(void)
 // ===================================
 // >> Minimize control
 // Redraw the button
-    if (mouse_hover->isMinimizeControl == TRUE)
+    if (WindowManager.mouse_hover->isMinimizeControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON)
+        if (WindowManager.mouse_hover->type == WT_BUTTON)
         {
             __button_released(obj_WID);
             //yellow_status("Release on min control\n");
-            on_control_clicked(mouse_hover);
+            on_control_clicked(WindowManager.mouse_hover);
             return;
         }
     }
 // ===================================
 // >> Maximize control
 // Redraw the button
-    if (mouse_hover->isMaximizeControl == TRUE)
+    if (WindowManager.mouse_hover->isMaximizeControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON)
+        if (WindowManager.mouse_hover->type == WT_BUTTON)
         {
             __button_released(obj_WID);
             //yellow_status("Release on max control\n");
-            on_control_clicked(mouse_hover);
+            on_control_clicked(WindowManager.mouse_hover);
             return;
         }
     }
 // ===================================
 // >> Close control
 // Redraw the button
-    if (mouse_hover->isCloseControl == TRUE)
+    if (WindowManager.mouse_hover->isCloseControl == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON)
+        if (WindowManager.mouse_hover->type == WT_BUTTON)
         {
             __button_released(obj_WID);
             //yellow_status("Release on close control\n");
-            // #test
+
             // On control clicked
             // close control: post close message.
-            on_control_clicked(mouse_hover);
+            on_control_clicked(WindowManager.mouse_hover);
             return;
         }
     }
-
 
 //
 // Menu itens
@@ -747,9 +700,9 @@ void on_mouse_released(void)
     //#deprecated
     /*
     unsigned long selected_item=0;
-    if (mouse_hover->isMenuItem == TRUE)
+    if (WindowManager.mouse_hover->isMenuItem == TRUE)
     {
-        if (mouse_hover->type == WT_BUTTON)
+        if (WindowManager.mouse_hover->type == WT_BUTTON)
         {
             __button_released(obj_WID);
 
@@ -884,8 +837,8 @@ static void on_control_clicked(struct gws_window_d *window)
 // When some input pointer clicked the control.
 //
 
-// Mouse?
-    if (window == mouse_hover)
+    // Mouse hover?
+    if (window == WindowManager.mouse_hover)
         ClickedByPointer = TRUE;
 
 // ------------
@@ -1064,7 +1017,7 @@ void on_doubleclick(void)
     struct gws_window_d *p;
 
 // Window
-    w = mouse_hover;
+    w = WindowManager.mouse_hover;
     if ((void*)w == NULL)
         return;
     if (w->magic != 1234)
@@ -1085,8 +1038,8 @@ void on_doubleclick(void)
         if (p->type != WT_OVERLAPPED)
             return;
 
-        // Setup the last window and update the desktop.
-        last_window = p;
+        // Setup the last window and update the desktop
+        WindowManager.last_window = p;
         wm_update_desktop3(p);
 
         /*
@@ -1675,7 +1628,7 @@ static void wm_tile(void)
 // zorder: The last window is on top of the zorder.
 
     // Do we have a valid first window?
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
     if ((void*)w == NULL){
         //debug_print("wm_tile: w==NULL\n");
         return;
@@ -1692,14 +1645,14 @@ static void wm_tile(void)
         // Get the next window.
         w = (struct gws_window_d *) w->next;
 
-        // Update the counter.
+        // Update the counter
         cnt++;
     };
 
 // =============================
 // Starting with the first window of the list,
 // create a stack of windows in the top/left corner of the screen.
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
     if ((void*) w == NULL){
         //debug_print("wm_tile: w==NULL\n");
         return; 
@@ -1784,15 +1737,15 @@ static void wm_tile(void)
             // It occupies the left half of the working area.
             if (i == cnt-1)
             {
-                active_window  = (void*) w;  // Active window
-                keyboard_owner = (void*) w;  // Window with focus.
-                last_window    = (void*) w;  // Top
-                top_window     = (void*) w;  // Top z-order: top window.
-                mouse_owner = NULL;
-                mouse_hover = NULL;
-                    
-                // Change for the second time for this widnow.
-                    
+                WindowManager.active_window  = (void*) w;  // Active window
+                WindowManager.keyboard_owner = (void*) w;  // Window with focus
+                WindowManager.last_window = (void*) w;  // Top
+                WindowManager.top_window = (void*) w;  // Top z-order: top window.
+                WindowManager.mouse_owner = NULL;
+                WindowManager.mouse_hover = NULL;
+
+                // Change for the second time for this window
+
                 // Resize
                 // Width:  The width of the working area.
                 // Height: The height of the working area divided by 2.
@@ -1847,15 +1800,15 @@ static void wm_tile(void)
                 // For titlebar color support. It's the active window.
                 //w->Border.border_size = 2;
 
-                active_window  = (void*) w;  // Active window
-                keyboard_owner = (void*) w;  // Window with focus.
-                last_window    = (void*) w;  // Top
-                top_window     = (void*) w;  // Top z-order: top window.
-                mouse_owner = NULL;
-                mouse_hover = NULL;
-                    
-                // Change for the second time for this widnow.
-                    
+                WindowManager.active_window  = (void*) w;  // Active window
+                WindowManager.keyboard_owner = (void*) w;  // Window with focus
+                WindowManager.last_window = (void*) w;  // Top
+                WindowManager.top_window = (void*) w;  // Top z-order: top window.
+                WindowManager.mouse_owner = NULL;
+                WindowManager.mouse_hover = NULL;
+
+                // Change for the second time for this window
+
                 // Resize
                 // Width:  Half of the working area.
                 // Height: Height of the working area leass 24.
@@ -1966,13 +1919,15 @@ fail:
 void wm_update_active_window(void)
 {
     int wid = -1;
-    if ((void*) active_window == NULL){
+
+    if ((void*) WindowManager.active_window == NULL){
         return;
     }
-    if (active_window->magic != 1234){
+    if (WindowManager.active_window->magic != 1234){
         return;
     }
-    wid = (int) active_window->id;
+    wid = (int) WindowManager.active_window->id;
+
     wm_update_window_by_id(wid);
 }
 
@@ -2021,7 +1976,7 @@ void wm_update_desktop(int tile, int show)
 // Set the last window in the stack as the active window.
 // Set focus on the last window of the stack. 
 
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
 
 // --------------
 // 0 windows.
@@ -2038,22 +1993,21 @@ void wm_update_desktop(int tile, int show)
 
     if (InvalidFirstWindow == TRUE)
     {
-        first_window = NULL;
+        WindowManager.first_window = NULL;
         flush_window(WindowManager.__root_window);
         goto end;
     }
 
-// The Lamb is the Lion.
 // The first is the last valid window.
-    last_window = (struct gws_window_d *) w;
-              l = (struct gws_window_d *) w;
+    WindowManager.last_window = (struct gws_window_d *) w;
+    l = (struct gws_window_d *) w;
 
 // ----------------
 // :: Redraw
-// Loop to redraw the linked list.
+// Loop to redraw the linked list
     while (1){
 
-        // This is the end of the list.
+        // This is the end of the list
         if ((void*)w == NULL){ 
             break; 
         }
@@ -2089,7 +2043,7 @@ void wm_update_desktop(int tile, int show)
 // Active the Lion.
 // Set focus on last valid. Starting at first one.
 // Activate
-    last_window = (struct gws_window_d *) l;
+    WindowManager.last_window = (struct gws_window_d *) l;
     set_active_window(l);
 
 // -------------------------------------------
@@ -2132,10 +2086,10 @@ void wm_update_desktop(int tile, int show)
         }
     }
 
-// Inalid last window
+// Invalid last window
     if ((void*) l == NULL)
     {
-        last_window = NULL;
+        WindowManager.last_window = NULL;
         flush_window(WindowManager.__root_window);
         goto end;
     }
@@ -2153,7 +2107,7 @@ void wm_update_desktop(int tile, int show)
 // to avoid the re-refresh.
 // #todo:
 // We can create a worker to this routine.
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
 
     while (1)
     {
@@ -2189,20 +2143,20 @@ end:
 // + Redraw and show the taskbar
 // + Send message to uodate the clients of the taskbar
 
-    if ((void*)taskbar_window != NULL)
+    if ((void*)WindowManager.taskbar_window != NULL)
     {
-        redraw_window(taskbar_window,TRUE);
+        redraw_window(WindowManager.taskbar_window, TRUE);
 
-        if (taskbar_window->shflags_p != NULL) 
+        if (WindowManager.taskbar_window->shflags_p != NULL) 
         {
-            uint32_t *flags = (uint32_t*) taskbar_window->shflags_p;
+            uint32_t *flags = (uint32_t*) WindowManager.taskbar_window->shflags_p;
 
             // Saying to the taskbar to repaint the components
             *flags |= 0x0008;
         }
 
         // #suspended: we are using the flag
-        // on_update_window(taskbar_window, GWS_Paint);
+        // on_update_window(WindowManager.taskbar_window, GWS_Paint);
 
         // #test
         // It avoids drawing the taskbar's components twice
@@ -2231,7 +2185,7 @@ void  wm_update_desktop2(void)
 
 // List
 // Get the first window
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
     if ((void*) w == NULL){
         goto done;
     }
@@ -2262,10 +2216,10 @@ done:
 
 // The taskbar created by the user.
 // Redraw it and send message to update the client area.
-    if ((void*)taskbar_window != NULL)
+    if ((void*)WindowManager.taskbar_window != NULL)
     {
-        redraw_window(taskbar_window,FALSE);
-        on_update_window(taskbar_window,GWS_Paint);
+        redraw_window(WindowManager.taskbar_window, FALSE);
+        on_update_window(WindowManager.taskbar_window, GWS_Paint);
     }
 
 // Show root window.
@@ -2279,7 +2233,7 @@ done:
 // #todo:
 // We can create a worker to this routine.
 // Looking up the list.
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
     while (1)
     {
         // End of the list?
@@ -2322,9 +2276,9 @@ done:
 // an event from the server. Good opportonity to wakeup 
 // the thread if necessary.
 
-    if ((void*) active_window != NULL)
+    if ((void*) WindowManager.active_window != NULL)
     {
-        if (active_window->magic == 1234)
+        if (WindowManager.active_window->magic == 1234)
         {
             // #test
             // Setting a bit instead of posting the message
@@ -2332,13 +2286,13 @@ done:
             // #ps:
             // This is working very well. 10x faster then posting the message
 
-            uint32_t *flags = (uint32_t*) active_window->shflags_p;
+            uint32_t *flags = (uint32_t*) WindowManager.active_window->shflags_p;
             *flags |= 0x0008;
 
-            //if (active_window->state != WINDOW_STATE_MINIMIZED)
+            //if (WindowManager.active_window->state != WINDOW_STATE_MINIMIZED)
             
-            // window_post_message( active_window->id, GWS_Paint, 0, 0 );
-            wmNotifyKernel(active_window, 8000, 8000);
+            // window_post_message( WindowManager.active_window->id, GWS_Paint, 0, 0 );
+            wmNotifyKernel(WindowManager.active_window, 8000, 8000);
         }
     }
 }
@@ -2353,12 +2307,12 @@ void wm_update_desktop3(struct gws_window_d *new_active_window)
     if ((void*) new_active_window == NULL){
         return;
     }
-    if (new_active_window == last_window)
+    if (new_active_window == WindowManager.last_window)
         goto done;
 
 // Se nao for a primeira da lista,
 // entao retira da lista e coloca no final.
-    if (new_active_window != first_window)
+    if (new_active_window != WindowManager.first_window)
     {
         // Simply remove from the list.
         wm_remove_window_from_list(new_active_window);
@@ -2368,11 +2322,11 @@ void wm_update_desktop3(struct gws_window_d *new_active_window)
 
 // Se ela for a primeira da lista, 
 // entao a segunda vira a primeira da lista
-    if (new_active_window == first_window){
-        first_window = new_active_window->next;
+    if (new_active_window == WindowManager.first_window){
+        WindowManager.first_window = new_active_window->next;
     }
 
-// Activate window and update desktop respecting the list.
+// Activate window and update desktop respecting the list
 done:
     set_active_window(new_active_window);
     wm_update_desktop2();
@@ -2446,15 +2400,15 @@ update_window (
     if (WindowManager.is_fullscreen == TRUE)
     {
         // The keyboard and mouse owner
-        keyboard_owner = (void*) window;
-        mouse_owner    = (void*) window;
+        WindowManager.keyboard_owner = (void*) window;
+        WindowManager.mouse_owner    = (void*) window;
 
         // Mouser hover
-        // mouse_hover = NULL;
+        // WindowManager.mouse_hover = NULL;
 
         // z-order top and last window
-        top_window     = (void*) window;
-        last_window    = (void*) window;
+        WindowManager.top_window = (void*) window;
+        WindowManager.last_window = (void*) window;
 
         // #test: Border for titlebar color support.
         //window->Border.border_size = 2;
@@ -2599,7 +2553,7 @@ void set_focus(struct gws_window_d *window)
     int IsOldValid = TRUE;
 
     // Get current keyboard owner
-    old = keyboard_owner;
+    old = WindowManager.keyboard_owner;
 
     if ((void *) old == NULL)
         IsOldValid = FALSE;
@@ -2624,14 +2578,13 @@ void set_focus(struct gws_window_d *window)
 
 /*
 // If it's the taskbar
-    if (target == taskbar_window)
+    if (target == WindowManager.taskbar_window)
     {
         if (target->isTaskBar == TRUE)
         {
         }
     }
 */
-
 
 // Parent
     int IsParentValid = FALSE;
@@ -2644,7 +2597,7 @@ void set_focus(struct gws_window_d *window)
             IsParentValid = TRUE;
     }
     // Is parent active?
-    if (p == active_window)
+    if (p == WindowManager.active_window)
         IsParentActive = TRUE;
     if (p->type != WT_OVERLAPPED)
         IsParentActive = FALSE;
@@ -2669,10 +2622,9 @@ void set_focus(struct gws_window_d *window)
             RedrawParent = TRUE;
         }
 
-        // Set the keyboard owner
-        keyboard_owner = (void*) target;
-        // Set the mouse owner
-        mouse_owner = (void*) target;
+        // Set the keyboard owner and mouse owner
+        WindowManager.keyboard_owner = (void*) target;
+        WindowManager.mouse_owner    = (void*) target;
 
         target->enabled = TRUE;
         RedrawTarget = TRUE;
@@ -2839,8 +2791,7 @@ void set_mouseover(struct gws_window_d *window)
     if (window->used != TRUE) { return; }
     if (window->magic != 1234){ return; }
 
-// O mouse está sobre essa janela.
-    mouse_hover = (void*) window;
+    WindowManager.mouse_hover = (void*) window;
 }
 
 // Pega o ponteiro da janela que o mouse esta sobre ela.
@@ -2848,7 +2799,7 @@ struct gws_window_d *get_mousehover(void)
 {
     struct gws_window_d *w;
 
-    w = (struct gws_window_d *) mouse_hover;
+    w = (struct gws_window_d *) WindowManager.mouse_hover;
     if ((void*)w == NULL){
         return NULL;
     }
@@ -2976,12 +2927,12 @@ void set_active_by_id(int wid)
 
 void set_first_window( struct gws_window_d *window)
 {
-    first_window = (struct gws_window_d *) window;
+    WindowManager.first_window = (struct gws_window_d *) window;
 }
 
 struct gws_window_d *get_first_window(void)
 {
-    return (struct gws_window_d *) first_window;
+    return (struct gws_window_d *) WindowManager.first_window;
 }
 
 void set_last_window(struct gws_window_d *window)
@@ -2997,48 +2948,48 @@ void set_last_window(struct gws_window_d *window)
 
 struct gws_window_d *get_last_window(void)
 {
-    return (struct gws_window_d *) last_window;
+    return (struct gws_window_d *) WindowManager.last_window;
 }
 
 void activate_first_window(void)
 {
 // Structure validation
-    if ( (void*) first_window == NULL ){
+    if ((void*) WindowManager.first_window == NULL){
         return;
     }
-    if (first_window->used != TRUE){
+    if (WindowManager.first_window->used != TRUE){
         return;
     }
-    if (first_window->magic != 1234){
+    if (WindowManager.first_window->magic != 1234){
         return;
     }
 // Type validation
-    if (first_window->type != WT_OVERLAPPED){
+    if (WindowManager.first_window->type != WT_OVERLAPPED){
         return;
     }
-// Set
-    set_active_window(first_window);
+    // Set
+    set_active_window(WindowManager.first_window);
 }
 
 void activate_last_window(void)
 {
 // Structure validation
-    if ( (void*) last_window == NULL ){
+    if ( (void*) WindowManager.last_window == NULL ){
         return;
     }
-    if (last_window->used != TRUE) { return; }
-    if (last_window->magic != 1234){ return; }
+    if (WindowManager.last_window->used != TRUE) { return; }
+    if (WindowManager.last_window->magic != 1234){ return; }
 
 // Type validation
 // #bugbug
 // Can we active the root window?
 // The root window is WT_SIMPLE.
 
-    if (last_window->type != WT_OVERLAPPED){
+    if (WindowManager.last_window->type != WT_OVERLAPPED){
         return;
     }
 // Set
-    set_active_window(last_window);
+    set_active_window(WindowManager.last_window);
 }
 
 // Add a window on top of the list of childs.
@@ -3144,29 +3095,29 @@ void wm_add_window_to_bottom(struct gws_window_d *window)
 
 // Invalid first window? So, we're the new first window.
     if ((void*) window == NULL){
-        first_window = window;
+        WindowManager.first_window = window;
         return;
     }
 // Invalid first window? So, we're the new first window.
     if (window->magic != 1234){
-        first_window = window;
+        WindowManager.first_window = window;
         return;
     }
 // We already are the first window. Nothing to do.
-    if (window == first_window)
+    if (window == WindowManager.first_window)
         return;
 
 // Save the old first. That is calid window.
-    old_first = first_window;
+    old_first = WindowManager.first_window;
 // Set us as the new first window.
-    first_window = window;
+    WindowManager.first_window = window;
 // Now we are the first and the old first is our next.
-    first_window->next = old_first;
+    WindowManager.first_window->next = old_first;
 // Now we are the prev of the old first window.
-    old_first->prev = first_window;
+    old_first->prev = WindowManager.first_window;
 }
 
-// The list starts with first_window.
+// The list starts with first_window
 void wm_add_window_to_top(struct gws_window_d *window)
 {
     struct gws_window_d  *Next;
@@ -3194,29 +3145,29 @@ void wm_add_window_to_top(struct gws_window_d *window)
 // =====================================
 // Se não existe uma 'primeira da fila'.
 // Então somos a primeira e a última.
-    if ((void*) first_window == NULL)
+    if ((void*) WindowManager.first_window == NULL)
     {
-        first_window = window;
-        last_window = window;
+        WindowManager.first_window = window;
+        WindowManager.last_window = window;
         goto done;
     }
-// Invalid first window.
-    if ( first_window->used != TRUE )
+// Invalid first window
+    if ( WindowManager.first_window->used != TRUE )
     {
-        first_window = window;
-        last_window = window;
+        WindowManager.first_window = window;
+        WindowManager.last_window = window;
         goto done;
     }
-    if ( first_window->magic != 1234 )
+    if (WindowManager.first_window->magic != 1234)
     {
-        first_window = window;
-        last_window = window;
+        WindowManager.first_window = window;
+        WindowManager.last_window = window;
         goto done;
     }
 
 // ===================================
 // Se exite uma 'primeira da fila'.
-    Next = first_window;
+    Next = WindowManager.first_window;
     while ((void*) Next->next != NULL)
     {
         Next = Next->next;
@@ -3228,7 +3179,7 @@ void wm_add_window_to_top(struct gws_window_d *window)
     window->prev = Next;
 
 done:
-    last_window = (struct gws_window_d *) window;
+    WindowManager.last_window = (struct gws_window_d *) window;
     window->next = NULL;
     set_active_window(window);
 }
@@ -3309,7 +3260,7 @@ void wm_remove_window_from_list_and_kill(struct gws_window_d *window)
         return;
     }
 
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
     if ((void*) w == NULL){
         return;
     }
@@ -3346,7 +3297,7 @@ void wm_remove_window_from_list(struct gws_window_d *window)
         return;
     }
 
-    w = (struct gws_window_d *) first_window;
+    w = (struct gws_window_d *) WindowManager.first_window;
     if ((void*) w == NULL){
         return;
     }
@@ -4018,11 +3969,11 @@ void __switch_active_window(int active_first)
     struct gws_window_d *w;
     register int i=0;
 
-    w = first_window;
+    w = WindowManager.first_window;
 
-    // Update zOrder.
+    // Update zOrder
     while (1){
-        last_window = w;
+        WindowManager.last_window = w;
         if (w == NULL)
             break;
         if (w->magic != 1234)
@@ -4036,13 +3987,13 @@ void __switch_active_window(int active_first)
     };
 
     if (active_first == TRUE){
-        set_active_window(first_window);
-        redraw_window(first_window,TRUE);
-        on_update_window(first_window,GWS_Paint);
+        set_active_window(WindowManager.first_window);
+        redraw_window(WindowManager.first_window, TRUE);
+        on_update_window(WindowManager.first_window, GWS_Paint);
     } else {
-        set_active_window(last_window);
-        redraw_window(last_window,TRUE);
-        on_update_window(last_window,GWS_Paint);
+        set_active_window(WindowManager.last_window);
+        redraw_window(WindowManager.last_window, TRUE);
+        on_update_window(WindowManager.last_window, GWS_Paint);
     };
 }
 
@@ -4236,7 +4187,7 @@ void __probe_tb_button_hover(unsigned long long1, unsigned long long2)
             if (Status==TRUE)
             {
                 // set_mouseover(w);
-                mouse_hover = (void*) w;
+                WindowManager.mouse_hover = (void*) w;
                 return;
             }
         }
@@ -4283,14 +4234,15 @@ wm_hit_test_2(
 
 // ---------------------------------------------
 // 1. Taskbar first
-    if (taskbar_window != NULL && taskbar_window->magic == 1234)
+    if ( WindowManager.taskbar_window != NULL && 
+         WindowManager.taskbar_window->magic == 1234)
     {
-        if (long1 >= taskbar_window->absolute_x &&
-            long1 <= taskbar_window->absolute_right &&
-            long2 >= taskbar_window->absolute_y &&
-            long2 <= taskbar_window->absolute_bottom)
+        if (long1 >= WindowManager.taskbar_window->absolute_x &&
+            long1 <= WindowManager.taskbar_window->absolute_right &&
+            long2 >= WindowManager.taskbar_window->absolute_y &&
+            long2 <= WindowManager.taskbar_window->absolute_bottom)
         {
-            hover = taskbar_window;
+            hover = WindowManager.taskbar_window;
             insideTaskbar = TRUE;
         }
     }
@@ -4320,10 +4272,10 @@ wm_hit_test_2(
             c00 = c00->next; // walk siblings
         };
 
-        if (hover != mouse_hover)
+        if (hover != WindowManager.mouse_hover)
         {
-            on_mouse_leave(mouse_hover);  // repinte a antiga
-            mouse_hover = hover;
+            on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
+            WindowManager.mouse_hover = hover;
             on_mouse_hover(hover);        // repinte a nova
         }
 
@@ -4338,7 +4290,7 @@ wm_hit_test_2(
 
 // ---------------------------------------------
 // 2. Overlapped windows via list
-    struct gws_window_d *w = first_window;
+    struct gws_window_d *w = WindowManager.first_window;
     //int insideAppWindow = FALSE;
     hover = NULL;
 
@@ -4436,10 +4388,10 @@ wm_hit_test_2(
             // inside titlebar control?
             if (insideTitleBarControl == TRUE)
             {
-                if (hover != mouse_hover)
+                if (hover != WindowManager.mouse_hover)
                 {
-                    on_mouse_leave(mouse_hover);
-                    mouse_hover = hover;
+                    on_mouse_leave(WindowManager.mouse_hover);
+                    WindowManager.mouse_hover = hover;
                     on_mouse_hover(hover);
                 }
 
@@ -4467,10 +4419,10 @@ wm_hit_test_2(
                         // Now we are inside the titlebar, but not in a control.
                         hover = tb;
                     
-                        if (hover != mouse_hover)
+                        if (hover != WindowManager.mouse_hover)
                         {
-                            on_mouse_leave(mouse_hover);
-                            mouse_hover = hover;
+                            on_mouse_leave(WindowManager.mouse_hover);
+                            WindowManager.mouse_hover = hover;
                             on_mouse_hover(hover);
                         }
 
@@ -4508,14 +4460,14 @@ wm_hit_test_2(
                     break;
                 }
             }
-            c = c->next; // walk siblings
+            c = c->next;  // walk siblings
         };
 
-        if (hover != mouse_hover)
+        if (hover != WindowManager.mouse_hover)
         {
             //printf("hover :)\n");
-            on_mouse_leave(mouse_hover);
-            mouse_hover = hover;
+            on_mouse_leave(WindowManager.mouse_hover);
+            WindowManager.mouse_hover = hover;
             on_mouse_hover(hover);
         }
         //printf("hover ?\n");
@@ -4530,11 +4482,11 @@ wm_hit_test_2(
 // ---------------------------------------------
 // fail?
 
-    on_mouse_leave(mouse_hover);  // repinte a antiga
+    on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
 
     // Later: add overlapped windows and children checks here.
     // For now, fallback to root if nothing matched.
-    mouse_hover = WindowManager.__root_window;
+    WindowManager.mouse_hover = WindowManager.__root_window;
 }
 
 // Se o mouse esta passando sobre alguma janela de alguns tipos.
@@ -4601,15 +4553,15 @@ wm_hit_test_00(
                 {
                     // Deixe a antiga, e repinte ela,
                     // se estamos numa nova.
-                    if (w != mouse_hover)
+                    if (w != WindowManager.mouse_hover)
                     {
                         // Habilitada para input.
                         if (w->enabled == TRUE)
                         {
-                            on_mouse_leave(mouse_hover);  // repinte a antiga
+                            on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
                             // The new mouse over.
                             // #todo: Create set_mouseover(w);
-                            mouse_hover = (void*) w;      // se new
+                            WindowManager.mouse_hover = (void*) w;      // se new
                             // Já que estamos numa nova, 
                             // vamos mudar o visual dela.
                             on_mouse_hover(w);            // repinte a nova
@@ -4643,10 +4595,10 @@ wm_hit_test_00(
                     // Yes, 
                     if (Status==TRUE)
                     {
-                        if (w != mouse_hover)
+                        if (w != WindowManager.mouse_hover)
                         {
-                            on_mouse_leave(mouse_hover);
-                            mouse_hover = (void*) w;
+                            on_mouse_leave(WindowManager.mouse_hover);
+                            WindowManager.mouse_hover = (void*) w;
                             on_mouse_hover(w);
 
                             // Update relative mouse pointer
@@ -4664,16 +4616,14 @@ wm_hit_test_00(
     }
     };
 
-// #test
 // Assume root when no one was found
     //printf ("Not Found\n");
 
-    on_mouse_leave(mouse_hover);  // repinte a antiga
+    on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
 
 // This ensures that the previous hover state is canceled and 
 // that the root window becomes the default hover target.
-    mouse_hover = (void*) WindowManager.__root_window;
-
+    WindowManager.mouse_hover = (void*) WindowManager.__root_window;
 */
 
 }
@@ -4854,12 +4804,12 @@ ProcessEvent:
 // Actually a combination also can genrate this message.
     if (msg == GWS_Close)
     {
-        if ((void*) active_window != NULL)
+        if ((void*) WindowManager.active_window != NULL)
         {
-            if (active_window->magic == 1234)
+            if (WindowManager.active_window->magic == 1234)
             {
                 yellow_status("Close window");
-                window_post_message ( active_window->id, GWS_Close, 0, 0 );        
+                window_post_message ( WindowManager.active_window->id, GWS_Close, 0, 0 );        
             }
         }
     }
@@ -4952,13 +4902,13 @@ void wm_enter_fullscreen_mode(void)
 // Update window (redraw)
     update_window(w,TRUE);
 
-// New keyboard and mouse owner
-    keyboard_owner = w;
-    mouse_owner = w;
+    // New keyboard and mouse owner
+    WindowManager.keyboard_owner = w;
+    WindowManager.mouse_owner = w;
 
 // Update mouse hover
 // #todo: Mayber we can reset the mouse position
-    mouse_hover = NULL;
+    WindowManager.mouse_hover = NULL;
 }
 
 // Exit fullscreen mode
@@ -4969,12 +4919,11 @@ void wm_exit_fullscreen_mode(int tile)
     }
     WindowManager.is_fullscreen = FALSE;
 
+// Set keyboard owner (wwf) and mouser owner.
+    WindowManager.mouse_owner = NULL;
+    WindowManager.keyboard_owner = NULL;
 // Setup the mouse hover window
-    mouse_hover = NULL;
-// Set up the mouse owner.    
-    mouse_owner = NULL;
-// Set the window with focus.
-    keyboard_owner = NULL;
+    WindowManager.mouse_hover = NULL;
 
     if (Compositor.is_composition_disabled == TRUE){
         wm_update_desktop(tile,TRUE);
@@ -5335,7 +5284,7 @@ int dock_window(struct gws_window_d *window, int position)
 
 // Can't be the root window or the taskbar
     if (window == WindowManager.__root_window) { goto fail; }
-    if (window == taskbar_window){ goto fail; }
+    if (window == WindowManager.taskbar_window){ goto fail; }
 // Can't be a button
     if (window->type == WT_BUTTON){
         goto fail;
@@ -5374,8 +5323,8 @@ int dock_window(struct gws_window_d *window, int position)
             if (window->state == WINDOW_STATE_MINIMIZED)
             {
                 window->state = WINDOW_STATE_NORMAL;
-                // Now this window can receive input again.
-                if (window == keyboard_owner){
+                // Now this window can receive input again
+                if (window == WindowManager.keyboard_owner){
                     window->enabled = TRUE;
                 }
             }
@@ -5506,7 +5455,7 @@ int dock_active_window(int position)
 // Structure validation
 // #todo: Use a worker. 
 // Create one if we dont have it yet.
-    aw = (void*) active_window;
+    aw = (void*) WindowManager.active_window;
     if ((void*) aw == NULL){
         goto fail;
     }
@@ -5518,8 +5467,9 @@ int dock_active_window(int position)
     if (aw == WindowManager.__root_window){
         goto fail;
     }
-// Can't be the taskbar.
-    if (aw == taskbar_window){
+
+// Can't be the taskbar
+    if (aw == WindowManager.taskbar_window){
         goto fail;
     }
 
@@ -5529,8 +5479,9 @@ fail:
     return (int) -1;
 }
 
-struct gws_window_d *get_active_window (void){
-    return (struct gws_window_d *) active_window;
+struct gws_window_d *get_active_window(void)
+{
+    return (struct gws_window_d *) WindowManager.active_window;
 }
 
 // Activate window
@@ -5549,9 +5500,8 @@ void set_active_window(struct gws_window_d *window)
         return;
     }
 
-    // #test
     // Let's activate also the taskbar window
-    //if (window == taskbar_window)
+    //if (window == WindowManager.taskbar_window)
         //goto go_ahead;
 
     if (window->type != WT_OVERLAPPED)
@@ -5560,20 +5510,20 @@ void set_active_window(struct gws_window_d *window)
 go_ahead:
 
 // Is it already the active window
-    if (window == active_window){
+    if (window == WindowManager.active_window){
         return;
     }
 
-  // Update global pointers
-    active_window  = (void*) window;  // The new active window
-    keyboard_owner = (void*) window;  // The new keyboard owner
-    mouse_owner    = (void*) window;  // The new mouse owner
+    // Update global pointers
+    WindowManager.active_window  = (void*) window;  // The new active window
+    WindowManager.keyboard_owner = (void*) window;  // The new keyboard owner
+    WindowManager.mouse_owner    = (void*) window;  // The new mouse owner
 }
 
 void unset_active_window(void)
 {
     // #bugbug: Is it dangerours?
-    //active_window = NULL;
+    //WindowManager.active_window = NULL;
 }
 
 // Pega o ponteiro da janela com foco de entrada.
@@ -5581,16 +5531,16 @@ struct gws_window_d *get_window_with_focus(void)
 {
     struct gws_window_d *w;
 
-    w = (struct gws_window_d *) keyboard_owner;
+    w = (struct gws_window_d *) WindowManager.keyboard_owner;
     if ((void*)w==NULL){
         return NULL;
     }
     if (w->used != TRUE){
-        keyboard_owner = NULL;
+        WindowManager.keyboard_owner = NULL;
         return NULL;
     }
     if (w->magic != 1234){
-        keyboard_owner = NULL;
+        WindowManager.keyboard_owner = NULL;
         return NULL; 
     }
 
@@ -5599,7 +5549,7 @@ struct gws_window_d *get_window_with_focus(void)
 
 void set_window_with_focus(struct gws_window_d * window)
 {
-    if (window == keyboard_owner)
+    if (window == WindowManager.keyboard_owner)
         return;
 
     if ( (void*) window == NULL )
@@ -5607,18 +5557,19 @@ void set_window_with_focus(struct gws_window_d * window)
     if (window->magic!=1234)
         return;
 
-    keyboard_owner = (void*) window; 
+    WindowManager.keyboard_owner = (void*) window;
+
 /*  
 //#test
     struct gws_window_d *w;
     w = (struct gws_window_d *) windowList[id];
     sc82 (10011,w->client_tid,w->client_tid,w->client_tid);
 */
+
 }
 
-
 // Pegando a z-order de uma janela.
-int get_zorder ( struct gws_window_d *window )
+int get_zorder(struct gws_window_d *window)
 {
     if ( (void *) window != NULL ){
         return (int) window->zIndex;
@@ -5627,24 +5578,23 @@ int get_zorder ( struct gws_window_d *window )
     return (int) -1;
 }
 
-
 struct gws_window_d *get_top_window (void)
 {
-    return (struct gws_window_d *) top_window;
+    return (struct gws_window_d *) WindowManager.top_window;
 }
 
-// Setando a top window.
+// Setando a top window
 void set_top_window (struct gws_window_d *window)
 {
-    if (window == top_window)
+    if (window == WindowManager.top_window)
         return;
 
     if ( (void*) window == NULL )
         return;
-    if (window->magic!=1234)
+    if (window->magic != 1234)
         return;
 
-    top_window = (void*) window;
+    WindowManager.top_window = (void*) window;
 }
 
 // Update the absolute dimension for the rectangle of a window 
@@ -5852,7 +5802,8 @@ gws_resize_window (
     unsigned long m[10];
 
    //if (window->type == WT_OVERLAPPED)
-   if (window->type == WT_OVERLAPPED || window == taskbar_window)
+   if ( window->type == WT_OVERLAPPED || 
+        window == WindowManager.taskbar_window)
    {
        m[0] = (unsigned long) (window->client_tid & 0xFFFFFFFF);
 
@@ -5869,7 +5820,7 @@ gws_resize_window (
        m[8] = window->rcClient.height;
 
        // Client area rectangle for taskbar window
-       if (window == taskbar_window)
+       if (window == WindowManager.taskbar_window)
        {
            m[5] = 0;
            m[6] = 0;
@@ -5987,18 +5938,16 @@ gwssrv_change_window_position (
     // But not for taskbar window, because it is a special case.
     if (window->type != WT_OVERLAPPED)
     {
-        if (window == taskbar_window)
+        if (window == WindowManager.taskbar_window)
         {
             window->absolute_x = (unsigned long) x;
             window->absolute_y = (unsigned long) y;
-            window->absolute_right = 
-                (unsigned long) (x + window->width);
-            window->absolute_bottom = 
-                (unsigned long) (y + window->height);
+            window->absolute_right  = (unsigned long) (x + window->width);
+            window->absolute_bottom = (unsigned long) (y + window->height);
             return 0;
         }
 
-        if (window != taskbar_window)
+        if (window != WindowManager.taskbar_window)
         {
             p = window->parent;
             if ((void*) p != NULL)
@@ -6158,7 +6107,8 @@ gwssrv_change_window_position (
 // Update the wproxy structure that belongs to this thread.
     unsigned long m[10];
    //if (window->type == WT_OVERLAPPED)
-   if (window->type == WT_OVERLAPPED || window == taskbar_window)
+   if ( window->type == WT_OVERLAPPED || 
+        window == WindowManager.taskbar_window)
    {
        m[0] = (unsigned long) (window->client_tid & 0xFFFFFFFF);
 
@@ -6175,7 +6125,7 @@ gwssrv_change_window_position (
        m[8] = window->rcClient.height;
 
        // Client area rectangle for taskbar window
-       if (window == taskbar_window)
+       if (window == WindowManager.taskbar_window)
        {
            m[5] = 0;
            m[6] = 0;

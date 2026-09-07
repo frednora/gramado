@@ -1062,30 +1062,7 @@ struct gws_window_d
 // Windows
 //
 
-//extern struct gws_window_d  *__root_window; 
-extern struct gws_window_d  *active_window;
-// Taskbar created by the user.
-extern struct gws_window_d  *taskbar_window; 
-// z-order ?
-// But we can use multiple layers.
-// ex-wayland: background, bottom, top, overlay.
-extern struct gws_window_d *first_window;
-extern struct gws_window_d *last_window;
-extern struct gws_window_d *top_window;     // z-order
-
-extern struct gws_window_d *keyboard_owner;
-extern struct gws_window_d *mouse_owner;
-
-extern struct gws_window_d *mouse_hover;  // hover
-
-// The limits for the mouse pointer.
-// Normally it's the screen size (root window),
-// but it can be the client area of an application window 
-// when the mouse is captured by an application window.
-extern struct gws_window_d *cursor_clip;
-
-
-// Window list.
+// Window list:
 // This is gonna be used to register the windows.
 // These indexes will be returned to the caller.
 #define WINDOW_COUNT_MAX  1024
