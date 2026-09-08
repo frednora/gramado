@@ -17,6 +17,57 @@
 #include <netinet/tcp.h>
 
 
+#define __METHOD_NULL    0
+#define __METHOD_GET     1
+#define __METHOD_POST    2
+// ...
+
+
+/*
+Routes:
+/            → ROUTEID_ROOT
+/id=N        → ROUTEID_ID with ParameterId (0–4 or invalid)
+/about       → ROUTEID_ABOUT
+/favicon.ico → ROUTEID_FAVICON_ICO
+/index.html  → ROUTEID_INDEX_HTML
+Invalid URIs → handled by ...
+*/
+
+#define ROUTEID_ROOT  1
+#define ROUTEID_ID  2
+#define ROUTEID_ABOUT  3
+#define ROUTEID_FAVICON_ICO  4
+#define ROUTEID_INDEX_HTML  5
+// ...
+
+
+// ---------------------------------------------
+struct http_request_info_d 
+{
+    int MethodId;
+
+    int RouteId;
+    int ParameterId;
+};
+static struct http_request_info_d  HTTP_REQUEST_INFO;
+
+static char http_method[8]; 
+static char http_uri[256];
+static char http_version[16];
+
+// ---------------------------------------------
+struct http_response_info_d
+{
+    char *response_ptr;   // Pointer to assembled response
+    int response_size;    // Length of response in bytes
+};
+static struct http_response_info_d  HTTP_REPONSE_INFO;
+
+static char resp[2048];
+
+
+
+
 static int IsTimeToQuit = FALSE;
 
 #define RESPONSE_BUFFER_SIZE  1024
@@ -24,8 +75,1123 @@ static int IsTimeToQuit = FALSE;
 #define HTTP_PORT    22888
 static void handle_connection(int connfd);
 
+
+static int 
+__parse_http_request_line(
+    const char *payload, size_t len,
+    char *method, size_t msz,
+    char *uri, size_t usz,
+    char *version, size_t vsz );
+
+static int __http_parse_first_line(char *payload, size_t len);
+
+// root view
+static int __build_root_view(int method_id);
+
+// id view
+static int 
+__build_id_view(
+    int method_id, 
+    int parameter_id );
+
+static int __build_about_view(int method_id);
+static int __build_favicon_view(int method_id);
+static int __build_index_view(int method_id);
+static int __build_invalid_view(int method_id);
+
+int 
+dispatch_route(
+    int method_id, 
+    int route_id, 
+    int parameter_id);
+
+
 // ===============================================
 
+// Parse the first line: METHOD URI VERSION
+static int 
+__parse_http_request_line(
+    const char *payload, size_t len,
+    char *method, size_t msz,
+    char *uri, size_t usz,
+    char *version, size_t vsz )
+{
+    size_t i = 0;
+    size_t pos = 0;
+
+    if (!payload || len == 0) return -1;
+
+    // METHOD
+    while (i < len && payload[i] != ' ' && pos < msz-1) 
+    {
+        method[pos++] = payload[i++];
+    }
+    method[pos] = 0;
+    if (i >= len || payload[i] != ' ') 
+        return -1;
+    i++; // skip space
+
+    // URI
+    pos = 0;
+    while (i < len && payload[i] != ' ' && payload[i] != '\r' && pos < usz-1) 
+    {
+        uri[pos++] = payload[i++];
+    }
+    uri[pos] = 0;
+    if (i >= len || payload[i] != ' ') 
+        return -1;
+    i++; // skip space
+
+    // VERSION
+    pos = 0;
+    while (i < len && payload[i] != '\r' && payload[i] != '\n' && pos < vsz-1) 
+    {
+        version[pos++] = payload[i++];
+    }
+    version[pos] = 0;
+
+    return 0;
+}
+
+static int __http_parse_first_line(char *payload, size_t len)
+{
+    int Status = -1;
+
+    // Initialization
+    HTTP_REQUEST_INFO.MethodId = 0;
+    HTTP_REQUEST_INFO.RouteId = 0;
+    HTTP_REQUEST_INFO.ParameterId = 0;
+
+// Parameters:
+    if ((void*) payload == NULL)
+        return -1;
+    if (len <= 0)
+        return -1;
+
+    Status = 
+    (int) __parse_http_request_line(
+            payload, len, 
+            http_method, sizeof(http_method),
+            http_uri, sizeof(http_uri), 
+            http_version, sizeof(http_version) 
+        );
+
+    if (Status != 0)
+        return -1;
+
+// ---
+
+    printf("HTTP: method=%s uri=%s version=%s\n", 
+        http_method, http_uri, http_version );
+
+// Method id:
+    int MethodId = __METHOD_NULL;     // Invalid
+
+    if ( gramado_strncmp(http_method, "GET", 3) == 0 )
+        MethodId = __METHOD_GET;
+    if ( gramado_strncmp(http_method, "POST", 4) == 0 )
+        MethodId = __METHOD_POST;
+    // ...
+    HTTP_REQUEST_INFO.MethodId = MethodId;
+
+
+//
+// ROUTE: 
+// Decide which path the request belongs to
+//
+
+// Parameter id:
+// 1–4 → /id=N
+// 5   → /favicon.ico
+// 6   → /index.html
+
+    // Using: Request Uniform Resource Identifier
+
+
+    // files
+
+    // root --------------
+    if ( gramado_strncmp(http_uri, "/", 1) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_ROOT;
+        HTTP_REQUEST_INFO.ParameterId = 0;
+    }
+
+    // root + id ---------------
+    if ( gramado_strncmp(http_uri, "/id=0", 5) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_ID;
+        HTTP_REQUEST_INFO.ParameterId = 0;
+    }
+    if ( gramado_strncmp(http_uri, "/id=1", 5) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_ID;
+        HTTP_REQUEST_INFO.ParameterId = 1;
+    }
+    if ( gramado_strncmp(http_uri, "/id=2", 5) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_ID;
+        HTTP_REQUEST_INFO.ParameterId = 2;
+    }
+    if ( gramado_strncmp(http_uri, "/id=3", 5) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_ID;
+        HTTP_REQUEST_INFO.ParameterId = 3;
+    }
+    if ( gramado_strncmp(http_uri, "/id=4", 5) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_ID;
+        HTTP_REQUEST_INFO.ParameterId = 4;
+    }
+
+    if ( gramado_strncmp(http_uri, "/about", 6) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_ABOUT;
+        HTTP_REQUEST_INFO.ParameterId = 0;
+    }
+
+    if ( gramado_strncmp(http_uri, "/favicon.ico", 12) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_FAVICON_ICO;
+        HTTP_REQUEST_INFO.ParameterId = 0;
+    }
+
+    if ( gramado_strncmp(http_uri, "/index.html",  11) == 0 )
+    {
+        HTTP_REQUEST_INFO.RouteId = ROUTEID_INDEX_HTML;
+        HTTP_REQUEST_INFO.ParameterId = 0;
+    }
+
+//------------------------------------------------
+
+
+    return 0;  //OK
+}
+
+static int __build_root_view(int method_id)
+{
+    HTTP_REPONSE_INFO.response_ptr = NULL;
+    HTTP_REPONSE_INFO.response_size = 0;
+
+//
+// Web page
+//
+
+/*
+    static const char body1[] =
+    "<!DOCTYPE html>\n"
+    "<html lang=\"en\">\n"
+    "<head>\n"
+    "<meta charset=\"utf-8\">\n"
+    "<title>Gramado OS</title>\n"
+    "<style>\n"
+    "  body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }\n"
+    "  .container {\n"
+    "    max-width: 640px;\n"
+    "    margin: 40px auto;\n"
+    "    padding: 24px;\n"
+    "    background: #fff;\n"
+    "    border-radius: 8px;\n"
+    "    box-shadow: 0 2px 8px rgba(0,0,0,0.08);\n"
+    "    text-align: center;\n"
+    "  }\n"
+    "  hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }\n"
+    "  ul { list-style: none; padding: 0; }\n"
+    "  li { margin: 8px 0; }\n"
+    "  a { color: #0066cc; text-decoration: none; }\n"
+    "  a:hover { text-decoration: underline; }\n"
+    "</style>\n"
+    "</head>\n"
+    "<body>\n"
+    "<div class=\"container\">\n"
+    "<h1>Hello from Gramado OS!</h1>\n"
+    "<hr>\n"
+    "<p>This page was served directly from the <b>kernel</b>.</p>\n"
+    "<p>Try exploring:</p>\n"
+    "<ul>\n"
+    "  <li><a href=\"/index.html\">Home</a></li>\n"
+    "  <li><a href=\"/about\">About Gramado</a></li>\n"
+    "  <li><a href=\"/id=1\">Special ID=1 page</a></li>\n"
+    "</ul>\n"
+    "<hr>\n"
+    "<p>Port 11888 &mdash; Built by Fred Nora</p>\n"
+    "</div>\n"
+    "</body>\n"
+    "</html>\n";
+*/
+
+static const char body1[] =
+"<!DOCTYPE html>\n"
+"<html lang=\"en\">\n"
+"<head>\n"
+"<meta charset=\"utf-8\">\n"
+"<title>Gramado Ring 3 Server</title>\n"
+"<style>\n"
+"  body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #eef2f5; }\n"
+"  .container {\n"
+"    max-width: 640px;\n"
+"    margin: 40px auto;\n"
+"    padding: 24px;\n"
+"    background: #fff;\n"
+"    border-radius: 10px;\n"
+"    box-shadow: 0 2px 8px rgba(0,0,0,0.1);\n"
+"    text-align: center;\n"
+"  }\n"
+"  h1 { color: #333; }\n"
+"  p { color: #555; }\n"
+"  ul { list-style: none; padding: 0; }\n"
+"  li { margin: 8px 0; }\n"
+"  a { color: #0066cc; text-decoration: none; }\n"
+"  a:hover { text-decoration: underline; }\n"
+"</style>\n"
+"</head>\n"
+"<body>\n"
+"<div class=\"container\">\n"
+"<h1>Hello from Gramado OS (Ring 3)!</h1>\n"
+"<hr>\n"
+"<p>This page is served directly from the <b>user‑space server</b>.</p>\n"
+"<p>Explore the routes:</p>\n"
+"<ul>\n"
+"  <li><a href=\"/index.html\">Home</a></li>\n"
+"  <li><a href=\"/about\">About Gramado</a></li>\n"
+"  <li><a href=\"/id=1\">Special ID=1 page</a></li>\n"
+"</ul>\n"
+"<hr>\n"
+"<p>Port 22888 &mdash; Ring 3 HTTP Server</p>\n"
+"</div>\n"
+"</body>\n"
+"</html>\n";
+
+
+
+// body len --------------------------------
+
+    size_t body_len;
+    char *body;
+
+    body = body1;
+    body_len = sizeof(body1) - 1;
+
+// -----------------------------------------
+// Convert body_len to decimal ASCII manually (no snprintf).
+    char body_len_str[8];
+    size_t v = body_len;
+    int i = 0;
+    char tmp[8];
+
+    if (v == 0) {
+        tmp[i] = '0';
+        i++;
+    } else {
+
+        int SizeOfTmp = sizeof(tmp);
+
+        while ( v > 0 && 
+                i < (int) SizeOfTmp )
+        {
+            tmp[i] = (char) ('0' + (v % 10));
+            i++;
+            v /= 10;
+        }
+    }
+    
+    // tmp holds digits reversed; flip into body_len_str.
+    int j = 0;
+    while (i > 0) 
+    {
+        body_len_str[j++] = tmp[--i];
+    }
+    body_len_str[j] = 0;
+// -----------------------------------------
+
+// -----------------------------------------
+// Headers are assembled with strcat, so Content-Length always
+// matches the real body size instead of a hand-typed literal.
+
+    //char resp[2048];
+    memset(resp, 0, sizeof(resp));
+
+    // -- status -------------
+    strcat(resp, "HTTP/1.1 200 OK\r\n");
+
+    // -- server --------
+    strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
+
+    // -- content type --------
+    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+ 
+    // -- content lenght --------
+    strcat(resp, "Content-Length: ");
+    strcat(resp, body_len_str);
+    strcat(resp, "\r\n");
+
+    // -- connection --------
+    switch (method_id) 
+    {
+        // GET
+        case __METHOD_GET:  
+            strcat(resp, "Connection: close\r\n");
+            break;
+
+        // POST
+        case __METHOD_POST:
+            strcat(resp, "Connection: keep-alive\r\n");
+            break;
+
+        default:
+            strcat(resp, "Connection: close\r\n");
+            break;
+    }
+    strcat(resp, "\r\n");
+
+//
+// VIEW: 
+// Render the HTML body
+//
+
+    strcat(resp, body);
+
+    size_t resp_len = strlen(resp);
+
+    // Save info
+
+    HTTP_REPONSE_INFO.response_ptr = (char *) resp;
+    HTTP_REPONSE_INFO.response_size = resp_len;
+
+    return 0;
+}
+
+static int 
+__build_id_view(
+    int method_id, 
+    int parameter_id )
+{
+    HTTP_REPONSE_INFO.response_ptr = NULL;
+    HTTP_REPONSE_INFO.response_size = 0;
+
+
+//
+// Web page
+//
+
+static const char body1[] =
+"<!DOCTYPE html>\n"
+"<html><head><title>ID Route</title></head>\n"
+"<body>\n"
+"<h1>Special ID Route</h1>\n"
+"<p>You requested /id=N. Each ID demonstrates a different status code.</p>\n"
+"<p>Try /id=2 for Created, /id=3 for Not Found, /id=4 for Server Error.</p>\n"
+"</body></html>\n";
+
+    // Invalid parameter id
+    static const char body2[] =
+    "<!DOCTYPE html>\n"
+    "<html lang=\"en\">\n"
+    "<head>\n"
+    "<meta charset=\"utf-8\">\n"
+    "<title>Error</title>\n"
+    "</head>\n"
+    "<body>\n"
+    "<h2>Oops! Invalid id</h2>\n"
+    "<p>The server could not process your request.</p>\n"
+    "</body>\n"
+    "</html>\n";
+
+
+// body len --------------------------------
+
+    size_t body_len;
+    char *body;
+
+    switch (parameter_id) 
+    {
+        case 0:
+            body = body1;
+            body_len = sizeof(body1) - 1;
+            break;
+
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+            body = body1;
+            body_len = sizeof(body1) - 1;
+            break;
+
+        // Invalid id
+        default:
+            body = body2;
+            body_len = sizeof(body2) - 1;
+            break;
+    };
+
+
+// -----------------------------------------
+// Convert body_len to decimal ASCII manually (no snprintf).
+    char body_len_str[8];
+    size_t v = body_len;
+    int i = 0;
+    char tmp[8];
+
+    if (v == 0) {
+        tmp[i] = '0';
+        i++;
+    } else {
+
+        int SizeOfTmp = sizeof(tmp);
+
+        while ( v > 0 && 
+                i < (int) SizeOfTmp )
+        {
+            tmp[i] = (char) ('0' + (v % 10));
+            i++;
+            v /= 10;
+        }
+    }
+    
+    // tmp holds digits reversed; flip into body_len_str.
+    int j = 0;
+    while (i > 0) 
+    {
+        body_len_str[j++] = tmp[--i];
+    }
+    body_len_str[j] = 0;
+// -----------------------------------------
+
+// -----------------------------------------
+// Headers are assembled with strcat, so Content-Length always
+// matches the real body size instead of a hand-typed literal.
+
+    //char resp[2048];
+    memset(resp, 0, sizeof(resp));
+
+    // -- status -------------
+    switch (parameter_id) {
+    case 1:
+        strcat(resp, "HTTP/1.1 200 OK\r\n");
+        break;
+    case 2:
+        strcat(resp, "HTTP/1.1 201 Created\r\n");
+        break;
+    case 3:
+        strcat(resp, "HTTP/1.1 404 Not Found\r\n");
+        break;
+    case 4:
+        strcat(resp, "HTTP/1.1 500 Internal Server Error\r\n");
+        break;
+    default:
+        strcat(resp, "HTTP/1.1 200 OK\r\n");
+        //strcat(resp, "HTTP/1.0 200 OK\r\n");
+        //strcat(resp, "HTTP/1.1 200 OK\r\n");
+        break;
+    };
+
+    // -- server --------
+    switch (parameter_id){
+    case 1:  strcat(resp, "Server: Gramnet/0.1 (Gramado)\r\n");   break;
+    case 2:  strcat(resp, "Server: Kerenel/0.8 (Gramado)\r\n");   break;
+    case 3:  strcat(resp, "Server: Apache/2.4.41 (Ubuntu)\r\n");  break;
+    case 4:  strcat(resp, "Server: Microsoft-IIS/10.0\r\n");      break;
+    default:
+        strcat(resp, "Server: Gramnet/0.1 (Gramado)\r\n");
+        break;
+    };
+
+    // -- content type --------
+    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+
+/*
+    switch (route_id) 
+    {
+        case ROUTEID_ROOT:
+            strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+            break;
+
+        case ROUTEID_INDEX_HTML:
+            strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+            break;
+
+        case ROUTEID_FAVICON_ICO:
+            strcat(resp, "Content-Type: image/x-icon\r\n");
+            break;
+
+        default: 
+            strcat(resp, "Content-Type: text/html; charset=utf-8\r\n"); 
+            break;
+    };
+*/
+
+    // -- content lenght --------
+    strcat(resp, "Content-Length: ");
+    strcat(resp, body_len_str);
+    strcat(resp, "\r\n");
+
+    // -- connection --------
+    switch (method_id) 
+    {
+        // GET
+        case __METHOD_GET:  
+            strcat(resp, "Connection: close\r\n");
+            break;
+
+        // POST
+        case __METHOD_POST:
+            strcat(resp, "Connection: keep-alive\r\n");
+            break;
+
+        default:
+            strcat(resp, "Connection: close\r\n");
+            break;
+    }
+    strcat(resp, "\r\n");
+
+//
+// VIEW: 
+// Render the HTML body
+//
+
+    strcat(resp, body);
+
+    size_t resp_len = strlen(resp);
+
+    // Save info
+
+    HTTP_REPONSE_INFO.response_ptr = (char *) resp;
+    HTTP_REPONSE_INFO.response_size = resp_len;
+
+    return 0;
+}
+
+static int __build_about_view(int method_id)
+{
+    HTTP_REPONSE_INFO.response_ptr = NULL;
+    HTTP_REPONSE_INFO.response_size = 0;
+
+//
+// Web page
+//
+
+static const char body1[] =
+"<!DOCTYPE html>\n"
+"<html><head><title>About Gramado</title></head>\n"
+"<body>\n"
+"<h1>About Gramado OS</h1>\n"
+"<p>Gramado is a hobby operating system built with curiosity and passion.</p>\n"
+"<p>It runs its own kernel, TCP/IP stack, and now serves web pages!</p>\n"
+"</body></html>\n";
+
+
+
+// body len --------------------------------
+
+    size_t body_len;
+    char *body;
+
+    body = body1;
+    body_len = sizeof(body1) - 1;
+
+// -----------------------------------------
+// Convert body_len to decimal ASCII manually (no snprintf).
+    char body_len_str[8];
+    size_t v = body_len;
+    int i = 0;
+    char tmp[8];
+
+    if (v == 0) {
+        tmp[i] = '0';
+        i++;
+    } else {
+
+        int SizeOfTmp = sizeof(tmp);
+
+        while ( v > 0 && 
+                i < (int) SizeOfTmp )
+        {
+            tmp[i] = (char) ('0' + (v % 10));
+            i++;
+            v /= 10;
+        }
+    }
+    
+    // tmp holds digits reversed; flip into body_len_str.
+    int j = 0;
+    while (i > 0) 
+    {
+        body_len_str[j++] = tmp[--i];
+    }
+    body_len_str[j] = 0;
+// -----------------------------------------
+
+// -----------------------------------------
+// Headers are assembled with strcat, so Content-Length always
+// matches the real body size instead of a hand-typed literal.
+
+    //char resp[2048];
+    memset(resp, 0, sizeof(resp));
+
+    // -- status -------------
+    strcat(resp, "HTTP/1.1 200 OK\r\n");
+
+    // -- server --------
+    strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
+
+    // -- content type --------
+    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+ 
+    // -- content lenght --------
+    strcat(resp, "Content-Length: ");
+    strcat(resp, body_len_str);
+    strcat(resp, "\r\n");
+
+    // -- connection --------
+    switch (method_id) 
+    {
+        // GET
+        case __METHOD_GET:  
+            strcat(resp, "Connection: close\r\n");
+            break;
+
+        // POST
+        case __METHOD_POST:
+            strcat(resp, "Connection: keep-alive\r\n");
+            break;
+
+        default:
+            strcat(resp, "Connection: close\r\n");
+            break;
+    }
+    strcat(resp, "\r\n");
+
+//
+// VIEW: 
+// Render the HTML body
+//
+
+    strcat(resp, body);
+
+    size_t resp_len = strlen(resp);
+
+    // Save info
+
+    HTTP_REPONSE_INFO.response_ptr = (char *) resp;
+    HTTP_REPONSE_INFO.response_size = resp_len;
+
+    return 0;
+}
+
+static int __build_favicon_view(int method_id)
+{
+    HTTP_REPONSE_INFO.response_ptr = NULL;
+    HTTP_REPONSE_INFO.response_size = 0;
+
+//
+// Web page
+//
+
+static const char body1[] =
+"<!DOCTYPE html>\n"
+"<html><head><title>Favicon</title></head>\n"
+"<body>\n"
+"<h1>Favicon Placeholder</h1>\n"
+"<p>This route should serve an icon file, but for now it’s just a test page.</p>\n"
+"</body></html>\n";
+
+
+// body len --------------------------------
+
+    size_t body_len;
+    char *body;
+
+    body = body1;
+    body_len = sizeof(body1) - 1;
+
+// -----------------------------------------
+// Convert body_len to decimal ASCII manually (no snprintf).
+    char body_len_str[8];
+    size_t v = body_len;
+    int i = 0;
+    char tmp[8];
+
+    if (v == 0) {
+        tmp[i] = '0';
+        i++;
+    } else {
+
+        int SizeOfTmp = sizeof(tmp);
+
+        while ( v > 0 && 
+                i < (int) SizeOfTmp )
+        {
+            tmp[i] = (char) ('0' + (v % 10));
+            i++;
+            v /= 10;
+        }
+    }
+    
+    // tmp holds digits reversed; flip into body_len_str.
+    int j = 0;
+    while (i > 0) 
+    {
+        body_len_str[j++] = tmp[--i];
+    }
+    body_len_str[j] = 0;
+// -----------------------------------------
+
+// -----------------------------------------
+// Headers are assembled with strcat, so Content-Length always
+// matches the real body size instead of a hand-typed literal.
+
+    //char resp[2048];
+    memset(resp, 0, sizeof(resp));
+
+    // -- status -------------
+    strcat(resp, "HTTP/1.1 200 OK\r\n");
+
+    // -- server --------
+    strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
+
+    // -- content type --------
+    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+ 
+    // -- content lenght --------
+    strcat(resp, "Content-Length: ");
+    strcat(resp, body_len_str);
+    strcat(resp, "\r\n");
+
+    // -- connection --------
+    switch (method_id) 
+    {
+        // GET
+        case __METHOD_GET:  
+            strcat(resp, "Connection: close\r\n");
+            break;
+
+        // POST
+        case __METHOD_POST:
+            strcat(resp, "Connection: keep-alive\r\n");
+            break;
+
+        default:
+            strcat(resp, "Connection: close\r\n");
+            break;
+    }
+    strcat(resp, "\r\n");
+
+//
+// VIEW: 
+// Render the HTML body
+//
+
+    strcat(resp, body);
+
+    size_t resp_len = strlen(resp);
+
+    // Save info
+
+    HTTP_REPONSE_INFO.response_ptr = (char *) resp;
+    HTTP_REPONSE_INFO.response_size = resp_len;
+
+    return 0;
+}
+
+static int __build_index_view(int method_id)
+{
+    HTTP_REPONSE_INFO.response_ptr = NULL;
+    HTTP_REPONSE_INFO.response_size = 0;
+
+//
+// Web page
+//
+
+    static const char body1[] =
+    "<!DOCTYPE html>\n"
+    "<html lang=\"en\">\n"
+    "<head>\n"
+    "<meta charset=\"utf-8\">\n"
+    "<title>Gramado OS</title>\n"
+    "<style>\n"
+    "  body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }\n"
+    "  .container {\n"
+    "    max-width: 640px;\n"
+    "    margin: 40px auto;\n"
+    "    padding: 24px;\n"
+    "    background: #fff;\n"
+    "    border-radius: 8px;\n"
+    "    box-shadow: 0 2px 8px rgba(0,0,0,0.08);\n"
+    "    text-align: center;\n"
+    "  }\n"
+    "  hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }\n"
+    "  ul { list-style: none; padding: 0; }\n"
+    "  li { margin: 8px 0; }\n"
+    "  a { color: #0066cc; text-decoration: none; }\n"
+    "  a:hover { text-decoration: underline; }\n"
+    "</style>\n"
+    "</head>\n"
+    "<body>\n"
+    "<div class=\"container\">\n"
+    "<h1>Hello from Gramado OS!</h1>\n"
+    "<hr>\n"
+    "<p>This page was served directly from the <b>kernel</b>.</p>\n"
+    "<p>Try exploring:</p>\n"
+    "<ul>\n"
+    "  <li><a href=\"/index.html\">Home</a></li>\n"
+    "  <li><a href=\"/about\">About Gramado</a></li>\n"
+    "  <li><a href=\"/id=1\">Special ID=1 page</a></li>\n"
+    "</ul>\n"
+    "<hr>\n"
+    "<p>Port 11888 &mdash; Built by Fred Nora</p>\n"
+    "</div>\n"
+    "</body>\n"
+    "</html>\n";
+
+
+// body len --------------------------------
+
+    size_t body_len;
+    char *body;
+
+    body = body1;
+    body_len = sizeof(body1) - 1;
+
+// -----------------------------------------
+// Convert body_len to decimal ASCII manually (no snprintf).
+    char body_len_str[8];
+    size_t v = body_len;
+    int i = 0;
+    char tmp[8];
+
+    if (v == 0) {
+        tmp[i] = '0';
+        i++;
+    } else {
+
+        int SizeOfTmp = sizeof(tmp);
+
+        while ( v > 0 && 
+                i < (int) SizeOfTmp )
+        {
+            tmp[i] = (char) ('0' + (v % 10));
+            i++;
+            v /= 10;
+        }
+    }
+    
+    // tmp holds digits reversed; flip into body_len_str.
+    int j = 0;
+    while (i > 0) 
+    {
+        body_len_str[j++] = tmp[--i];
+    }
+    body_len_str[j] = 0;
+// -----------------------------------------
+
+// -----------------------------------------
+// Headers are assembled with strcat, so Content-Length always
+// matches the real body size instead of a hand-typed literal.
+
+    //char resp[2048];
+    memset(resp, 0, sizeof(resp));
+
+    // -- status -------------
+    strcat(resp, "HTTP/1.1 200 OK\r\n");
+
+    // -- server --------
+    strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
+
+    // -- content type --------
+    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+ 
+    // -- content lenght --------
+    strcat(resp, "Content-Length: ");
+    strcat(resp, body_len_str);
+    strcat(resp, "\r\n");
+
+    // -- connection --------
+    switch (method_id) 
+    {
+        // GET
+        case __METHOD_GET:  
+            strcat(resp, "Connection: close\r\n");
+            break;
+
+        // POST
+        case __METHOD_POST:
+            strcat(resp, "Connection: keep-alive\r\n");
+            break;
+
+        default:
+            strcat(resp, "Connection: close\r\n");
+            break;
+    }
+    strcat(resp, "\r\n");
+
+//
+// VIEW: 
+// Render the HTML body
+//
+
+    strcat(resp, body);
+
+    size_t resp_len = strlen(resp);
+
+    // Save info
+
+    HTTP_REPONSE_INFO.response_ptr = (char *) resp;
+    HTTP_REPONSE_INFO.response_size = resp_len;
+
+    return 0;
+}
+
+static int __build_invalid_view(int method_id)
+{
+    HTTP_REPONSE_INFO.response_ptr = NULL;
+    HTTP_REPONSE_INFO.response_size = 0;
+
+//
+// Web page
+//
+
+static const char body1[] =
+"<!DOCTYPE html>\n"
+"<html><head><title>Error</title></head>\n"
+"<body>\n"
+"<h1>Error</h1>\n"
+"<p>Oops! The route you tried doesn’t exist.</p>\n"
+"<p>Return to <a href=\"/\">root</a> or try <a href=\"/index.html\">index.html</a>.</p>\n"
+"</body></html>\n";
+
+
+// body len --------------------------------
+
+    size_t body_len;
+    char *body;
+
+    body = body1;
+    body_len = sizeof(body1) - 1;
+
+// -----------------------------------------
+// Convert body_len to decimal ASCII manually (no snprintf).
+    char body_len_str[8];
+    size_t v = body_len;
+    int i = 0;
+    char tmp[8];
+
+    if (v == 0) {
+        tmp[i] = '0';
+        i++;
+    } else {
+
+        int SizeOfTmp = sizeof(tmp);
+
+        while ( v > 0 && 
+                i < (int) SizeOfTmp )
+        {
+            tmp[i] = (char) ('0' + (v % 10));
+            i++;
+            v /= 10;
+        }
+    }
+    
+    // tmp holds digits reversed; flip into body_len_str.
+    int j = 0;
+    while (i > 0) 
+    {
+        body_len_str[j++] = tmp[--i];
+    }
+    body_len_str[j] = 0;
+// -----------------------------------------
+
+// -----------------------------------------
+// Headers are assembled with strcat, so Content-Length always
+// matches the real body size instead of a hand-typed literal.
+
+    //char resp[2048];
+    memset(resp, 0, sizeof(resp));
+
+    // -- status -------------
+    strcat(resp, "HTTP/1.1 200 OK\r\n");
+
+    // -- server --------
+    strcat(resp, "Server: Microsoft-IIS/10.0\r\n");
+
+    // -- content type --------
+    strcat(resp, "Content-Type: text/html; charset=utf-8\r\n");
+ 
+    // -- content lenght --------
+    strcat(resp, "Content-Length: ");
+    strcat(resp, body_len_str);
+    strcat(resp, "\r\n");
+
+    // -- connection --------
+    switch (method_id) 
+    {
+        // GET
+        case __METHOD_GET:  
+            strcat(resp, "Connection: close\r\n");
+            break;
+
+        // POST
+        case __METHOD_POST:
+            strcat(resp, "Connection: keep-alive\r\n");
+            break;
+
+        default:
+            strcat(resp, "Connection: close\r\n");
+            break;
+    }
+    strcat(resp, "\r\n");
+
+//
+// VIEW: 
+// Render the HTML body
+//
+
+    strcat(resp, body);
+
+    size_t resp_len = strlen(resp);
+
+    // Save info
+
+    HTTP_REPONSE_INFO.response_ptr = (char *) resp;
+    HTTP_REPONSE_INFO.response_size = resp_len;
+
+    return 0;
+}
+
+int 
+dispatch_route(
+    int method_id, 
+    int route_id, 
+    int parameter_id) 
+{
+    switch(route_id) {
+        case ROUTEID_ROOT:
+            return __build_root_view(method_id);
+            break;
+        case ROUTEID_ID:
+            return __build_id_view(method_id, parameter_id);
+            break;
+        case ROUTEID_ABOUT:
+            return __build_about_view(method_id);
+            break;
+        case ROUTEID_FAVICON_ICO:
+            return __build_favicon_view(method_id);
+            break;
+        case ROUTEID_INDEX_HTML:
+            return __build_index_view(method_id);
+            break;
+        default:
+            return __build_invalid_view(method_id);
+            break;
+    }
+
+    return (int) -1;
+}
+
+
+
+// We need to read the header to know what to do 
+// with the connection state.
 static void handle_connection(int connfd)
 {
     char buffer[1024];
@@ -61,6 +1227,53 @@ static void handle_connection(int connfd)
     printf("HTTPSRV.BIN: Received request:\n%s\n", buffer);
 
 
+//
+// -------------------------------------------------
+//
+
+    int Status = 0;
+    Status = (int) __http_parse_first_line(buffer, n);
+
+    // 0 = OK
+    if (Status != 0){
+        printf("HTTP: on __http_parse_first_line()\n");
+        // goto fail;
+        exit(1);
+    }
+
+//
+// -------------------------------------------------
+//
+
+// -------------------------
+
+// Build the response string: header + body
+    int DispatcherStatus = -1;
+
+    DispatcherStatus = 
+    dispatch_route (
+        HTTP_REQUEST_INFO.MethodId,
+        HTTP_REQUEST_INFO.RouteId,
+        HTTP_REQUEST_INFO.ParameterId
+    );
+
+    // #todo
+    if (DispatcherStatus < 0)
+    {
+        //#todo
+    }
+
+// -------------------------------------------------    
+
+    char *resp = (char *) HTTP_REPONSE_INFO.response_ptr;
+    size_t resp_len = HTTP_REPONSE_INFO.response_size;
+
+    write(connfd, resp, resp_len);
+
+// -------------------------------------------------    
+
+/*
+
 // --- HTML body ---
     const char *body =
         "<!DOCTYPE html>\n"
@@ -95,15 +1308,24 @@ static void handle_connection(int connfd)
 
     printf("Sending response ...\n");
 
+//
 // Send
+//
+
+    // #todo:
+    // Use this one
+    // int Flags = 0;
+    // int nw = send(connfd, response, strlen(response), Flags);
+
     write(connfd, response, strlen(response));
+*/
 
     // Close connection
     // close(connfd);
 }
 
 
-int main( int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     struct sockaddr_in addr;
     socklen_t addrlen=0;
@@ -120,6 +1342,7 @@ int main( int argc, char *argv[])
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     //addr.sin_addr.s_addr = htonl(INADDR_ANY); 
 
+    // #todo: Maybe we can reveive the port number as parameter
     addr.sin_port = htons(HTTP_PORT);
 
     addrlen = sizeof(addr);

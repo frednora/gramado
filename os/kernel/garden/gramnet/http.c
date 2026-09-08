@@ -248,7 +248,7 @@ static int __http_parse_first_line(char *payload, size_t len)
     return 0;  //OK
 }
 
-//  done
+
 static int __build_root_view(int method_id)
 {
     HTTP_REPONSE_INFO.response_ptr = NULL;
