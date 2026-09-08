@@ -25,11 +25,9 @@ static unsigned long mmblockCount=0;
 // Começo do Heap support.
 // Na verdade é o gerenciamento de meória necessário para stdlib.c
 
-// Variáveis internas. 
 static unsigned long last_valid=0;       // Último heap pointer válido. 
 static unsigned long last_size=0;        // Último tamanho alocado.
 static unsigned long mm_prev_pointer=0;  // Endereço da úntima estrutura alocada.
-
 
 // ================================================
 
@@ -57,7 +55,6 @@ void *Heap;
 // obs:. heapList[0] = The Kernel Heap!
 unsigned long heapList[HEAP_COUNT_MAX];
 
-
 //
 // == Private functions: Prototypes ================================
 //
@@ -69,10 +66,9 @@ static char *__findenv( const char *name, int *offset );
 
 // ================================================
 
-// #local
 // stdlib_strncmp:
-// Compara duas strings.
-static int stdlib_strncmp ( char *s1, char *s2, int len )
+// Compare two strings
+static int stdlib_strncmp (char *s1, char *s2, int len)
 {
     register int n=0;
     n = (int) len;
@@ -257,8 +253,6 @@ done:
     //printf("Done.\n");
     return TRUE;
 
-// Fail. 
-// Falha ao iniciar o heap do kernel.
 fail:
     debug_print("__init_heap: Fail\n");
 
@@ -269,7 +263,6 @@ fail:
         kernel_stack_start,
         kernel_stack_end);
 
-    refresh_screen(); 
     while(1){}
 */
 
@@ -277,16 +270,14 @@ fail:
 }
 
 
-// #local
 // __init_mm:
-// Inicializa o memory manager.
+// Initialize memory manager
 
 static int __init_mm(void)
 {
     register int i=0;
     int Status = FALSE;
 
-    //#debug
     //debug_print ("__init_mm:\n");
 
 // @todo: 
@@ -303,30 +294,27 @@ static int __init_mm(void)
         goto fail;
     }
 
-// Lista de blocos de memória dentro do heap.
+// List of blocks of memory inside the heap
     i=0;
     while (i<MMBLOCK_COUNT_MAX){
         mmblockList[i] = (unsigned long) 0;
         i++;
     };
 
-//Primeiro Bloco.
-    //current_mmblock = (void *) NULL;
+    //current_mmblock = (void *) NULL;  // First block
 
-// #importante:
+// #important:
 // #inicializando o índice la lista de ponteiros 
 // par estruturas de alocação.
 // #bugbug: temos que inicializar isso no kernel também.
     mmblockCount = 0;
 
-// Continua...
+// Continue ...
 
-    //#debug
     //debug_print ("__init_mm: done\n");
     //printf      ("__init_mm: done\n");
 
-    // ok
-    return TRUE;
+    return TRUE;  // OK
 
 fail:
     return FALSE;
@@ -336,7 +324,7 @@ fail:
 // Interna de suporte à getenv. 
 // Credits: apple open source.
 
-static char *__findenv ( const char *name, int *offset )
+static char *__findenv (const char *name, int *offset)
 {
     size_t len;
     const char *np;
@@ -392,8 +380,7 @@ static char *__findenv ( const char *name, int *offset )
 
     printf ("__findenv: overflow\n");
 
-//done:
-    return (char *) 0;
+    return (char *) 0;  // OK
     //return NULL;
 }
 
@@ -442,13 +429,12 @@ heapSetLibcHeap (
 {
     struct heap_d *h; 
 
-// Check limits.
+// Check limits
 
     if (HeapStart == 0){
         debug_print("heapSetLibcHeap: HeapStart\n");
         return;
     }
-
     if (HeapSize == 0){
         debug_print("heapSetLibcHeap: HeapSize\n");
         return;
@@ -509,7 +495,6 @@ unsigned long heapAllocateMemory (unsigned long size)
     struct mmblock_d  *Current;
 
     debug_print ("heapAllocateMemory: $\n");
-
 
 // Available heap.
 // Se não há heap disponível, não há muito o que fazer.
@@ -772,9 +757,10 @@ fail:
  
 unsigned long FreeHeap (unsigned long size)
 {
-    // #suspensa 
+    // #suspense
     // #todo
-    return (unsigned long) g_heap_pointer;
+
+    return (unsigned long) g_heap_pointer;  // #bugbug
 }
 
 /*
@@ -791,8 +777,8 @@ int libcInitRT (void)
 {
     int Status = FALSE;
 
-    // #debug
     debug_print ("libcInitRT:\n");
+
     Status = (int) __init_mm();
     if (Status != TRUE){
         debug_print("libcInitRT: [FAIL] __init_mm\n");
@@ -800,12 +786,8 @@ int libcInitRT (void)
     }
 
     //...
-    
-    //#debug
-    //debug_print ("libcInitRT: done\n");
 
-    // OK
-    return TRUE;
+    return TRUE;  // OK
 
 fail:
     return FALSE;
@@ -813,24 +795,40 @@ fail:
 
 //
 // -----------------
-// Fim do Heap support.
+// End of Heap support
 //
 
-
-// #todo
 char *mktemp(char *template)
 {
-    debug_print ("mktemp: [TODO]\n");
-    return (char *) 0;
+    static unsigned int counter = 0;
+    char *p;
+    int len;
+
+    if (template == NULL)
+        return NULL;
+
+    len = strlen(template);
+    if (len < 6)
+        return NULL;
+
+    // Look for the classic "XXXXXX" at the end
+    p = template + len - 6;
+    if (strncmp(p, "XXXXXX", 6) != 0)
+        return NULL;
+
+    // Simple unique name using a counter
+    sprintf(p, "%d", counter++ % 1000000);
+
+    return template;
 }
 
-// Seed rand.
+// Seed rand
 void srand(unsigned int seed)
 {
     randseed = (unsigned int) seed;
 }
 
-// Generate a random number.
+// Generate a random number
 int rand(void)
 {
     randseed = (randseed * 1234 + 5);
@@ -1059,10 +1057,8 @@ void *realloc ( void *start, size_t newsize )
         return newstart;
     };
 
-//fail.
-   return NULL;
+   return NULL;  // Fail
 }
-
 
 /*
  * free:
@@ -1177,8 +1173,9 @@ void *calloc (size_t count, size_t size)
     if (count <= 0){
         new_size = (1*size);
     }
+
     ptr = (void*) malloc(new_size);
-    if ( (void*) ptr != NULL ){
+    if ((void*) ptr != NULL){
         memset(ptr, 0, new_size);
     }
 
@@ -1194,14 +1191,14 @@ void *xcalloc (size_t count, size_t size)
         count = 1;
         size  = 8;
     }
+
     ptr = (void*) calloc(count,size);
-    if ( (void*) ptr == NULL ){
+    if ((void*) ptr == NULL){
         stdlib_die ("xcalloc: [FAIL] ptr\n");
     }
 
     return (void *) ptr;
 }
-
 
 void *xzalloc (size_t n)
 {
@@ -1217,7 +1214,7 @@ void *zmalloc (size_t size)
 {
     void *ptr;
 
-    if(size<=0){
+    if (size<=0){
         size=1;
     }
 
@@ -1231,8 +1228,7 @@ void *zmalloc (size_t size)
         return (void*) ptr;
     };
 
-// fail
-    return NULL;
+    return NULL;  // Fail
 }
 
 // system:
@@ -1254,10 +1250,8 @@ void *zmalloc (size_t size)
 
 int system(const char *command)
 {
-
-    if ( (void*) command == NULL )
+    if ((void*) command == NULL)
         return -1;
-
 
 // test - Exibe uma string somente para teste.
     if ( stdlib_strncmp ( (char *) command, "test", 4 ) == 0 )
@@ -1494,7 +1488,7 @@ char *getenv (const char *name)
     //printf ("getenv2: %s \n", (const char *) name);
     //return NULL;
 
-    if ( (void *) name == NULL )
+    if ((void *) name == NULL)
     {
         debug_print ("getenv: [FAIL] name\n");
         return (char *) 0;
@@ -1507,7 +1501,7 @@ char *getenv (const char *name)
     }
 
     //rwlock_rdlock(&__environ_lock);
-    result = __findenv (name, &offset);
+    result = __findenv(name, &offset);
     //rwlock_unlock(&__environ_lock);
 
     //debug_print ("getenv: done\n");
@@ -1533,7 +1527,7 @@ int setenv (const char *name, const char *value, int overwrite)
 // value
 //
 
-    if ( (void *) value == NULL ){
+    if ((void *) value == NULL){
         debug_print ("setenv: [FAIL] value\n");
         return -1;
     }
@@ -1547,16 +1541,19 @@ int setenv (const char *name, const char *value, int overwrite)
     return (int) (-1);
 }
 
-//#todo
 int unsetenv (const char *name)
 {
     debug_print("unsetenv: [TODO]\n"); 
+
+    // #todo: Not implemented yet
+
     return (int) (-1);
 }
 
-// #todo
 int clearenv(void)
 {
+    // #todo: Not implemented yet
+
     //size_t environ_size = 0;
     //for (; environ[environ_size]; ++environ_size) {
     //    environ[environ_size] = NULL;
@@ -1584,7 +1581,9 @@ int atoi(const char *str)
     int rv=0; 
     char sign = 0;
 
-    /* skip till we find either a digit or '+' or '-' */
+/* 
+   Skip till we find either a digit or '+' or '-' .
+*/
     while (*str) 
     {
         if (*str <= '9' && *str >= '0')
@@ -1798,11 +1797,10 @@ strtod (char *str, char **ptr)
 }
 */
 
-
-// ok.
 int abs(int j)
 {
     int result = (int) (j < 0 ? -j : j);
+
     return (int) result;
 }
 
@@ -1891,8 +1889,7 @@ void d_common(BYTE *buf,DWORD count,bool memory)  //Hex Dump
 //================================================
 
 
-// strtod:
-// String to double.
+// strtod: String to double
 // This is a worker for some other routines.
 // see:
 // https://man7.org/linux/man-pages/man3/strtod.3.html
@@ -1902,31 +1899,28 @@ double strtod(const char *nptr, char **endptr)
 // We are supporting floating point only in the libc for desktop/.
 // see: Makefile flags.
 
-    // #todo
-    // Not implemented yet.
+    // #todo: Not implemented yet
+
     return (double) 0.0;
 }
 
-// strtof
-// String to float.
+// strtof: String to float
 float strtof(const char *str, char **endptr)
 {
     return (float) strtod(str, endptr);
 }
 
-// atof
-// ascii to float.
+// atof: ascii to float
 double atof(const char *str)
 {
     if ( (void*) str == NULL ){
         return (double) 0.0;
     }
+
     return (double) strtod(str,NULL);
 }
 
 //================================================
-
-
 
 /*
 void abort();
@@ -1941,6 +1935,7 @@ void abort()
 long labs(long j)
 {
     long result = (long) (j < 0 ? -j : j);
+
     return (long) result;
 }
 
@@ -1948,6 +1943,9 @@ long labs(long j)
 int mkstemp(char *template)
 {
     debug_print("mktemp: [TODO]\n"); 
+
+    // #todo: Not implemented yet
+
     return -1; 
 }
 
@@ -1955,6 +1953,9 @@ int mkstemp(char *template)
 int mkostemp(char *template, int flags)
 { 
     debug_print("mkostemp: [TODO]\n"); 
+
+    // #todo: Not implemented yet
+
     return -1; 
 }
 
@@ -1962,6 +1963,9 @@ int mkostemp(char *template, int flags)
 int mkstemps(char *template, int suffixlen)
 { 
     debug_print("mktemps: [TODO]\n"); 
+
+    // #todo: Not implemented yet
+
     return -1; 
 }
 
@@ -1969,6 +1973,9 @@ int mkstemps(char *template, int suffixlen)
 int mkostemps(char *template, int suffixlen, int flags)
 { 
     debug_print("mkostemps: [TODO]\n"); 
+
+    // #todo: Not implemented yet
+
     return -1; 
 }
 
@@ -1997,7 +2004,7 @@ char *ptsname(int fd)
         return NULL;
     }
 
-    //#todo
+    // #todo: Not implemented yet
 
     return NULL; 
 }
@@ -2024,11 +2031,11 @@ int ptsname_r(int fd, char *buf, size_t buflen)
         return -1;;
     }
 
-    //#todo buflen
+    // #todo: Not implemented yet
+    // #todo: buflen
 
     return -1;   //use syscall !!
 }
-
 
 
 /*
@@ -2051,7 +2058,6 @@ int mkstemp(char* pattern)
     return -1;
 }
 */
-
 
 
 //serenity os
@@ -2089,7 +2095,6 @@ ldiv_t ldiv(long numerator, long denominator)
 }
 */
 
-
 /*
 ldiv_t ldiv(long num, long den);
 ldiv_t ldiv(long num, long den)
@@ -2103,8 +2108,11 @@ ldiv_t ldiv(long num, long den)
 //This function is specified in POSIX.1-2001. 
 int posix_openpt (int flags)
 {
+    //const char *path = "/dev/ptmx";
+
     debug_print("posix_openpt: [FIXME]\n"); 
-    return (int) open ("/dev/ptmx", flags, 0);
+
+    return (int) open("/dev/ptmx", flags, 0);
 }
 
 //grantpt - grant access to the slave pseudoterminal 
@@ -2113,13 +2121,13 @@ int grantpt(int fd)
 { 
     debug_print("grantpt: [TODO]\n");
 
-    if(fd<0)
+    if (fd<0)
     {
         errno = EBADF;
         return -1;
     }
 
-    //#todo
+    // #todo: Not implemented yet
 
     return -1; 
 }
@@ -2136,9 +2144,10 @@ int unlockpt(int fd)
         return -1;
     }
 
+    // #todo: Not implemented yet
+
     return -1; 
 }
-
 
 /*
 int gramado_unlockpt(int fd);
@@ -2210,6 +2219,9 @@ char *dirname(char *s)
 int getpt(void)
 {
     debug_print("getpt: [TODO]\n"); 
+
+    // #todo: Not implemented yet
+
     return -1; 
 }
 
@@ -2218,12 +2230,17 @@ int getpt(void)
 const char *getprogname(void)
 {
     debug_print("getprogname: [TODO]\n");
+
+    // #todo: Not implemented yet
+
     return NULL;
     //return __progname;
 }
 
 void setprogname(const char *progname)
 {
+    // #todo: Not implemented yet
+
     //for (int i = strlen(progname) - 1; i >= 0; i--) {
     //    if (progname[i] == '/') {
     //        __progname = progname + i + 1;
@@ -2235,28 +2252,68 @@ void setprogname(const char *progname)
 }
 
 
-void *bsearch ( 
-    const void *key, 
-    const void *base, 
+void *bsearch(
+    const void *key,
+    const void *base,
     size_t nmemb,
     size_t size,
-    int (*compar)(const void *, const void *)
-    )
+    int (*compar)(const void *, const void *))
 {
-    debug_print("bsearch: [TODO]\n");
-    return NULL;
+    size_t low = 0;
+    size_t high = nmemb;
+
+    if (nmemb == 0 || size == 0 || compar == NULL)
+        return NULL;
+
+    while (low < high) 
+    {
+        size_t mid = low + (high - low) / 2;
+        const void *p = (const char *)base + mid * size;
+
+        int cmp = compar(key, p);
+
+        if (cmp < 0)
+            high = mid;
+        else if (cmp > 0)
+            low = mid + 1;
+        else
+            return (void *)p;          // found
+    };
+
+    return NULL;                       // not found
 }
 
-
-void 
-qsort (
-    void *base, 
-    size_t nmemb, 
+void qsort(
+    void *base,
+    size_t nmemb,
     size_t size,
-    int (*compar)(const void *, const void *)
-    )
+    int (*compar)(const void *, const void *))
 {
-    debug_print("qsort: [TODO]\n");
+    char *array = (char *)base;
+    size_t i, j;
+    char temp[256];                    // enough for most element sizes
+
+    if (nmemb < 2 || size == 0 || size > sizeof(temp) || compar == NULL)
+        return;
+
+    for (i = 1; i < nmemb; i++) 
+    {
+        memcpy(temp, array + i * size, size);
+        j = i;
+        while (j > 0 && compar(array + (j-1)*size, temp) > 0) 
+        {
+            memcpy(
+                array + j * size, 
+                array + (j-1)*size, 
+                size );
+
+            j--;
+        }
+        memcpy( 
+            array + j * size, 
+            temp, 
+            size );
+    };
 }
 
 void 
@@ -2269,8 +2326,9 @@ qsort_r (
     )
 {
     debug_print("qsort_r: [TODO]\n");
-}
 
+    // #todo: Not implemented yet
+}
 
 // See:
 // https://linux.die.net/man/3/putenv
@@ -2303,7 +2361,6 @@ int putenv(char *string)
 
     return (int) rval;
 }
-
 
 double my_strtod(const char *s, char **endptr) 
 {
@@ -2355,10 +2412,10 @@ double my_strtod(const char *s, char **endptr)
     }
 
     if (endptr) 
-        *endptr = (char *)s;
+        *endptr = (char *) s;
+
     return sign * result;
 }
-
 
 int my_strtoi(const char *s) 
 {
@@ -2371,10 +2428,10 @@ int my_strtoi(const char *s)
     {
         result = result * 10 + (*s - '0');
         s++;
-    }
+    };
+
     return sign * result;
 }
-
 
 //
 // End

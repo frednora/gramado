@@ -24,6 +24,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <spawn.h>
+
 #include <rtl/gramado.h> 
 
 #define UNISTD_SYSTEMCALL_FORK     71  
@@ -43,7 +44,6 @@
 
 int errno = 0;    // The number of the last error.
 int sys_nerr=0;   // The size of the list of strings.
-
 
 
 // #todo: 
@@ -115,23 +115,31 @@ char *__execv_environ[] = {
     NULL 
 };
 
-int execv(const char *path, char *const argv[])
-{
-    if ( (void*) path == NULL ){
-        errno = EINVAL;
-        return -1;
-    }
-
-// #bugbug: 
-// Falta a tipagem do último argumento?
-    return (int) execve( path, (char **) argv, __execv_environ );
-    //return (int) execve ( path, (char **) argv, (char **) __execv_environ );
-    //return (int) execve ( path, (char **) argv, environ ); //#todo: use this one.
-}
-
-/*
- * execve:
- * 
+/**
+ * execve - Execute a program with an explicitly supplied environment.
+ *
+ * @pathname: Full path to the executable file (same rules as execv:
+ *            no PATH search is performed).
+ * @argv:     NULL-terminated array of argument strings
+ *            (argv[0] = program name, last element = NULL).
+ * @envp:     NULL-terminated array of environment strings of the form
+ *            "NAME=value".  This becomes the complete environment of
+ *            the new process.  Pass the global `environ` if you want
+ *            to keep the current environment.
+ *
+ * Behavior:
+ *   - Identical to execv except that the environment is taken from
+ *     the caller-supplied `envp` array instead of the current
+ *     process environment.
+ *   - This is the fundamental system call; the other exec* functions
+ *     are usually implemented on top of it.
+ *   - On success the function does not return.
+ *   - On failure it returns -1 and sets errno.
+ *
+ * Example:
+ *   char *args[] = { "/bin/echo", "hello", NULL };
+ *   char *env[]  = { "PATH=/bin:/usr/bin", "HOME=/tmp", NULL };
+ *   execve("/bin/echo", args, env);   // never returns on success
  */
 
 int 
@@ -163,6 +171,43 @@ execve (
     return (int) value;
 }
 
+/**
+ * execv - Execute a program, inheriting the current environment.
+ *
+ * @pathname: Full path to the executable file (must be an absolute or
+ *            relative path that the kernel can open; no PATH search).
+ * @argv:     NULL-terminated array of argument strings.
+ *            argv[0] is conventionally the program name.
+ *            The array must end with a NULL pointer.
+ *
+ * Behavior:
+ *   - The calling process is completely replaced by the new program.
+ *   - All open file descriptors that do not have the close-on-exec
+ *     flag set remain open.
+ *   - The environment of the new program is the same as the calling
+ *     process (i.e. the current `environ`).
+ *   - On success the function does not return.
+ *   - On failure it returns -1 and sets errno (common errors:
+ *     ENOENT, EACCES, ENOMEM, E2BIG, etc.).
+ *
+ * Example:
+ *   char *args[] = { "/bin/ls", "-l", "/tmp", NULL };
+ *   execv("/bin/ls", args);   // never returns on success
+ */
+
+int execv(const char *path, char *const argv[])
+{
+    if ( (void*) path == NULL ){
+        errno = EINVAL;
+        return -1;
+    }
+
+// #test:
+// Calling the main worker
+    return (int) execve ( path, (char **) argv, (char **) environ );  // #todo: Use this one
+    //return (int) execve( path, (char **) argv, (char **) __execv_environ );
+}
+
 ssize_t read_tty (int fd, const void *buf, size_t count)
 {
     if (fd<0)
@@ -172,12 +217,11 @@ ssize_t read_tty (int fd, const void *buf, size_t count)
     }
     
     return (ssize_t) sc80 ( 
-                         272, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
+                        272, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
 }
-
 
 // o descritor seleciona uma tty em ttyList[]
 ssize_t write_tty (int fd, const void *buf, size_t count)
@@ -189,10 +233,10 @@ ssize_t write_tty (int fd, const void *buf, size_t count)
     }
 
     return (ssize_t) sc80 ( 
-                         273, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
+                        273, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
 }
 
 // read on virtual console!
@@ -206,11 +250,10 @@ ssize_t read_VC (int fd, const void *buf, size_t count)
     }
 
     return (ssize_t) sc80 ( 
-                         262, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
-
+                        262, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
 }
 
 // write on virtual console!
@@ -224,16 +267,14 @@ ssize_t write_VC (int fd, const void *buf, size_t count)
     }
 
     return (ssize_t) sc80 ( 
-                         263, 
-                         (unsigned long) fd,      // dispositivo.
-                         (unsigned long) buf, 
-                         (unsigned long) count ); 
+                        263, 
+                        (unsigned long) fd,
+                        (unsigned long) buf, 
+                        (unsigned long) count ); 
 }
 
 ssize_t read(int fd, const void *buf, size_t count)
 {
-// (Input port)
-
     ssize_t value = (-1);
 
     if (fd<0){
@@ -268,8 +309,6 @@ ssize_t read(int fd, const void *buf, size_t count)
 
 ssize_t write(int fd, const void *buf, size_t count)
 {
-// (Output port)
-
     ssize_t value = (-1);
 
     if (fd<0){
@@ -367,6 +406,8 @@ pwrite (
         return -1;
     }
 
+    // #todo: Not implemented yet
+
     return -1;
 }
 
@@ -385,11 +426,10 @@ int truncate(const char *path, off_t length)
         return -1;
     }
 
-//#todo
+    // #todo: Not implemented yet
 
     return -1;
 }
-
 
 int ftruncate (int fd, off_t length)
 { 
@@ -399,6 +439,8 @@ int ftruncate (int fd, off_t length)
         errno=EBADF;
         return -1;
     }
+
+    // #todo: Not implemented yet
 
     return -1;
 }
@@ -418,10 +460,10 @@ void _exit(int status)
 
     value = 
         (int) sc80( 
-                  UNISTD_SYSTEMCALL_EXIT, 
-                  (unsigned long) status, 
-                  (unsigned long) status, 
-                  (unsigned long) status );
+                UNISTD_SYSTEMCALL_EXIT, 
+                (unsigned long) status, 
+                (unsigned long) status, 
+                (unsigned long) status );
 
 // Wait forever
     while (1){
@@ -484,10 +526,10 @@ void exit(int status)
 DoExit:
     value = 
         (int) sc80( 
-                  UNISTD_SYSTEMCALL_EXIT, 
-                  (unsigned long) status, 
-                  (unsigned long) status, 
-                  (unsigned long) status );
+                UNISTD_SYSTEMCALL_EXIT, 
+                (unsigned long) status, 
+                (unsigned long) status, 
+                (unsigned long) status );
 
 // Wait forever
     while (1){
@@ -520,13 +562,11 @@ pid_t fork(void)
     return (pid_t) value;
 }
 
-
 // #todo
 pid_t vfork(void)
 {
     return (pid_t) fork();
 }
-
 
 // Set user identity.
 // Sets the effective user ID of the calling process.
@@ -574,7 +614,7 @@ uid_t getuid(void)
 // gid
 int setgid(gid_t gid)
 {
-    if(gid<0)
+    if (gid<0)
     {
         errno=EINVAL;
         return -1;
@@ -629,7 +669,8 @@ pid_t getpid(void)
     unsigned long ul_value=0;
     ul_value = 
         (unsigned long) sc80( UNISTD_SYSTEMCALL_GETPID, 0, 0, 0 );
-// 32bit value.
+
+    // 32bit value
     return (pid_t) (ul_value & 0xFFFFFFFF);
 }
 
@@ -640,7 +681,8 @@ pid_t getppid(void)
     unsigned long ul_value=0;
     ul_value = 
         (unsigned long) sc80( UNISTD_SYSTEMCALL_GETPPID, 0, 0, 0 );
-// 32bit value.
+
+    // 32bit value
     return (pid_t) (ul_value & 0xFFFFFFFF);
 }
 
@@ -677,7 +719,6 @@ pid_t tcgetpgrp(int fd)
 
     return (pid_t) s;
 }
-
 
 /*
 The function tcsetpgrp() makes the process group with process 

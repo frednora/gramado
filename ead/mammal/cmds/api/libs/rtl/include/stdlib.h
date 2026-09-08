@@ -1,45 +1,16 @@
-
 // stdlib.h
 // The stdlib header for 64bit usermode in Gramado OS.
 // 2016 - Created by Fred Nora.
- 
-/*
-   O que deve conter:
 
-    atof string para float
-    atoi	string para integer
-    atol	string para long integer
-    strtod	string para double
-    strtol	string para long int
-    strtoul	string para unsigned long int
-
-	Gera��o de seq��ncia pseudo-aleat�ria
-    rand	gera um n�mero inteiro pseudo aleat�rio
-    srand	seleciona a semente do gerador pseudo aleat�rio
-    
-	Aloca��o e libera��o de mem�ria
-    malloc
-    calloc
-    realloc	aloca mem�ria do "heap"
-    free	libera mem�ria de volta para o "heap"
-
-	Controle de processos
-    abort	for�a o t�rmino da execu��o
-    atexit	registra uma fun��o "callback" para sa�da do programa
-    exit	termina a execu��o do programa
-    getenv	obt�m uma vari�vel de ambiente
-    system	executa um comando externo
-
-	Ordenamento e procura
-    bsearch	procura bin�ria em "array"
-    qsort	ordena "array" segundo algoritmo Quick Sort
-
-	Matem�tica
-    abs
-    labs	valor absoluto
-    div
-    ldiv	divis�o inteira
-*/
+// #todo
+// It needs to have:
+// atof, atoi, atol,
+// strtod, strtol, strtoul,
+// rand, srand,
+// malloc, calloc, realloc, free,
+// abort, atexit, exit, getenv, system,
+// bsearch, qsort,
+// abs, labs, div, ldiv
 
 #ifndef __RTL_STDLIB_H
 #define __RTL_STDLIB_H    1
@@ -62,38 +33,38 @@ typedef _BSD_WCHAR_T_  wchar_t;
 #endif
 
 typedef struct {
-	int quot;		/* quotient */
-	int rem;		/* remainder */
+	int quot;		// quotient
+	int rem;		// remainder
 } div_t;
 
 typedef struct {
-	long quot;		/* quotient */
-	long rem;		/* remainder */
+	long quot;		// quotient
+	long rem;		// remainder
 } ldiv_t;
 
 
 #if !defined(_ANSI_SOURCE) && \
     (defined(_ISOC99_SOURCE) || (__STDC_VERSION__ - 0) >= 199901L || \
      (__cplusplus - 0) >= 201103L || defined(_NETBSD_SOURCE))
+
+// #todo: Review these types
 typedef struct {
-	/* LONGLONG */
-	long long int quot;	/* quotient */
-	/* LONGLONG */
-	long long int rem;	/* remainder */
+	long long int quot;  // quotient
+	long long int rem;   // remainder
 } lldiv_t;
+
 #endif
 
 #if defined(_NETBSD_SOURCE)
 typedef struct {
-	quad_t quot;		/* quotient */
-	quad_t rem;		    /* remainder */
+	quad_t quot;  // quotient
+	quad_t rem;   // remainder
 } qdiv_t;
 #endif
 
 
 #define EXIT_SUCCESS  0
 #define EXIT_FAILURE  1
-
 
 // bsd-like
 // #todo rand max for 64 bit?
@@ -142,15 +113,14 @@ int atoi(const char *str);
 void itoa(int n, char s[]);
 
 // unix v7 - like.
-char *nvmatch ( char *s1, char *s2 );
-char *v7_getenv ( char *name );
-
+char *nvmatch(char *s1, char *s2);
+char *v7_getenv(char *name);
 
 //
 // environ
 //
 
-char *getenv (const char *name);
+char *getenv(const char *name);
 
 int 
 setenv(
@@ -165,27 +135,25 @@ int clearenv(void);
 // mktemp - make a unique temporary filename
 // 4.3BSD, POSIX.1-2001.  
 // POSIX.1-2008 removes the specification of mktemp().
-char *mktemp (char *template);
-
+char *mktemp(char *template);
 
 void _Exit(int status); 
-
 
 //
 // alloc
 //
 
 void *malloc (size_t size);
-void *xmalloc ( size_t size );
+void *xmalloc (size_t size);
 void *xmemdup (void const *p, size_t s);
 char *xstrdup(char const *string);
 void *calloc (size_t count, size_t size);
 void *xcalloc (size_t count, size_t size);
 void *xzalloc (size_t n);
-void *zmalloc ( size_t size );
-void *realloc ( void *start, size_t newsize );
+void *zmalloc (size_t size);
+void *realloc (void *start, size_t newsize);
 
-void *rtl_malloc ( size_t size );
+void *rtl_malloc (size_t size);
 void *rtl_calloc (size_t count, size_t size);
 
 void free (void *ptr);
@@ -195,8 +163,7 @@ void srand(unsigned int seed);
 int random(void);
 void srandom(unsigned int seed);
 
-// #todo
-int system (const char *command);
+int system(const char *command);
 
 //
 // failure routines
@@ -249,9 +216,7 @@ int putenv(char *string);
 
 int abs( int j);
 
-
-//rt support
-//pegando informa��es sobre o heap usado pela biblioteca C99 em user mode.
+// Heap support
 unsigned long rtGetHeapStart(void);
 unsigned long rtGetHeapEnd(void);
 unsigned long rtGetHeapPointer(void);
@@ -261,14 +226,12 @@ unsigned long rtGetAvailableHeap(void);
 
 /*
  * libcInitRT:
- *     Inicializa o gerenciamento em user mode de mem�ria virtual
- * para a biblioteca libC99.
- * Obs: *IMPORTANTE: Essa rotina deve ser chamada entes que a biblioteca C 
- * seja usada.
- * Obs: Pode haver uma chamada � ela em crt0.s por exemplo.
+ * rt initialization.
+ * + Initialize the memory management for the ring 3 part.
+ * + #ps: It needs to be called at the initialization.
  */
+
 int libcInitRT(void);
 
 #endif    
-
 

@@ -131,13 +131,14 @@ typedef int gid_t;
 // == Prototypes ============================================
 //
 
-int execv(const char *path, char *const argv[]);
 
 int 
 execve ( 
     const char *path, 
     char *const argv[], 
     char *const envp[] );  
+
+int execv(const char *path, char *const argv[]);
 
 pid_t fork(void);
 pid_t vfork(void);
@@ -206,8 +207,6 @@ long pathconf (const char *pathname, int name);
 int close (int fd);
 
 
-
-
 //
 // pipe
 //
@@ -216,12 +215,9 @@ int close (int fd);
 int pipe2 ( int pipefd[2], int flags );
 int pipe ( int pipefd[2] );
 
-
-
 //
 // tty
 //
-
 
 // tty from open file list.
 ssize_t write_tty (int fd, const void *buf, size_t count);
@@ -251,28 +247,23 @@ pwrite (
     off_t offset );
 
 
-
 int truncate (const char *path, off_t length);
 int ftruncate (int fd, off_t length); 
-
 
 char *getlogin (void);
 int setlogin(const char *name);
 char *__gethostname (void);
 
-
-//See: http://man7.org/linux/man-pages/man2/sethostname.2.html
+// See: http://man7.org/linux/man-pages/man2/sethostname.2.html
 int gethostname (char *name, size_t len);
 int sethostname (const char *name, size_t len);
 int getusername (char *name, size_t len);
 int setusername (const char *name, size_t len);
 
-
 char *ttyname(int fd);
 int ttyname_r(int fd, char *buf, size_t buflen);
 int isatty(int fd);
-
-              
+             
 int getopt (int argc, char * const argv[], const char *optstring);
 
 // See:
@@ -280,7 +271,6 @@ int getopt (int argc, char * const argv[], const char *optstring);
 unsigned int alarm(unsigned int seconds);
 
 int brk(void *addr);
-
 
 int execvp (const char *file, char *const argv[]);
 
@@ -293,7 +283,6 @@ execvpe (
 
 int chdir(const char *path);
 int fchdir(int fd);
-
 
 void sync(void);
 int syncfs(int fd); 
@@ -311,11 +300,9 @@ off_t tell(int fildes);
 
 int access (const char *pathname, int mode);
 
-
 int chown (const char *pathname, uid_t owner, gid_t group);
 int fchown (int fd, uid_t owner, gid_t group);
 int lchown (const char *pathname, uid_t owner, gid_t group);
-
 
 // Compare
 // Not tested yet.
@@ -323,10 +310,9 @@ int compar (char *s1, char *s2);
 
 // pega uma label em uma linha do arquivo
 // para comparar strings;
-int getlin (char s[]);
+int getlin(char s[]);
 
-int eq (char *a, char *b);
-
+int eq(char *a, char *b);
 
 pid_t 
 xxx_todo_int133 ( 
@@ -335,11 +321,8 @@ xxx_todo_int133 (
     unsigned long cx, 
     unsigned long dx );
 
-
-
 pid_t tcgetpgrp ( int fd);
 int tcsetpgrp (int fd, pid_t pgrp);
-
 
 int setpgid(pid_t pid, pid_t pgid);
 pid_t getpgid(pid_t pid); 
@@ -350,39 +333,33 @@ int setpgrp(void);
 /* POSIX.1 version */
 pid_t getpgrp(void);
 
-
 /* BSD version */
 int bsd_setpgrp(pid_t pid, pid_t pgid);
 /* BSD version */
 pid_t bsd_getpgrp(pid_t pid); 
 
-
 char *getcwd(char *buf, size_t size);
 char *getwd(char *buf);
 char *get_current_dir_name(void);
 
-
-//Count occurrences of a char.
+// Count occurrences of a char.
 int 
 StrOcc (
     unsigned char *src, 
     int ch );
 
-
-//Point to 1st occurrence of marker set in str.
+// Point to 1st occurrence of marker set in str.
 unsigned char *StrFirstOcc (
     unsigned char *src,
     unsigned char *marker );
 
-
-//Point to last occurrence of market set in str.
+// Point to last occurrence of market set in str.
 unsigned char *StrLastOcc (
     unsigned char *src,
     unsigned char *marker );
 
-
-
 int getdtablesize(void);
 
-#endif  /* __UNISTD_H */
+#endif    
+
 
