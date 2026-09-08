@@ -1,22 +1,16 @@
 // qemudisp.c
-// Display controller support.
-// #todo: display device for qemu vm. (bochs)
-// Created by Fred Nora.
-
+// QEMU Standard VGA / Bochs Graphics Adapter (BGA) driver.
+// Runtime resolution change using the Bochs DISPI interface.
+// Compatible with QEMU -vga std / -device VGA.
 
 #include <kernel.h>
+#include "qemudisp.h"
 
 // =========================================================
 // Global driver instance
 // =========================================================
 
 struct qemudisp_d *qemudisp = NULL;
-
-
-// PCI device
-struct pci_device_d *PCIDeviceQemuDisplay;
-
-
 
 // =========================================================
 // Low-level register access (I/O ports)
@@ -48,6 +42,10 @@ int qemudisp_is_present(void)
     return FALSE;
 }
 
+// =========================================================
+// Initialization
+// =========================================================
+
 int qemudisp_initialize(void)
 {
     PROGRESS("qemudisp_initialize:\n");
@@ -63,7 +61,7 @@ int qemudisp_initialize(void)
     }
     memset(qemudisp, 0, sizeof(struct qemudisp_d));
 
-    qemudisp->used = TRUE;
+    qemudisp->used  = TRUE;
     qemudisp->magic = 1234;
 
     // Check if Bochs interface is present
@@ -99,9 +97,7 @@ int qemudisp_initialize(void)
 
     // LFB address – we keep the one the bootloader already mapped
     // (most common case on Gramado)
-    // #todo: We already have this value from the BAR.
-    // qemudisp->lfb_pa = gSavedLFB;          // from bootloader
-    //qemudisp->lfb_pa = ?;
+    qemudisp->lfb_pa = gSavedLFB;          // from bootloader
     qemudisp->lfb_va = FRONTBUFFER_VA;     // your usual VA
 
     // Optional: try to find the PCI device (for future use)
@@ -127,8 +123,7 @@ int qemudisp_initialize(void)
 // Set resolution (the main feature)
 // =========================================================
 
-int 
-qemudisp_set_resolution(
+int qemudisp_set_resolution(
     unsigned long width,
     unsigned long height,
     unsigned long bpp )
@@ -213,8 +208,7 @@ qemudisp_set_resolution(
 // Query helpers
 // =========================================================
 
-void 
-qemudisp_get_resolution(
+void qemudisp_get_resolution(
     unsigned long *width,
     unsigned long *height,
     unsigned long *bpp )
@@ -270,7 +264,6 @@ void qemudisp_show_info(void)
     printk("  LFB VA  : %x\n", qemudisp->lfb_va);
 }
 
-
 // =========================================================
 // Optional: simple vsync (classic VGA style)
 // =========================================================
@@ -281,174 +274,45 @@ void qemudisp_vsync(void)
     while (!(in8(0x3DA) & 0x08) );
 }
 
-
-
-// #todo ioctl
-int 
-qemudisp_ioctl ( 
-    int fd, 
-    unsigned long request, 
-    unsigned long arg )
+// =========================================================
+// Optional: clear the entire framebuffer
+// =========================================================
+void qemudisp_clear(unsigned int color)
 {
-    debug_print("qemudisp_ioctl: #todo\n");
-    if(fd<0){
-        return -1;
-    }
-    return -1;
-}
+    if (qemudisp == NULL || qemudisp->magic != 1234)
+        return;
 
+    unsigned int *fb = (unsigned int *) qemudisp->lfb_va;
+    unsigned long total_pixels = qemudisp->width * qemudisp->height;
+
+    // Only works well for 32 bpp
+    if (qemudisp->bpp == 32) {
+        for (unsigned long i = 0; i < total_pixels; i++)
+            fb[i] = color;
+    }
+}
 
 // =========================================================
 // Optional: find the PCI device (if you want to use it later)
 // =========================================================
-struct pci_device_d *qemudisp_find_pci_device(void);
 struct pci_device_d *qemudisp_find_pci_device(void)
 {
     int i;
     struct pci_device_d *dev;
 
-    for (i = 0; i < PCI_DEVICE_LIST_SIZE; i++) 
-    {
+    for (i = 0; i < PCI_DEVICE_LIST_SIZE; i++) {
         dev = (struct pci_device_d *) pcideviceList[i];
         if (dev == NULL)
             continue;
         if (dev->magic != 1234)
             continue;
 
-        // The target device was found into the list
         if (dev->Vendor == QEMU_VGA_VENDOR_ID &&
             dev->Device == QEMU_VGA_DEVICE_ID)
         {
             return dev;
         }
     }
-
     return NULL;
-}
-
-
-//
-// $
-// INITIALIZATION
-//
-
-int DDINIT_qemudisp(void)
-{
-    int Status = -1;
-
-    // #breakpoint
-    panic("DDINIT_qemudisp: THIS IS A WORK IN PROGRESS!\n");
-
-
-    PROGRESS("DDINIT_qemudisp:\n");
-
-
-
-// #test
-// Sondando na lista de dispositivos encontrados 
-// pra ver se tem algum controlador de display.
-// #importante:
-// Estamos sondando uma lista que contruimos quando fizemos
-// uma sondagem no começo da inicializaçao do kernel.
-// #todo: 
-// Podemos salvar essa lista.
-// #todo
-// É uma estrutura para dispositivos pci. (pci_device_d)
-// Vamos mudar de nome.
-
-/*
-// pci device.
-    PCIDeviceQemuDisplay = 
-        (struct pci_device_d *) scan_pci_device_list2 ( 
-                                    (unsigned char) PCI_CLASSCODE_DISPLAY, 
-                                    (unsigned char) PCI_SUBCLASS_NONVGA );
-
-    if ((void *) PCIDeviceQemuDisplay == NULL){
-        printk("qemudisp_initialize: PCIDeviceQemuDisplay\n");
-        Status = (int) -1;
-        goto fail;
-    }
-    if ( PCIDeviceQemuDisplay->used != TRUE || 
-         PCIDeviceQemuDisplay->magic != 1234 )
-    {
-        printk ("qemudisp_initialize: PCIDeviceQemuDisplay validation\n");
-        Status = (int) -1;
-        goto fail;
-    }
-*/
-
-//
-// #test
-// Find the PCI device from a list of devices.
-//
-
-    struct pci_device_d *dev;
-    dev = (struct pci_device_d *) qemudisp_find_pci_device();
-    if ((void*) dev != NULL){
-        printk("Device was found\n");
-    }
-    printk("bus=%d dev=%d fun%d\n", dev->bus, dev->dev, dev->func);
-
-    dev->BAR0 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x10 );
-    dev->BAR1 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x14 );
-    dev->BAR2 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x18 );
-    dev->BAR3 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x1C );
-    dev->BAR4 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x20 );
-    dev->BAR5 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x24 );
-
-
-// Bits 31-4 : Actual base address
-// Bit  3    : Prefetchable (1 = yes)
-// Bits 2-1  : Type (00 = 32-bit, 10 = 64-bit)
-// Bit  0    : Always 0 for Memory BAR
-
-// clear flags
-    unsigned long lfb_pa  = dev->BAR0 & ~0xF;
-    unsigned long mmio_pa = dev->BAR2 & ~0xF;
-
-    printk("LFB  PA  = %x\n", lfb_pa);   // should be 0xFD000000 in your case
-    printk("MMIO PA  = %x\n", mmio_pa);
-
-// -------------------------
-// BAR0 = Framebuffer
-// bar0 → physical address of the framebuffer
-// Memory (prefetchable)
-// Linear Framebuffer (the real pixel memory)
-// 16 MB (default)
-// This is the address you should use as lfb_pa
-
-// -------------------------
-// BAR2 = MMIO (Bochs registers at +0x500)
-// bar2 → physical address of the MMIO control region
-// Memory (MMIO)
-// Control registers (Bochs DISPI + VGA ports)
-// 4 KB
-// Registers live at BAR2 + 0x500
-
-// #todo (IMPORTANT)
-// We need to map these addresses in order to access them 
-// using virtual addresses.
-
-    printk("BAR0=%x BAR1=%x BAR2=%x\n", 
-        dev->BAR0, dev->BAR1, dev->BAR2 );
-    // ...
-
-// Save the important addresses
-    qemudisp->lfb_pa   = lfb_pa;
-    qemudisp->mmio_pa  = mmio_pa;          // you may want to add this field
-    qemudisp->using_pci = TRUE;
-    qemudisp->bus = dev->bus;
-    qemudisp->dev = dev->dev;
-    qemudisp->fun = dev->func;
-
-// Keep a global pointer if you like
-    PCIDeviceQemuDisplay = dev;
-
-    printk("DDINIT_qemudisp: OK\n");
-
-    return 0;
-
-fail:
-    return (int) -1;
 }
 

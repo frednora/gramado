@@ -252,12 +252,16 @@ extern int system_state;
 // hw stuff - display device
 #include "../halls/hcidev/chardev/display/dc.h"
 #include "../halls/hcidev/chardev/display/rop.h"
+
 // display device support
 #include "../halls/hcidev/chardev/display/display.h"
+
 // bootloader display device
 #include "../halls/hcidev/chardev/display/bldisp/bldisp.h"
+
 // qemu display device
-//#include "../halls/hcidev/chardev/display/qemudisp/qemudisp.h"
+#include "../halls/hcidev/chardev/display/qemudisp/qemudisp.h"
+
 // ==================================
 // dev/per/
 #include "../halls/dev/per/dev00.h"
