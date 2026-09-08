@@ -22,18 +22,19 @@ static int __socket_pipe( int pipefd[2] );
 // socket:
 // Create an endpoint for communication.
 // See: http://man7.org/linux/man-pages/man2/socket.2.html
-// OUT: fd.
-int socket( int domain, int type, int protocol )
+// OUT: fd
+int socket(int domain, int type, int protocol)
 {
     int value = -1;
 
     value = 
         (int) sc80 ( 
-                  7000, 
-                  (unsigned long) domain, 
-                  (unsigned long) type, 
-                  (unsigned long) protocol );
-    if (value<0)
+                7000, 
+                (unsigned long) domain, 
+                (unsigned long) type, 
+                (unsigned long) protocol );
+
+    if (value < 0)
     {
         errno = (-value);
         return (int) -1;
@@ -42,28 +43,28 @@ int socket( int domain, int type, int protocol )
     return (int) value;
 }
 
-// Local worker.
+// Local worker
 static int __socket_pipe( int pipefd[2] )
 {
     return (int) sc80 ( 
-                     247, 
-                     (unsigned long) pipefd, 
-                     (unsigned long) pipefd, 
-                     (unsigned long) pipefd );
+                    247, 
+                    (unsigned long) pipefd, 
+                    (unsigned long) pipefd, 
+                    (unsigned long) pipefd );
 }
-
 
 int socketpair(int domain, int type, int protocol, int sv[2])
 {
     int fd = -1;
     int pipefd[2];
 
-// #bugbug
-// Only two types of family?
+// #bugbug:
+// Only this family? Why?
 
-    if ( domain == AF_UNSPEC || domain == AF_UNIX )
+    if ( domain == AF_UNSPEC || 
+         domain == AF_UNIX )
     {
-        if ( protocol != 0 ){
+        if (protocol != 0){
             return (int) (-1);
         }
 
@@ -71,7 +72,7 @@ int socketpair(int domain, int type, int protocol, int sv[2])
             //return (int) (-1);
 
         // Podemos colocar sv diretamente.
-        fd = (int) __socket_pipe (pipefd);
+        fd = (int) __socket_pipe(pipefd);
 
         if ( fd  == -1 ) { 
             printf ("socketpair: fail\n");
@@ -106,9 +107,9 @@ bind (
 {
     int value = -1;
 
-    if (sockfd<0)
+    if (sockfd < 0)
     {
-        errno=EBADF;
+        errno = EBADF;
         return (int) -1;
     }
 
@@ -117,15 +118,15 @@ bind (
 
     value = 
         (int) sc80 ( 
-                  7003, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+                7003, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen );
 
-    if (value<0)
+    if (value < 0)
     {
         errno = (-value);
-        printf ("bind: [FAIL] Couldn't bind\n");
+        printf ("bind: Fail\n");
         return (int) -1;
     }
 
@@ -139,45 +140,46 @@ int listen(int sockfd, int backlog)
 {
     int value = -1;
 
-// fd limits
+// Parameters:
     if (sockfd<0){
         errno = EBADF;
         goto fail;
     }
-// backlog limits
-    if (backlog <= 0 || backlog > SOMAXCONN){
+    // backlog limits
+    if (backlog <= 0 || backlog > SOMAXCONN)
+    {
         errno = EBADF;
         goto fail;
     }
 
     value = 
         (int) sc80 ( 
-                  7004, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) backlog, 
-                  (unsigned long) 0 );
+                7004, 
+                (unsigned long) sockfd, 
+                (unsigned long) backlog, 
+                (unsigned long) 0 );
 
-// Fail.
-    if (value<0)
+    // Fail
+    if (value < 0)
     {
         errno = (-value);
         goto fail;
     }
 
-// OK
+    // OK
     if (value == 0)
     {
        errno = 0;
        return 0;
     }
 
-// Positive values.
+// Positive values
     errno = 0;  //?
     return (int) value;
+
 fail:
     return (int) (-1);
 }
-
 
 // #todo
 // See: https://linux.die.net/man/2/accept4
@@ -190,16 +192,19 @@ accept4 (
 {
     errno = -1;
     printf ("accept4: [TODO] Not implemented yet\n");
+
+    // #todo: Not implemented yet
+
     return -1;
 }
-
 
 // Alternative. Not tested.
 int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
     int value = -1;
-    
-    if(sockfd<0)
+
+
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) (-1);
@@ -221,27 +226,26 @@ int accept2 (int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     return (int) value;
 }
 
-
-// OUT: fd.
+// OUT: fd
 int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
 {
     int value = -1;
 
-    if (sockfd<0){
+    if (sockfd < 0){
         errno = EBADF;
         return (int) (-1);
     }
-    if ( (void*) addr == NULL ){
+    if ((void*) addr == NULL){
         errno = EINVAL;
-        return -1;
+        return (int) (-1);
     }
 
     value = 
         (int) sc80 ( 
-                  7002, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+                7002, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen );
 
     if (value<0){
         errno = (-value);
@@ -251,7 +255,6 @@ int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen)
     return (int) value;
 }
 
-
 int 
 connect ( 
     int sockfd, 
@@ -260,19 +263,19 @@ connect (
 {
     int value = -1;
 
-    if(sockfd<0){
+    if (sockfd < 0){
         errno = EBADF;
         return (int) (-1);
     }
 
     value = 
         (int) sc80 ( 
-                  7001, 
-                  (unsigned long) sockfd, 
-                  (unsigned long) addr, 
-                  (unsigned long) addrlen );
+                7001, 
+                (unsigned long) sockfd, 
+                (unsigned long) addr, 
+                (unsigned long) addrlen );
 
-    if (value<0)
+    if (value < 0)
     {
         errno = (-value);
         return (int) (-1);
@@ -280,7 +283,6 @@ connect (
 
     return (int) value;
 }
-
 
 // shutdown:
 // shut down part of a full-duplex connection.
@@ -291,19 +293,19 @@ int shutdown(int sockfd, int how)
 {
     int value = -1;
 
-    if (sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) (-1);
     }
 
     value = (int) sc80 ( 
-              7009, 
-              (unsigned long) sockfd, 
-              (unsigned long) how, 
-              (unsigned long) how );
+            7009, 
+            (unsigned long) sockfd, 
+            (unsigned long) how, 
+            (unsigned long) how );
 
-    if (value<0)
+    if (value < 0)
     {
         errno = (-value);
         return (int) (-1);
@@ -311,7 +313,6 @@ int shutdown(int sockfd, int how)
 
     return (int) value;
 }
-
 
 /*
 void FD_CLR(int fd, fd_set *set);
@@ -336,8 +337,6 @@ void FD_ZERO(fd_set *set);
 void FD_ZERO(fd_set *set)
 {}
 */  
-
-
 
 /*
 select() and pselect() allow a program to monitor multiple file
@@ -365,7 +364,7 @@ int pselect(int nfds, fd_set *readfds, fd_set *writefds,
 
 
 // send:
-
+// ...
 ssize_t 
 send ( 
     int sockfd, 
@@ -379,14 +378,13 @@ send (
         return (ssize_t) -1;
     }
 
-    //#todo: Usar esse.
+    // #todo: Use this one
     //return (ssize_t) sendto ( (int) sockfd, 
         //(const void *) buf, (size_t) len, (int) flags,
         //(const struct sockaddr *) dest_addr, (socklen_t) addrlen );
 
-    return (ssize_t) write( sockfd, (const void *) buf, len );
+    return (ssize_t) write(sockfd, (const void *) buf, len);
 }
-
 
 // sendto:
 // 4.4BSD, SVr4, POSIX.1-2001.  
@@ -402,7 +400,7 @@ sendto (
     socklen_t addrlen )
 {
 
-// Parameters validation:
+// Parameters:
     if (sockfd < 0)
     {
         errno = EBADF;
@@ -410,15 +408,15 @@ sendto (
     }
     if ((void*) buf == NULL)
     {
-        errno = EFAULT;          // POSIX says EFAULT for invalid buffer
+        errno = EFAULT;    // POSIX says EFAULT for invalid buffer
         goto fail;
     }
     if (len == 0) {
-        return 0;               //  Common and useful convention
+        return 0;          //  Common and useful convention
     }
 
 // === Real work happens here ===
-// In a real libc you would call the kernel syscall here
+// In a libc we would call the kernel syscall here
 // When a valid destination is provided, it needs to use the syscall.
 
 // Case 1: Destination address provided → must use sendto syscall
@@ -436,7 +434,7 @@ sendto (
 // Case 2: No destination address → behave like send() / write()
 // This is correct for connected sockets (TCP, connected UDP, etc.)
 
-    return (ssize_t) write( sockfd, (const void *) buf, len );
+    return (ssize_t) write(sockfd, (const void *) buf, len);
 
 fail:
     return (ssize_t) -1;
@@ -531,12 +529,12 @@ recv (
         return 0;               //  Common and useful convention
     }
 
-   return (ssize_t) read( sockfd, (const void *) buf, len );
-
-    // #todo: Usar esse.
+    // #todo: Use this one
     //return (ssize_t) recvfrom ( (int) sockfd, 
         //(void *) buf, (size_t) len, (int) flags,
         //(struct sockaddr *) src_addr, (socklen_t *) addrlen );
+
+   return (ssize_t) read( sockfd, (const void *) buf, len );
 
 fail:
     return (ssize_t) (-1);
@@ -565,11 +563,14 @@ recvfrom (
         return 0;               //  Common and useful convention
     }
 
+    // #todo
+    // Maybe we need to use a syscall for recvfrom(),
+    // not simply call read().
+
     return (ssize_t) read( sockfd, (const void *) buf, len );
 fail:
     return (ssize_t) (-1);
 }
-
 
 ssize_t recvmsg (int sockfd, struct msghdr *msg, int flags)
 {
@@ -586,6 +587,9 @@ ssize_t recvmsg (int sockfd, struct msghdr *msg, int flags)
 
     printf ("recvmsg: [TODO]\n");
 
+    // #todo
+    // Maybe we need to use a syscall for recvmsg(),
+    // not simply call read().
 
 /*
     ssize_t ret = (ssize_t) sc80(??,                 // <<<< Choose a free syscall number
@@ -602,6 +606,7 @@ ssize_t recvmsg (int sockfd, struct msghdr *msg, int flags)
     return ret;
 */
 
+    //return (ssize_t) read( sockfd, (const void *) buf, len );
     return -1;
 
 fail:
@@ -684,9 +689,7 @@ getsockname (
     return (int) value;
 }
 
-
 // ===================================
-
 
 int 
 getsockopt(
@@ -696,11 +699,13 @@ getsockopt(
     void *optval, 
     socklen_t *optlen)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) -1;
     }
+
+    // #todo: Not implemented yet
 
     return -1; 
 }
@@ -714,33 +719,39 @@ setsockopt (
     const void *optval, 
     socklen_t optlen )
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) -1;
     }
+
+    // #todo: Not implemented yet
 
     return -1; 
 }
 
 int sendfd(int sockfd, int fd)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) -1;
     }
  
+    // #todo: Not implemented yet
+
     return -1; 
 }
 
 int recvfd(int sockfd)
 {
-    if(sockfd<0)
+    if (sockfd < 0)
     {
         errno = EBADF;
         return (int) -1;
     }
+
+    // #todo: Not implemented yet
 
     return -1; 
 }

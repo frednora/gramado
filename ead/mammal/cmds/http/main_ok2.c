@@ -150,15 +150,7 @@ static void do_request(int sockfd)
     {
         int chunk = (BufferSize - total > 1024) ? 1024 : (BufferSize - total);
         tmp_buf = (__http_response_buffer + total); 
-
-        // #todo:
-        // Use this one
-        // int Flags = 0;
-        // int nw = send( fd_output, tmp_buf, chunk, Flags );
-
-        // #provisory
         int nw = write( fd_output, tmp_buf, chunk );
-
         if (nw <= 0) 
             break;
         total += nw;

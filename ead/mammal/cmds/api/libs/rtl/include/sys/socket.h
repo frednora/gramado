@@ -1,11 +1,10 @@
-
 // sys/socket.h
 // Core socket functions and data structures.
 // See:
 // https://en.wikipedia.org/wiki/Berkeley_sockets
 
-#ifndef __SOCKET_H
-#define __SOCKET_H    1
+#ifndef __LIBC_SOCKET_H
+#define __LIBC_SOCKET_H    1
 
 #include <stddef.h>
 #include <sys/un.h>
@@ -219,9 +218,7 @@
 #define SO_PROTOCOL  0x1025  // get socket protocol
 
 
-
 // Read using getsockopt() with SOL_SOCKET, SO_PEERCRED 
-
 struct sockpeercred 
 {
     uid_t uid;  // effective user id
@@ -261,7 +258,7 @@ struct sockaddr
     char           sa_data[14];
 };
 
-// #test
+// For Gramado OS
 struct sockaddr_gram  
 {
     unsigned short sa_family;
@@ -280,14 +277,12 @@ struct sockproto
     unsigned short sp_protocol;  // protocol 
 };
 
-
 typedef struct
 {
     char     *h_addr;
     unsigned  h_length;
 
-}hostent;
-
+} hostent;
 
 
 /*
@@ -298,14 +293,12 @@ struct ucred {
 };
 */
 
-
 // Scatter/gather array items
 struct iovec 
 {
     void   *iov_base;  // Starting address
     size_t  iov_len;   // Number of bytes to transfer
 };
-
 
 struct msghdr 
 {
@@ -346,7 +339,7 @@ connect(
 int shutdown(int sockfd, int how);
 
 // Send:
-ssize_t send( int sockfd, const void *buf, size_t len, int flags);
+ssize_t send(int sockfd, const void *buf, size_t len, int flags);
 ssize_t sendmsg(int sockfd, const struct msghdr *msg, int flags);
 ssize_t 
 sendto ( 

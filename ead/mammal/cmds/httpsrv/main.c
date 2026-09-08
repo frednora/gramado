@@ -26,6 +26,9 @@ static void handle_connection(int connfd);
 
 // ===============================================
 
+// #todo
+// We need to read the header to know what to do 
+// with the connection state.
 static void handle_connection(int connfd)
 {
     char buffer[1024];
@@ -95,7 +98,15 @@ static void handle_connection(int connfd)
 
     printf("Sending response ...\n");
 
+//
 // Send
+//
+
+    // #todo:
+    // Use this one
+    // int Flags = 0;
+    // int nw = send(connfd, response, strlen(response), Flags);
+
     write(connfd, response, strlen(response));
 
     // Close connection
@@ -103,7 +114,7 @@ static void handle_connection(int connfd)
 }
 
 
-int main( int argc, char *argv[])
+int main(int argc, char *argv[])
 {
     struct sockaddr_in addr;
     socklen_t addrlen=0;
@@ -120,6 +131,7 @@ int main( int argc, char *argv[])
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
     //addr.sin_addr.s_addr = htonl(INADDR_ANY); 
 
+    // #todo: Maybe we can reveive the port number as parameter
     addr.sin_port = htons(HTTP_PORT);
 
     addrlen = sizeof(addr);
