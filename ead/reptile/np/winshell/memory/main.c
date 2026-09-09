@@ -21,14 +21,11 @@
 
 
 
-
-
 // Global display pointer
 struct gws_display_d *Display;
-
 struct dccanvas_d *dc00;  // shared dc
-
 static unsigned long __sh_flags = 0;
+
 
 struct ui_component_d *uic_button_refresh;
 struct ui_component_d *uic_button_close;
@@ -62,7 +59,6 @@ static struct button_info_d  MyButton_Close;
 static int __hover_button_id = -1; // Invalidate.
 
 
-
 // Window and control IDs
 static int main_window      = -1;
 //static int refresh_button   = -1;
@@ -82,6 +78,11 @@ static unsigned long cr_left   = 0;
 static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
+
+#define BGCOLOR_VIEWPORT  COLOR_WHITE
+#define BGCOLOR_HEADER    COLOR_LIGHTGRAY
+#define BGCOLOR_FOOTER    COLOR_STEELBLUE
+
 
 static void update_children(int fd);
 static void set_default_responder(int wid);
@@ -259,15 +260,20 @@ static void update_children(int fd)
         exit(1);
     }
 
-    // Background bands
-    lingui_draw_rectangle0_dc(dc00, 0, 0, cr_width, cr_height, COLOR_WHITE, 0);
+// --------------------
+// + Background for the viewport
+// + Bacground for the header
+// + Background for the footer
 
+    // Background band
+    lingui_draw_rectangle0_dc(dc00, 0, 0, cr_width, cr_height, BGCOLOR_VIEWPORT, 0);
     // Header band
-    lingui_draw_rectangle0_dc(dc00, 0, 0, cr_width, 40, COLOR_LIGHTGRAY, 0);
-
+    lingui_draw_rectangle0_dc(dc00, 0, 0, cr_width, 40, BGCOLOR_HEADER, 0);
     // Bottom band (button area)
-    lingui_draw_rectangle0_dc(dc00, 0, cr_height - (button_h + 20), cr_width, button_h + 20, COLOR_STEELBLUE, 0);
+    lingui_draw_rectangle0_dc(
+        dc00, 0, cr_height - (button_h + 20), cr_width, button_h + 20, BGCOLOR_FOOTER, 0);
 
+// --------------------
     // Header label
     const char *label_chose = "System Memory Status: ";
     libgui_drawstringblock_dc(dc00, 8, 8, COLOR_BLACK, label_chose, 2);
@@ -788,7 +794,7 @@ int main(int argc, char *argv[])
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, wi.cr_width, wi.cr_height,
-        COLOR_WHITE,
+        BGCOLOR_VIEWPORT,
         0  // ROP
     );
 
@@ -796,7 +802,7 @@ int main(int argc, char *argv[])
     lingui_draw_rectangle0_dc(
         dc00,
         0, 0, wi.cr_width, 40,
-        COLOR_LIGHTGRAY,
+        BGCOLOR_HEADER,
         0
     );
 
@@ -804,7 +810,7 @@ int main(int argc, char *argv[])
     lingui_draw_rectangle0_dc(
         dc00,
         0, wi.cr_height - 80, wi.cr_width, 80,
-        COLOR_STEELBLUE,
+        BGCOLOR_FOOTER,
         0
     );
 

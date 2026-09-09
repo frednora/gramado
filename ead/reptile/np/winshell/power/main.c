@@ -709,7 +709,6 @@ int main(int argc, char *argv[])
 
 
 // ============================================================
-// #test
 // Getting the flag earlier. This way we can use it in the loop.
 
     __sh_flags = (unsigned long) wi.sh_flags;
@@ -943,8 +942,8 @@ int main(int argc, char *argv[])
             if (*flags_ptr & 0x0008)
             {
                 // Clear BLIT bit
-                 *flags_ptr &= ~0x0008;
-                  // Redraw
+                *flags_ptr &= ~0x0008;
+                // Redraw
                 update_children(client_fd);
             }
             //if (*p == 1)

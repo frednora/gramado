@@ -27,16 +27,6 @@
 #include "globals.h"
 #include <editor.h>
 
-#define SCALE_FACTOR  2
-static int font_width  = (8 * SCALE_FACTOR);
-static int font_height = (8 * SCALE_FACTOR);
-
-#define FLAG_DIRTY   0x0001  // editor started drawing
-#define FLAG_READY   0x0002  // editor finished drawing
-#define FLAG_BLIT    0x0008  // needs redraw
-
-static unsigned long __sh_flags = 0;
-
 
 
 // Used by small_dc
@@ -546,28 +536,16 @@ static void editorDrawChar_dc(struct dccanvas_d *dc, int ch)
     cursor_x = pos_x;
     cursor_y = pos_y;
 
-    // # BLOCK
-    libgui_DrawCharBlockStyle_dc (
-        dc,
-        cr_left + (cursor_x * font_width),
-        cr_top  + (cursor_y * font_height),
-        Color,
-        ch,
-        SCALE_FACTOR
-    );
-
-/*
     // Draw character into the canvas
     libgui_drawchar_dc(
         dc,
-        cr_left + (cursor_x * font_width),   // X position
-        cr_top  + (cursor_y * font_height),   // Y position
+        cr_left + (cursor_x * 8),   // X position
+        cr_top  + (cursor_y * 8),   // Y position
         ch,                         // character
         Color,                      // foreground
         COLOR_WHITE,                // background
         0                           // ROP
     );
-*/
 
     cursor_x++;  // Advance cursor
 }
@@ -632,11 +610,11 @@ static void editorDrawCell(struct dccanvas_d *dc, int line, int col)
     // # BLOCK
     libgui_DrawCharBlockStyle_dc (
         dc,
-        cr_left + (col * font_width),
-        cr_top  + (line * font_height),
+        cr_left + (col * 8),
+        cr_top  + (line * 8),
         cell->fg,
         cell->ch,
-        SCALE_FACTOR
+        1
     );
 
     /*
@@ -672,8 +650,7 @@ static void editorRedrawBuffer(struct dccanvas_d *dc)
             continue;
 
         CharCount = lb->char_count;
-        for (col=0; col < CharCount; col++)
-        {
+        for (col=0; col < CharCount; col++) {
             editorDrawCell(dc, line, col);
         }
     }
@@ -723,23 +700,10 @@ static void editorHandleKey(int key)
             if (cursor_x > 0) 
             {
                 cursor_x--;
-
-                // # BLOCK
-                libgui_DrawCharBlockStyle_dc (
-                    dc00,
-                    cr_left + (cursor_x * font_width),
-                    cr_top  + (cursor_y * font_height),
-                    COLOR_BLACK,
-                    ' ',
-                    SCALE_FACTOR
-                );
-
-                /*
                 libgui_drawchar_dc(dc00,
-                    cr_left + (cursor_x * font_width),
-                    cr_top  + (cursor_y * font_height),
+                    cr_left + (cursor_x * 8),
+                    cr_top  + (cursor_y * 8),
                     ' ', COLOR_BLACK, COLOR_WHITE, 0);
-                */
             }
             break;
 
@@ -814,7 +778,7 @@ static void editorDrawStatusBar(void)
     if (!dc || !text_buffer) 
         return;
 
-    unsigned long sb_height = font_height *3;  //24;
+    unsigned long sb_height = 24;
     unsigned long sb_left   = 0;
     unsigned long sb_top    = cr_height - sb_height;
     unsigned long sb_width  = cr_width;
@@ -832,16 +796,6 @@ static void editorDrawStatusBar(void)
     sprintf( status, "Ln %d | Col %d", 
         cursor_y + 1, cursor_x + 1 );
 
-    libgui_drawstringblock_dc(
-        dc, 
-        sb_left + (8 * SCALE_FACTOR), 
-        sb_top + (6 * SCALE_FACTOR), 
-        COLOR_BLACK, 
-        status, 
-        SCALE_FACTOR 
-    );
-
-    /*
     // Draw string into the status bar
     libgui_drawstring_dc(
         dc,
@@ -852,7 +806,6 @@ static void editorDrawStatusBar(void)
         0, 
         status
     );
-    */
 }
 
 static int editorDrawInSmallBuffer(void)
@@ -1613,8 +1566,8 @@ static int __editor_initialize(void)
 // Cursor limits based on the window size.
     cursor_x = 0;
     cursor_y = 0;
-    cursor_x_max = ((w_width  / font_width)  -1);
-    cursor_y_max = ((w_height / font_height) -1);
+    cursor_x_max = ((w_width/8)  -1);
+    cursor_y_max = ((w_height/8) -1);
 
 // >> Status: interaction/activation. (int)
 // Indicates focus, active/inactive, and user engagement.
@@ -1711,12 +1664,6 @@ static int __editor_initialize(void)
     m[8] = lWi.cr_height;
 
     sc80( 48, &m[0], &m[0], &m[0] );
-
-
-// ============================================================
-// Getting the flag earlier. This way we can use it in the loop.
-
-    __sh_flags = (unsigned long) lWi.sh_flags;
 
 // ----------------------------------------
 
@@ -1942,28 +1889,6 @@ static int __editor_initialize(void)
     {
         if (isTimeToQuit == TRUE)
             break;
-
-        // #test It's working
-        // But its dangeours.
-        // Get value inside the shared area
-
-        //char *p;
-        if (__sh_flags != 0)
-        {
-            char *flags_ptr = (char *) __sh_flags;
-            if (*flags_ptr & 0x0008)
-            {
-                // Clear BLIT bit
-                *flags_ptr &= ~0x0008;
-                // Redraw
-                update_clients(client_fd);
-            }
-            //if (*p == 1)
-            //{
-            //    printf("power: FLAGS\n");
-            //    exit(0);
-            //}
-        }
 
         // 1. Pump events from Display Server
         pump(client_fd, main_window);

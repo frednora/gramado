@@ -2542,7 +2542,7 @@ libgui_BackbufferDrawCharBlockStyle(
 }
 
 void
-libgui_BackbufferDrawCharBlockStyle_dc(
+libgui_DrawCharBlockStyle_dc(
     struct dccanvas_d *dc,
     unsigned long x,          // top-left in screen space
     unsigned long y,
@@ -2637,7 +2637,7 @@ libgui_drawstringblock_dc(
             cx += advance;          // or advance / 2 for tighter word spacing
         } else {
 
-            libgui_BackbufferDrawCharBlockStyle_dc(
+            libgui_DrawCharBlockStyle_dc(
                 dc, cx, y, color, *str, scale );
 
 			cx += advance;

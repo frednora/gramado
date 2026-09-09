@@ -191,7 +191,7 @@ lingui_draw_rectangle0_dc(
     unsigned long rop );
 
 void
-libgui_BackbufferDrawCharBlockStyle_dc(
+libgui_DrawCharBlockStyle_dc(
     struct dccanvas_d *dc,
     unsigned long x,          // top-left in screen space
     unsigned long y,
