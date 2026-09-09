@@ -125,9 +125,8 @@ void do_hello(int src_tid)
 // Sending back the same message found into the buffer.
 // Message back to caller.
 
-// The message buffer address.
-    unsigned long msg_buffer_address = 
-        (unsigned long) RTLEventBuffer;
+// The message buffer address
+    unsigned long msg_buffer_address = (unsigned long) RTLEventBuffer;
 
     rtl_post_system_message( 
         (int) dst_tid,
@@ -173,6 +172,7 @@ void xxxSendResponse(void)
 }
 
 // Process events.
+// Processing requests.
 // These events come from the kernel or another process.
 // The caller TID for the kernel is 99.
 static int 
@@ -183,16 +183,16 @@ xxxProcessEvent (
     unsigned long long2,
     int caller_tid )
 {
-// Processing requests.
     int isKernelMessage = FALSE;
 
 // Invalid message code
     if (msg <= 0){
         goto fail;
     }
-// Is it a message from the kernel.
+// Is it a message from the kernel?
     if (caller_tid == 99)
         isKernelMessage = TRUE;
+
 
     switch (msg){
 
@@ -438,10 +438,10 @@ static int xxxEventLoopSystemEvents(void)
         {
             if (RTLEventBuffer[1] < 100)
             {
-                // Get caller's tid.
+                // Get caller's tid
                 Caller.tid = (int) ( RTLEventBuffer[8] & 0xFFFF );
 
-                // Dispatch.
+                // Dispatch
                 xxxProcessEvent ( 
                     (void*) RTLEventBuffer[0], 
                     RTLEventBuffer[1],  // msg code.
@@ -503,10 +503,10 @@ int libinit_initialize_library(void)
 // We're NOT using the unix-sockets
 // just like in a regular Gramado server. 
 // We're just getting messages in the threads message queue.
+// Called by main.c
 
 int msgloop_RunServer(void)
 {
-// Called by main() in main.c
 
 // #todo
 // Move the loop and the handler to the library.
@@ -530,6 +530,7 @@ int msgloop_RunServer(void)
 
     //# no focus!
     //rtl_focus_on_this_thread();
+
     IdleLoopStatus = (int) xxxEventLoopSystemEvents();
     if (IdleLoopStatus < 0){
         printf("msgloop_RunServer: Loop failed\n");
@@ -575,15 +576,13 @@ int msgloop_RunServer_HeadlessMode(void)
 // This is the only environment that our
 // network infrastructure is working fine.
 
-
 // Enable network.
 // The network infra-structure has a flag
 // to not pump data from the NIC device.
 // Let's enable the input.
+
     //do_net_on();
 
-// dhcp
-// Let's o the dhcp dialog.
 // Maybe this is the first time we're doing this.
     //do_dhcp_dialog();
 

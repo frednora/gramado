@@ -1258,7 +1258,7 @@ static void compareStrings(int fd)
 // Send system message to init.bin and
 // do NOT wait for response.
 // But it will send us a message back.
-    if ( gramado_strncmp(prompt,"msg2",4) == 0 )
+    if ( gramado_strncmp(prompt, "msg2", 4) == 0 )
     {
         // IN: PID for init process, msgcode, sig, sig.
         rtl_post_to_tid( 0, 44888, 1234, 5678 );
@@ -1267,7 +1267,7 @@ static void compareStrings(int fd)
 
 // Sleep until
 // IN: ms.
-    if ( gramado_strncmp(prompt,"sleep",5) == 0 ){
+    if ( gramado_strncmp(prompt, "sleep", 5) == 0 ){
         rtl_sleep(2000);
         goto exit_cmp;
     }

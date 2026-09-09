@@ -368,6 +368,10 @@ static void process_command(void)
     else if (strcmp(argv[0], "clear") == 0) {
         shell_builtin_clear();
     }
+    else if (strcmp(argv[0], "msg1") == 0) {
+        // IN: PID for init process, msgcode, sig, sig.
+        rtl_post_to_tid( 0, 44888, 1234, 5678 );
+    }
     else if (strcmp(argv[0], "reset") == 0) {
         __test_reset();
     }

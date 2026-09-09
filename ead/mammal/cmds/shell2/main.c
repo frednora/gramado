@@ -154,6 +154,12 @@ static void process_command(void)
         write(1, "\n", 1);  // Go to the next line
         //printf("HELP\n");
     }
+    else if (strcmp(argv[0], "msg1") == 0) {
+
+        // IN: PID for init process, msgcode, sig, sig.
+        rtl_post_to_tid( 0, 44888, 1234, 5678 );
+
+    }
     else if (strcmp(argv[0], "run") == 0 && argc > 1) {
 
         // Build the command line string from argv[1..]
