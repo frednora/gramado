@@ -27,9 +27,13 @@
 #include "globals.h"
 #include <editor.h>
 
-#define SCALE_FACTOR  2
+#define SCALE_FACTOR  3
 static int font_width  = (8 * SCALE_FACTOR);
 static int font_height = (8 * SCALE_FACTOR);
+
+static int UseStatusbar = TRUE;
+
+// -------------------------------------
 
 #define FLAG_DIRTY   0x0001  // editor started drawing
 #define FLAG_READY   0x0002  // editor finished drawing
@@ -808,8 +812,11 @@ editorSetCursor(
 static void editorDrawStatusBar(void)
 {
     struct dccanvas_d *dc;
-
+   
     dc = dc00;
+
+    if (UseStatusbar != TRUE)
+        return;
 
     if (!dc || !text_buffer) 
         return;
