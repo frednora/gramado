@@ -1,4 +1,4 @@
-# nora3d
+# velo3d
 
 3D library and demo for Gramado OS.
 
