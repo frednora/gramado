@@ -151,7 +151,7 @@ int x64smp_initialization(void)
     smp_info.probe_via = 0;
 
 // The SMP support
-    printk("SMP: Starting ...\n");
+    //printk("SMP: Starting ...\n");
 
 //
 // == ACPI ===========================================================

@@ -1,5 +1,8 @@
 // main.c
-// Created by Fred Nora.
+// Gramado OS client-side GUI app: Launch
+// Launches #power.bin, #memory.bin or #sysinfo.bin.
+// Respects the same event loop, pump, DC, shared flags and
+// interaction pattern used by the Power Manager example.
 
 // rtl
 #include <types.h>
@@ -13,99 +16,355 @@
 //#include <arpa/inet.h>
 #include <sys/socket.h>
 #include <rtl/gramado.h>
-// libgws - The client-side library.
+
+// The client-side library
 #include <gws.h>
+
+// #test
+// The client-side library
+#include <libgui.h>
 
 #include "launch.h"
 
+static int toggle_flag = 0;
+
+static int isTimeToQuit = FALSE;
+
+// Global display pointer
 struct gws_display_d *Display;
 
-// Network ports
-#define PORTS_WS  4040
-#define PORTS_NS  4041
-#define PORTS_FS  4042
-// ...
+struct dccanvas_d *dc00;  // shared dc
 
-#define IP(a, b, c, d) \
-    (a << 24 | b << 16 | c << 8 | d)
+static unsigned long __sh_flags = 0;
 
 
+struct ui_component_d *uic_button_power;
+struct ui_component_d *uic_button_memory;
+struct ui_component_d *uic_button_sysinfo;
+struct ui_component_d *uic_footer;
 
-struct my_menu_info_d 
+struct button_info_d
 {
-    int menu_wid;
+    int button_id;
 
-    int item0_wid;
-    int item1_wid;
-    int item2_wid;
-    int item3_wid;
+// This is the window id that represents the icon.
+    int wid;
+
+// Absolute values
+    unsigned long absolute_left;
+    unsigned long absolute_top;
+    unsigned long width; 
+    unsigned long height;
+
+// Relative values
+    unsigned long left;
+    unsigned long top;
+
+// The state of the icon, it also represents
+// the state of the client application.
+// (running, minimized, etc.).
+    int state;
 };
-struct my_menu_info_d MyMenuInfo;
+static struct button_info_d  MyButton_Power;
+static struct button_info_d  MyButton_Memory;
+static struct button_info_d  MyButton_Sysinfo;
 
-static int main_window = -1;
-static int isTimeToQuit=FALSE;
-
-// ====================================
-
-static int 
-launchProcedure(
-    int fd, 
-    int event_window, 
-    int event_type, 
-    unsigned long long1, 
-    unsigned long long2 );
-
-void pump(int fd, int wid);
-static int __initialize_connection(void);
-
-static void __paint_worker(int fd);
-static void __close_worker(int fd);
-
-// ====================================
+static int __hover_button_id = -1; // Invalidate.
 
 
-// Worker: redraw all children when we receive MSG_PAINT
-static void __paint_worker(int fd)
+struct bmp_cache_d *icon00_cache;
+
+// -----------------
+
+// Window IDs
+static int main_window     = -1;
+
+static int __paint_is_needed = FALSE;
+
+// Default responder (button to trigger on Enter)
+static int default_responder = -1;
+
+static void set_default_responder(int wid);
+static void switch_responder(int fd);
+static void trigger_default_responder(int fd);
+
+static void on_button_clicked(int id);
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
+static void update_children(int fd);
+
+// =====================================================
+
+
+/**
+ * Generic syscall stub for x86_64.
+ * num   The syscall number (placed in rax)
+ * arg1  First argument (placed in rdi)
+ * arg2  Second argument (placed in rsi)
+ * arg3  Third argument (placed in rdx)
+ * return      Result from the kernel (returned in rax)
+ */
+
+// "a"(num)  → RAX = syscall number
+// "D"(arg1) → RDI = first argument
+// "S"(arg2) → RSI = second argument
+// "d"(arg3) → RDX = third argument
+
+/*
+unsigned long 
+syscall3 (
+    unsigned long num, 
+    unsigned long arg1, 
+    unsigned long arg2, 
+    unsigned long arg3 ) 
 {
-    // Redraw the main window
-    gws_redraw_window(fd, main_window, TRUE);
+    unsigned long ret=0;
 
-    // Redraw the menu container
-    gws_redraw_window(fd, MyMenuInfo.menu_wid, TRUE);
+    asm volatile (
+        "syscall \n"
+        : "=a" (ret)                    // Output: rax contains the return value
+        : "a" (num),                    // Input: rax = syscall number
+          "D" (arg1),                   // Input: rdi = arg1
+          "S" (arg2),                   // Input: rsi = arg2
+          "d" (arg3)                    // Input: rdx = arg3
+        : "rcx", "r11", "memory"        // Clobbers: syscall changes rcx and r11
+    );
 
-    // Redraw each menu item
-    gws_redraw_window(fd, MyMenuInfo.item0_wid, TRUE);
-    gws_redraw_window(fd, MyMenuInfo.item1_wid, TRUE);
-    gws_redraw_window(fd, MyMenuInfo.item2_wid, TRUE);
-    gws_redraw_window(fd, MyMenuInfo.item3_wid, TRUE);
+    return (unsigned long) ret;
+}
+*/
 
-    gws_refresh_window (fd, main_window);
 
-    //#todo: Lock the geometry of the main window and the menu container.
+// Handle click events for components
+static void on_button_clicked(int id)
+{
+    if (id < 0)
+        return;
 
-    // #debug
-    //printf("Paint worker: refreshed main, menu, and items\n");
+    switch (id)
+    {
+        case 1:  // MyButton_Power
+            printf("Button %d clicked! Launching #power.bin\n", id);
+            rtl_clone_and_execute("#power.bin");
+            // Do not exit — keep the launcher alive so the user can
+            // launch more programs if desired.
+            break;
+
+        case 2:  // MyButton_Memory
+            printf("Button %d clicked! Launching #memory.bin\n", id);
+            rtl_clone_and_execute("#memory.bin");
+            break;
+
+        case 3:  // MyButton_Sysinfo
+            printf("Button %d clicked! Launching #sysinfo.bin\n", id);
+            rtl_clone_and_execute("#sysinfo.bin");
+            break;
+
+        default:
+            printf("Unknown button clicked: %d\n", id);
+            break;
+    };
 }
 
-// Worker: destroy all windows and exit
-static void __close_worker(int fd)
+
+// Hit-test for our fake buttons in LaunchApp
+static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my) 
 {
-    // Destroy children first
-    gws_destroy_window(fd, MyMenuInfo.item0_wid);
-    gws_destroy_window(fd, MyMenuInfo.item1_wid);
-    gws_destroy_window(fd, MyMenuInfo.item2_wid);
-    gws_destroy_window(fd, MyMenuInfo.item3_wid);
 
-    // Destroy the menu container
-    gws_destroy_window(fd, MyMenuInfo.menu_wid);
+// Button Power
+    if ( rel_mx >= MyButton_Power.left && 
+         rel_mx <= MyButton_Power.left + MyButton_Power.width &&
+         rel_my >= MyButton_Power.top  && 
+         rel_my <= MyButton_Power.top + MyButton_Power.height )
+    {
+        return (int) MyButton_Power.button_id;
+    }
 
-    // Destroy the main window
-    gws_destroy_window(fd, main_window);
+// Button Memory
+    if ( rel_mx >= MyButton_Memory.left && 
+         rel_mx <= MyButton_Memory.left + MyButton_Memory.width &&
+         rel_my >= MyButton_Memory.top  && 
+         rel_my <= MyButton_Memory.top + MyButton_Memory.height )
+    {
+        return (int) MyButton_Memory.button_id;
+    }
 
-    //printf("Close worker: destroyed all windows\n");
+// Button Sysinfo
+    if ( rel_mx >= MyButton_Sysinfo.left && 
+         rel_mx <= MyButton_Sysinfo.left + MyButton_Sysinfo.width &&
+         rel_my >= MyButton_Sysinfo.top  && 
+         rel_my <= MyButton_Sysinfo.top + MyButton_Sysinfo.height )
+    {
+        return (int) MyButton_Sysinfo.button_id;
+    }
+
+    return -1;
 }
 
-// Process events
+static void update_children(int fd)
+{
+    struct gws_window_info_d  wi;
+
+    // Get window info
+    gws_get_window_info(fd, main_window, &wi);
+
+    unsigned long button_w = wi.cr_width / 5;
+    unsigned long button_h = wi.cr_height / 8;
+
+    unsigned long button_y = (wi.cr_height - button_h) / 2;
+
+    // Three buttons evenly spaced
+    unsigned long power_x   = (wi.cr_width / 6)     - (button_w / 2);
+    unsigned long memory_x  = (wi.cr_width / 2)     - (button_w / 2);
+    unsigned long sysinfo_x = (5 * wi.cr_width / 6) - (button_w / 2);
+
+
+// #test: We are still thinking about the bits configuration
+//#define FLAG_DIRTY  0x0001  // client started drawing
+//#define FLAG_READY  0x0002  // client finished drawing
+//#define FLAG_ACK    0x0004  // server acknowledged
+
+
+// -----------------
+
+    if ((void*)dc00 == NULL)
+        return;
+
+// The background for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, wi.cr_width, wi.cr_height,
+        COLOR_WHITE,
+        0  // ROP
+    );
+
+// ------------------------------------------
+// String
+
+    libgui_drawstringblock_dc(
+        dc00,
+        8,
+        8,
+        COLOR_BLACK,
+        "P=Power  M=Memory  I=Sysinfo  Q=Quit",
+        2
+    );
+
+//
+// Support for button positions and dimensions
+//
+
+// -------------------------------------------------
+// Redraw the Power button
+
+    // Relative values
+    MyButton_Power.left = power_x;
+    MyButton_Power.top  = button_y;
+
+    // Update absolute values.
+    MyButton_Power.absolute_left = 
+        wi.left + wi.cr_left + MyButton_Power.left;
+    MyButton_Power.absolute_top = 
+        wi.top + wi.cr_top + MyButton_Power.top;
+
+    libgui_set_ui_component_position(
+        uic_button_power, 
+        MyButton_Power.left, 
+        MyButton_Power.top );
+    libgui_set_ui_component_dimension(
+        uic_button_power,
+        button_w,
+        button_h );
+    libgui_set_ui_component_flags(uic_button_power, (0x0001 | 0x0002) );
+    libgui_redraw_ui_component(uic_button_power, dc00);
+
+// -------------------------------------------------
+// Redraw the Memory button
+
+    // Relative values
+    MyButton_Memory.left = memory_x;
+    MyButton_Memory.top  = button_y;
+
+    // Update absolute values
+    MyButton_Memory.absolute_left = 
+        wi.left + wi.cr_left + MyButton_Memory.left;
+    MyButton_Memory.absolute_top = 
+        wi.top + wi.cr_top + MyButton_Memory.top;
+
+    libgui_set_ui_component_position(
+        uic_button_memory, 
+        MyButton_Memory.left, 
+        MyButton_Memory.top );
+    libgui_set_ui_component_dimension(
+        uic_button_memory,
+        button_w,
+        button_h );
+    libgui_set_ui_component_flags(uic_button_memory, (0x0001 | 0x0002) );
+    libgui_redraw_ui_component(uic_button_memory, dc00);
+
+// -------------------------------------------------
+// Redraw the Sysinfo button
+
+    // Relative values
+    MyButton_Sysinfo.left = sysinfo_x;
+    MyButton_Sysinfo.top  = button_y;
+
+    // Update absolute values
+    MyButton_Sysinfo.absolute_left = 
+        wi.left + wi.cr_left + MyButton_Sysinfo.left;
+    MyButton_Sysinfo.absolute_top = 
+        wi.top + wi.cr_top + MyButton_Sysinfo.top;
+
+    libgui_set_ui_component_position(
+        uic_button_sysinfo, 
+        MyButton_Sysinfo.left, 
+        MyButton_Sysinfo.top );
+    libgui_set_ui_component_dimension(
+        uic_button_sysinfo,
+        button_w,
+        button_h );
+    libgui_set_ui_component_flags(uic_button_sysinfo, (0x0001 | 0x0002) );
+    libgui_redraw_ui_component(uic_button_sysinfo, dc00);
+
+//
+// bmp
+//
+
+    if (icon00_cache && icon00_cache->loaded) 
+    {
+        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
+    }
+
+//
+// footer
+//
+
+    libgui_set_ui_component_position(
+        uic_footer, 0, wi.cr_height - 24 );
+    libgui_set_ui_component_dimension(
+        uic_footer, wi.cr_width, 24 );
+    libgui_set_ui_component_flags(uic_footer, (0x0001 | 0x0002));
+    libgui_redraw_ui_component(uic_footer, dc00);
+}
+
+static void set_default_responder(int wid)
+{
+    if (wid >= 0)
+        default_responder = wid;
+}
+
+static void switch_responder(int fd)
+{
+    // Placeholder — can cycle focus among the three buttons later.
+}
+
+static void trigger_default_responder(int fd) 
+{
+    // Placeholder for Enter key.
+}
+
+// ----------------------------------------------------
+// Procedure: handles events sent by the display server
+// ----------------------------------------------------
 static int 
 launchProcedure(
     int fd, 
@@ -114,569 +373,471 @@ launchProcedure(
     unsigned long long1, 
     unsigned long long2 )
 {
-    int f12Status = -1;
-    int tmpNewWID = -1;
+    int ButtonId = -1;
 
-// Parameters:
-    if (fd < 0){
-        goto fail;
-    }
-    if (event_type <= 0){
-        goto fail;
-    }
+    if (fd < 0)
+        return (int) -1;
 
-// Process the event.
-    switch (event_type){
+    if (event_window < 0)
+        return (int) -1;
+    if (event_type < 0)
+        return (int) -1;
 
-        case 0:
-            printf("msg\n");
+    switch (event_type) {
+
+    // Null event
+    case 0:
+        return 0;
+        break;
+
+    // Redraw child windows
+    case MSG_PAINT:
+        update_children(fd);
+        return 0;
+        break;
+
+    case MSG_KEYDOWN:
+        switch (long1){
+
+        case VK_RETURN:
+            //trigger_default_responder(fd);
             break;
 
-        //#todo
-        // Update the bar and the list of clients.
-        case MSG_PAINT:
-            __paint_worker(fd);   // redraw main, container, items
-            //printf("launch: MSG_PAINT\n");
-
-            // #todo
-            // We need to update all the clients
-            // Create update_clients()
-            //gws_redraw_window(fd, main_window, TRUE);
-            //gws_redraw_window(fd, NavigationInfo.button00_window, TRUE);
-            //gws_redraw_window(fd, NavigationInfo.button01_window, TRUE);
-            //gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
-            //draw_separator(fd);
-            //#test
-            //#todo
-            //gws_redraw_window(fd, iconList[0], TRUE);
-            //gws_redraw_window(fd, iconList[1], TRUE);
-            //gws_redraw_window(fd, iconList[2], TRUE);
-            //gws_redraw_window(fd, iconList[3], TRUE);
-
-            // #test (good)
-            // Async with 4 data
-            // Redraw and show.
-            //gws_async_command2( fd, 2000, 0,
-                //main_window,
-                //NavigationInfo.button00_window,
-                //NavigationInfo.button01_window,
-                //NavigationInfo.button02_window );
-            //draw_separator(fd);
-
+        case 'P':
+        case 'p':
+            printf("launch: P >> Power\n");
+            rtl_clone_and_execute("#power.bin");
             break;
 
-        // One button was clicked
-        case GWS_MouseClicked:
-            //printf("[DEBUG EVENT] type=%d event_window=%d long1=%d long2=%d\n",
-                //event_type, event_window, (int) long1, (int) long2);
-
-            if ((int) long1 == MyMenuInfo.item0_wid)
-                printf("Item 0\n");
-            if ((int) long1 == MyMenuInfo.item1_wid)
-                printf("Item 1\n");
-            if ((int) long1 == MyMenuInfo.item2_wid)
-                printf("Item 2\n");
-            if ((int) long1 == MyMenuInfo.item3_wid)
-                printf("Item 3\n");
+        case 'M':
+        case 'm':
+            printf("launch: M >> Memory\n");
+            rtl_clone_and_execute("#memory.bin");
             break;
 
-        // Add new client. Given the wid.
-        // The server created a client.
-        case 99440:
-            printf("launch: [99440]\n");
+        case 'I':
+        case 'i':
+            printf("launch: I >> Sysinfo\n");
+            rtl_clone_and_execute("#sysinfo.bin");
             break;
 
-        // Remove client. Given the wid.
-        // The server removed a client.
-        case 99441:
-            printf("launch: [99441]\n");
-            break;
-        
-        // Update client info.
-        // The server send data about the client.
-        case 99443:
-            printf("launch: [99443]\n");
+        // Quit the launcher itself
+        case 'Q':
+        case 'q':
+            printf("launch: Send QUIT message\n");
+            gws_async_command(fd,88,0,0);  // Send quit message
+            isTimeToQuit = TRUE;
             break;
 
-        // #test:
-        // ds sent us a message to create an iconic window for an app.
-        case 99500:
-            /*
-            tmpNewWID = (int) create_bar_icon(
-                fd, 
-                main_window,
-                2,  // Icon ID
-                8,8,28,28,
-                "NEW" );
-            if (tmpNewWID < 0)
-                goto fail;
-            gws_refresh_window(fd,tmpNewWID);
-            */
-            break;
+        };
+        break;
 
-        case MSG_CLOSE:
-            __close_worker(fd);
-            isTimeToQuit = TRUE;  // Signal to quit the app
-            break;
-        
-        case MSG_COMMAND:
-            /*
-            printf("taskbar.bin: MSG_COMMAND %d \n",long1);
-            switch(long1){
-            case 4001:  //app1
-            printf("taskbar.bin: 4001\n");
-            gws_clone_and_execute("#browser.bin");  break;
-            case 4002:  //app2
-            printf("taskbar.bin: 4002\n");
-            gws_clone_and_execute("#editor.bin");  break;
-            case 4003:  //app3
-            printf("taskbar.bin: 4003\n");
-            gws_clone_and_execute("#terminal.bin");  break;
-            };
-            */
-            break;
+    case MSG_SYSKEYDOWN:
+        switch (long1) {
+            case VK_F1:
+                printf("LaunchApp: VK_F1 >> Power\n");
+                rtl_clone_and_execute("#power.bin");
+                return 0;
+            case VK_F2:
+                printf("LaunchApp: VK_F2 >> Memory\n");
+                rtl_clone_and_execute("#memory.bin");
+                return 0;
+            case VK_F3:
+                printf("LaunchApp: VK_F3 >> Sysinfo\n");
+                rtl_clone_and_execute("#sysinfo.bin");
+                return 0;
+            case VK_F11:
+                // Should not appear — broker intercepts fullscreen toggle
+                printf("LaunchApp: VK_F11 (unexpected)\n");
+                return 0;
+
+            case VK_ARROW_LEFT: 
+            case VK_ARROW_RIGHT: 
+                switch_responder(fd); 
+                break;
+
+            // reserved for future
+            case VK_ARROW_UP: 
+            case VK_ARROW_DOWN: 
+                printf("LaunchApp: Arrow up/down pressed (no action yet)\n"); 
+                break;
+        };
+        break;
+
+    case GWS_MouseClicked:
+        break;
+
+    // #test
+    case MSG_MOUSEMOVE:
+        // #bugbug
+        // Kernel is sending us absolute values
+        // instead of relative values.
+        ButtonId = (int) __hit_test_button(long1, long2);
+        if (ButtonId > 0)
+            __hover_button_id = ButtonId;
+        if (ButtonId <= 0)
+            __hover_button_id = -1;
+        break;
+
+    case MSG_MOUSEPRESSED:
+        break;
+
+    case MSG_MOUSERELEASED:
+        printf("launch: Button released: %d\n", __hover_button_id);
+        on_button_clicked(__hover_button_id);
+        break;
+
+    case MSG_CLOSE:
+        isTimeToQuit = TRUE;  // #test
+        break;
 
 
-        // 20 = MSG_KEYDOWN
-        case MSG_KEYDOWN:
-            /*
-            switch(long1){
-                // keyboard arrows
-                case 0x48: 
-                    goto done; 
-                    break;
-                case 0x4B: 
-                    goto done; 
-                    break;
-                case 0x4D: 
-                    goto done; 
-                    break;
-                case 0x50: 
-                    goto done; 
-                    break;
-                
-                case '1':
-                    goto done;
-                    break;
- 
-                case '2': 
-                    goto done;
-                    break;
-                
-                case VK_RETURN:
-                    return 0;
-                    break;
-                
-                // input
-                default:                
-                    break;
-            }
-            */
-            break;
-
-        // 22 = MSG_SYSKEYDOWN
-        case MSG_SYSKEYDOWN:
-            switch (long1){
-                case VK_F1:
-                    printf("My F1\n"); 
-                    break;
-                case VK_F2:
-                    printf("My F2\n"); 
-                    break;
-                case VK_F3:
-                    printf("My F3\n"); 
-                    break;
-                case VK_F4:
-                    printf("My F4\n"); 
-                    break;
-                default:
-                    break;
-            };
-            break;
-
-        default:
-            goto fail;
-            break;
+    // Unknown event
+    default:
+        return -1;
+        break;
     };
 
-    // ok
-    // retorna TRUE quando o diálogo chamado 
-    // consumiu o evento passado à ele.
-
-done:
-    //check_victory(fd);
-    return 0;
-    //return (int) gws_default_procedure(fd,0,msg,long1,long2);
-fail:
-    return (int) (-1);
+// Fail
+    return (int) -1;
 }
 
-
-// Pump event
-// + Request next event with the server.
-// + Process the event.
-void pump(int fd, int wid)
+// ----------------------------------------------------
+// Pump: fetches events from the server and dispatches
+// ----------------------------------------------------
+static void pump(int fd)
 {
-    struct gws_event_d  lEvent;
-    lEvent.used = FALSE;
-    lEvent.magic = 0;
-    lEvent.type = 0;
-    //lEvent.long1 = 0;
-    //lEvent.long2 = 0;
+    struct gws_event_d event;
+    event.used = FALSE;
+    event.magic = 0;
+    event.type = 0;
 
     struct gws_event_d *e;
+    e = (struct gws_event_d *) gws_get_next_event(
+        fd, (int) main_window, (struct gws_event_d *) &event );
 
-    if (fd<0)
+    if ((void*) e == NULL)
         return;
-    if (wid<0)
+    if (e->magic != 1234 || e->used != TRUE) 
         return;
-
-// Request event with the display server.
-    e = 
-        (struct gws_event_d *) gws_get_next_event(
-                                   fd, 
-                                   wid,
-                                   (struct gws_event_d *) &lEvent );
-
-    if ((void *) e == NULL)
-        return;
-    if (e->magic != 1234){
-        return;
-    }
     if (e->type <= 0)
         return;
 
-// Process event
-    int Status = -1;
-    Status = launchProcedure( fd, e->window, e->type, e->long1, e->long2 );
-
-    // ...
+    launchProcedure(fd, e->window, e->type, e->long1, e->long2);
 }
 
-
-// OUT: client fd.
-static int __initialize_connection(void)
-{
-
-// -------------------------
-    struct sockaddr_in addr_in;
-    addr_in.sin_family = AF_INET;
-    addr_in.sin_addr.s_addr = IP(127,0,0,1);    //ok
-    //addr_in.sin_addr.s_addr = IP(127,0,0,9);  //fail
-    addr_in.sin_port = __PORTS_DISPLAY_SERVER;
-// -------------------------
-
-
-    int client_fd = -1;
-
-    //gws_debug_print ("-------------------------\n"); 
-    //printf          ("-------------------------\n"); 
-    //gws_debug_print("taskbar.bin: Initializing\n");
-    //printf       ("taskbar.bin: Initializing ...\n");
-
-// Socket:
-// Create a socket. 
-// AF_GRAMADO = 8000
-
-    // #debug
-    //printf ("gws: Creating socket\n");
-
-    client_fd = 
-        (int) socket( 
-            AF_INET,   // Remote or local connections
-            SOCK_RAW,  // Type
-            0 );       // Protocol
-
-    if (client_fd < 0)
-    {
-       gws_debug_print("launch.bin: on socket()\n");
-       printf         ("launch.bin: on socket()\n");
-       exit(1);  //#bugbug Cuidado.
-    }
-
-// Connect
-// Nessa hora colocamos no accept um fd.
-// então o servidor escreverá em nosso arquivo.
-// Tentando nos conectar ao endereço indicado na estrutura
-// Como o domínio é AF_GRAMADO, então o endereço é "w","s".
-
-    //printf ("gws: Trying to connect ..\n");      
-
-    while (TRUE){
-        if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
-            debug_print("launch.bin: Connection Failed\n"); 
-            printf     ("launch.bin: Connection Failed\n"); 
-        }else{ break; }; 
-    };
-
-    return (int) client_fd;
-}
 
 int main(int argc, char *argv[])
 {
-    const char *display_name_string = "display:name.0";
-    int client_fd=-1;
+    const char *display_name = "display:name.0";
+    int client_fd = -1;
 
-    //printf("launch.BIN: Hello\n");
+    isTimeToQuit = FALSE;
 
-// ============================
-// Open display.
-// IN: hostname:number.screen_number
-    Display = (struct gws_display_d *) gws_open_display(display_name_string);
-    if ((void*) Display == NULL){
-        printf("launch.bin: Display\n");
-        goto fail;
-    }
-// Get client socket.
-    client_fd = (int) Display->fd;
-    if (client_fd <= 0){
-        printf("launch.bin: fd\n");
-        goto fail;
-    }
-
-
-//
-// Create main window
-//
-    //printf("launch.BIN: Create window\n");
-
-    const char *program_name = "Launch";
-
-    main_window = 
-        (int) gws_create_window (
-                  client_fd,
-                  WT_OVERLAPPED, 
-                  WINDOW_STATUS_ACTIVE,  // status
-                  WINDOW_STATE_NULL,     // state
-                  program_name,
-                  20, 20, 200, 300,
-                  0,
-                  0x0000,   // style
-                  COLOR_WINDOW, 
-                  COLOR_WINDOW );
-
-    if (main_window < 0){
-        printf("on create window\n");
+    // Connect to display server
+    Display = gws_open_display(display_name);
+    if ((void*) Display == NULL) {
+        printf("launch_app: Could not open display\n");
         return EXIT_FAILURE;
     }
 
-    gws_refresh_window(client_fd,main_window);
+    client_fd = Display->fd;
+    if (client_fd <= 0) {
+        printf("launch: Invalid fd\n");
+        return EXIT_FAILURE;
+    }
+
+    // Screen size
+    unsigned long screen_w = gws_get_system_metrics(1);
+    unsigned long screen_h = gws_get_system_metrics(2);
+
+// =========================================
+// Library initialization
+
+    int status = -1;
+    status = (int) libgui_initialize();
+    if (status < 0){
+        printf("launch_app: on libgui_initialize()\n");
+        exit(1);
+    }
 
 
-//
-// Menu structure
-//
+// =========================================
+// Main window
 
-    //printf("launch.bin: Create menu\n");
+    unsigned long mw_style = WS_APP;
 
-    struct gws_menu_d *menu00;
-    struct gws_window_info_d lWi;
+    unsigned long win_w = screen_w / 2;
+    unsigned long win_h = screen_h / 2;
+    unsigned long win_x = screen_w/4;
+    unsigned long win_y = screen_h/4;
 
-// Get info about the main window.
-// IN: fd, wid, window info structure.
+    main_window = 
+        (int) gws_create_window(
+                client_fd,
+                WT_OVERLAPPED,
+                WINDOW_STATUS_ACTIVE,  //status
+                WINDOW_STATE_NULL,  //state
+                "Launch",
+                win_x, win_y, win_w, win_h,
+                0,
+                mw_style,  // style
+                COLOR_WHITE, COLOR_GRAY );
+
+    if (main_window < 0) {
+        printf("launch_app: Failed to create main window\n");
+        return EXIT_FAILURE;
+    }
+
+// After creating main_window,
+// get information about it.
+    struct gws_window_info_d wi;
     gws_get_window_info(
-        client_fd, 
-        main_window,   // The app window.
-        (struct gws_window_info_d *) &lWi );
-
-
+        client_fd,
+        main_window,
+        (struct gws_window_info_d *) &wi );
 
 // ============================================================
 // #test
 // Update the wproxy structure that belongs to this thread.
 
-/*
     unsigned long m[10];
     int mytid = gettid();
     m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
 
     // Frame/chrome rectangle
-    m[1] = lWi.left;
-    m[2] = lWi.top;
-    m[3] = lWi.width;
-    m[4] = lWi.height;
+    m[1] = wi.left;
+    m[2] = wi.top;
+    m[3] = wi.width;
+    m[4] = wi.height;
 
     // Client area rectangle
-    m[5] = lWi.cr_left;
-    m[6] = lWi.cr_top;
-    m[7] = lWi.cr_width;
-    m[8] = lWi.cr_height;
+    m[5] = wi.cr_left;
+    m[6] = wi.cr_top;
+    m[7] = wi.cr_width;
+    m[8] = wi.cr_height;
 
     sc80( 48, &m[0], &m[0], &m[0] );
-*/
 
+
+// ============================================================
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) wi.sh_flags;
+
+// ============================================================
+// Create a device context structure
+// based on the information we got with the server.
+// This is a dc to draw into the client area.
+
+    dc00 = (struct dccanvas_d *) libgui_create_dc(
+        wi.ca_canvas_base_address,
+        wi.ca_canvas_width,
+        wi.ca_canvas_height,
+        wi.ca_canvas_bpp
+    );
+    if ((void*)dc00 == NULL){
+        printf("launch: on dc00\n");
+        exit(1);
+    }
+
+// bg for the client area
+    lingui_draw_rectangle0_dc (
+        dc00,
+        0, 0, wi.cr_width, wi.cr_height,
+        COLOR_WHITE,
+        0  // ROP
+    );
+
+// String
+
+    libgui_drawstringblock_dc(
+        dc00,
+        8,
+        8,
+        COLOR_BLACK,
+        "P=Power  M=Memory  I=Sysinfo  Q=Quit",
+        2
+    );
+
+// ============================================================
 
 //
-// Creating the menu
+// Support for button positions and dimensions
 //
 
-    menu00 = 
-        (struct gws_menu_d *) gws_create_menu(
-            client_fd,
-            main_window,  // Parent
-            TRUE,         // Highlight
-            4,            // n of itens
-            0, 0, lWi.cr_width, lWi.cr_height,   // Relative to the client area rectangle.
-            COLOR_GRAY
+    unsigned long button_w = wi.cr_width / 5;
+    unsigned long button_h = wi.cr_height / 8;
+    unsigned long button_y = (wi.cr_height - button_h) / 2;
+
+    unsigned long power_x   = (wi.cr_width / 6)     - (button_w / 2);
+    unsigned long memory_x  = (wi.cr_width / 2)     - (button_w / 2);
+    unsigned long sysinfo_x = (5 * wi.cr_width / 6) - (button_w / 2);
+
+// ============================================================
+// Create Power button
+
+    MyButton_Power.button_id = 1;
+
+    // Relative values
+    MyButton_Power.left = power_x;
+    MyButton_Power.top  = button_y;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Power.absolute_left = wi.left + wi.cr_left + MyButton_Power.left;
+    MyButton_Power.absolute_top  = wi.top + wi.cr_top + MyButton_Power.top;
+    MyButton_Power.width         = button_w;
+    MyButton_Power.height        = button_h;
+
+// Create a button
+    uic_button_power = libgui_create_ui_component (
+        dc00, 
+        1,   // type = button 
+        MyButton_Power.left, 
+        MyButton_Power.top, 
+        MyButton_Power.width, 
+        MyButton_Power.height,
+        "Power",
+        (0x0001 | 0x0002)
+    );
+
+// ============================================================
+// Create Memory button
+
+    MyButton_Memory.button_id = 2;
+
+    // Relative values
+    MyButton_Memory.left = memory_x;
+    MyButton_Memory.top  = button_y;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Memory.absolute_left = wi.left + wi.cr_left + MyButton_Memory.left;
+    MyButton_Memory.absolute_top  = wi.top + wi.cr_top + MyButton_Memory.top;
+    MyButton_Memory.width         = button_w;
+    MyButton_Memory.height        = button_h;
+
+// Create a button
+    uic_button_memory = libgui_create_ui_component (
+        dc00, 
+        1,   // type = button 
+        MyButton_Memory.left, 
+        MyButton_Memory.top, 
+        MyButton_Memory.width, 
+        MyButton_Memory.height,
+        "Memory",
+        (0x0001 | 0x0002)
+    );
+
+// ============================================================
+// Create Sysinfo button
+
+    MyButton_Sysinfo.button_id = 3;
+
+    // Relative values
+    MyButton_Sysinfo.left = sysinfo_x;
+    MyButton_Sysinfo.top  = button_y;
+
+    // Absolute coordinates (relative to screen)
+    MyButton_Sysinfo.absolute_left = wi.left + wi.cr_left + MyButton_Sysinfo.left;
+    MyButton_Sysinfo.absolute_top  = wi.top + wi.cr_top + MyButton_Sysinfo.top;
+    MyButton_Sysinfo.width         = button_w;
+    MyButton_Sysinfo.height        = button_h;
+
+// Create a button
+    uic_button_sysinfo = libgui_create_ui_component (
+        dc00, 
+        1,   // type = button 
+        MyButton_Sysinfo.left, 
+        MyButton_Sysinfo.top, 
+        MyButton_Sysinfo.width, 
+        MyButton_Sysinfo.height,
+        "Sysinfo",
+        (0x0001 | 0x0002)
+    );
+
+// -----------------------------------------------------
+// #test: BMP image
+
+    icon00_cache = (struct bmp_cache_d*) bmp_load_bmp_image("#folder.bmp");
+    if (icon00_cache && icon00_cache->loaded) 
+    {
+        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
+    }
+
+// ================================================================================
+
+// Create footer component
+    uic_footer =
+        libgui_create_ui_component(
+            dc00,
+            UI_COMPONENT_FOOTER,
+            0, 
+            wi.cr_height -24, 
+            wi.cr_width, 
+            24,
+            "-- launch --", 
+            (0x0001 | 0x0002)
         );
 
-    if ((void*) menu00 == NULL){
-        printf("on create menu\n");
-        return EXIT_FAILURE;
-    }
+// ================================================================================
 
-    MyMenuInfo.menu_wid = (int) menu00->window;
+// Main window: Activate and show.
+    gws_set_active( client_fd, main_window );
 
-//
-// Menu item
-//
-
-    struct gws_menu_item_d *tmp;
-    const char *tmp_label0 = "Menu item 0";
-    const char *tmp_label1 = "Menu item 1";
-    const char *tmp_label2 = "Menu item 2";
-    const char *tmp_label3 = "Menu item 3";
-
-    tmp = 
-        (struct gws_menu_item_d *) gws_create_menu_item (
-            client_fd,
-            tmp_label0,
-            0,  // index
-            menu00 );
-    if (tmp->window < 0)
-        printf("menuitem window fail\n");
-    MyMenuInfo.item0_wid = tmp->window;
-
-    tmp = 
-        (struct gws_menu_item_d *) gws_create_menu_item (
-            client_fd,
-            tmp_label1,
-            1,  // index
-            menu00 );
-    if (tmp->window < 0)
-        printf("menuitem window fail\n");
-    MyMenuInfo.item1_wid = tmp->window;
-
-    tmp = 
-        (struct gws_menu_item_d *) gws_create_menu_item (
-            client_fd,
-            tmp_label2,
-            2,  // index
-            menu00 );
-    if (tmp->window < 0)
-        printf("menuitem window fail\n");
-    MyMenuInfo.item2_wid = tmp->window;
-
-    tmp = 
-        (struct gws_menu_item_d *) gws_create_menu_item (
-            client_fd,
-            tmp_label3,
-            3,  // index
-            menu00 );
-    if (tmp->window < 0)
-        printf("menuitem window fail\n");
-    MyMenuInfo.item3_wid = tmp->window;
-
-// Refresh only the menu window
-    gws_refresh_window(client_fd,MyMenuInfo.menu_wid);
-
-// Refresh the whole application window
-    //gws_refresh_window(client_fd,main_window);
-
-
-/*
-// The IDs
-    printf("[DEBUG CREATE] main_window=%d\n", main_window);
-    printf("[DEBUG CREATE] menu_wid=%d\n", MyMenuInfo.menu_wid);
-    printf("[DEBUG CREATE] item0_wid=%d\n", MyMenuInfo.item0_wid);
-    printf("[DEBUG CREATE] item1_wid=%d\n", MyMenuInfo.item1_wid);
-    printf("[DEBUG CREATE] item2_wid=%d\n", MyMenuInfo.item2_wid);
-    printf("[DEBUG CREATE] item3_wid=%d\n", MyMenuInfo.item3_wid);
-*/
-
-//
-// Event loop
-//
-
-
-/*
-// ================================
-// #test
-// Lets setup if we want to block on empty queue or not
-// #todo: Create msgctl() api
-
-    int rv = -1;
-    rv = (int) sc80( 912, 1000, 1000, 1000 );  // Yes
-    //rv = (int) sc80( 912, 1001, 1001, 1001 );  // No
-    if (rv < 0){
-        printf ("on sc80:912\n");
-        exit(0);
-    }
-*/
-
-// =======================
-// Event loop
-// Getting input events from the system.
-
-    unsigned long start_jiffie=0;
-    unsigned long end_jiffie=0;
-    unsigned long delta_jiffie=0;
-    int UseSleep = TRUE;
-
-// #ps: We will sleep if a round was less than 16 ms, (60fps).
-// The thread wait until complete the 16 ms.
-// #bugbug: Valid only if the timer fires 1000 times a second.
-// It gives the opportunities for other threads to run a bit more.
 
     int nSysMsg = 0;
 
-    isTimeToQuit =  FALSE;
+//
+// Event loop
+//
 
     while (1){
 
         if (isTimeToQuit == TRUE)
             break;
 
-        // ----
-        start_jiffie = (unsigned long) rtl_jiffies();
-        
+        // Shared flags handling (same as Power app)
+        if (__sh_flags != 0)
+        {
+            char *flags_ptr = (char *) __sh_flags;
+            if (*flags_ptr & 0x0008)
+            {
+                // Clear BLIT bit
+                *flags_ptr &= ~0x0008;
+                // Redraw
+                update_children(client_fd);
+            }
+        }
+
         // 1. Pump events from Display Server
-        pump(client_fd,main_window);
+        // #bugbug:
+        // This pump is very slow, affecting the responsivity
+        // for the other pump that gets events from the system.
+        pump(client_fd);
 
         // 2. Pump events from Input Broker (system events)
         for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
-            launchProcedure (
+            // IN: wid, event type, VK, scancode.
+            launchProcedure(
                 client_fd,
-                (int) RTLEventBuffer[0],   // window id
-                (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
-                (unsigned long) RTLEventBuffer[2], // VK code
-                (unsigned long) RTLEventBuffer[3]  // scancode
-            );
-            RTLEventBuffer[1] = 0; // clear after dispatch
+                (int) RTLEventBuffer[0],
+                (int) RTLEventBuffer[1],
+                (unsigned long) RTLEventBuffer[2],
+                (unsigned long) RTLEventBuffer[3] );
+            RTLEventBuffer[1] = 0;  // Clear after dispatch
         }
         };
-
-        end_jiffie = rtl_jiffies();
-        // ----
-
-        if (end_jiffie > start_jiffie)
-        {
-            delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
-            // Let's sleep if the round was less than 16 ms.
-            if (delta_jiffie < 16){
-                if (UseSleep == TRUE)
-                    rtl_sleep(16 - delta_jiffie);
-            }    
-        }
     };
 
-// Done
-    //printf("launch.bin: Test done\n");
-    return EXIT_SUCCESS;
+    if (isTimeToQuit == TRUE){
+        printf("LaunchApp: Close window\n");
+        gws_destroy_window(client_fd, main_window);
+    }
 
-fail:
-    printf("launch.bin: fail\n");
-    return EXIT_FAILURE;
+    if (client_fd > 0)
+        close(client_fd);
+
+    return EXIT_SUCCESS;
 }

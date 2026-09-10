@@ -243,11 +243,12 @@ build-extras:
 #	@-cp $(L2_WINAPPS)/bin/DOC.BIN      $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/EDITOR.BIN   $(BUILD)/DE/
 #	@-cp $(L2_WINAPPS)/bin/GWS.BIN      $(BUILD)/DE/
-#	@-cp $(L2_WINAPPS)/bin/LAUNCH.BIN   $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/LAUNCH.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/MEMORY.BIN   $(BUILD)/DE/
-#	@-cp $(L2_WINAPPS)/bin/MENUAPP.BIN  $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/POWER.BIN    $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/SYSINFO.BIN  $(BUILD)/DE/
+
+	@-cp $(L2_WINAPPS)/bin/PAINT.BIN  $(BUILD)/DE/
 
 
 # assets

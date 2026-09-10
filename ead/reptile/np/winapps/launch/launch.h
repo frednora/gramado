@@ -1,9 +1,11 @@
-// menuapp.h
+// launch.h
+// Header for the Launch application (Gramado OS client-side GUI).
+// Created for Gramado hobby OS.
 
-#ifndef __MENUAPP_H
-#define __MENUAPP_H    1
+#ifndef __LAUNCH_H
+#define __LAUNCH_H
 
-extern struct gws_display_d *Display;
+// Include any project-specific definitions here if needed.
+// Currently minimal; mirrors the style of power.h.
 
-#endif  
-
+#endif // __LAUNCH_H

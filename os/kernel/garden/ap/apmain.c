@@ -26,6 +26,7 @@ static void __ap_animation_experiment(void)
     int Counter = 0;
 
     while (1){
+
         //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
 
         Counter++;
@@ -76,8 +77,11 @@ static void __ap_animation_experiment(void)
 
 // #test:
 // The AP is operating as a DPC dispatcher.
+// It reads a message from the BSP's structure.
+
 static void __ap_DPC_experiment(int lapic_id)
 {
+    static int BSP_ID = 0;
     int i=0;
 
 // Parameter:
@@ -85,6 +89,13 @@ static void __ap_DPC_experiment(int lapic_id)
     {
         panic("__ap_DPC_experiment: lapic_id\n");
     }
+
+    // #todo
+    // Probably the BSP can't use this routine.
+    //if (lapic_id == BSP_ID){
+        //panic("__ap_DPC_experiment: core is BSP\n");
+    //}
+
 
 //
 // Animation and QF experiment
@@ -95,11 +106,12 @@ static void __ap_DPC_experiment(int lapic_id)
     unsigned int Color = COLOR_BLACK;
     int Counter = 0;
 
-    // #test: Using DPC via AP, not via zero gravity.
+    // #test: 
+    // Using DPC via AP, not via zero gravity.
     // Turn it on
     if (CONFIG_USE_DPC_VIA_AP == 1)
     {
-        lapic_info[0].DPC_QUEUE.on = TRUE;
+        lapic_info[ BSP_ID ].DPC_QUEUE.on = TRUE;
 
         // This AP is working as a DPC dispatcher.
         lapic_info[lapic_id].is_dpc_dispatcher = TRUE;
@@ -114,38 +126,39 @@ static void __ap_DPC_experiment(int lapic_id)
     // This is the idea of Defered Procedure Call (DPC) in Windows.
     // The AP is doing the work that belongs to the handlers of the IRQs.
     while (1){
+
         //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
 
-
         // Do we have a new message?
-        if (lapic_info[0].DPC_QUEUE.on == TRUE)
+        if (lapic_info[ BSP_ID ].DPC_QUEUE.on == TRUE)
         {
             int slot = qf_get_message();
             if (slot != (-1))
             {
                 if (slot >=0 && slot < 32)
                 {
-                    int msgcode = lapic_info[0].DPC_QUEUE.cache_msg[0];
+                    int msgcode = lapic_info[ BSP_ID ].DPC_QUEUE.cache_msg[0];
+
                     switch (msgcode)
                     {
                         case 1000:
                             //x_panic("1000: DPC Via AP");
                             wmRawKeyEvent (
-                                lapic_info[0].DPC_QUEUE.cache_chars[0], 
-                                lapic_info[0].DPC_QUEUE.cache_chars[1], 
-                                lapic_info[0].DPC_QUEUE.cache_chars[2], 
-                                lapic_info[0].DPC_QUEUE.cache_chars[3]
+                                lapic_info[BSP_ID].DPC_QUEUE.cache_chars[0], 
+                                lapic_info[BSP_ID].DPC_QUEUE.cache_chars[1], 
+                                lapic_info[BSP_ID].DPC_QUEUE.cache_chars[2], 
+                                lapic_info[BSP_ID].DPC_QUEUE.cache_chars[3]
                             );
                             break;
 
                         case 2000:
                             // x_panic("2000: DPC Via AP");
                             int mouse_event_id = 
-                                ( lapic_info[0].DPC_QUEUE.cache_longs[0] & 0xFFFFFFFF); 
+                                ( lapic_info[BSP_ID].DPC_QUEUE.cache_longs[0] & 0xFFFFFFFF); 
                             wmMouseEvent( 
                                 mouse_event_id,  //event_id, 
-                                lapic_info[0].DPC_QUEUE.cache_longs[1],  //long1, 
-                                lapic_info[0].DPC_QUEUE.cache_longs[2]  //long2 
+                                lapic_info[BSP_ID].DPC_QUEUE.cache_longs[1],  //long1, 
+                                lapic_info[BSP_ID].DPC_QUEUE.cache_longs[2]  //long2 
                             );
                             break;
 
@@ -155,6 +168,7 @@ static void __ap_DPC_experiment(int lapic_id)
                         case 4000:
                             break;
 
+                        // #ps: hang this processor
                         case 8000:
                             asm ("hlt \n");
                             break;
@@ -242,7 +256,7 @@ static void __ap_DPC_experiment(int lapic_id)
     };
 
     // Turn the QF off
-    lapic_info[0].DPC_QUEUE.on = FALSE;
+    lapic_info[BSP_ID].DPC_QUEUE.on = FALSE;
 }
 
 
@@ -268,12 +282,14 @@ static void AP_kmain2(void)
 // For taskswitching via hardware i guess.
 // see:
 // https://www.felixcloutier.com/x86/clts
+
     asm volatile ("clts \n");
 
     //PROGRESS("AP_kmain: \n")
 
 // Talk with the BSP in order to identify the current AP.
 // #ps: return the lapic info id, not the real hw cpu id.
+
     lapic_id = (int) __AP_BSP_handshake();
 
 /*
@@ -316,7 +332,7 @@ static void AP_kmain2(void)
         __ap_DPC_experiment(lapic_id);
     }
 
-///
+//
 //
 //
 
@@ -325,6 +341,7 @@ static void AP_kmain2(void)
 // Something went wrong with this AP.
 // #todo:
 // Call a system routine in order to report this.
+
 AP_die:
     while (1){
         asm (" cli ");
@@ -340,7 +357,6 @@ AP_die:
 
 void AP_kmain(void)
 {
-    // See kmain.c
     AP_kmain2();
 }
 

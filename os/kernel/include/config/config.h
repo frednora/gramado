@@ -170,8 +170,6 @@
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0  // BSP's LAPIC
 // ...
 
-
-
 //
 // == DPC ========
 //
@@ -198,6 +196,7 @@
 // 1) via AP processor
 // DPC (Deferred Procedure via AP processor)
 #define CONFIG_USE_DPC_VIA_AP  0
+
 
 // 2) via ZeroGravity (during the timer handler, when the context was fully saved)
 // DPC (Deferred Procedure via ZeroGravity)

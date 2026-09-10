@@ -1,7 +1,5 @@
 # 2019 - Created by Fred Nora.
-#todo:
-#fazer um makefile pra compilar o shell
-#obs: #bugbug tem que arrumas as coisas aqui.
+# Adapted for the Paint (sketchpad) application.
 
 VERSION = 0
 PATCHLEVEL = 0
@@ -52,20 +50,26 @@ LIBCOBJ   = ../../api/garden/rtl/obj
 LIBGWS    = ../../api/gthouse/libgws/include/
 LIBGWSOBJ = ../../api/gthouse/libgws/obj
 
+# libgui - Client-side services
+LIBGUI    = ../../api/gthouse/libgui/include/
+LIBGUIOBJ = ../../api/gthouse/libgui/obj
+
 
 # Objects
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
 socket.o inet.o \
 math.o \
-libgws.o    
+libgws.o libgui.o  
+
+
 
 .PHONY: all all-c hello-link finalize clean
 
 all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
 main.o:
-	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -o main.o
+	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -o main.o
 all-c:
 
 	cp $(LIBCOBJ)/crt0.o  .
@@ -91,11 +95,14 @@ all-c:
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
 
+# libgui
+	cp $(LIBGUIOBJ)/libgui.o .
+
+
 hello-link:
-	ld $(linkFlags) -o MENUAPP.BIN $(myObjects)    
+	ld $(linkFlags) -o PAINT.BIN $(myObjects)    
 finalize:
-	cp MENUAPP.BIN  ../bin
+	cp PAINT.BIN  ../bin
 clean:
 	-rm *.o
-	-rm MENUAPP.BIN 
-	
+	-rm PAINT.BIN 
