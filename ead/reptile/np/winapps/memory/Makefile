@@ -1,11 +1,12 @@
-# EDITOR.BIN
-# Created by Fred Nora.
+# Memory app
+# Gramado OS client-side GUI app showing system memory information.
+# 2025 - Created by Fred Nora (example by Copilot).
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = editor
+#NAME = 
 
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../link.ld
@@ -44,38 +45,37 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # rtl
-LIBC      = ../api/garden/rtl/include/
-LIBCOBJ   = ../api/garden/rtl/obj
+LIBC      = ../../api/garden/rtl/include/
+LIBCOBJ   = ../../api/garden/rtl/obj
 
 # libgws - (Using the server-side services)
-LIBGWS    = ../api/gthouse/libgws/include/
-LIBGWSOBJ = ../api/gthouse/libgws/obj
+LIBGWS    = ../../api/gthouse/libgws/include/
+LIBGWSOBJ = ../../api/gthouse/libgws/obj
 
 # libgui - Client-side services
-LIBGUI    = ../api/gthouse/libgui/include/
-LIBGUIOBJ = ../api/gthouse/libgui/obj
+LIBGUI    = ../../api/gthouse/libgui/include/
+LIBGUIOBJ = ../../api/gthouse/libgui/obj
+
 
 # Objects
-myObjects = crt0.o globals.o rtl.o \
-ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
-ioctl.o socket.o inet.o \
+myObjects = crt0.o rtl.o \
+ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
+socket.o inet.o \
+math.o \
 libgws.o libgui.o \
-editor.o main.o    
+main.o    
 
 
 .PHONY: all all-c hello-link finalize clean
 
 all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
-
 main.o:
-	gcc -c main.c     $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o main.o
-	gcc -c editor.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o editor.o
-	gcc -c globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o globals.o
+	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -o main.o  
 
 all-c:
 
-	cp $(LIBCOBJ)/crt0.o   .
+	cp $(LIBCOBJ)/crt0.o  .
 	cp $(LIBCOBJ)/rtl.o  .
 
 	cp $(LIBCOBJ)/ctype.o   .
@@ -92,6 +92,9 @@ all-c:
 	cp $(LIBCOBJ)/inet.o  .
 
 
+#test
+	cp $(LIBCOBJ)/math.o  .
+
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
 
@@ -99,10 +102,10 @@ all-c:
 	cp $(LIBGUIOBJ)/libgui.o .
 
 hello-link:
-	ld $(linkFlags) -o EDITOR.BIN $(myObjects)    
+	ld $(linkFlags) -o MEMORY.BIN $(myObjects)    
 finalize:
-	cp EDITOR.BIN  ../bin
+	cp MEMORY.BIN  ../bin
 clean:
 	-rm *.o
-	-rm EDITOR.BIN 
+	-rm MEMORY.BIN 
 	

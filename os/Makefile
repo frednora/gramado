@@ -39,8 +39,10 @@ L1_CPP00 = $(__DEP_L1)/cpp00
 __DEP_L2 = ../ead/reptile
 # Display server/compositor
 L2_COMP     = $(__DEP_L2)/comp00
+L2_ASSETS   = $(__DEP_L2)/np/assets
 # Client-side GUI applications (Nomad Pastors)
 L2_WINSHELL = $(__DEP_L2)/np/winshell
+L2_WINAPPS  = $(__DEP_L2)/np/winapps
 # 3D demos
 L2_VELO3D   = $(__DEP_L2)/velo3d
 
@@ -229,23 +231,29 @@ build-extras:
 # L2: Install binaries, theme and 3d demos
 	@echo "Installing L2"
 
+
 	@-cp $(L2_COMP)/src/bin/COMP00.BIN  $(BUILD)/DE
 
+# winshell
+	@-cp $(L2_WINSHELL)/bin/BROWSER.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/TASKBAR.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/TERMINAL.BIN  $(BUILD)/DE/
 
-	@-cp $(L2_WINSHELL)/bin/BROWSER.BIN  $(BUILD)/DE/
-#	@-cp $(L2_WINSHELL)/bin/DOC.BIN      $(BUILD)/DE/
-	@-cp $(L2_WINSHELL)/bin/EDITOR.BIN   $(BUILD)/DE/
-#	@-cp $(L2_WINSHELL)/bin/GWS.BIN      $(BUILD)/DE/
-#	@-cp $(L2_WINSHELL)/bin/LAUNCH.BIN   $(BUILD)/DE/
-	@-cp $(L2_WINSHELL)/bin/MEMORY.BIN   $(BUILD)/DE/
-#	@-cp $(L2_WINSHELL)/bin/MENUAPP.BIN  $(BUILD)/DE/
-	@-cp $(L2_WINSHELL)/bin/POWER.BIN    $(BUILD)/DE/
-	@-cp $(L2_WINSHELL)/bin/SYSINFO.BIN  $(BUILD)/DE/
+# winapps
+#	@-cp $(L2_WINAPPS)/bin/DOC.BIN      $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/EDITOR.BIN   $(BUILD)/DE/
+#	@-cp $(L2_WINAPPS)/bin/GWS.BIN      $(BUILD)/DE/
+#	@-cp $(L2_WINAPPS)/bin/LAUNCH.BIN   $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/MEMORY.BIN   $(BUILD)/DE/
+#	@-cp $(L2_WINAPPS)/bin/MENUAPP.BIN  $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/POWER.BIN    $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/SYSINFO.BIN  $(BUILD)/DE/
 
-	@cp $(L2_WINSHELL)/assets/themes/theme01/*.BMP  $(BUILD)/DE
 
+# assets
+	@cp $(L2_ASSETS)/themes/theme01/*.BMP  $(BUILD)/DE
+
+# velociraptor 3D demo
 	@-cp $(L2_VELO3D)/bin/ENG00.BIN   $(BUILD)/DE/
 
 

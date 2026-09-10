@@ -45,16 +45,16 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # rtl
-LIBC      = ../api/garden/rtl/include/
-LIBCOBJ   = ../api/garden/rtl/obj
+LIBC      = ../../api/garden/rtl/include/
+LIBCOBJ   = ../../api/garden/rtl/obj
 
 # libgws - (Using the server-side services)
-LIBGWS    = ../api/gthouse/libgws/include/
-LIBGWSOBJ = ../api/gthouse/libgws/obj
+LIBGWS    = ../../api/gthouse/libgws/include/
+LIBGWSOBJ = ../../api/gthouse/libgws/obj
 
 # libgui - Client-side services
-LIBGUI    = ../api/gthouse/libgui/include/
-LIBGUIOBJ = ../api/gthouse/libgui/obj
+LIBGUI    = ../../api/gthouse/libgui/include/
+LIBGUIOBJ = ../../api/gthouse/libgui/obj
 
 
 # Objects

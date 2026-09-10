@@ -1,8 +1,7 @@
-# history:
 # 2019 - Created by Fred Nora.
-# todo:
-# fazer um makefile pra compilar o shell
-# obs: #bugbug tem que arrumas as coisas aqui.
+#todo:
+#fazer um makefile pra compilar o shell
+#obs: #bugbug tem que arrumas as coisas aqui.
 
 VERSION = 0
 PATCHLEVEL = 0
@@ -47,19 +46,19 @@ CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
 # API
-LIBC      = ../api/garden/rtl/include/
-LIBCOBJ   = ../api/garden/rtl/obj
+LIBC      = ../../api/garden/rtl/include/
+LIBCOBJ   = ../../api/garden/rtl/obj
 
-LIBGWS    = ../api/gthouse/libgws/include/
-LIBGWSOBJ = ../api/gthouse/libgws/obj
+LIBGWS    = ../../api/gthouse/libgws/include/
+LIBGWSOBJ = ../../api/gthouse/libgws/obj
 
 
 # Objects
 myObjects = crt0.o main.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
 socket.o inet.o \
+math.o \
 libgws.o    
-
 
 .PHONY: all all-c hello-link finalize clean
 
@@ -72,11 +71,11 @@ all-c:
 	cp $(LIBCOBJ)/crt0.o  .
 	cp $(LIBCOBJ)/rtl.o  .
 
-	cp $(LIBCOBJ)/ctype.o  .
-	cp $(LIBCOBJ)/stdio.o  .
-	cp $(LIBCOBJ)/fcntl.o  .
-	cp $(LIBCOBJ)/stdlib.o  .
-	cp $(LIBCOBJ)/string.o  .
+	cp $(LIBCOBJ)/ctype.o   .
+	cp $(LIBCOBJ)/stdio.o .
+	cp $(LIBCOBJ)/fcntl.o .
+	cp $(LIBCOBJ)/stdlib.o .
+	cp $(LIBCOBJ)/string.o .
 	cp $(LIBCOBJ)/unistd.o  .
 
 	cp $(LIBCOBJ)/termios.o  .
@@ -86,15 +85,17 @@ all-c:
 	cp $(LIBCOBJ)/inet.o  .
 
 
+#test
+	cp $(LIBCOBJ)/math.o  .
+
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
 
 hello-link:
-	ld $(linkFlags) -o GWS.BIN $(myObjects)    
+	ld $(linkFlags) -o MENUAPP.BIN $(myObjects)    
 finalize:
-	cp GWS.BIN  ../bin
+	cp MENUAPP.BIN  ../bin
 clean:
 	-rm *.o
-	-rm GWS.BIN 
-	
+	-rm MENUAPP.BIN 
 	

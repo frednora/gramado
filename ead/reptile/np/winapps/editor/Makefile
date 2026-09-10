@@ -1,12 +1,11 @@
-# Power App
-# Gramado OS client-side GUI app with Restart and Shutdown buttons.
-# 2025 - Created by Fred Nora (example by Copilot).
+# EDITOR.BIN
+# Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = 
+#NAME = editor
 
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../link.ld
@@ -44,40 +43,40 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-
 # rtl
-LIBC      = ../api/garden/rtl/include/
-LIBCOBJ   = ../api/garden/rtl/obj
+LIBC      = ../../api/garden/rtl/include/
+LIBCOBJ   = ../../api/garden/rtl/obj
 
 # libgws - (Using the server-side services)
-LIBGWS    = ../api/gthouse/libgws/include/
-LIBGWSOBJ = ../api/gthouse/libgws/obj
+LIBGWS    = ../../api/gthouse/libgws/include/
+LIBGWSOBJ = ../../api/gthouse/libgws/obj
 
 # libgui - Client-side services
-LIBGUI    = ../api/gthouse/libgui/include/
-LIBGUIOBJ = ../api/gthouse/libgui/obj
-
+LIBGUI    = ../../api/gthouse/libgui/include/
+LIBGUIOBJ = ../../api/gthouse/libgui/obj
 
 
 # Objects
-myObjects = crt0.o rtl.o \
-ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
-socket.o inet.o \
-math.o \
+myObjects = crt0.o globals.o rtl.o \
+ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o \
+ioctl.o socket.o inet.o \
 libgws.o libgui.o \
-main.o    
+editor.o main.o    
 
 
 .PHONY: all all-c hello-link finalize clean
 
 all: main.o all-c hello-link finalize clean
 	@echo "Ok?"
+
 main.o:
-	gcc -c main.c $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -o main.o
+	gcc -c main.c     $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o main.o
+	gcc -c editor.c   $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o editor.o
+	gcc -c globals.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -I include/ -o globals.o
 
 all-c:
 
-	cp $(LIBCOBJ)/crt0.o  .
+	cp $(LIBCOBJ)/crt0.o   .
 	cp $(LIBCOBJ)/rtl.o  .
 
 	cp $(LIBCOBJ)/ctype.o   .
@@ -90,7 +89,6 @@ all-c:
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
 	cp $(LIBCOBJ)/socket.o  .
-	cp $(LIBCOBJ)/math.o  .
 
 	cp $(LIBCOBJ)/inet.o  .
 
@@ -102,10 +100,10 @@ all-c:
 	cp $(LIBGUIOBJ)/libgui.o .
 
 hello-link:
-	ld $(linkFlags) -o POWER.BIN $(myObjects)    
+	ld $(linkFlags) -o EDITOR.BIN $(myObjects)    
 finalize:
-	cp POWER.BIN  ../bin
+	cp EDITOR.BIN  ../bin
 clean:
 	-rm *.o
-	-rm POWER.BIN 
+	-rm EDITOR.BIN 
 	

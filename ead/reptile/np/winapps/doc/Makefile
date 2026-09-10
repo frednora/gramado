@@ -1,12 +1,12 @@
-# Memory app
-# Gramado OS client-side GUI app showing system memory information.
-# 2025 - Created by Fred Nora (example by Copilot).
+# DOC.BIN - docviewer (browser)
+# history:
+# 2019 - Created by Fred Nora.
 
 VERSION = 0
 PATCHLEVEL = 0
 SUBLEVEL = 0
 EXTRAVERSION =
-#NAME = 
+#NAME = DOC
 
 linkFlags  = -m elf_x86_64 \
 -s -x -static -T ../link.ld
@@ -44,46 +44,40 @@ CFLAGS += -fno-pie
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -fno-optimize-sibling-calls    
 
-# rtl
-LIBC      = ../api/garden/rtl/include/
-LIBCOBJ   = ../api/garden/rtl/obj
+# API
+LIBC      = ../../api/garden/rtl/include/
+LIBCOBJ   = ../../api/garden/rtl/obj
 
-# libgws - (Using the server-side services)
-LIBGWS    = ../api/gthouse/libgws/include/
-LIBGWSOBJ = ../api/gthouse/libgws/obj
-
-# libgui - Client-side services
-LIBGUI    = ../api/gthouse/libgui/include/
-LIBGUIOBJ = ../api/gthouse/libgui/obj
+LIBGWS    = ../../api/gthouse/libgws/include/
+LIBGWSOBJ = ../../api/gthouse/libgws/obj
 
 
 # Objects
-myObjects = crt0.o rtl.o \
-ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
+myObjects = crt0.o main.o rtl.o \
+ctype.o stdlib.o stdio.o string.o unistd.o termios.o ioctl.o fcntl.o \
+globals.o lexer.o parser.o tree.o compiler.o \
 socket.o inet.o \
-math.o \
-libgws.o libgui.o \
-main.o    
+libgws.o    
 
+.PHONY: all all-c gramcc-link finalize clean
 
-.PHONY: all all-c hello-link finalize clean
-
-all: main.o all-c hello-link finalize clean
+all: main.o all-c gramcc-link finalize clean
 	@echo "Ok?"
 main.o:
-	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I $(LIBGUI) -o main.o  
-
+	gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBGWS) -I include/ -o main.o
 all-c:
 
-	cp $(LIBCOBJ)/crt0.o  .
-	cp $(LIBCOBJ)/rtl.o  .
+	# rtl
+	cp $(LIBCOBJ)/crt0.o    .
+	cp $(LIBCOBJ)/rtl.o    .
 
 	cp $(LIBCOBJ)/ctype.o   .
-	cp $(LIBCOBJ)/stdio.o .
-	cp $(LIBCOBJ)/fcntl.o .
-	cp $(LIBCOBJ)/stdlib.o .
-	cp $(LIBCOBJ)/string.o .
+	cp $(LIBCOBJ)/stdio.o   .
+	cp $(LIBCOBJ)/stdlib.o  .
+	cp $(LIBCOBJ)/string.o  .
+	cp $(LIBCOBJ)/time.o    .
 	cp $(LIBCOBJ)/unistd.o  .
+	cp $(LIBCOBJ)/fcntl.o   .
 
 	cp $(LIBCOBJ)/termios.o  .
 	cp $(LIBCOBJ)/ioctl.o  .
@@ -92,20 +86,20 @@ all-c:
 	cp $(LIBCOBJ)/inet.o  .
 
 
-#test
-	cp $(LIBCOBJ)/math.o  .
-
 # libgws
 	cp $(LIBGWSOBJ)/libgws.o .
 
-# libgui
-	cp $(LIBGUIOBJ)/libgui.o .
+# ----------------------
+	gcc  -c  globals.c   -I $(LIBC) $(CFLAGS) -o globals.o
+	gcc  -c  lexer.c     -I $(LIBC) $(CFLAGS) -o lexer.o
+	gcc  -c  parser.c    -I $(LIBC) $(CFLAGS) -o parser.o
+	gcc  -c  tree.c      -I $(LIBC) $(CFLAGS) -o tree.o
+	gcc  -c  compiler.c  -I $(LIBC) $(CFLAGS) -o compiler.o
 
-hello-link:
-	ld $(linkFlags) -o MEMORY.BIN $(myObjects)    
+gramcc-link:
+	ld $(linkFlags) -o DOC.BIN $(myObjects)    
 finalize:
-	cp MEMORY.BIN  ../bin
+	cp DOC.BIN  ../bin
 clean:
 	-rm *.o
-	-rm MEMORY.BIN 
-	
+	-rm DOC.BIN 
