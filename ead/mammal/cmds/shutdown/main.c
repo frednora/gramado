@@ -74,13 +74,15 @@ int main(int argc, char *argv[])
 
     register int i=0;
     int fSilent = FALSE;
+    //...
 
     for (i=1; i<argc; i++)
     {
-        if ( gramado_strncmp(argv[i],"--silent",8) == 0 )
+        if ( gramado_strncmp(argv[i], "--silent", 8) == 0 )
             fSilent=TRUE;
         //if ( gramado_strncmp(argv[i],"--silent",8) == 0 )
             //fSilent=TRUE;
+        //...
     };
 
 //
@@ -105,8 +107,9 @@ int main(int argc, char *argv[])
 //   But we still can't realise when KVM is running on qemu.
 //   It's because is also used by virtualbox.
 //   And the shutdown routine only works on qemu.
+
     //isTCG = (int) is_tcg();
-    isTCG = (int) rtl_get_system_metrics(300); // Is it running on tcg?
+    isTCG = (int) rtl_get_system_metrics(300);  // Is it running on tcg?
     if (isTCG == TRUE){
         do_via_qemu(shutdown_verbose);
     }

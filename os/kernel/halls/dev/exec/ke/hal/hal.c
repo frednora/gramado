@@ -11,11 +11,15 @@
 
 extern void rsp0Stack(void);
 
-
 //extern unsigned long gdt;
 //extern unsigned long idt;
 //extern unsigned long tss;
 //extern void asm_reboot(void);
+
+
+#define QEMU_MAGIC_PORT  0x0604
+#define QEMU_SHUTDOWN_COMMAND  0x2000 
+
 
 // hw interrupt breakers.
 // see: 
@@ -202,17 +206,22 @@ void hal_shutdown (void)
         panic ("hal_shutdown: system_state\n");
     }
 
-    /*
-    if (qemu____){
-        //Bochs/QEMU poweroff
-        shutdown_str = "Shutdown";
-        while (*shutdown_str) out8 (0x8900, *(shutdown_str++));
-    }
-    */
-
     x_panic ("hal_shutdown");
 }
 
+// #todo:
+// First of all we got to certificate that 
+// we are running on qemu. 
+// #ps: We already have worker for this.
+
+void hal_shutdown_via_qemu(void)
+{
+    printk("hal_shutdown_via_qemu:\n");
+
+    out16(
+        (unsigned short) QEMU_MAGIC_PORT, 
+        (unsigned short) QEMU_SHUTDOWN_COMMAND );
+}
 
 // Speaker ON. 
 // OUT 

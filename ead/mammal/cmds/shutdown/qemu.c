@@ -10,8 +10,8 @@
 #include <stdbool.h>
 #include <libio.h>
 
-//#test
 #include "qemu.h"
+
 
 #define QEMU_MAGIC_PORT  0x0604
 #define QEMU_SHUTDOWN_COMMAND  0x2000 
@@ -28,8 +28,18 @@ static void __save_fat_cache(void)
     sc82( 10008, 0, 0, 0);
 }
 
+// Power off:
+// This is a ring 3 routine that turns the machine off.
+// Its a low level routine.
+// #bugbug:
+// Actually we need to shutdown the whole operating system 
+// first of all. So, the bast place to call this routine is 
+// inside the kernel, right after the full OS shutdown.
+
 static void __poweroff(void)
 {
+// #provisory
+
     libio_outport16(
         (unsigned short) QEMU_MAGIC_PORT, 
         (unsigned short) QEMU_SHUTDOWN_COMMAND );
@@ -47,12 +57,14 @@ void do_via_qemu(int verbose)
     debug_print("SHUTDOWN.BIN: [QEMU] Shutting down\n");
 
 // Save FAT cache into the disk.
+// #bugbug
+// Actually the kernel can't accept this kind of command.
     if (verbose == TRUE){
         printf("Saving fat...\n");
     }
     __save_fat_cache();
 
-// Power off using the qemu infra-structure.
+// Power off using the qemu infra-structure
     if (verbose == TRUE){
         printf("Poweroff via qemu\n");
     }

@@ -105,6 +105,8 @@ unsigned long hal_get_machine_type(void);
 void hal_reboot(void);
 void hal_shutdown(void);
 
+void hal_shutdown_via_qemu(void);
+
 
 //
 // Speaker support

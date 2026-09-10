@@ -1440,6 +1440,12 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         keReboot();
         goto exit_cmp;
     }
+// shutdown:
+    if ( gramado_strncmp( cmdline, "shutdown", 8 ) == 0 )
+    {
+        hal_shutdown_via_qemu();
+        goto exit_cmp;
+    }
 
 // beep:
     if ( gramado_strncmp( cmdline, "beep", 4 ) == 0 ){
