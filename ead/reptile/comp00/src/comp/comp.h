@@ -148,8 +148,9 @@ void wmReactToPaintEvents(void);
 
 void __display_mouse_cursor(void);
 void comp_display_desktop_components(void);
-// #test
-// Creating a real compositor. Using offscreen buffers.
+
+
+void compComposeFullscreen(void);
 void compComposeDesktop(void);
 
 

@@ -826,6 +826,83 @@ void comp_display_desktop_components(void)
     //__update_fps();
 }
 
+// Compose desktop only for the full screen case
+void compComposeFullscreen(void)
+{
+    struct gws_window_d *fw = WindowManager.fullscreen_window;
+
+    if ((void*)fw == NULL || fw->magic != 1234)
+        return;
+
+    // Get the canvas for the client area
+    struct canvas_information_d *ci = fw->ca_canvas;
+
+    if ((void*)ci == NULL || ci->magic != 1234 || ci->initialized != TRUE)
+        return;
+
+    // #todo: Suspended
+    // This flag is not setted right for now.
+    //if (ci->dirty != TRUE)
+        //return;
+
+    // Respect the same dimension logic used by the normal compositor path
+    unsigned long left   = (fw->absolute_x + fw->rcClient.left);
+    unsigned long top    = (fw->absolute_y + fw->rcClient.top);
+    unsigned long width  = fw->rcClient.width;
+    unsigned long height = fw->rcClient.height;
+
+/*
+    // Safety: never blit more lines than the canvas actually has
+    // (the same #danger comment you already have)
+    if (ci->dc != NULL)
+    {
+        if (height > ci->dc->device_height)
+            height = ci->dc->device_height;
+        if (width > ci->dc->device_width)
+            width = ci->dc->device_width;
+    }
+*/
+
+    // Blit using the client-area dimensions
+    comp_blit_canvas_to_canvas_imp(
+        ci,                     // source canvas
+        canvas_backbuffer,      // destination (or frontbuffer if you prefer)
+        left, top,
+        width, height
+    );
+
+    ci->dirty = FALSE;
+    
+    //#todo
+    //validate_window(fw);
+
+    // Optional final backbuffer → frontbuffer flush if still needed
+    // ...
+
+// Flush
+// #todo: Where this values came from?
+// We can't do syscalls to get these values,
+// we need a local cache.
+// #bugbug:
+// De facto. We are doing syscalls.
+// #todo: We need use the cashed values,
+// and update the cached values if the resolution changes.
+
+    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+    unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+
+    comp_blit_canvas_to_canvas(
+        CANVAS_BACKBUFFER,    // source >>>
+        CANVAS_FRONTBUFFER,   // >>> destination
+        0, 0,                 // destination position
+        DeviceWidth, DeviceHeight 
+    );
+
+    // Mouse (optional)
+    //if (gUseMouse && gDisplayMousePointer)
+        //__display_mouse_cursor();
+}
+
 // This is the function called by the main loop in comploop.c
 // when the composition is active.
 // The worker that compose the desktop scene
@@ -864,15 +941,17 @@ void compComposeDesktop(void)
     //redraw_window(WindowManager.__root_window, FALSE);
     //refresh_window(WindowManager.__root_window);
 
+//
+// When we are NOT in full screen
+//
+
 // Walk the list of canvas
 // We only have frame canvas into the linked list.
 // Its own client area canvas is linked to it.
 // This way: frame_canvas->client_canvas
 
     int Counter=0;
-
     ci = (struct canvas_information_d *) canvas_head;
-
     while (1){
 
         // End of list

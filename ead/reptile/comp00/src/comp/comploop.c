@@ -4668,7 +4668,15 @@ static int ServerLoop(int client_index)
                 comp_display_desktop_components();
             // Use composition
             } else {
-                compComposeDesktop();
+
+                // Compose the desktop in fullscreen mode
+                if (WindowManager.is_fullscreen == TRUE){
+                    compComposeFullscreen();
+
+                // Compose the dsktop in not fullscreen mode
+                } else {
+                    compComposeDesktop();
+                }
             }
         }
 

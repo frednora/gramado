@@ -2017,7 +2017,11 @@ void wm_update_desktop(int tile, int show)
                 if (w->magic == 1234)
                 {
                     if (w->state != WINDOW_STATE_MINIMIZED)
-                        redraw_window(w,FALSE);
+                        redraw_window(w, FALSE);
+
+                    uint32_t *flags = (uint32_t*) w->shflags_p;      
+                    if (w->state != WINDOW_STATE_MINIMIZED)
+                        *flags |= 0x0008;
                 }
 
                 // Post message to the main window.
@@ -2142,11 +2146,10 @@ end:
     {
         redraw_window(WindowManager.taskbar_window, TRUE);
 
+        // Saying to the taskbar to repaint the components
         if (WindowManager.taskbar_window->shflags_p != NULL) 
         {
             uint32_t *flags = (uint32_t*) WindowManager.taskbar_window->shflags_p;
-
-            // Saying to the taskbar to repaint the components
             *flags |= 0x0008;
         }
 
@@ -2161,6 +2164,11 @@ end:
     // #bugbug
     // In the case of taskbar it will redraw the components twice
 
+// #todo
+// Actually we got to change the flag for all the 
+// application window and not send the Paint message.
+
+// #test: #suspended
 // Send Paint message to all clients. (Overlapped only)
 // IN: wid, msgcode, data1, data2
     window_post_message_broadcast( 0, GWS_Paint, 0, 0 );
@@ -2201,6 +2209,10 @@ void  wm_update_desktop2(void)
                     redraw_window(w, FALSE);
                     //on_update_window(w,GWS_Paint);
                 }
+
+                uint32_t *flags = (uint32_t*) w->shflags_p;      
+                if (w->state != WINDOW_STATE_MINIMIZED)
+                    *flags |= 0x0008;
             }
         }
         // Next window from the list
@@ -2214,7 +2226,12 @@ done:
     if ((void*)WindowManager.taskbar_window != NULL)
     {
         redraw_window(WindowManager.taskbar_window, FALSE);
-        on_update_window(WindowManager.taskbar_window, GWS_Paint);
+        // on_update_window(WindowManager.taskbar_window, GWS_Paint);
+
+        uint32_t *flags = (uint32_t*) WindowManager.taskbar_window->shflags_p;      
+        if (WindowManager.taskbar_window->state != WINDOW_STATE_MINIMIZED)
+                *flags |= 0x0008;
+
     }
 
 // Show root window.
@@ -4895,7 +4912,12 @@ void wm_enter_fullscreen_mode(void)
     redraw_window(WindowManager.__root_window, FALSE);
 
 // Update window (redraw)
-    update_window(w,TRUE);
+    update_window(w, TRUE);
+
+    uint32_t *flags = (uint32_t*) w->shflags_p;      
+    if (w->state != WINDOW_STATE_MINIMIZED)
+        *flags |= 0x0008;
+
 
     // New keyboard and mouse owner
     WindowManager.keyboard_owner = w;
@@ -4904,6 +4926,8 @@ void wm_enter_fullscreen_mode(void)
 // Update mouse hover
 // #todo: Mayber we can reset the mouse position
     WindowManager.mouse_hover = NULL;
+
+    Compositor.disable_frame_blit = TRUE;
 }
 
 // Exit fullscreen mode
@@ -4921,10 +4945,12 @@ void wm_exit_fullscreen_mode(int tile)
     WindowManager.mouse_hover = NULL;
 
     if (Compositor.is_composition_disabled == TRUE){
-        wm_update_desktop(tile,TRUE);
+        wm_update_desktop(tile, TRUE);
     } else {
-        wm_update_desktop(tile,FALSE);
+        wm_update_desktop(tile, FALSE);
     }
+
+    Compositor.disable_frame_blit = FALSE;
 }
 
 /*
