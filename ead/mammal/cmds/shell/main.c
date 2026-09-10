@@ -369,7 +369,12 @@ static void process_command(void)
         shell_builtin_clear();
     }
     else if (strcmp(argv[0], "msg1") == 0) {
-        // IN: PID for init process, msgcode, sig, sig.
+    
+        // #test:
+        // It's working. The init is receiving the message,
+        // but we can't read the reponse because we do not 
+        // get system events.
+        // IN: TID for init process, msgcode, sig, sig.
         rtl_post_to_tid( 0, 44888, 1234, 5678 );
     }
     else if (strcmp(argv[0], "reset") == 0) {
@@ -446,7 +451,9 @@ static void process_command(void)
 //====================================================
 // Worker loop: read from stdin, echo, accumulate
 //====================================================
-
+// + Reads from stdid
+// + Send to stdout (The terminal will read it)
+//
 static void shell_worker(void)
 {
     // Char support
@@ -466,6 +473,7 @@ static void shell_worker(void)
 
     while (1)
     {
+        // -- Read from stdin --------
         if (read( __fd_input, char_buf, 1 ) > 0)
         {
             C = (int) char_buf[0];
@@ -473,6 +481,7 @@ static void shell_worker(void)
             // Printable ASCII
             if (C >= 0x20 && C <= 0x7E)
             {
+                // -- write into stdout --------
                 // Echo the char to the terminal or kernel console
                 write( __fd_stdout, &char_buf[0], 1 );
 
@@ -491,6 +500,7 @@ static void shell_worker(void)
                 {
                     prompt_pos--;
                     prompt[prompt_pos] = 0;
+                    // -- write into stdout --------
                     write( __fd_stdout, "\b \b", 3 );
                 }
             }
@@ -498,6 +508,7 @@ static void shell_worker(void)
             // ENTER
             else if (C == '\n' || C == '\r')
             {
+                // -- write into stdout --------
                 write( __fd_stdout, "\n", 1 );  // Go to next line
                 process_command();
 
@@ -508,9 +519,6 @@ static void shell_worker(void)
     }
 }
 
-//====================================================
-// main()
-//====================================================
 
 int main(int argc, char *argv[])
 {
@@ -523,8 +531,8 @@ int main(int argc, char *argv[])
     // Get kernel info
     uname(&my_un);
 
-
     reset_prompt();
     shell_worker();
+
     return EXIT_SUCCESS;
 }

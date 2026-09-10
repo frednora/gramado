@@ -1260,7 +1260,7 @@ static void compareStrings(int fd)
 // But it will send us a message back.
     if ( gramado_strncmp(prompt, "msg2", 4) == 0 )
     {
-        // IN: PID for init process, msgcode, sig, sig.
+        // IN: TID for init process, msgcode, sig, sig.
         rtl_post_to_tid( 0, 44888, 1234, 5678 );
         goto exit_cmp;
     }

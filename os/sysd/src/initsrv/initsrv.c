@@ -100,17 +100,19 @@ void do_dhcp_dialog(void)
     sc82( 22003, 3, 0, 0 );
 }
 
-// Responding the hello.
-// Hey init, are you up?
+// Process the hello request.
+// Posting a response.
 void do_hello(int src_tid)
 {
-    int dst_tid = src_tid;
+    int dst_tid = src_tid;  // The caller receives the response
+    // The message buffer address
+    unsigned long msg_buffer_address = (unsigned long) RTLEventBuffer;
 
     //printf("init.bin: 44888 received | sender=%d receiver=%d\n",
     //    RTLEventBuffer[8],   //sender (the caller)
     //    RTLEventBuffer[9] ); //receiver
 
-    printf("init.bin: [44888] Hello received from %d\n", src_tid );
+    printf("initsrv.c: [44888] Hello received from %d\n", src_tid );
     if (dst_tid < 0){
         return;
     }
@@ -119,18 +121,13 @@ void do_hello(int src_tid)
 // Reply
 //
 
-// -------------
-// Reply: 
-// Sending response
-// Sending back the same message found into the buffer.
-// Message back to caller.
-
-// The message buffer address
-    unsigned long msg_buffer_address = (unsigned long) RTLEventBuffer;
+// Posting a response.
+// Posting the same message we received
 
     rtl_post_system_message( 
         (int) dst_tid,
-        (unsigned long) msg_buffer_address );
+        (unsigned long) msg_buffer_address 
+    );
 
 /*
 // #test
@@ -141,6 +138,7 @@ void do_hello(int src_tid)
     NextMessage.long2 = 0;
     NoReply = FALSE;
 */
+
 }
 
 
@@ -330,6 +328,7 @@ xxxProcessEvent (
 // Out of range for system messages
 // 'Hello' received. Let's respond it.
     case 44888:
+        // printf("44888\n");
         do_hello(caller_tid);
         break;
 
@@ -436,15 +435,18 @@ static int xxxEventLoopSystemEvents(void)
         // more events into the queue.
         if ( rtl_get_event() == TRUE )
         {
-            if (RTLEventBuffer[1] < 100)
-            {
+            // #todo: I guess the purpose here
+            // is limiting who is able to communicate with us.
+            // ex: all the callers bellow the 100 mark (system threds).
+            //if (RTLEventBuffer[8] < 100)
+            //{
                 // Get caller's tid
                 Caller.tid = (int) ( RTLEventBuffer[8] & 0xFFFF );
 
                 // Dispatch
                 xxxProcessEvent ( 
                     (void*) RTLEventBuffer[0], 
-                    RTLEventBuffer[1],  // msg code.
+                    RTLEventBuffer[1],  // msg code
                     RTLEventBuffer[2], 
                     RTLEventBuffer[3],
                     Caller.tid );
@@ -452,7 +454,7 @@ static int xxxEventLoopSystemEvents(void)
                     // #test
                     //rtl_yield();
                     //Caller.tid = -1;
-            }
+            //}
         }
 
         if (NoReply == FALSE){
