@@ -3,6 +3,11 @@
 // mouse/kdb/timer
 // Created by Fred Nora. 
 
+// It dispatches input events into the message queues 
+// of the appropriate GUI threads.
+// But it also sends input in stdin when we are 
+// not using the GUI.
+
 // This is an in-kernel input event handler.
 // PS2 keyboard, PS2 mouse and pit timer events goes here.
 // see: wmKeyEvent, wmMouseEvent and wmTimerEvent.
@@ -4065,14 +4070,14 @@ wmMouseEvent(
         // see: bldisp.c
         if (use_kernelside_mouse_drawing == TRUE)
         {
-            
-            // #suspended:
-            // Suspended for all the cases,
-            // let's do it only for specific cases 
+            // #todo
+            // Actually who needs to draw the pointer
+            // is the GPU.
+    
             // Update mouse position
-            // bldisp_update_mouse_position(long1, long2);
+            bldisp_update_mouse_position(long1, long2);
             // Display mouse cursor
-            // bldisp_display_mouse_cursor();
+            bldisp_display_mouse_cursor();
 
             // Hit-testing
             // #todo:
@@ -4137,15 +4142,6 @@ wmMouseEvent(
 
                         rel_long1 = long1;
                         rel_long2 = long2;
-
-                        // #ps: Not even in desktop
-                        // Explorer.exe draws the pointer for 
-                        // desktop window
-
-                        // Update mouse position
-                        // bldisp_update_mouse_position(long1, long2);
-                        // Display mouse cursor
-                        // bldisp_display_mouse_cursor();
 
                         if (wproxy_hover != wproxy_shell)
                             return 0;

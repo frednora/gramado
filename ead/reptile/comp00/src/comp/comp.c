@@ -579,6 +579,11 @@ long comp_get_mouse_y_position(void)
 // This is a low-level routine that interacts with the display device driver.
 // It draws the mouse pointer directly into the frontbuffer (LFB).
 //
+
+// #suspended:
+// Actually who needs to draw the pointer is the kernel
+// using the gpu for acceleration
+
 static void direct_draw_mouse_pointer(void)
 {
     // TODO:
@@ -632,6 +637,9 @@ static void direct_draw_mouse_pointer(void)
 
 // + Apaga o cursor antigo, copiando o conteudo do backbuffer
 // + Pinta o novo cursor diretamente no lfb.
+// #suspended:
+// Actually who needs to draw the pointer is the kernel
+// using the gpu for acceleration
 void __display_mouse_cursor(void)
 {
     unsigned long rWidth = 16;

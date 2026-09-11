@@ -152,7 +152,10 @@ wmProcessMouseEvent(
         // using the compositor, when it draws or
         // blit the frame.
 
-        // gDisplayMousePointer = TRUE;
+        // #suspended:
+        // Actually who needs to draw the pointer is the kernel
+        // using the gpu for acceleration
+
         __display_mouse_cursor();
 
         // Check the window we are inside of and 
@@ -168,6 +171,9 @@ wmProcessMouseEvent(
         // #ps: The dc belongs to a canvas of a window.
        
         /*
+        // #suspended:
+        // Actually who needs to draw the pointer is the kernel
+        // using the gpu for acceleration
         dc_draw_rectangle0 (
             WindowManager.mouse_hover->frame_canvas->dc,  // dc
             saved_x - WindowManager.mouse_hover->left,  // left 
@@ -179,6 +185,10 @@ wmProcessMouseEvent(
         ); 
         */
 
+        /*
+        // #suspended:
+        // Actually who needs to draw the pointer is the kernel
+        // using the gpu for acceleration
         // Using absolute values directly into the frontbuffer
         frontbuffer_draw_rectangle( 
             (unsigned long) saved_x, 
@@ -187,6 +197,7 @@ wmProcessMouseEvent(
             (unsigned long) 8, 
             (unsigned int) COLOR_RED, 
             (unsigned long) 0 );
+        */
 
         return;
     }

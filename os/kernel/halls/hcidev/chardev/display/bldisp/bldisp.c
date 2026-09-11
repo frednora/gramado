@@ -170,8 +170,9 @@ void bldisp_update_mouse_position(unsigned long x, unsigned long y)
 // + Pinta o novo cursor diretamente no lfb.
 void bldisp_display_mouse_cursor(void)
 {
-    const unsigned long rWidth = 16;
-    const unsigned long rHeight = 16;
+    const unsigned long rWidth = 8; // 16
+    const unsigned long rHeight = 8; // 16
+
 
 // Display server not initialized yet.
    // if ((void*) display_server == NULL)
