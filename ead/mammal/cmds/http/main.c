@@ -30,10 +30,13 @@
 //#define __DEFAULT_TARGET_IP  "192.168.1.2"
 
 // http://httpbin.org
-#define __DEFAULT_TARGET_IP  "100.60.124.177"
+//#define __DEFAULT_TARGET_IP  "100.60.124.177"
 
 // http://wttr.in/
-// #define __DEFAULT_TARGET_IP  "5.9.243.187"
+#define __DEFAULT_TARGET_IP  "5.9.243.187"
+
+// http://google.com
+#define __DEFAULT_TARGET_IP  "192.178.24.110"
 
 
 #define HTTP_PORT 80
@@ -70,8 +73,9 @@ static void do_request(int sockfd)
     //strcat(request, "GET /index.html HTTP/1.1\r\n");
     strcat(request, "GET /status/500 HTTP/1.1\r\n");
 
-    strcat(request, "Host: httpbin.org\r\n");
+    //strcat(request, "Host: httpbin.org\r\n");
     //strcat(request, "Host: wttr.in\r\n");
+    strcat(request, "Host: http://google.com\r\n");
 
     strcat(request,
         "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36\r\n"
