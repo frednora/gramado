@@ -147,14 +147,46 @@ wmProcessMouseEvent(
         comp_set_mouse_position(saved_x, saved_y);
 
         // #test
+        // #bugbug: Its not a good time to display
+        // the pointer. We need to do it
+        // using the compositor, when it draws or
+        // blit the frame.
+
+        // gDisplayMousePointer = TRUE;
         __display_mouse_cursor();
 
         // Check the window we are inside of and 
         // update the mouse_hover pointer.
 
         // see: wm.c
-        //wm_hit_test_00(saved_x,saved_y); // original
-        wm_hit_test_2(saved_x,saved_y); // #test
+        //wm_hit_test_00(saved_x,saved_y);  // original
+        wm_hit_test_2(saved_x, saved_y);  // #test
+
+        // #bugbug
+        // The top values is out of limits for
+        // the taskbar window.
+        // #ps: The dc belongs to a canvas of a window.
+       
+        /*
+        dc_draw_rectangle0 (
+            WindowManager.mouse_hover->frame_canvas->dc,  // dc
+            saved_x - WindowManager.mouse_hover->left,  // left 
+            saved_y - WindowManager.mouse_hover->top,  // top 
+            4,  // width 
+            4,  // height
+            COLOR_RED,
+            0          // ROP 
+        ); 
+        */
+
+        // Using absolute values directly into the frontbuffer
+        frontbuffer_draw_rectangle( 
+            (unsigned long) saved_x, 
+            (unsigned long) saved_y, 
+            (unsigned long) 8, 
+            (unsigned long) 8, 
+            (unsigned int) COLOR_RED, 
+            (unsigned long) 0 );
 
         return;
     }

@@ -4029,10 +4029,8 @@ wmMouseEvent(
     use_kernelside_mouse_drawing = 
         (int) ibroker_get_kernelside_mouse_drawing_status();
 
-    //#debug
     //printk ("w:%d h:%d\n",deviceWidth, deviceHeight);
     //printk ("x:%d y:%d\n",long1, long2);
-    //refresh_screen();
     //while(1){}
 
 // #test
@@ -4067,8 +4065,14 @@ wmMouseEvent(
         // see: bldisp.c
         if (use_kernelside_mouse_drawing == TRUE)
         {
-            bldisp_update_mouse_position(long1, long2);
-            bldisp_display_mouse_cursor();
+            
+            // #suspended:
+            // Suspended for all the cases,
+            // let's do it only for specific cases 
+            // Update mouse position
+            // bldisp_update_mouse_position(long1, long2);
+            // Display mouse cursor
+            // bldisp_display_mouse_cursor();
 
             // Hit-testing
             // #todo:
@@ -4091,7 +4095,8 @@ wmMouseEvent(
             {
                 if (wproxy_hover->magic == 1234)
                 {
-                    // Inside the frame, send absolute values.
+                    // Inside the frame, 
+                    // send absolute values to the display server.
                     if (wproxy_hover->hit_area == HIT_FRAME){
 
                         //printk("frame\n");
@@ -4101,23 +4106,24 @@ wmMouseEvent(
                             (unsigned long) long2 );
                         return 0;
 
-                    // Inside the client area, send relative values.
+                    // Inside the client area, 
+                    // send relative values to the application.
                     } else if (wproxy_hover->hit_area == HIT_CLIENT) {
 
                         // Good for regular apps
-                        // For regular app windows, the correct relative calculation is this.
+                        // For regular app windows, 
+                        // the correct relative calculation is this.
                         rel_long1 = long1 - (wproxy_hover->l + wproxy_hover->ca_l);
                         rel_long2 = long2 - (wproxy_hover->t + wproxy_hover->ca_t);
 
-                        // #hack
+                        // #hack: Good for taskbar
                         if (wproxy_hover == wproxy_shell)
                         {
-                            // Good for taskbar
                             rel_long1 = long1 - wproxy_hover->ca_l;
                             rel_long2 = long2 - wproxy_hover->ca_t;
                         }
 
-                        //printk("client\n");
+                        // printk("client: %d\n", wproxy_hover->tid);
                         ipc_post_message_to_tid(
                             (tid_t) __HARDWARE_TID, 
                             (tid_t) wproxy_hover->tid,
@@ -4132,9 +4138,17 @@ wmMouseEvent(
                         rel_long1 = long1;
                         rel_long2 = long2;
 
+                        // #ps: Not even in desktop
+                        // Explorer.exe draws the pointer for 
+                        // desktop window
+
+                        // Update mouse position
+                        // bldisp_update_mouse_position(long1, long2);
+                        // Display mouse cursor
+                        // bldisp_display_mouse_cursor();
+
                         if (wproxy_hover != wproxy_shell)
                             return 0;
-
 
                         // We need more parameters for this kind of message.
                         // We need to change the event loop 

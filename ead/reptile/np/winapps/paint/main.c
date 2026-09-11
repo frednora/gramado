@@ -624,8 +624,8 @@ int main(int argc, char *argv[])
         pump(client_fd);
 
         // 2. Input-broker events
-        for (nSysMsg = 0; nSysMsg < 32; nSysMsg++)
-        {
+        //for (nSysMsg = 0; nSysMsg < 32; nSysMsg++)
+        //{
             if (rtl_get_event() == TRUE)
             {
                 paintProcedure(
@@ -636,7 +636,7 @@ int main(int argc, char *argv[])
                     (unsigned long) RTLEventBuffer[3]);
                 RTLEventBuffer[1] = 0;
             }
-        }
+        //}
     }
 
     if (isTimeToQuit == TRUE){

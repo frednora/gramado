@@ -637,13 +637,13 @@ void __display_mouse_cursor(void)
     unsigned long rWidth = 16;
     unsigned long rHeight = 16;
 
-// Display server not initialized yet.
+// Display server not initialized yet
     if ((void*) display_server == NULL)
         return;
     if (display_server->initialized != TRUE)
         return;
 
-// Mouse not initialized yet.
+// Mouse not initialized yet
     if (gUseMouse != TRUE)
         return;
 
@@ -1063,7 +1063,8 @@ void compComposeDesktop(void)
                 // ----------------------------------
                 // 1) chrome/frame canvas
                 ci_src = ci;
-                if (Compositor.disable_frame_blit != TRUE){
+                if (Compositor.disable_frame_blit != TRUE)
+                {
                     comp_blit_canvas_to_canvas_imp (
                         ci_src, ci_dst, left, top, width, height );
                 }
