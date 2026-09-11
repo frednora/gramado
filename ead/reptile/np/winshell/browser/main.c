@@ -61,27 +61,22 @@ int main(int argc, char *argv[])
     status = (int) libgui_initialize();
     if (status < 0){
         printf("editor: libgui_initialize fail\n");
-        exit(1);
+        // exit(1);
+        goto fail;
     }
 
     struct dccanvas_d *dc;
     dc = (struct dccanvas_d *) libgui_get_backbuffer_dc();
     if ((void*)dc == NULL){
         printf("editor: libgui_get_backbuffer_dc fail\n");
-        exit(1);
+        // exit(1);
+        goto fail;
     }
 
-// #test
-// Drawing a pixel using the libdisp library.
-
-/*
-    // Draw it (backbuffer)
-    libgui_putpixel0 ( dc, 0xFF0000, 10, 10, 0 );
-
-    // Draw it (frontbuffer)
-    libgui_frontbuffer_putpixel( 0x00FF00, 20, 20, 0 );
-*/
-
     return (int) browser_initialize(argc, argv);
+
+fail:
+    // exit(1);
+    return EXIT_FAILURE;
 }
 

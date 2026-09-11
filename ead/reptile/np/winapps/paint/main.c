@@ -340,8 +340,9 @@ paintProcedure(
             break;
         case 'Q':
         case 'q':
-            gws_async_command(fd, 88, 0, 0);
-            isTimeToQuit = TRUE;
+            isTimeToQuit = TRUE;  // Quit the application
+            // #test: This syscall quit the server
+            // gws_async_command(fd, 88, 0, 0);
             break;
         }
         break;
@@ -638,8 +639,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    if (isTimeToQuit == TRUE)
-    {
+    if (isTimeToQuit == TRUE){
         printf("Paint: Close window\n");
         gws_destroy_window(client_fd, main_window);
     }

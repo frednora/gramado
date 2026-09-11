@@ -301,16 +301,12 @@ static void on_button_clicked(int id)
     };
 }
 
-
 static void editorShutdown(int fd)
 {
     if (fd<0)
         return;
 
-    //gws_destroy_window(fd,client_window);   // #bugbug: sometimes we can't delete this window.
-    //gws_destroy_window(fd,savebutton_window);
-    //gws_destroy_window(fd,addressbar_window);
-    gws_destroy_window(fd,main_window);
+    gws_destroy_window(fd, main_window);
 }
 
 static void update_clients(int fd)
@@ -1102,16 +1098,9 @@ browserProcedure(
         break;
 
     case MSG_CLOSE:
-        printf ("editor.bin: MSG_CLOSE\n");
-        editorShutdown(fd);
-        //isTimeToQuit = TRUE;
-        // #test
-        //if ((void*) Display != NULL){
-            //gws_close_display(Display);
-        //}
-        exit(0);
+        isTimeToQuit = TRUE;
         break;
-    
+
     // After a resize event.
     //case MSG_SIZE:
         //break;
@@ -1986,7 +1975,6 @@ static int __editor_initialize(void)
         if (isTimeToQuit == TRUE)
             break;
 
-
         // #test It's working
         // But its dangeours.
         // Get value inside the shared area
@@ -2031,129 +2019,15 @@ static int __editor_initialize(void)
     };
 
 
-/*
-    while (1)
+    if (isTimeToQuit == TRUE)
     {
-        if (isTimeToQuit == TRUE)
-            break;
-
-        // It needs to be the main window for now.
-        // Calls gws_get_next_event() to fetch the next event from the DS.
-        // And dispatch it to the procedure.
-        pump( client_fd, main_window );
-
-        C = fgetc(stdin);
-        if (C > 0)
-        {
-            browserProcedure ( 
-                client_fd,    // socket
-                client_window,    // window ID
-                MSG_KEYDOWN,  // message code
-                C,            // long1 (ascii)
-                C );          // long2 (ascii)
-        }
-
-    };
-*/
-
-// ===========================================
-
-// loop
-// The server will return an event from the client's event queue.
-// Call the local window procedure if a valid event was found.
-// #todo: 
-// Por enquanto, a rotina no servidor somente lida com 
-// eventos na janela com foco de entrada.
-// Talvez a ideia é lidar com eventos em todas as janelas
-// do processo cliente.
-
-    //Display->running = TRUE;
-
-// Getting the asynchronous events 
-// from the window server via socket.
-// Processing this events.
-
-/*
-    while (1)
-    {
-        //if ( Display->running != TRUE )
-            //break;
-        if (isTimeToQuit == TRUE)
-            break;
-
-        // It needs to be the main window for now.
-        pump( client_fd, main_window );
-    };
-*/
-
-// ok
-    if (isTimeToQuit == TRUE){
-        printf("editor.bin: isTimeToQuit\n");
+        printf("browser.bin: isTimeToQuit\n");
         editorShutdown(client_fd);
-        return EXIT_SUCCESS;
+        if (client_fd>0)
+            close(client_fd);
+
+        return EXIT_SUCCESS;  // OK
     }
-
-// Hang
-    printf("editor.bin: main loop failedn");
-    while (1){
-    };
-
-
-/*
-    int C=0;
-    //char data[2];
-    //int nread=0;
-
-    //fputc('A',stdin);
-    //fputs("This is a string in stdin",stdin);
-
-    rewind(stdin);
-
-    while (1){
-        C=fgetc(stdin);
-        if(C>0){
-            browserProcedure( 
-                client_fd,     // socket
-                NULL,          // opaque window object
-                MSG_KEYDOWN,   // message code
-                C,             // long1 (ascii)
-                C );           // long2 (ascii)
-        }
-    };
-*/
-
-//==============================================
-
-
-//
-// loop
-//
-
-/*
-//=================================
-// Set foreground thread.
-// Get events scanning a queue in the foreground queue.
-    rtl_focus_on_this_thread();
-    
-    while (1){
-        if ( rtl_get_event() == TRUE )
-        {  
-            browserProcedure( 
-                client_fd,
-                (void*) RTLEventBuffer[0], 
-                RTLEventBuffer[1], 
-                RTLEventBuffer[2], 
-                RTLEventBuffer[3] );
-        }
-    };
-
-//=================================
-*/
-
-// Done
-    //close(client_fd);
-    printf("editor: exit 0\n");
-    return EXIT_SUCCESS;
 
 fail:
     return EXIT_FAILURE;
@@ -2206,9 +2080,10 @@ int browser_initialize(int argc, char *argv[])
 
     __editor_initialize();
 
-    return 0;
+    return EXIT_SUCCESS;
+
 fail:
-    return 1;
+    return EXIT_FAILURE;
 }
 
 //

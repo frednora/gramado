@@ -424,11 +424,10 @@ launchProcedure(
         // Quit the launcher itself
         case 'Q':
         case 'q':
-            printf("launch: Send QUIT message\n");
-            gws_async_command(fd,88,0,0);  // Send quit message
-            isTimeToQuit = TRUE;
+            isTimeToQuit = TRUE;   // Quit the application
+            // #test: This call quit the server
+            // gws_async_command(fd,88,0,0);
             break;
-
         };
         break;
 

@@ -30,6 +30,8 @@
 #include <libgui.h>
 
 
+static isTimeToQuit = FALSE;
+
 /*
 // #test: These are sent by the system
 #define __MSG_DC1  76  // ^q
@@ -1586,7 +1588,7 @@ static void doClose(int fd)
     gws_destroy_window(fd, main_window);
 
     // Exit the terminal process itself. (quick and dirty)
-    exit(0);
+    // exit(0);
 }
 
 static void doHelp(int fd)
@@ -3019,7 +3021,8 @@ terminalProcedure (
 
     // Close the terminal application
     case MSG_CLOSE:
-        doClose(fd);
+        isTimeToQuit = TRUE;
+        // doClose(fd);
         break;
 
     //case MSG_QUIT:
@@ -4346,6 +4349,9 @@ int terminal_init(unsigned short flags)
     int ch_read=0;
     while (1){
 
+        if (isTimeToQuit == TRUE)
+            break;
+
         // #test It's working
         // But its dangeours.
         // Get value inside the shared area
@@ -4444,14 +4450,20 @@ int terminal_init(unsigned short flags)
         goto fail;
 */
 
-done:
-    printf("terminal.bin: Bye\n");
-    return 0;
+    if (isTimeToQuit == TRUE)
+    {
+        doClose(client_fd);
+
+        if (client_fd > 0)
+            close(client_fd);
+
+        return EXIT_SUCCESS;  // OK
+    }
 
 fail:
-    // #bugbug: This code is running. We're simply avoiding the noise.
     printf("terminal.bin: Fail\n");
-    return (int) -1;
+
+    return EXIT_FAILURE;
 }
 
 // Main function for the terminal application
@@ -4545,16 +4557,8 @@ int main(int argc, char *argv[])
     const unsigned short INIT_FLAGS = 0;
 
     Status = (int) terminal_init(INIT_FLAGS);
-    if (Status != 0)
-    {
-        printf("terminal main(): Something is wrong\n");
-        //printf("TERM: main() is returning in thread %d\n", 
-            //term00_gettid() );
-        
-        // #bugbug: This code is running. We're simply avoiding the noise.
-    }
 
-    return 0;
+    return Status;
 }
 
 //

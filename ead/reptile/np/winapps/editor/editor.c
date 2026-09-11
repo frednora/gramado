@@ -305,7 +305,7 @@ static void editorShutdown(int fd)
     //gws_destroy_window(fd,client_window);   // #bugbug: sometimes we can't delete this window.
     //gws_destroy_window(fd,savebutton_window);
     //gws_destroy_window(fd,addressbar_window);
-    gws_destroy_window(fd,main_window);
+    gws_destroy_window(fd, main_window);
 }
 
 static void update_clients(int fd)
@@ -2047,18 +2047,22 @@ static int __editor_initialize(void)
     };
 */
 
-// ok
-    if (isTimeToQuit == TRUE){
+// Quit the application
+    if (isTimeToQuit == TRUE)
+    {
         printf("editor.bin: isTimeToQuit\n");
         editorShutdown(client_fd);
-        return EXIT_SUCCESS;
+
+        if (client_fd > 0)
+            close(client_fd);
+
+        return EXIT_SUCCESS;  // OK
     }
 
-// Hang
-    printf("editor.bin: main loop failedn");
-    while (1){
-    };
-
+    // Hang
+    //printf("editor.bin: main loop failedn");
+    //while (1){
+    //};
 
 /*
     int C=0;
@@ -2111,10 +2115,8 @@ static int __editor_initialize(void)
 //=================================
 */
 
-// Done
-    //close(client_fd);
-    printf("editor: exit 0\n");
-    return EXIT_SUCCESS;
+    // printf("editor: exit 0\n");
+    // return EXIT_SUCCESS;
 
 fail:
     return EXIT_FAILURE;

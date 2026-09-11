@@ -984,7 +984,8 @@ int main(int argc, char *argv[])
         close(client_fd);
 
     // printf("power: Send QUIT message\n");
-    // gws_async_command(fd,88,0,0);  // Send quit message
+    // Send quit message. It quits the server.
+    // gws_async_command(fd,88,0,0);
 
     return EXIT_SUCCESS;
 }

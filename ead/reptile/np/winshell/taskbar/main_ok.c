@@ -55,10 +55,8 @@
 // libgws - The client-side library.
 #include <gws.h>
 
-// #test
 // The client-side library
 #include <libgui.h>
-
 
 #include "taskbar.h"
 
@@ -76,6 +74,7 @@ static unsigned long __sh_flags = 0;
 
 
 // Colors
+#define DEFAULT_TB_BACKGROUND_COLOR  COLOR_WHITE
 #define HONEY_COLOR_TASKBAR  0x00C3C3C3 
 #define MYGREEN  0x0b6623
 //...
@@ -222,8 +221,8 @@ static int icon_left_limit = 80; // Limit in pixels.
 int iconList[32];
 
 
-struct icon_info_d MyButton;
 static int __hover_icon_id = -1;
+
 
 //
 // Strings
@@ -240,9 +239,9 @@ const char *buttom00_label = "<";  // Navigation
 const char *buttom01_label = ">";  // Navigation
 const char *buttom02_label = "[]";  // Purpose?
 
-//const char *app1_name = "#power.bin";
-//const char *app1_name = "#draw.bin";
-const char *app1_name = "#terminal.bin";
+//const char *app1_name = "#launch.bin";
+const char *app1_name = "#paint.bin";
+//const char *app1_name = "#terminal.bin";
 const char *app2_name = "#editor.bin";
 
 
@@ -306,9 +305,6 @@ draw_bar_button(
     unsigned int fg_color,
     unsigned int bg_color,
     int show );
-
-static int draw_separator(int fd);
-static int draw_separator2(void);
 
 static int create_icons_on_desktop(int fd);
 static int create_desktop_area(int fd);
@@ -708,7 +704,7 @@ static void on_button_clicked(int id)
 
     switch (id)
     {
-        case 1:  // MyButton.icon_id
+        case 1:  // StartButton.button_id
             printf("Button %d clicked!\n", id);
             // Example: launch an app
             do_launch_app(1);
@@ -736,12 +732,13 @@ static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my)
 // #test
 // For now we only check against our button.
 // Let's use the relative values for that.
-    if ( rel_mx >= MyButton.left && 
-         rel_mx <= MyButton.left + MyButton.width &&
-         rel_my >= MyButton.top  && 
-         rel_my <= MyButton.top + MyButton.height )
+
+    if ( rel_mx >= StartButton.left && 
+         rel_mx <= StartButton.left + StartButton.width &&
+         rel_my >= StartButton.top  && 
+         rel_my <= StartButton.top + StartButton.height )
     {
-        return (int) MyButton.icon_id;
+        return (int) StartButton.button_id;
     }
 
     // ...
@@ -764,26 +761,18 @@ static void update_clients(int fd)
         main_window,
         (struct gws_window_info_d *) &wi );
 
-// bg for the client area
+// -----------------------
+// Draw background for the client area
+
     lingui_draw_rectangle0_dc (
         dc00,
         0, 0, wi.cr_width, wi.cr_height,
-        COLOR_RED,
+        DEFAULT_TB_BACKGROUND_COLOR,
         0  // ROP
     );
 
-/*
-// string
-    libgui_drawstring_dc(
-            dc00,
-            2,
-            2,
-            COLOR_YELLOW,
-            COLOR_BLUE,
-            0, // ROP 
-            "Taskbar" 
-        );
-*/
+// -----------------------
+// Update start button
 
     libgui_set_ui_component_position(
         uic_button_start, 
@@ -817,143 +806,16 @@ tbProcedure(
         goto fail;
     }
 
-// Process the event.
+// Process the event
     switch (event_type){
 
-        //#todo
-        // Update the bar and the list of clients.
+        // #ps: 
+        // Sent by the server. 
+        // But now we are using the shared flag.
         case MSG_PAINT:
-
             update_clients(fd);
-    
-            //printf("task.bin: MSG_PAINT\n");
-            // #todo
-            // We need to update all the clients
-            // Create update_clients()
-            //gws_redraw_window(fd, main_window, TRUE);
-            //gws_redraw_window(fd, NavigationInfo.button00_window, TRUE);
-            //gws_redraw_window(fd, NavigationInfo.button01_window, TRUE);
-            //gws_redraw_window(fd, NavigationInfo.button02_window, TRUE);
-            // #test
-            // New component. (using libgui)
-
-            /*
-            // Ddraw using absolute values
-            draw_bar_button(
-                MyButton.absolute_left, 
-                MyButton.absolute_top,
-                MyButton.width, 
-                MyButton.height, 
-                "App", COLOR_WHITE, COLOR_GRAY, TRUE );
-            */
-
-            //draw_separator(fd);
-            //draw_separator2();
-
-            //#test
-            //#todo
-            //gws_redraw_window(fd, iconList[0], TRUE);
-            //gws_redraw_window(fd, iconList[1], TRUE);
-            //gws_redraw_window(fd, iconList[2], TRUE);
-            //gws_redraw_window(fd, iconList[3], TRUE);
-
-            // #test (good)
-            // Async with 4 data
-            // Redraw and show.
-            //gws_async_command2( fd, 2000, 0,
-                //main_window,
-                //NavigationInfo.button00_window,
-                //NavigationInfo.button01_window,
-                //NavigationInfo.button02_window );
-            //draw_separator(fd);
-
             break;
 
-        // One button was clicked
-        // Sent by the server?
-        case GWS_MouseClicked:
-            //#debug
-            //printf("taskbar: GWS_MouseClicked\n");
-
-            // #debug 
-            //if (long1 == main_window)
-                //printf("taskbar: GWS_MouseClicked\n");
-
-            //if (event_window == NavigationInfo.button00_window)
-            // #ps: Probably the event window is the main window.
-
-            // # Display apps. (recent apps?), maximize.
-            if (long1 == NavigationInfo.button00_window)
-            {
-                // witch_side: 1=top, 2=right, 3=bottom, 4=left
-                gws_dock_active_window(fd,4);
-                //gws_async_command(fd,30,0,0);  // TILE (Update desktop)
-                //gws_async_command(fd,15,0,0); //SET ACTIVE WINDOW BY WID
-                //gws_async_command(fd,1014,0,0); //maximize active window
-
-                /*
-                // #todo: It is working. 
-                // We got to initialize the variables first.
-            
-                //#test: Testing a new worker.
-                tmpNewWID = (int) create_bar_icon(
-                    fd, 
-                    main_window,
-                    0,
-                    (icon_left_limit + icon_counter),  // Left
-                    2,  // Top
-                    32, // Width
-                    28, // Height
-                    "NEW" );
-
-                if (tmpNewWID < 0)
-                    goto fail;
-                gws_refresh_window(fd,tmpNewWID);
-                if (icon_counter<0)
-                    goto fail;
-                if (icon_counter>=32)
-                    goto fail;
-                iconList[icon_counter] = (int) tmpNewWID;
-                icon_counter++;
-
-                printf("done %d\n",tmpNewWID);
-                */
-            }
-
-            if (long1 == NavigationInfo.button01_window)
-            {
-                // witch_side: 1=top, 2=right, 3=bottom, 4=left
-                gws_dock_active_window(fd,2);
-                //gws_async_command(fd,1011,0,0);
-            }
-            // #todo: Back
-            //if (long1 == NavigationInfo.button02_window)
-                //gws_async_command(fd,30,0,0);
-            break;
-
-        // #test
-        case MSG_MOUSEPRESSED:
-            //printf("taskbar: MSG_MOUSEPRESSED:\n");
-            if (__hover_icon_id == MyButton.icon_id)
-            {
-                printf("taskbar: Button pressed\n");
-                // #todo: on button pressed
-                // on_button_clicked(__hover_icon_id);
-            }
-            break;
-
-        // #test
-        case MSG_MOUSERELEASED:
-            //printf("taskbar: MSG_MOUSERELEASED:\n");
-            if (__hover_icon_id == MyButton.icon_id)
-            {
-                printf("taskbar: Button released\n");
-                // #todo: on button released
-                on_button_clicked(__hover_icon_id);
-            }
-            break;
-
-        // #test
         case MSG_MOUSEMOVE:
             // printf("%d %d\n", long1, long2);
             IconId = (int) __hit_test_icon(long1, long2);
@@ -963,70 +825,30 @@ tbProcedure(
                 __hover_icon_id = -1;
             break;
 
-        //case GWS_ServerNotifyApp:
-            //break;
-
-        // Add new client. Given the wid.
-        // The server created a client.
-        case 99440:
-            printf("taskbar: [99440]\n");
+        case MSG_MOUSEPRESSED:
+            //printf("taskbar: MSG_MOUSEPRESSED:\n");
+            if (__hover_icon_id == StartButton.button_id)
+            {
+                printf("taskbar: Button pressed\n");
+                // #todo: on button pressed
+                // on_button_clicked(__hover_icon_id);
+            }
             break;
 
-        // Remove client. Given the wid.
-        // The server removed a client.
-        case 99441:
-            printf("taskbar: [99441]\n");
-            break;
-        
-        // Update client info.
-        // The server send data about the client.
-        case 99443:
-            printf("taskbar: [99443]\n");
+        case MSG_MOUSERELEASED:
+            //printf("taskbar: MSG_MOUSERELEASED:\n");
+            if (__hover_icon_id == StartButton.button_id)
+            {
+                printf("taskbar: Button released\n");
+                // #todo: on button released
+                on_button_clicked(__hover_icon_id);
+            }
             break;
 
-        // #test:
-        // ds sent us a message to create an iconic window for an app.
-        case 99500:
-            tmpNewWID = (int) create_bar_icon(
-                fd, 
-                main_window,
-                2,  // Icon ID
-                8,8,28,28,
-                "NEW" );
-            if (tmpNewWID < 0)
-                goto fail;
-            gws_refresh_window(fd,tmpNewWID);
+        // #suspended: This message was sent by the server
+        case GWS_MouseClicked:
+            printf("taskbar: GWS_MouseClicked\n");
             break;
-
-        // #bugbug
-        // The taskbar application is the Shell, just like the explorer.exe
-        // in Windows. We can't simply close it.
-        // #todo
-        // It only can happen when in certain situations.
-        case MSG_CLOSE:
-            printf("taskbar: Closing... #bugbug\n");
-            //exit(0);
-            // Let's leave the main loop.
-            isTimeToQuit = TRUE;
-            break;
-        
-        case MSG_COMMAND:
-            /*
-            printf("taskbar.bin: MSG_COMMAND %d \n",long1);
-            switch(long1){
-            case 4001:  //app1
-            printf("taskbar.bin: 4001\n");
-            gws_clone_and_execute("#browser.bin");  break;
-            case 4002:  //app2
-            printf("taskbar.bin: 4002\n");
-            gws_clone_and_execute("#editor.bin");  break;
-            case 4003:  //app3
-            printf("taskbar.bin: 4003\n");
-            gws_clone_and_execute("#terminal.bin");  break;
-            };
-            */
-            break;
-
 
         // 20 = MSG_KEYDOWN
         case MSG_KEYDOWN:
@@ -1085,6 +907,68 @@ tbProcedure(
                 default:
                     break;
             };
+            break;
+
+        //case GWS_ServerNotifyApp:
+            //break;
+
+        // Add new client. Given the wid.
+        // The server created a client.
+        case 99440:
+            printf("taskbar: [99440]\n");
+            break;
+
+        // Remove client. Given the wid.
+        // The server removed a client.
+        case 99441:
+            printf("taskbar: [99441]\n");
+            break;
+        
+        // Update client info.
+        // The server send data about the client.
+        case 99443:
+            printf("taskbar: [99443]\n");
+            break;
+
+        // #test:
+        // ds sent us a message to create an iconic window for an app.
+        case 99500:
+            tmpNewWID = (int) create_bar_icon(
+                fd, 
+                main_window,
+                2,  // Icon ID
+                8,8,28,28,
+                "NEW" );
+            if (tmpNewWID < 0)
+                goto fail;
+            gws_refresh_window(fd,tmpNewWID);
+            break;
+
+        // #bugbug
+        // The taskbar application is the Shell, just like the explorer.exe
+        // in Windows. We can't simply close it.
+        // #todo
+        // It only can happen when in certain situations.
+        case MSG_CLOSE:
+            printf("taskbar: Closing ...\n");
+            isTimeToQuit = TRUE;  // Let's leave the main loop
+            break;
+
+        case MSG_COMMAND:
+            /*
+            printf("taskbar.bin: MSG_COMMAND %d \n",long1);
+            switch(long1){
+            case 4001:  //app1
+            printf("taskbar.bin: 4001\n");
+            gws_clone_and_execute("#browser.bin");  break;
+            case 4002:  //app2
+            printf("taskbar.bin: 4002\n");
+            gws_clone_and_execute("#editor.bin");  break;
+            case 4003:  //app3
+            printf("taskbar.bin: 4003\n");
+            gws_clone_and_execute("#terminal.bin");  break;
+            };
+            */
             break;
 
         default:
@@ -1284,86 +1168,6 @@ draw_bar_button(
     return 0;
 }
 
-
-// Draw a separator in the navigation bar.
-static int draw_separator(int fd)
-{
-    unsigned long sLeft = 2 +84 +84;
-    unsigned long sTop  = 8;
-    const char *SeparatorString = "|";
-    unsigned int SeparatorColor = COLOR_GRAY;
-
-// Parameter:
-    if (fd<0)
-        goto fail;
-
-// Filters
-    if (main_window<0)
-        goto fail;
-    if (NavigationInfo.useSeparator != TRUE)
-        goto fail;
-
-// Draw it in the pre-defined position.
-    gws_draw_text (
-        (int) fd,
-        (int) main_window,
-        (unsigned long) sLeft,
-        (unsigned long) sTop,
-        (unsigned int) SeparatorColor,
-        SeparatorString );
-
-    return 0;
-fail:
-    return (int) -1;
-}
-
-// Draw a separator in the navigation bar.
-static int draw_separator2(void)
-{
-    unsigned long sLeft = TaskbarInfo.left +4 +32 +4;  //2 +84 +84;
-    unsigned long sTop  = TaskbarInfo.top + 8;  //8;
-    //const char *SeparatorString = "|";
-    unsigned int SeparatorColor = COLOR_GRAY;
-
-// Parameter:
-    //if (fd<0)
-        //goto fail;
-
-// Filters
-    //if (main_window<0)
-        //goto fail;
-    if (NavigationInfo.useSeparator != TRUE)
-        goto fail;
-
-// Draw it in the pre-defined position.
-/*
-    gws_draw_text (
-        (int) fd,
-        (int) main_window,
-        (unsigned long) sLeft,
-        (unsigned long) sTop,
-        (unsigned int) SeparatorColor,
-        SeparatorString );
-*/
-
-// Draw it using the libgui library
-    libgui_backbuffer_draw_rectangle0(
-        sLeft, sTop, 2, 16,
-        SeparatorColor,
-        1, 0, FALSE
-    );
-
-    // Refresh to show it
-    libgui_refresh_rectangle_via_kernel(
-        sLeft, sTop, 2, 16
-    );
-    return 0;
-
-fail:
-    return (int) -1;
-}
-
-
 static int create_icons_on_desktop(int fd)
 {
     register int i=0;
@@ -1562,8 +1366,6 @@ int main(int argc, char *argv[])
 
 // --------------------------------
 
-    isTimeToQuit=FALSE;
-
 // Initialize navigation info structure.
     NavigationInfo.button00_window = -1;
     NavigationInfo.button01_window = -1;
@@ -1600,7 +1402,6 @@ int main(int argc, char *argv[])
     //sc80 (643,0,0,0);
 
 // Create the rectangle
-    //gws_debug_print ("taskbar.bin: Create rectangle\n");
     //printf          ("taskbar.bin: Create rectangle\n");
     //sc80(897,0,0,0);
 
@@ -1693,11 +1494,7 @@ int main(int argc, char *argv[])
     //gws_async_command(client_fd,5,0,0);  // Draw black rectangle.
     //}
 
-// #debug
-// ok
-
-    //printf("gws.bin: [1] calling create window\n");
-
+    // #debug
     //while(1){}
     //asm ("int $3");
 
@@ -1713,26 +1510,13 @@ int main(int argc, char *argv[])
     unsigned long tb_t = h - TASKBAR_HEIGHT;
     unsigned long tb_w = w;
     unsigned long tb_h = TASKBAR_HEIGHT;
-
-/*
-    // #test
-    unsigned long TestHeight = 400;
-    unsigned long tb_l = 0;
-    unsigned long tb_t = h - TestHeight;
-    unsigned long tb_w = w;
-    unsigned long tb_h = TestHeight;
-*/
-
-    unsigned long style = WS_APP | WS_TASKBAR;
-
     TaskbarInfo.left = tb_l;
     TaskbarInfo.top = tb_t;
     TaskbarInfo.width = tb_w;
     TaskbarInfo.height = tb_h;
 
+    unsigned long style = WS_APP | WS_TASKBAR;
     //TaskbarInfo.style = style;
-
-    // printf("taskbar: Create window\n");
 
     main_window = 
         (int) gws_create_window (
@@ -1743,7 +1527,7 @@ int main(int argc, char *argv[])
                 program_name,
                 tb_l, tb_t, tb_w, tb_h,
                 0, 
-                style,      // style
+                style,
                 HONEY_COLOR_TASKBAR, HONEY_COLOR_TASKBAR );
 
     if (main_window < 0){
@@ -1752,7 +1536,6 @@ int main(int argc, char *argv[])
     }
     gws_set_active( client_fd, main_window );
 
-    // printf("taskbar: Create window ok\n");
 
 // =============================
 // #test
@@ -1794,14 +1577,13 @@ int main(int argc, char *argv[])
         main_window,
         (struct gws_window_info_d *) &wi );
 
-
 // ============================================================
-// #test
 // Getting the flag earlier. This way we can use it in the loop.
 
     __sh_flags = (unsigned long) wi.sh_flags;
 
 // ============================================================
+// create the dc
 
     dc00 = (struct dccanvas_d *) libgui_create_dc(
         wi.ca_canvas_base_address,
@@ -1814,307 +1596,43 @@ int main(int argc, char *argv[])
         printf("power: on dc00\n");
         exit(1);
     }
-
     if ((void*)dc00 != NULL){
         // ...
     }
 
-    /*
+// -----------------------
+// Draw background for the client area
+
     lingui_draw_rectangle0_dc (
         dc00,
-        wi.cr_left, wi.cr_top, wi.cr_width, wi.cr_height,
-        COLOR_RED,
+        0, 0, wi.cr_width, wi.cr_height,
+        DEFAULT_TB_BACKGROUND_COLOR,
         0  // ROP
     );
-    */
-    
-// ========================
-// Create button based on the taskbar dimensions
 
-    /*
-    NavigationInfo.button00_window = 
-    (int) create_bar_icon (
-        client_fd,
-        main_window,
-        0, // Icon ID
-        2,  // Left
-        2,  // Top
-        (8*10),   // 8 chars width. 
-        tb_h -2,
-        buttom00_label );
-    */
+// -----------------------
+// Create the start button
+// Using a worker to create an UI component (button)
 
-// ========================
-// Create button based on the taskbar dimensions
-
-    /*
-    NavigationInfo.button01_window = 
-    (int) create_bar_icon (
-        client_fd,
-        main_window,
-        0, // Icon ID
-        2 +84,  // Left
-        2,      // Top
-        (8*10),   // 8 chars width
-        tb_h -2,
-        buttom01_label );
-    */
-
-// ========================
-// Create button based on the taskbar dimensions.
-
-    /*
-    NavigationInfo.button02_window = 
-    (int) create_bar_icon (
-        client_fd,
-        main_window,
-        0, // Icon ID
-        2 +84 +84,  // Left 
-        2,          // Top
-        (8*10),   // 8 chars width. 
-        tb_h -2,
-        buttom02_label );
-    */
-
-
-//
-// Create and draw the new component
-//
-
-// #test
-// Create new component.
-    MyButton.icon_id = 1;  // #test
-    MyButton.wid     = -1;   // not a server window, just client-side
-
-    // Absolute values
-    MyButton.absolute_left = TaskbarInfo.left +3;
-    MyButton.absolute_top  = TaskbarInfo.top  +3;
-    MyButton.width = 34;
-    MyButton.height = TaskbarInfo.height -6;  //24;
-
-    // Relative values
-    MyButton.left = 3;
-    MyButton.top  = 3;
-
-    MyButton.state   = 0;    // 0 = normal, 1 = hover, 2 = pressed
-
-    __hover_icon_id = -1; // Invalidate.
-
-// Draw the new component (using lingui)
-// Using absolute values
-/*
-    draw_bar_button (
-        MyButton.absolute_left, 
-        MyButton.absolute_top,
-        MyButton.width, 
-        MyButton.height, 
-        "App", COLOR_WHITE, COLOR_GRAY, TRUE );
-*/
-
-    //draw_bar_button (
-        //0, 0, wi.cr_width, wi.cr_height,
-        //"App", COLOR_WHITE, COLOR_GRAY, TRUE );
-
-
-    // #test: using a worker to create an UI component (button)
     create_start_button(client_fd);
 
-// ========================
+// Hover what icon?
+    __hover_icon_id = -1;  // Invalidates
+
+// #todo:
 // Create separator
 
-    //draw_separator(client_fd);
-    //draw_separator2();
-
-/*
-// Onde separator
-    gws_draw_text (
-        (int) client_fd,
-        (int) main_window,
-        (unsigned long) 2 +84 +84 +84 +2,
-        (unsigned long) 2,
-        (unsigned long) COLOR_GRAY,
-        "|" );
-*/
-
-    //printf ("taskbar.bin: main_window created\n");
-    //while(1){}
-
-    //printf("gws.bin: [2] after create simple green window :)\n");
-    //asm ("int $3");
-    
-    // #debug
-    //gws_refresh_window (client_fd, main_window);
-
-    //while(1){}
-    //asm ("int $3");
-
-
-/*
-// barra azul no topo.
-//===============================
-    gws_debug_print ("taskbar.bin:  Creating  window \n");
-    //printf        ("taskbar.bin: Creating main window \n");
-    int tmp1 = -1;
-    tmp1 = (int) gws_create_window (
-                     client_fd,
-                     WT_SIMPLE, 1, 1, "status",
-                     0, 0, w, 24,
-                     0, 0, COLOR_BLUE, COLOR_BLUE );
-    if (tmp1<0){
-        printf ("taskbar.bin: tmp1\n");
-        exit(1);
-    }
-    //status_window = tmp1;
-//========================
-*/
-
-    //printf ("taskbar.bin: status_window created\n");
-    //while(1){}
-
-    //printf("gws.bin: [2] after create simple gray bar window :)\n");
-
-    // #debug
-    //gws_refresh_window (client_fd, tmp1);
-    //asm ("int $3");
-
-/*
-//===================
-// Drawing a char just for fun,not for profit.
-
-    gws_debug_print ("taskbar.bin: 2 Drawing a char \n");
-    //printf        ("taskbar.bin: Drawing a char \n");
-    if (main_window > 0)
-    {
-        gws_draw_char ( 
-            client_fd, 
-            main_window, 
-            2, 2, COLOR_RED, 'G' );
-         
-         // Símbolo para somatoria.
-         // #ps: The extended ascii chars are working.
-         gws_draw_char ( 
-            client_fd, 
-            main_window, 
-            2 + 8 + 2, 2, COLOR_RED, 228 );
-    }
-//====================   
-*/
-
-    // #debug
-    //gws_refresh_window (client_fd, tmp1);
-    //asm ("int $3");
-   
-    /*
-    //
-    // == stdin ===================================================
-    //
-    char evBuf[32];
-    int ev_nreads=0;
-    unsigned long lMessage[8];
-    //struct
-    while(TRUE){
-        //read from keyboard tty
-        ev_nreads = read(0,evBuf,16);
-        //if (ev_nreads>0){ printf ("E\n"); }  //funcionou.
-        if(ev_nreads>0)
-        {
-            memcpy( (void*) &lMessage[0],(const void*) &evBuf[0], 16); //16 bytes 
-            if( lMessage[1] != 0 )
-            {
-                 printf( "%c", lMessage[2] ); //long1
-                 fflush(stdout);
-            }
-        }  
-        gws_draw_char ( client_fd, main_window, 
-        32, 8, COLOR_RED, 'I' );
-    };
-    // ============================================================
-    */
-    
-
-    // Create a little window in the top left corner.
-    //gws_create_window (client_fd,
-        //WT_SIMPLE,1,1,"gws-client",
-        //2, 2, 8, 8,
-        //0, 0, COLOR_RED, COLOR_RED);
-
-// #test
-// Setup the flag to show or not the fps window.
-// Request number 6.
-    //gws_async_command(client_fd,6,FALSE,0);
-
-// Refresh
-    //gws_refresh_window(client_fd, main_window);
-
-//
-// Client
-//
-
-// #todo
-// Podemos nesse momento ler alguma configuração
-// que nos diga qual interface devemos inicializar.
-
-    /*
-    if (launchChild == TRUE)
-    {
-        gws_redraw_window(client_fd,main_window,0);
-        
-        // Interface 1: File manager.
-        //gws_clone_and_execute("#fileman.bin");
-
-        // Interface 1: Test app.
-        //gws_clone_and_execute("#editor.bin");
-    }
-    */
-
-//
-// Input
-//
-    
-// Enable input method number 1.
-// Event queue in the current thread.
-    //gws_enable_input_method(1);
-
-
-// =================================
-// Focus
-
-// Set focus on current thread.
-    //rtl_focus_on_this_thread();
-
-// Set focus on main window.
-// #bugbug
-// Maybe it can switch the foreground thread.
-    // 9 = set focus
-    // gws_async_command( client_fd, 9, main_window, main_window );
-
-
-// #test:  ??
+// #test:
 // Setup kernel console.
 // Set cursor position on top of the raw window.
-// We're using graphics, but we want to keep the console,
-// in a known position.
+// We're using graphics, but 
+// we want to keep the console in a known position.
+
     sc80 ( 34, 2, 2, 0 );
 
-// Show prompt
-    //doPrompt(client_fd);
-
-    //#breakpoint
-    //printf("taskbar.bin: Breakpoint :)\n");
-    //while(1){}
-
-/*
-// #test
-// Getting 2mb shared memory surface.
-// ring3.
-    void *ptr;
-    ptr = (void*) rtl_shm_get_2mb_surface();
-    if( (void*) ptr != NULL )
-        printf("surface address: %x\n",ptr);
-*/
 
 // ===============================
-//
+
     __initialize_client_list();
 
 // =======================
@@ -2160,11 +1678,10 @@ int main(int argc, char *argv[])
 // #bugbug: Valid only if the timer fires 1000 times a second.
 // It gives the opportunities for other threads to run a bit more.
 
-    printf("taskbar: Event loop\n");
+    // printf("taskbar: Event loop\n");
+    isTimeToQuit = FALSE;
 
-    // isTimeToQuit =  FALSE;
-
-    int nSysMsg = 0;
+    int iSysMsg = 0;  // Iterator for system messages
 
     while (1){
         if (isTimeToQuit == TRUE)
@@ -2204,7 +1721,7 @@ int main(int argc, char *argv[])
         pump(client_fd, main_window);
 
         // 2. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++)
+        for (iSysMsg=0; iSysMsg<32; iSysMsg++)
         {
             if (rtl_get_event() == TRUE)
             {
@@ -2225,75 +1742,18 @@ int main(int argc, char *argv[])
         {
             delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
             // Let's sleep if the round was less than 16 ms.
-            if (delta_jiffie < MainLoopIntervalMS){
-                if (UseSleep == TRUE)
-                    rtl_sleep(MainLoopIntervalMS - delta_jiffie);
+            if (delta_jiffie < MainLoopIntervalMS)
+            {
+                // #suspended:
+                // We are still implementing the sleep() support.
+                // if (UseSleep == TRUE)
+                    // rtl_sleep(MainLoopIntervalMS - delta_jiffie);
             }    
         }
     };
 
-/*
-//=================================
-    // Podemos chamar mais de um diálogo
-    // Retorna TRUE quando o diálogo chamado 
-    // consumiu o evento passado à ele.
-    // Nesse caso chamados 'continue;'
-    // Caso contrário podemos chamar outros diálogos.
-
-    while (1){
-        if ( rtl_get_event() == TRUE )
-        {
-            //if( RTLEventBuffer[1] == MSG_QUIT ){ break; }
-
-            cmdlineProcedure ( 
-                client_fd,
-                (void*) RTLEventBuffer[0], 
-                RTLEventBuffer[1], 
-                RTLEventBuffer[2], 
-                RTLEventBuffer[3] );
-        }
-    };
-//=================================
-*/
-    // Isso eh estranho ... um cliente remoto nao deve poder fazer isso.
-    //gws_debug_print ("gws: Sending command to close the server. \n");
-    //gws_async_command(client_fd,1,0,0);
-    //exit(0);
-
-    // Asking to server to send me an notification
-    // telling me to close myself
-    
-    //gws_debug_print ("gws: Pinging\n");
-    //gws_async_command(client_fd,2,0,0);
-
-    //while(1){}
-    // ...
-
-    /*
-    unsigned long event_buffer[8];
-    // Event loop
-    while (TRUE)
-    {
-        // Get next event.
-        read ( client_fd, event_buffer, sizeof(event_buffer) );
-        
-        //event: Close my self
-        //if ( event_buffer[1] == 12344321 )
-        //{
-        //    gws_debug_print ("gws: [EVENT] We got the event 12344321\n \n");
-        //    break;
-        //}
-        
-        if ( event_buffer[0] == 'p' &&
-             event_buffer[1] == 'o' &&
-             event_buffer[2] == 'n' &&
-             event_buffer[3] == 'g' )
-        {
-            printf("PONG\n");
-            gws_async_command(client_fd,1,0,0);
-        }
-    };
-    */
+// Close the socket
+    close(client_fd);
  
     return EXIT_SUCCESS;  // done
 }

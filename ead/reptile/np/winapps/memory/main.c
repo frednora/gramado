@@ -19,7 +19,7 @@
 
 #include "memory.h" // Optional: define colors or prototypes if you like
 
-
+static int isTimeToQuit = FALSE;
 
 // Global display pointer
 struct gws_display_d *Display;
@@ -515,17 +515,24 @@ memoryProcedure(
 {
     int ButtonId = -1;
 
-    if (fd < 0) return -1;
-    if (event_window < 0) return -1;
-    if (event_type < 0) return -1;
+    if (fd < 0) 
+        return -1;
+    if (event_window < 0) 
+        return -1;
+    if (event_type < 0) 
+        return -1;
+
+//
+// Event type
+//
 
     switch (event_type) {
 
+    // Null/heartbeat event
     case 0:
-        // Null/heartbeat event
         return 0;
 
-case MSG_KEYDOWN:
+    case MSG_KEYDOWN:
     switch (long1) {
     case VK_RETURN:  // Enter key
         trigger_default_responder(fd);
@@ -626,16 +633,13 @@ case MSG_KEYDOWN:
 
         break;
 
-    case MSG_CLOSE:
-        //gws_destroy_window(fd, refresh_button);
-        //gws_destroy_window(fd, close_button);
-        gws_destroy_window(fd, main_window);
-        exit(0);
-        break;
-
     case MSG_PAINT:
         update_children(fd);
         return 0;
+
+    case MSG_CLOSE:
+        isTimeToQuit = TRUE;
+        break;
 
     default:
         // Unknown event
@@ -1014,19 +1018,23 @@ int main(int argc, char *argv[])
     }
 */
 
-    int nSysMsg = 0;
 
 //
 // Event loop
 //
 
+    isTimeToQuit = FALSE;
+    int nSysMsg = 0;   // Iterator
+
     while (1){
 
-        // #test It's working
-        // But its dangeours.
-        // Get value inside the shared area
+    if (isTimeToQuit == TRUE)
+        break;
 
-    //char *p;
+    // #test It's working
+    // But its dangeours.
+    // Get value inside the shared area
+
     if (__sh_flags != 0)
     {
         char *flags_ptr = (char *) __sh_flags;
@@ -1065,5 +1073,17 @@ int main(int argc, char *argv[])
 
     };
 
-    return EXIT_SUCCESS;
+    if (isTimeToQuit == TRUE)
+    {
+        if (client_fd > 0){
+            gws_destroy_window(client_fd, main_window);
+        }
+
+        if (client_fd > 0)
+            close(client_fd);
+
+        return EXIT_SUCCESS;  // OK
+    }
+
+    return EXIT_FAILURE;
 }

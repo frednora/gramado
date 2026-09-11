@@ -13,6 +13,8 @@
 #include <gws.h>
 #include <libgui.h>
 
+static int isTimeToQuit = FALSE;
+
 // Globals
 struct gws_display_d *Display;
 struct dccanvas_d *dc00;
@@ -162,10 +164,10 @@ static int systemProcedure(int fd, int event_window, int event_type,
         break;
 
     case MSG_CLOSE:
-        gws_destroy_window(fd, main_window);
-        exit(0);
+        isTimeToQuit = TRUE;
         break;
     }
+
     return 0;
 }
 
@@ -282,6 +284,14 @@ int main(int argc, char *argv[])
             }
         }
     }
+
+    if (isTimeToQuit == TRUE){
+        printf("sysinfo: Close window\n");
+        gws_destroy_window(fd, main_window);
+    }
+
+    if (fd > 0)
+        close(fd);
 
     return EXIT_SUCCESS;
 }
