@@ -931,7 +931,7 @@ static int ServerLoop(void)
         (int) bind (
                 server_fd, 
                 (struct sockaddr *) &server_address, 
-                addrlen );
+                (socklen_t *) &addrlen );
 
     if (bind_status < 0){
         printf("netd: on bind()\n");

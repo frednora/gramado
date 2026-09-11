@@ -83,25 +83,6 @@ static void clear_canvas(void);
 
 // =====================================================
 
-/*
-unsigned long
-syscall3 (
-    unsigned long num,
-    unsigned long arg1,
-    unsigned long arg2,
-    unsigned long arg3 )
-{
-    unsigned long ret=0;
-    asm volatile (
-        "syscall \n"
-        : "=a" (ret)
-        : "a" (num), "D" (arg1), "S" (arg2), "d" (arg3)
-        : "rcx", "r11", "memory"
-    );
-    return (unsigned long) ret;
-}
-*/
-
 // ----------------------------------------------------
 static void clear_canvas(void)
 {
@@ -123,13 +104,14 @@ static void clear_canvas(void)
 // Draw a small “pixel” (3×3 rect) at relative coordinates
 static void draw_pixel(unsigned long x, unsigned long y)
 {
-    if ((void*)dc00 == NULL) return;
+    if ((void*)dc00 == NULL) 
+        return;
 
     // Keep the pixel inside the canvas (above toolbar)
-    struct gws_window_info_d wi;
-    gws_get_window_info(Display->fd, main_window, &wi);
-    if (y >= (wi.cr_height - TOOLBAR_H - 2))
-        return;
+    //struct gws_window_info_d wi;
+    //gws_get_window_info(Display->fd, main_window, &wi);
+    //if (y >= (wi.cr_height - TOOLBAR_H - 2))
+        //return;
 
     lingui_draw_rectangle0_dc (
         dc00,
@@ -142,7 +124,8 @@ static void draw_pixel(unsigned long x, unsigned long y)
 // ----------------------------------------------------
 static void on_button_clicked(int id)
 {
-    if (id < 0) return;
+    if (id < 0) 
+        return;
 
     switch (id)
     {
@@ -376,14 +359,16 @@ paintProcedure(
         break;
 
     case MSG_MOUSEMOVE:
+        // printf(".\n");
         // long1/long2 are currently absolute – the hit-test still works
         // for the toolbar.  For drawing we use the relative values
         // that the procedure receives.
         ButtonId = __hit_test_button(long1, long2);
-        if (ButtonId > 0)
+        if (ButtonId > 0){
             __hover_button_id = ButtonId;
-        else
+        } else {
             __hover_button_id = -1;
+        }
 
         // Freehand drawing
         if (is_drawing)
@@ -397,15 +382,16 @@ paintProcedure(
     case MSG_MOUSEPRESSED:
         // Start a stroke if we are over the canvas (not toolbar)
         {
-            struct gws_window_info_d wi;
-            gws_get_window_info(fd, main_window, &wi);
-            if (long2 < (wi.cr_height - TOOLBAR_H))
-            {
+            // #bugbug: This is a very expensive function
+            //struct gws_window_info_d wi;
+            //gws_get_window_info(fd, main_window, &wi);
+            //if (long2 < (wi.cr_height - TOOLBAR_H))
+            //{
                 is_drawing = TRUE;
                 last_x = long1;
                 last_y = long2;
                 draw_pixel(long1, long2);
-            }
+            //}
         }
         break;
 

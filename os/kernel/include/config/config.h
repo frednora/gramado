@@ -33,6 +33,9 @@
 
 // #test
 // Area for the buffers needed by the compositor for canvases.
+// #ps: The ring 3 compositor is doing that job of
+// sharing buffers with the client.
+// Check if this on is in use yet.
 #define CONFIG_USE_SHBUFFER_FOR_CANVAS  0
 
 

@@ -1012,7 +1012,6 @@ tcp_client_connect(
     if (!sk)
         return -EINVAL;
 
-
 // #todo: 
 // We can't connect to broadcast o 0 values.
     if (dst_ip_ipv4_int == 0xFFFFFFFF)
@@ -1021,7 +1020,6 @@ tcp_client_connect(
         return -EINVAL;
     if (dst_port == 0)
         return -EINVAL;
-
 
 // #todo: 
 // We can't connect to the caller's socket.
@@ -1216,7 +1214,7 @@ tcp_client_connect(
     sk_local->state = SS_CONNECTING;
 
     printk("tcp_client_connect: conn %d >> SYN_SENT (local port %u)\n",
-           conn->id, sk_local->port);
+           conn->id, sk_local->port );
 
     return 0;
 }
@@ -1240,18 +1238,18 @@ int tcp_change_socket_buffer(struct socket_d *sk, size_t desired_size)
     char *old_base;
     char *new_base;
     size_t old_size;
-    size_t new_size = desired_size;  //8192;          // target size for remote TCP
+    size_t new_size = desired_size;  //8192 - target size for remote TCP
     size_t copy_len;
 
     // -------------------------------------------------
     // 1. Validate the socket
     // -------------------------------------------------
     if ((void *) sk == NULL) {
-        printk("tcp_change_socket_buffer: sk == NULL\n");
+        printk("tcp_change_socket_buffer: sk\n");
         return -EINVAL;
     }
     if (sk->magic != 1234) {
-        printk("tcp_change_socket_buffer: sk validation failed\n");
+        printk("tcp_change_socket_buffer: sk magic\n");
         return -EINVAL;
     }
 
@@ -1263,16 +1261,16 @@ int tcp_change_socket_buffer(struct socket_d *sk, size_t desired_size)
     // 2. Validate the private_file
     // -------------------------------------------------
     fp = sk->private_file;
-    if ((void *) fp == NULL) {
-        printk("tcp_change_socket_buffer: private_file == NULL\n");
+    if ((void *) fp == NULL){
+        printk("tcp_change_socket_buffer: fp\n");
         return -ENOENT;
     }
-    if (fp->magic != 1234) {
-        printk("tcp_change_socket_buffer: private_file validation failed\n");
+    if (fp->magic != 1234){
+        printk("tcp_change_socket_buffer: fp magic\n");
         return -EINVAL;
     }
     if ((void *) fp->_base == NULL) {
-        printk("tcp_change_socket_buffer: _base == NULL\n");
+        printk("tcp_change_socket_buffer: fp->_base\n");
         return -EINVAL;
     }
 

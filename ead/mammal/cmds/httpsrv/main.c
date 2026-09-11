@@ -1329,6 +1329,8 @@ int main(int argc, char *argv[])
 {
     struct sockaddr_in addr;
     socklen_t addrlen=0;
+    // The listening socket (sockfd) lives 
+    // for the whole lifetime of the server.
     int sockfd;
 
     printf("HTTPSRV.BIN: Hello from Gramado OS ring 3 server. Port=%d\n", 
@@ -1383,7 +1385,7 @@ int main(int argc, char *argv[])
         newconn = (int) accept( 
             sockfd, 
             (struct sockaddr *) &addr, 
-            (socklen_t *) addrlen 
+            (socklen_t *) &addrlen 
         );
 
         if (newconn > 0){

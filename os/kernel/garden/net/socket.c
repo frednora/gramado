@@ -2614,7 +2614,6 @@ fail:
 // just inject pointers; it now has to actually 
 // drive the network handshake out onto the wire.
 
-
 // Validate parameters:
 // + Ensure sockfd is valid.
 // + Ensure addr points to a valid struct sockaddr_in.
@@ -3047,10 +3046,10 @@ __OK_new_slot:
 // Here we initialize the 3 step handshake sending a SYN
 // and creating the connection structure.
 
-
     // #todo: This is a work in progress!
 
 remote_go:
+
     if (target_port_short != __PORTS_DISPLAY_SERVER &&
         target_port_short != __PORTS_NETWORK_SERVER)
     {
@@ -3060,9 +3059,8 @@ remote_go:
         int __rv = 
         tcp_client_connect(
             client_socket, 
-            target_ip_int, 
-            target_port_short 
-        );
+            target_ip_int, target_port_short );
+
         if (__rv < 0) {
             printk("__connect_inet_remote: tcp_client_connect failed\n");
             return __rv;
@@ -3077,7 +3075,6 @@ remote_go:
 
         return 0;   // OK for now
     }
-
 
 // --------------------------------------------------
 // #ps
@@ -3137,7 +3134,6 @@ remote_go:
 // estamos apenas entrando na fila e implorando para nos conectarmos.
 // Quem realizara a conexão sera o accept(), 
 // pegando o cliente da fila de conexões pendentes.
-
 
 // #important:
 // Rhe socket for the server for now is already valid only for two ports.

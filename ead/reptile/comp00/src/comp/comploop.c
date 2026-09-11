@@ -4402,7 +4402,7 @@ static int ServerLoop(int client_index)
             (int) bind (
                     server_fd, 
                     (struct sockaddr *) &server_address, 
-                    addrlen );
+                    (socklen_t *) &addrlen );
         // OK
         if (bind_status >= 0)
             break;

@@ -254,9 +254,6 @@ struct connection_d
     int used;
     int magic;
 
-    // #test
-    // char buf[1024];
-
     int id;       // unique connection identifier
     int type;     // LOCAL, TCP, UDP, etc.
     //int protocol;
@@ -267,9 +264,11 @@ struct connection_d
 
 // tcp connection
     struct tcp_connection_d *tcp_conn;
+
 // udp connection
     // future: struct udp_connection_d *udp_conn;
-    // #test
+
+// #test
     //struct network_buffer_d  *n_buf;
 
 // 1 = we are the server, 
