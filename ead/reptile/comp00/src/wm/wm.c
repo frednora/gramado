@@ -2029,13 +2029,12 @@ void wm_update_desktop(int tile, int show)
                 //on_update_window(w,GWS_Paint);
                 //invalidate_window(w);
 
-                // New Lion.
-                // This is the last valid for now.
+                // This is the last valid for now
                 l = (struct gws_window_d *) w;
             }
         }
 
-        // Get the next window from the list.
+        // Get the next window from the list
         w = (struct gws_window_d *) w->next; 
     }; 
 
@@ -2096,8 +2095,10 @@ void wm_update_desktop(int tile, int show)
     yellowstatus0("Gramado", FALSE);
 
 // Show the whole screen
-    if (show){
-        flush_window(WindowManager.__root_window);
+    if (show)
+    {
+        //if (Compositor.is_composition_disabled == TRUE)
+            flush_window(WindowManager.__root_window);
     }
 
 // ------------------

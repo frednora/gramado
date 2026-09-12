@@ -1927,7 +1927,6 @@ fail:
     return (int) -1;
 }
 
-// #test
 // Drawing a rectangle inside a given canvas,
 // given its device context.
 void
@@ -1940,8 +1939,6 @@ dc_draw_rectangle0(
     unsigned int color,
     unsigned long rop )
 {
-// #ps: Not tested yet
-
     int i=0;
     int NumberOfLines=0;
 
@@ -1999,9 +1996,7 @@ dc_draw_rectangle0(
 
     NumberOfLines = final_height;
 
-//
 // Drawing multiple lines inside the canvas
-//
 
     for (i=0; i<NumberOfLines; i++)
     {

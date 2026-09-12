@@ -871,10 +871,11 @@ void compComposeFullscreen(void)
     }
 */
 
-    // Blit using the client-area dimensions
+    // Blit client area.
+    // Blit using the client-area dimensions.
     comp_blit_canvas_to_canvas_imp(
-        ci,                     // source canvas
-        canvas_backbuffer,      // destination (or frontbuffer if you prefer)
+        ci,                 // source canvas
+        canvas_backbuffer,  // destination (or frontbuffer if you prefer)
         left, top,
         width, height
     );
@@ -1254,9 +1255,14 @@ int compInitializeCompositor(void)
         Compositor.is_composition_disabled = FALSE; 
     };
 
-// Don’t copy the chrome into the backbuffer
-    Compositor.disable_frame_blit = FALSE;
-    //Compositor.disable_frame_blit = TRUE;
+// Frame blit configuration
+
+    // Don’t copy the chrome into the backbuffer
+    if (CONFIG_DISABLE_FRAME_BLIT == 1){
+        Compositor.disable_frame_blit = TRUE;
+    } else {
+        Compositor.disable_frame_blit = FALSE;    
+    }
 
 // The structure is initialized
     Compositor.used = TRUE;

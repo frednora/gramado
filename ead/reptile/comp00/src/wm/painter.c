@@ -2347,7 +2347,7 @@ int clear_window_by_id(int wid, unsigned long flags)
     }
 
 // Redraw
-    redraw_window(w,flags);
+    redraw_window(w, flags);
     return 0;
 
 fail:

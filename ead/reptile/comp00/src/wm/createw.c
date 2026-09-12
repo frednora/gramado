@@ -1643,7 +1643,6 @@ void *doCreateAndDrawWindow (
     int ButtonSysMenu = FALSE;  // system menu na barra de títulos.
     // ...
 
-
 // Desktop support
     int ParentWindowDesktopId;    //Id do desktop da parent window.
     int WindowDesktopId;          //Id do desktop da janela a ser criada.
@@ -1659,7 +1658,6 @@ void *doCreateAndDrawWindow (
     struct gws_window_d *windowButton6;
 
 // Border
-// #
 // Improvisando uma largura de borda.
 // Talvez devamos receber isso via parâmetros.
 // Ou ser baseado no estilo.
@@ -1831,9 +1829,8 @@ void *doCreateAndDrawWindow (
     }
 
 // ================
-// #test
 // Creating a canvas for the window
-    size_t size_in_kb = 2048; //200; //128; //64;
+    size_t size_in_kb = 2048;  // 2 MB
     struct dccanvas_d *dc00;
     struct dccanvas_d *dc01;
     struct canvas_information_d *ci00;
@@ -1849,7 +1846,6 @@ void *doCreateAndDrawWindow (
 // to communicate state with the client (needs_redraw, has_focus, 
 // geometry changes, etc.) instead of sending many messages.
 // Pass the pointer to the client in the CreateWindow reply.
-
 
 //
 // Create canvases for chrome/frame and client area
@@ -1870,9 +1866,9 @@ void *doCreateAndDrawWindow (
             dc00 = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
             ci00 = (struct canvas_information_d *) compCreateNewCanvas(dc00);
             // Link with the window
-            ci00->owner_window = window; // link to the window
-            ci00->is_frame = TRUE; // It's a frame
-            window->frame_canvas = ci00;       // window keeps a pointer to its canvas
+            ci00->owner_window = window;    // link to the window
+            ci00->is_frame = TRUE;          // It's a frame
+            window->frame_canvas = ci00;    // window keeps a pointer to its canvas
             // add to the list for the compositor
             // #important:
             // Only the frame canvas gets injected into the global linked 
@@ -1882,8 +1878,8 @@ void *doCreateAndDrawWindow (
             dc01 = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
             ci01 = (struct canvas_information_d *) compCreateNewCanvas(dc01);
             // Link with the window
-            ci01->owner_window = window; // link to the window
-            ci01->is_frame = FALSE;  // Not a frame
+            ci01->owner_window = window;    // link to the window
+            ci01->is_frame = FALSE;         // Not a frame
             window->ca_canvas = ci01;       // window keeps a pointer to its canvas
             // add to the list for the compositor
             // #ps #important
@@ -1909,20 +1905,17 @@ void *doCreateAndDrawWindow (
                 goto fail;
             if (app_window->type != WT_OVERLAPPED)
                 goto fail;
-            // Now we can get the pointers for canvases.
+            // Now we can get the pointers for canvases
             ci00 = app_window->frame_canvas;
             dc00 = ci00->dc;
         }
  
         // ... (OTHER TYPES)
-
     }
 // ================
 
-
-// #test
 // Window class
-    window->window_class.ownerClass = gws_WindowOwnerClassNull;
+    window->window_class.ownerClass  = gws_WindowOwnerClassNull;
     window->window_class.kernelClass = gws_KernelWindowClassNull;
     window->window_class.serverClass = gws_ServerWindowClassNull;
     window->window_class.clientClass = gws_ClientWindowClassNull;
@@ -1955,13 +1948,10 @@ void *doCreateAndDrawWindow (
 // Gravity
     window->gravity = DefaultGravity;
 
-
-// #test
 // Confituration for the Non-Client Area
     window->ConfigNonClientArea.useHitTesting = TRUE;
     window->ConfigNonClientArea.allowDrawing = TRUE;
 
-// #test
 // Confituration for the Client Area
     window->ConfigClientArea.useHitTesting = TRUE;
     window->ConfigClientArea.allowDrawing = TRUE;
@@ -1992,7 +1982,6 @@ void *doCreateAndDrawWindow (
 // buffers
     window->depth_buf = NULL;
 
-
 // Device contexts
 // #todo:
 // We can create our own device contexts.
@@ -2004,7 +1993,6 @@ void *doCreateAndDrawWindow (
     }
     window->is_solid = (int) is_solid;
 
-// #test
 // ===================================================================
 // Overide the default configuration
 
@@ -2017,7 +2005,7 @@ void *doCreateAndDrawWindow (
         if (window->style & WS_TRANSPARENT){
             window->rop_shadow = ROP_XOR;
         }
-        window->rop_bg     = THEME_ROP_WINDOW_BACKGROUND;
+        window->rop_bg = THEME_ROP_WINDOW_BACKGROUND;
         if (window->style & WS_TRANSPARENT){
             window->rop_bg = ROP_XOR;
         }
@@ -2044,7 +2032,7 @@ void *doCreateAndDrawWindow (
         if (window->style & WS_TRANSPARENT){
             window->rop_shadow = ROP_XOR;
         }
-        window->rop_bg     = THEME_ROP_WINDOW_BACKGROUND;
+        window->rop_bg = THEME_ROP_WINDOW_BACKGROUND;
         if (window->style & WS_TRANSPARENT){
             window->rop_bg = ROP_XOR;
         }
@@ -2099,30 +2087,31 @@ void *doCreateAndDrawWindow (
 // Titlebar height
     unsigned long __TBHeight = METRICS_TITLEBAR_DEFAULT_HEIGHT;
 
+//
 // Events
+//
+
     // window->single_event = ?;
 
 // == Event Queue =============================
+
     register int e=0;
     static int Max=32;
-    // Indexes
+
     window->ev_head=0;
     window->ev_tail=0;
-    for (e=0; e<Max; e++)
-    {
-        // Standard header
-        window->ev_wid[e]=0;
-        window->ev_msg[e]=0;
-        window->ev_long1[e]=0;
-        window->ev_long2[e]=0;
-        // Extra fields
-        window->ev_long3[e]=0;
-        window->ev_long4[e]=0;
+    for (e=0; e<Max; e++){
+    window->ev_wid[e]=0;
+    window->ev_msg[e]=0;
+    window->ev_long1[e]=0;
+    window->ev_long2[e]=0;
+    window->ev_long3[e]=0;
+    window->ev_long4[e]=0;
     };
 
+// Lock or unlock the window
 
-// Lock or unlock the window.
-    //window->locked = FALSE;
+    // window->locked = FALSE;
 
 // Can't lock,
 // We need permitions to do our work.
@@ -2133,7 +2122,7 @@ void *doCreateAndDrawWindow (
 // Input support:
 // The buffer and the input pointers.
 
-// Input pointer device.
+// Input pointer device
     window->ip_device = IP_DEVICE_NULL;
     window->ip_on = FALSE;  // desligado
 // For keyboard
@@ -2159,7 +2148,7 @@ void *doCreateAndDrawWindow (
 // #todo
 // The properties for the mouse pointer.
 // Valid only for this window.
-// See: widnow.h
+// See: window.h
     window->mpp.test_value = 1000;
     window->mpp.bg_color = 
         (unsigned int) (COLOR_BEIGE + rand());
@@ -2182,7 +2171,6 @@ void *doCreateAndDrawWindow (
     } else if ((void*) title == NULL){
         window->name = (char *) default_window_name;
     };
-
 
 // ===================================
 // Parent
@@ -2249,8 +2237,8 @@ void *doCreateAndDrawWindow (
 // Relative position inside parent.
 // These are local coordinates: 
 // (0,0) means top-left of parent’s client area in WT_OVERLAPPED.
-    window->left   = (unsigned long) (WindowLeft   & 0xFFFF);
-    window->top    = (unsigned long) (WindowTop    & 0xFFFF);
+    window->left   = (unsigned long) (WindowLeft & 0xFFFF);
+    window->top    = (unsigned long) (WindowTop  & 0xFFFF);
 // Dimensions of the window itself.
     window->width  = (unsigned long) (WindowWidth  & 0xFFFF);
     window->height = (unsigned long) (WindowHeight & 0xFFFF);
@@ -2263,7 +2251,6 @@ void *doCreateAndDrawWindow (
 // Height in chars
     window->height_in_chars = 
         (unsigned long) (window->height / 8);  //>>3
-
 
 // =================================
 // Frame area. (wrong)
@@ -2291,26 +2278,23 @@ void *doCreateAndDrawWindow (
     }
 */
 
-    // Temporary
-    // >> Relative values <<
+
+// Client rectangle: 
+// (temporary values)
+// (relative values)
+// Setup: left, top, width, height
+
     struct gws_rect_d  crTmp;
+    unsigned long tbheight = 0;
 
-// Left
     crTmp.left = (unsigned long) (__BorderSize + pad_left);
-
-// Top
     crTmp.top  = (unsigned long) (__BorderSize + pad_top);
-
-// Width for the client area
     crTmp.width = 
         (unsigned long) ( 
             window->width - 
             (__BorderSize * 2) - 
             (pad_left + pad_right) 
         );
-
-// Height for the client area
-    unsigned long tbheight = 0;
     crTmp.height = 
         (unsigned long) ( 
             window->height - 
@@ -2318,6 +2302,7 @@ void *doCreateAndDrawWindow (
             (pad_top + pad_bottom) - 
             tbheight 
         ); 
+
 
 // If we have scrollbars.
 // #todo: Diminuimos as dimensões se o style
@@ -2830,13 +2815,14 @@ void *doCreateAndDrawWindow (
     default:
         debug_print("doCreateAndDrawWindow: [DEBUG] default\n");
              printf("doCreateAndDrawWindow: [DEBUG] default\n");
-        while (1){
-        };
+
+        exit(1);
         //return NULL;
+
         break;
     };
 
-    // #debug
+    // printf("breakpoint\n");
     // while(1){}
 
 //
@@ -3054,17 +3040,16 @@ void *doCreateAndDrawWindow (
 
         } else {
 
-            // #test 
             // Overlapped and Popup windows
             // Drawing a rectangle inside the frame canvas.
             // It's gonna be the background of the whole window.
 
             if (window->style & WS_APP)
             {
-                // #
-                // For application window, it creates an simple window
+                // For application window, it creates a simple window
                 // using the style WS_APP and then convert it to Overlapped
 
+                // Draw a rectangle inside the canvas
                 dc_draw_rectangle0 (
                     dc00,
                     0, 0, window->width, window->height,
@@ -3072,7 +3057,8 @@ void *doCreateAndDrawWindow (
                     window->rop_bg
                 );
             }
-            else if (window->type == WT_BUTTON) {
+
+            if (window->type == WT_BUTTON) {
 
                 // draw background for button/controls
                 // #ps: We need a valid dc here.
@@ -3098,9 +3084,15 @@ void *doCreateAndDrawWindow (
                     window->name 
                 );
                 */
+
+            // #todo: More types
+            // } else if (window->type == WT_XXX) {
+
+
+            // #todo: More types
+            } else {
+
             }
-            
-            // ... (#todo: For other types)
         }
 
         // #todo
@@ -3127,6 +3119,7 @@ void *doCreateAndDrawWindow (
 // Use color scheme in this routine.
 // #todo: Call get_color() to get the standard color 
 // for all this button components.
+
     if ((unsigned long) type == WT_BUTTON)
     {
         // #ps: ButtonState = window status.
@@ -3259,12 +3252,12 @@ void *doCreateAndDrawWindow (
 
             if (isDarkTheme == TRUE) {
                 // Dark theme
-                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_DARK;  //COLOR_RED;    // baseline
-                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_DARK;  //COLOR_BLUE;   // highlight
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_DARK;  // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_DARK;  // highlight
             } else {
                 // Light theme
-                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_LIGHT; //COLOR_GREEN;  // baseline
-                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_LIGHT;  //COLOR_YELLOW; // highlight
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_LIGHT;  // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_LIGHT;  // highlight
             }
 
             label_color = window->label_color_when_not_selected;
@@ -3301,7 +3294,8 @@ void *doCreateAndDrawWindow (
                     }
                     */
 
-                    // #bugbug: Not working
+                    // #ps:
+                    // Is it working?
                     dc_drawstring ( 
                         dc00, 
                         window->left + l_offset, 
@@ -3318,12 +3312,12 @@ void *doCreateAndDrawWindow (
             }
         }
 
-      //todo
+      // #todo
       // configurar a estrutura de botão 
       // e apontar ela como elemento da estrutura de janela.
-      //window->button->?
+      // window->button->?
     
-    } //button
+    }  //button
 
 //
 // More ...
@@ -3384,13 +3378,14 @@ void *CreateWindow (
 // we use the colors given by the caller.
     unsigned int FrameColor;
     unsigned int ClientAreaColor;
+
     if (type == WT_OVERLAPPED){
         FrameColor = (unsigned int) get_color(csiWindowBackground);
         ClientAreaColor = (unsigned int) get_color(csiWindow);
     } else if (type == WT_BUTTON) {
         FrameColor = (unsigned int) get_color(csiButton);
         ClientAreaColor = (unsigned int) get_color(csiWindow);
-    // Given by the caller.
+    // Given by the caller
     } else {
         FrameColor = (unsigned int) frame_color;
         ClientAreaColor = (unsigned int) client_color;

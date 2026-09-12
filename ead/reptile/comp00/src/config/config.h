@@ -69,5 +69,11 @@
 //#define CONFIG_MAIN_LOOP_INTERVAL_MS 22
 //#define CONFIG_MAIN_LOOP_INTERVAL_MS 33
 
+
+// Valid for all the windows.
+// FALSE = compositor blit frame to the desktop
+// TRUE = compositor skips
+#define CONFIG_DISABLE_FRAME_BLIT  0
+
 #endif    
 

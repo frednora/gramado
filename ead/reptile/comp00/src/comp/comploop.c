@@ -864,13 +864,11 @@ int serviceGetClientMessage(void)
 // Async request.
 // No response.
 // #todo: Explain the arguments.
-int serviceAsyncCommand(void)
-{
-// Business Logic:
 // Asunchronous Command.
 // + We're a receiving asynchronous events
 //   and reacting to these events.
-
+int serviceAsyncCommand(void)
+{
     unsigned long *message_address = (unsigned long *) &__buffer[0];
 
     // int window_id=0;
@@ -887,10 +885,8 @@ int serviceAsyncCommand(void)
 
 // Helper
     int wid = -1;
-
     register int i=0;
 
-    //#debug
     //server_debug_print ("serviceAsyncCommand:\n");
     //asm("cli");
 
@@ -921,7 +917,7 @@ int serviceAsyncCommand(void)
 //
 // id
 //
-    // #debug
+
     // printf ("serviceAsyncCommand: [request %d] \n", request_id);
  
     switch (request_id){
@@ -1159,18 +1155,20 @@ int serviceAsyncCommand(void)
         break;
     */
 
+    // 92:
     // Dock window given the wid and the side.
     // see: wm.c
     // IN:
-    // request_id = dock operation (92)
+    // request_id = dock operation
     // subrequest_id = witch side?
-    case ASYNC_REQUEST_DOCK_WINDOW:  //92:
+    case ASYNC_REQUEST_DOCK_WINDOW:
         // #todo: Not tested yet. This is a work in progress.
         // dock_window_by_id(wid,subrequest_id);
         break;
     
+    // 93:
     // Dock the active window
-    case ASYNC_REQUEST_DOCK_ACTIVE_WINDOW:  //93:
+    case ASYNC_REQUEST_DOCK_ACTIVE_WINDOW:
         // IN: position
         dock_active_window(subrequest_id);
         break;
@@ -1181,6 +1179,18 @@ int serviceAsyncCommand(void)
         //wid = (int) (data1 & 0xFFFFFFFF);
         //printf("comp00: wid {%d} | address {%x}\n", wid, data2);
         break;
+
+    // 300:
+    case 300:
+        Compositor.disable_frame_blit = TRUE;
+        break;
+
+    // 301:
+    case 301:
+        Compositor.disable_frame_blit = FALSE;
+        break;
+
+    // ...
 
     // 1000 - Put a pixel into the backbuffer
     // IN: color, x, y, rop

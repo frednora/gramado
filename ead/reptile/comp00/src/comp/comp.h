@@ -35,7 +35,8 @@ struct compositor_d
 // Don’t copy the chrome into the backbuffer.
 // Global override.
 // Valid for all the windows.
-// TRUE = compositor blit frame to the desktop, FALSE = compositor skips
+// FALSE = compositor blit frame to the desktop, 
+// TRUE = compositor skips
     int disable_frame_blit;
 
     // ...

@@ -462,10 +462,8 @@ struct ConfigClientArea_d
 // Server-side window object
 struct gws_window_d 
 {
-// Structure validation
     int used;
     int magic;
-
     int id;
     //int wid;
 
@@ -997,6 +995,9 @@ struct gws_window_d
     struct gws_event_d  single_event;
 
 // Event list
+// #todo:
+// Maybe we can put all these into a substructure.
+// w.Event.ev_head for example.
 
     // Indexes
     int ev_head;
@@ -1018,16 +1019,22 @@ struct gws_window_d
 // Um alerta de que exite uma mensagem para essa janela.
     int msgAlert;  //#todo: int ev_alert;
 
-//==================================================	
 // #todo:
-// Maybe every windle is gonna have a server side
-// window procedure and a client side window procedure.
+// Address for the server-side window procedure.
+// A flag can indicate if the procedure is server-side 
+// or client-side. 
+// (#ps: For client-side we need callback or some type of LPC)
+// Maybe we can use a pointer here or even a virtual function.
+
     unsigned long procedure;
+    // void *fn_procedure;
 
 // =========================================================
 // Window Class support.
 // Who own this window?
 // Where is the window procedure?
+// #todo: Change to w.wc?
+
     struct gws_window_class_d  window_class;
 
 // =========================================================
@@ -1037,6 +1044,15 @@ struct gws_window_d
 // Maybe only the overlapped window can have this iconic window.
 // Telling to the world that this is an icon window,
 // and we belongs to an overlapped window.
+
+// #bugbug
+// We don't need this anymore.
+// Now the client-side taskbar application can draw its
+// own UI components using client-side library.
+// Its usefull if the server draws an icon for a minimized 
+// window when the system do not have a taskbar (explorer) app.
+// #ps: A flag can indicate if we are using this fieature or not.
+
     struct gws_window_d  *_iconic;
     int is_iconic;
 
