@@ -1,0 +1,65 @@
+
+wmRawKeyEvent  
+Handles raw scancodes/bytes directly from the PS/2 keyboard. 
+This is the lowest-level handler.
+
+__ProcessExtendedKeyboardKeyStroke  
+Deals with extended scancodes (like arrow keys, function keys). 
+It translates raw bytes into structured events.
+
+__ProcessKeyboardInput  
+Works with structured messages (msg, long1, long2). 
+This is where hotkeys/shortcuts are interpreted and routed.
+
+__consoleProcessKeyboardInput  
+Specialized path for console mode — interprets structured messages but 
+routes them to stdin/TTY instead of GUI threads.
+
+------------------------------------------------
+
+| **Combination**  | **Destination** |
+| ---              | ---              |
+| Ctrl + Alt + Del | Kernel (reboot) |
+| Tab              | Foreground thread (if requested) |
+| Esc              | Foreground thread (if requested) |
+| F1–F12           | Foreground thread (planned) |
+| Arrow keys       | Foreground thread (planned) |
+| Control + F1     | Init process (launch app) |
+| Console commands | Kernel console |
+  (boot-m, dir, etc.) 
+| General keys     | Display server or stdin |
+
+Here’s a **plain text list** of the combinations I can see in your broker code, with their targets:
+
+---
+
+**Keyboard Combinations → Target**
+
+- **Ctrl + Alt + Del** → Kernel (system reboot via `input_process_cad_combination`)  
+- **Tab** → Foreground thread (only if app requested `THREAD_WANTS_TAB`)  
+- **Esc** → Foreground thread (only if app requested `THREAD_WANTS_ESC`)  
+- **F1–F12** → Foreground thread (planned, not yet fully implemented)  
+- **F5** → Special handling 
+    (goes to the display server for refresh/update logic — 
+    this is treated differently than other function keys)
+- **Arrow keys** → Foreground thread (planned, not yet fully implemented)  
+- **Control + F1** → Init process (launch app via `do_launch_app_via_initprocess`)  
+- **Control + F2** → Init process (launch app via `do_launch_app_via_initprocess`)  
+- **Control + F3** → Init process (launch app via `do_launch_app_via_initprocess`)  
+- **Control + F4** → Init process (launch app via `do_launch_app_via_initprocess`)  
+- **Console commands 
+   (typed strings like “boot-m”, “boot-s”, “about”, “dir”, “net-on”)** 
+   → Kernel console (`__shellParseCommandLine`)  
+- **General alphanumeric keys** → Display server (GUI mode) or 
+   stdin/TTY (console mode)  
+
+---
+
+So in summary:  
+- **Foreground thread** → Tab, Esc, F1–F12, arrows (if requested).  
+- **Display server**    → General GUI input.  
+- **Kernel internal**   → CAD, console commands.  
+- **Init process**      → Control + F1 through Control + F4 (at least four combinations).  
+
+
+

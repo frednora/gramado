@@ -2474,6 +2474,27 @@ int is_extended_key(unsigned char scancode)
     return FALSE;
 }
 
+/*
+ * __ProcessKeyboardInput()
+ *
+ * Structured keyboard input worker.
+ *
+ * Unlike wmRawKeyEvent(), which deals with raw scancodes and bytes,
+ * this routine handles higher-level, structured messages composed of
+ * three elements (msg, long1, long2). These messages represent
+ * decoded keyboard events already mapped to virtual keys.
+ *
+ * Responsibilities:
+ * - Deliver structured key events to the display server or foreground thread.
+ * - Apply filtering rules (e.g., only send Tab/Esc if the app requested them).
+ * - Recognize and act on certain hotkeys/shortcuts (Ctrl+Alt+Del, function keys).
+ * - Handle system-level combinations internally when required.
+ *
+ * In short: this is the broker stage where decoded keyboard events
+ * are interpreted as shortcuts/hotkeys and routed to the correct
+ * destination or consumed by the kernel.
+ */
+
 // Not in console mode
 static int 
 __ProcessKeyboardInput ( 
