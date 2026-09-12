@@ -113,6 +113,9 @@ extern struct display_device_d *bl_display_device;
 
 void bldisp_show_info(void);
 
+unsigned long bldisp_get_current_mouse_x(void);
+unsigned long bldisp_get_current_mouse_y(void);
+
 
 // ++
 // Mouse support

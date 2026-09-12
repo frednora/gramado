@@ -148,6 +148,16 @@ static char vsync_inb(int port);
 // ============================
 
 
+unsigned long bldisp_get_current_mouse_x(void)
+{
+    return (unsigned long) __new_mouse_x;
+}
+unsigned long bldisp_get_current_mouse_y(void)
+{
+    return (unsigned long) __new_mouse_y;
+}
+
+
 // Sinaliza que precisamos apagar o ponteiro do mouse,
 // copiando o conteudo do backbuffer no LFB.
 void bldisp_do_we_need_to_erase_mouse_pointer(int value)

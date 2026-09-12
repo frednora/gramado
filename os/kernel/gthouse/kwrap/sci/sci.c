@@ -1481,6 +1481,29 @@ void *sci0 (
 
 // ...
 
+//
+// 300 ~ +++  mouse stuff
+//
+
+// Get current mouse position.
+// When the app wants to know the current mouse position
+// ignoring the information provided by the messages.
+// The app wants the updated version.
+
+
+    if (number == 300)
+    {
+        // #todo: Fill more fields ...
+        message_address[0] = 1234;  // sig
+        message_address[1] = 4321;  // sig
+        message_address[2] = bldisp_get_current_mouse_x();
+        message_address[3] = bldisp_get_current_mouse_y();
+        // ...
+        // signature
+        return (void*) 1234;
+        //return NULL;
+    }
+
 // 350 - Initialize system component
 // Inicializar ou reinicializar componentes do sistema
 // depois da inicialização completa do kernel.
