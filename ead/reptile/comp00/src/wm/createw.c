@@ -1010,7 +1010,6 @@ doCreateAndDrawWindowFrame (
     struct dccanvas_d *dc00;
     struct canvas_information_d *ci00;
 
-
     int useFrame       = FALSE;
     int useTitleBar    = FALSE;
     int useTitleString = FALSE;
@@ -1116,6 +1115,8 @@ doCreateAndDrawWindowFrame (
         // #todo: Pointer validation
     }
 
+// Setup border size early
+    window->Border.border_size = BorderSize;
 
 // Save border colors setted by the caller
     window->Border.border_color1 = (unsigned int) BorderColor1;
@@ -1238,18 +1239,34 @@ doCreateAndDrawWindowFrame (
     if ( Type == WT_EDITBOX_SINGLE_LINE || 
          Type == WT_EDITBOX_MULTIPLE_LINES )
     {
-        window->Border.border_size = BorderSize;
         window->borderUsed = TRUE;
 
-        // Draw the border of an edit box
-        // #ps: Drawing it directly inside the backbuffer
-        __draw_window_border (
-            parent, window,
-            __rop_top_border,
-            __rop_left_border,
-            __rop_right_border,
-            __rop_bottom_border 
-        );
+        if (Compositor.is_composition_disabled == TRUE)
+        {
+            // Draw the border of an edit box
+            // #ps: Drawing it directly inside the backbuffer
+            __draw_window_border (
+                parent, window,
+                __rop_top_border,
+                __rop_left_border,
+                __rop_right_border,
+                __rop_bottom_border 
+            );
+        }
+
+        // We have a compositor and a canvas,
+        // Lets draw the window borders using the dc
+        if (Compositor.is_composition_disabled == FALSE)
+        {
+            // Draws window border when we have dc
+            __dc_draw_window_border(
+                dc00, parent, window,
+                __rop_top_border,
+                __rop_left_border,
+                __rop_right_border,
+                __rop_bottom_border 
+            );
+        }
 
         // When we draw the border for editbox windows 
         // we need to update the client area rectangle.
@@ -1272,9 +1289,12 @@ doCreateAndDrawWindowFrame (
     if (Type == WT_OVERLAPPED)
     {
 
+
         //
-        // Border
+        // [1] Border
         //
+
+        window->borderUsed = FALSE;  // Not using border yet
 
         // #todo
         // Maybe we need border size and padding size.
@@ -1288,8 +1308,6 @@ doCreateAndDrawWindowFrame (
         // and a flag to indicate that border is used.
         // It also has a border style.
 
-        window->borderUsed = FALSE;  // Not using border yet
-
         // Normal case:
         // The window is not maximized and not in fullscreen,
         // so we need to draw the border and the title bar.
@@ -1297,6 +1315,7 @@ doCreateAndDrawWindowFrame (
         if (IsMaximized == FALSE && IsFullscreen == FALSE)
         {
             window->borderUsed = TRUE;
+
             //WindowManager.is_fullscreen = FALSE;
             //WindowManager.fullscreen_window = window;
 
@@ -1317,7 +1336,7 @@ doCreateAndDrawWindowFrame (
             // Lets draw the window borders using the dc
             if (Compositor.is_composition_disabled == FALSE)
             {
-                // #test: Draws window border when we have dc
+                // Draws window border when we have dc
                 __dc_draw_window_border(
                     dc00, parent, window,
                     __rop_top_border,
@@ -1336,7 +1355,7 @@ doCreateAndDrawWindowFrame (
         }
 
         //
-        // Title bar
+        // [2] Titlebar
         //
 
         // #todo
@@ -1379,7 +1398,7 @@ doCreateAndDrawWindowFrame (
                 goto fail;
             }
             // Add it to the list of childs
-            wm_add_child_window(parent,tbWindow);
+            wm_add_child_window(parent, tbWindow);
 
             // Update the client area rectangle after drawing the title bar
             window->rcClient.top    += window->titlebar_height;
@@ -1388,7 +1407,7 @@ doCreateAndDrawWindowFrame (
 
 
         //
-        // Status bar
+        // [3] Statusbar
         //
 
         // (In the bottom)
@@ -1415,13 +1434,13 @@ doCreateAndDrawWindowFrame (
             {
                 // Relative to the app window.
                 sbTop = 
-                (unsigned long) (window->rcClient.height - window->statusbar_height);
+                    (unsigned long) (window->rcClient.height - window->statusbar_height);
                 // #bugbug
                 // We're gonna fail if we use
                 // the whole width 'window->width'.
                 // Clipping?
                 sbWidth = 
-                (unsigned long) (window->width - 4);
+                    (unsigned long) (window->width - 4);
             }
 
             // Estamos relativos à nossa área de cliente
@@ -1430,25 +1449,24 @@ doCreateAndDrawWindowFrame (
             // area de cliente, então precisamos redimensionar a
             // nossa área de cliente.
             
-            // #debug
             //printf ("l=%d t=%d w=%d h=%d\n",
             //    sbLeft, sbTop, sbWidth, sbHeight );
             //while(1){}
             
             sbWindow = 
                 (void *) doCreateAndDrawWindow ( 
-                             WT_SIMPLE, 
-                             0, // Style 
-                             1, 
-                             1, 
-                             "Statusbar", 
-                             sbLeft, sbTop, sbWidth, sbHeight,
-                             (struct gws_window_d *) window, 
-                             0, 
-                             window->statusbar_color,  //frame
-                             window->statusbar_color,  //client
-                             (unsigned long) __rop_statusbar );  // rop bg 
-            
+                            WT_SIMPLE, 
+                            0, // Style 
+                            1, 
+                            1, 
+                            "Statusbar", 
+                            sbLeft, sbTop, sbWidth, sbHeight,
+                            (struct gws_window_d *) window, 
+                            0, 
+                            window->statusbar_color,  //frame
+                            window->statusbar_color,  //client
+                            (unsigned long) __rop_statusbar );  // rop bg 
+
             // Depois de pintarmos a status bar, caso o estilo exija,
             // então devemos atualizar a altura da área de cliente.
             window->rcClient.height -= window->statusbar_height;
@@ -1459,7 +1477,7 @@ doCreateAndDrawWindowFrame (
             }
             sbWindow->type = WT_SIMPLE;
             sbWindow->isStatusBar = TRUE;
-            window->statusbar = (struct gws_window_d *) sbWindow;  // Window pointer.
+            window->statusbar = (struct gws_window_d *) sbWindow;  // Window pointer
             // Register window
             id = (int) RegisterWindow(sbWindow);
             if (id<0){
@@ -1467,7 +1485,7 @@ doCreateAndDrawWindowFrame (
                 goto fail;
             }
             // Add it to the list of childs
-            wm_add_child_window(parent,sbWindow);
+            wm_add_child_window(parent, sbWindow);
         }
 
         return 0;  // OK
@@ -1476,15 +1494,34 @@ doCreateAndDrawWindowFrame (
 // ===============================================
     if (Type == WT_POPUP)
     {
-        window->Border.border_size = BorderSize;
         window->borderUsed = TRUE;
-        // Draw the border of an edit box
-        __draw_window_border(
-            parent, window,
-            __rop_top_border,
-            __rop_left_border,
-            __rop_right_border,
-            __rop_bottom_border );
+
+        // Draw border
+        // #ps: Drawing it directly inside the backbuffer
+        if (Compositor.is_composition_disabled == TRUE)
+        {
+            // #ps: In the case we are not using the compositor
+            __draw_window_border(
+                parent, window,
+                __rop_top_border,
+                __rop_left_border,
+                __rop_right_border,
+                __rop_bottom_border );
+        }
+
+        // We have a compositor and a canvas,
+        // Lets draw the window borders using the dc
+        if (Compositor.is_composition_disabled == FALSE)
+        {
+            // Draws window border when we have dc
+            __dc_draw_window_border(
+                dc00, parent, window,
+                __rop_top_border,
+                __rop_left_border,
+                __rop_right_border,
+                __rop_bottom_border 
+            );
+        }
 
         // When we draw the border for editbox windows 
         // we need to update the client area rectangle.
@@ -1500,12 +1537,30 @@ doCreateAndDrawWindowFrame (
     if (Type == WT_ICON)
     {
         window->borderUsed = TRUE;
-        __draw_window_border(
-            parent, window,
-            __rop_top_border,
-            __rop_left_border,
-            __rop_right_border,
-            __rop_bottom_border );
+
+        if (Compositor.is_composition_disabled == TRUE)
+        {
+            __draw_window_border(
+                parent, window,
+                __rop_top_border,
+                __rop_left_border,
+                __rop_right_border,
+                __rop_bottom_border );
+        }
+
+        // We have a compositor and a canvas,
+        // Lets draw the window borders using the dc
+        if (Compositor.is_composition_disabled == FALSE)
+        {
+            // Draws window border when we have dc
+            __dc_draw_window_border(
+                dc00, parent, window,
+                __rop_top_border,
+                __rop_left_border,
+                __rop_right_border,
+                __rop_bottom_border 
+            );
+        }
 
         // When we draw the border for icons windows 
         // we need to update the client area rectangle.
