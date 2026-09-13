@@ -166,6 +166,7 @@ DDINIT_console(
     unsigned int bg_color, 
     unsigned int fg_color );
 
+void VirtualConsole_initialization(void);
 int VirtualConsole_early_initialization(void);
 
 #endif    

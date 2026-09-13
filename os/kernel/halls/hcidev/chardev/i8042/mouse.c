@@ -6,8 +6,6 @@
 
 #include <kernel.h>
 
-const char *device_name_ps2mouse = "PS2MOUSE";
-
 
 unsigned long g_mousepointer_width=0;
 unsigned long g_mousepointer_height=0;
@@ -49,7 +47,7 @@ void ps2mouse_poll(void)
 }
 
 
-int ps2mouse_initialize_driver(void)
+int ps2mouse_initialize_driver(const char *dev_name)
 {
     file *fp;
 
@@ -68,27 +66,20 @@ int ps2mouse_initialize_driver(void)
     fp->dev_major = 0;
     fp->dev_minor = 0;
 
-/*
-// Register the device.
-    devmgr_register_device ( 
-        (file *) fp, 
-        device_name_ps2mouse,  // name 
-        DEVICE_CLASS_CHAR,     // class (char, block, network)
-        DEVICE_TYPE_LEGACY,    // type (pci, legacy)
-        NULL,                  // Not a pci device.
-        NULL );                // Not a tty device. (not for now)
-*/
+    if ((void*) dev_name == NULL)
+        panic("ps2mouse_initialize_driver: dev_name");
+
 
     int rv = -1;
     rv = 
     (int) devmgr_register_legacy_device (
         (file *) fp, 
-        device_name_ps2mouse,  // name 
+        dev_name,              // name 
         DEVICE_CLASS_CHAR,     // class (char, block, network)
         DEVICE_TYPE_LEGACY );  // type (pci, legacy)
 
     if (rv < 0){
-        panic("ps2mouse.c: devmgr_register_legacy_device fail\n");
+        panic("ps2mouse_initialize_driver: on devmgr_register_legacy_device()\n");
     }
 
     return 0;

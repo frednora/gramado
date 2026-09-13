@@ -9,7 +9,6 @@
 
 #include <kernel.h>
 
-const char *device_name_ps2kbd = "PS2KBD";
 
 // Status
 // @todo: Status pode ser (int).
@@ -50,8 +49,7 @@ void ps2kbd_poll(void)
 }
 
 
-
-int ps2kbd_initialize_driver(void)
+int ps2kbd_initialize_driver(const char *dev_name)
 {
     file *fp;
 
@@ -66,29 +64,21 @@ int ps2kbd_initialize_driver(void)
     fp->____object = ObjectTypeLegacyDevice;
     fp->isDevice = TRUE;
 
-// #todo
+    // #todo
     fp->dev_major = 0;
     fp->dev_minor = 0;
 
-/*
-// #test
-// Registrando o dispositivo.
-    devmgr_register_device ( 
-        (file *) fp, 
-        device_name_ps2kbd,  // name 
-        DEVICE_CLASS_CHAR,   // class (char, block, network)
-        DEVICE_TYPE_LEGACY,  // type (pci, legacy)
-        NULL,                // Not a pci device.
-        NULL );              // Not a tty device. (not for now)
-*/
+
+    if ((void*) dev_name == NULL)
+        panic("ps2kbd_initialize_driver: dev_name");
 
     int rv = -1;
     rv = 
     (int) devmgr_register_legacy_device (
         (file *) fp, 
-        device_name_ps2kbd,  // name 
-        DEVICE_CLASS_CHAR,   // class (char, block, network)
-        DEVICE_TYPE_LEGACY );// type (pci, legacy)
+        dev_name,              // name 
+        DEVICE_CLASS_CHAR,     // class (char, block, network)
+        DEVICE_TYPE_LEGACY );  // type (pci, legacy)
 
     if (rv < 0){
         panic("kbd: devmgr_register_legacy_device fail\n");

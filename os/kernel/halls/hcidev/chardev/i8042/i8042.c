@@ -180,9 +180,11 @@ int DDINIT_ps2(void)
 // Keyboard
 //
 
-// Initialize the driver.
+    const char *dev_name_kbd = "PS2KBD";
+
+// Initialize the driver
     //PROGRESS("DDINIT_ps2: kbd driver\n");
-    ps2kbd_initialize_driver();
+    ps2kbd_initialize_driver(dev_name_kbd);
 
 // Initialize the device
 // Port 1: Keyboard
@@ -196,9 +198,11 @@ int DDINIT_ps2(void)
 // Mouse
 //
 
+    const char *dev_name_mouse = "PS2MOUSE";
+
 // Initialize the driver.
     //PROGRESS("DDINIT_ps2: mouse driver\n");
-    ps2mouse_initialize_driver();
+    ps2mouse_initialize_driver(dev_name_mouse);
 
 // Initialize the device.
 // Port 2: Mouse
@@ -230,8 +234,11 @@ int DDINIT_ps2_early_initialization(void)
 // Keyboard
 //
 
-// Initialize the driver.
-    ps2kbd_initialize_driver();
+    const char *dev_name = "EARLY_PS2KBD";
+
+
+// Initialize the driver
+    ps2kbd_initialize_driver(dev_name);
 
 // Initialize the device
 // Port 1: keyboard

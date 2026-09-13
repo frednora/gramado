@@ -1245,6 +1245,10 @@ fail:
 static int deviceinit(void)
 {
 
+
+// Finalize the initialization creating a device structure
+    DDINIT_bldisp();
+
 // IN: phase number = 1.
 // Chose the keyboad maps
     ibroker_initialize(1);

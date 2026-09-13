@@ -51,6 +51,9 @@ See:
 #include <kernel.h>
 
 
+const char *device_name_bldisp = "BLDISP";
+
+
 // Screen sizes and bpp.
 unsigned long g_device_screen_width=0;
 unsigned long g_device_screen_height=0;
@@ -1219,21 +1222,63 @@ int Video_initialize(void)
     return 0;
 }
 
-//==============================
+// ==============================
 
 //
-// $
+// ##
 // INITIALIZATION
 //
 
-
-// DDINIT_bldisp:
-// Device driver initialization
-// Initialize the device driver for the bootloader display device.
-// Called by keInitialize() in ke.c.
 int DDINIT_bldisp(void)
 {
     PROGRESS("DDINIT_bldisp:\n");
+
+    file *fp;
+
+    fp = (file *) kmalloc(sizeof(file));
+    if ((void *) fp == NULL){
+        panic("DDINIT_bldisp: fp\n");
+    }
+    memset ( fp, 0, sizeof(file) );
+    fp->used = TRUE;
+    fp->magic = 1234;
+
+    fp->____object = ObjectTypeLegacyDevice;
+    fp->isDevice = TRUE;
+
+// #todo
+    fp->dev_major = 0;
+    fp->dev_minor = 0;
+
+    int rv = -1;
+    rv = 
+    (int) devmgr_register_legacy_device (
+        (file *) fp, 
+        device_name_bldisp,    // name 
+        DEVICE_CLASS_CHAR,     // class (char, block, network)
+        DEVICE_TYPE_LEGACY );  // type (pci, legacy)
+
+    if (rv < 0){
+        panic("DDINIT_bldisp: on devmgr_register_legacy_device()\n");
+    }
+
+    return 0;
+}
+
+
+//
+// $
+// EARLY INITIALIZATION
+//
+
+
+// bldisp_early_initialization:
+// Device driver initialization
+// Initialize the device driver for the bootloader display device.
+// Called by displayInitialize() in display.c
+int bldisp_early_initialization(void)
+{
+    PROGRESS("bldisp_early_initialization:\n");
 
 //
 // Hardware context
@@ -1249,7 +1294,7 @@ int DDINIT_bldisp(void)
 
 // bootblk was initialized by kmain.c
     if (bootblk.initialized != TRUE){
-        x_panic ("DDINIT_bldisp: bootblk");
+        x_panic ("bldisp_early_initialization: bootblk");
     }
 
 // Structure initialization.

@@ -6,7 +6,7 @@
 
 int i8042_IsPS2KeyboardPooling(void);
 
-int ps2kbd_initialize_driver(void);
+int ps2kbd_initialize_driver(const char *dev_name);
 
 void ps2kbd_poll(void);
 

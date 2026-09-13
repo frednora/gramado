@@ -332,14 +332,16 @@ struct pci_device_d *qemudisp_find_pci_device(void)
 // INITIALIZATION
 //
 
+// #todo: Maybe we need a structure for display device.
+// The same way we did for bldisp.
 int DDINIT_qemudisp(struct pci_device_d *pci_dev)
 {
     int Status = -1;
 
+    printk("DDINIT_qemudisp:\n");
+
 // Keep a global pointer if you like
     PCIDeviceQemuDisplay = pci_dev;
-
-    printk("DDINIT_qemudisp: OK\n");
 
     return 0;
 

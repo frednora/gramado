@@ -157,6 +157,10 @@ int Video_initialize(void);
 // Device driver initialization
 int DDINIT_bldisp(void);
 
+// Early device driver initialization
+int bldisp_early_initialization(void);
+
+
 #endif    
 
 

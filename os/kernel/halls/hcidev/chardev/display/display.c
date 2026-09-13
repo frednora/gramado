@@ -150,7 +150,7 @@ int displayInitialize(void)
 // #ps: In the case of qemudisp it will be initialized from
 // PCI interface as PCI device.
 
-    Status = (int) DDINIT_bldisp();
+    Status = (int) bldisp_early_initialization();
 
     // vga?
     // ...

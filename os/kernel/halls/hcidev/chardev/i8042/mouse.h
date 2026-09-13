@@ -6,7 +6,8 @@
 
 int i8042_IsPS2MousePooling(void);
 
-int ps2mouse_initialize_driver(void);
+int ps2mouse_initialize_driver(const char *dev_name);
+
 void ps2mouse_poll(void);
 
 #endif   

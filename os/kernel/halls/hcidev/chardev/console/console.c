@@ -649,7 +649,7 @@ int console_get_current_virtual_console(void)
  *   - Called during initialization and by keyboard shortcuts.
  *   - Ensures user sees the correct console state.
  *   - Probably called by: 
- *     __local_ps2kbd_procedure and __initialize_virtual_consoles
+ *     __local_ps2kbd_procedure and VirtualConsole_initialization
  */
 
 void jobcontrol_switch_console(int n)
@@ -2580,13 +2580,313 @@ DDINIT_console(
 }
 
 //
+// ##
+// INITIALIZATION
+//
+
+// Initialize virtual consoles.
+// We already made a early initialization.
+// We will reinitialize only if the console was
+// not initialized before. In the case of failure 
+// of the early initialization routine.
+void VirtualConsole_initialization(void)
+{
+    struct tty_d *Lconsole0 = (struct tty_d *) &CONSOLE_TTYS[0];
+    struct tty_d *Lconsole1 = (struct tty_d *) &CONSOLE_TTYS[1];
+    struct tty_d *Lconsole2 = (struct tty_d *) &CONSOLE_TTYS[2];
+    struct tty_d *Lconsole3 = (struct tty_d *) &CONSOLE_TTYS[3];
+
+    char __tmpname[64];
+    const char *con0_name = "CONSOLE0";
+    const char *con1_name = "CONSOLE1";
+    const char *con2_name = "CONSOLE2";
+    const char *con3_name = "CONSOLE3";
+
+    unsigned int bg_colors[CONSOLETTYS_COUNT_MAX];
+    unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
+
+    register int i=0;
+
+
+    PROGRESS("VirtualConsole_initialization: (second time) <<<< \n");
+
+// stdout:
+// At this moment we need a valid stdout structure.
+
+    if ((void*) stdout == NULL)
+        x_panic("VirtualConsole_initialization: No stdout");
+    if (stdout->magic != 1234)
+        x_panic("VirtualConsole_initialization: Invalid stdout");
+
+//
+// Setup colors
+//
+
+// It sets the current and the default colors for each console.
+// 0) Default kernel console
+// 1) Auxiliary kernel console
+// 2) Warning console
+// 4) Danger console
+
+    bg_colors[0] = (unsigned int) COLOR_BLUE;
+    fg_colors[0] = (unsigned int) COLOR_WHITE;
+    bg_colors[1] = (unsigned int) COLOR_BLUE;
+    fg_colors[1] = (unsigned int) COLOR_YELLOW;
+    bg_colors[2] = (unsigned int) COLOR_ORANGE;
+    fg_colors[2] = (unsigned int) COLOR_WHITE;
+    bg_colors[3] = (unsigned int) COLOR_RED;
+    fg_colors[3] = (unsigned int) COLOR_YELLOW;
+
+//
+// Initialize
+// 
+
+// #bugbug
+// We have the same loop in console.c
+
+    // #debug
+    //PROGRESS("kstdio.c:\n");;
+
+    for (i=0; i<CONSOLETTYS_COUNT_MAX; i++)
+    {
+        if (CONSOLE_TTYS[i].initialized == TRUE){
+            debug_print("VirtualConsole_initialization: Console already initialized\n");
+        }
+
+        // Make the standard initialization.
+        if (CONSOLE_TTYS[i].initialized == FALSE)
+        {
+            // IN: console index, bg color, fg color
+            DDINIT_console( i, bg_colors[i], fg_colors[i] );
+
+            if (i == 0)
+            {
+                if ((void*) Lconsole0 != NULL)
+                {
+                    if (Lconsole0->magic != 1234){
+                        x_panic("VirtualConsole_initialization: No Lconsole0");
+                    }
+                    Lconsole0->fp = (file *) stdout;
+                    Lconsole0->next = NULL;
+                }
+            }
+
+            if (i == 1)
+            {
+                if ((void*) Lconsole1 != NULL)
+                {
+                    if (Lconsole1->magic != 1234){
+                        x_panic("VirtualConsole_initialization: No Lconsole1");
+                    }
+                    Lconsole1->fp = (file *) stdout;
+                    Lconsole1->next = NULL;
+                }
+            }
+
+            if (i == 2)
+            {
+                if ((void*) Lconsole2 != NULL)
+                {
+                    if (Lconsole2->magic != 1234){
+                        x_panic("VirtualConsole_initialization: No Lconsole2");
+                    }
+                    Lconsole2->fp = (file *) stdout;
+                    Lconsole2->next = NULL;
+                }
+            }
+
+            if (i == 3)
+            {
+                if ((void*) Lconsole3 != NULL)
+                {
+                    if (Lconsole3->magic != 1234){
+                        x_panic("VirtualConsole_initialization: No Lconsole3");
+                    }
+                    Lconsole3->fp = (file *) stdout;
+                    Lconsole3->next = NULL;
+                }
+            }
+        }
+    };
+
+// Associate standard stream with one of the consoles
+
+    stdin->tty  = (struct tty_d *) Lconsole0;
+    stdout->tty = (struct tty_d *) Lconsole0;
+    stderr->tty = (struct tty_d *) Lconsole0;
+
+// The foreground console
+    jobcontrol_switch_console(DEFAULT_CONSOLE);  //  Console 0
+
+// Setup the pointer for the current console
+    set_up_cursor(0,0);
+
+// ============================================================
+// Console 0
+    file *fp0 = kmalloc(sizeof(file));
+    memset(fp0, 0, sizeof(file));
+
+    fp0->used = TRUE;
+    fp0->magic = 1234;
+
+    fp0->____object = ObjectTypeVirtualConsole;
+    fp0->isDevice   = TRUE;
+    fp0->device     = NULL;   // will be filled by devmgr
+    fp0->dev_major  = 0;
+    fp0->dev_minor  = 0;
+
+    fp0->_flags     = __SRD | __SWR;
+    fp0->_file      = -1;
+
+    fp0->_base      = NULL;
+    fp0->_p         = NULL;
+    fp0->_r         = 0;
+    fp0->_w         = 0;
+    fp0->_lbfsize   = 0;
+
+    fp0->sync.can_read  = TRUE;
+    fp0->sync.can_write = TRUE;
+
+    fp0->inode = NULL;
+
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con0_name);
+
+    devmgr_register_tty_device(
+        fp0,
+        __tmpname,
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole0 );
+
+// ============================================================
+// Console 1
+    file *fp1 = kmalloc(sizeof(file));
+    memset(fp1, 0, sizeof(file));
+
+    fp1->used = TRUE;
+    fp1->magic = 1234;
+
+    fp1->____object = ObjectTypeVirtualConsole;
+    fp1->isDevice   = TRUE;
+    fp1->device     = NULL;   // will be filled by devmgr
+    fp1->dev_major  = 0;
+    fp1->dev_minor  = 0;
+
+    fp1->_flags     = __SRD | __SWR;
+    fp1->_file      = -1;
+
+    fp1->_base      = NULL;
+    fp1->_p         = NULL;
+    fp1->_r         = 0;
+    fp1->_w         = 0;
+    fp1->_lbfsize   = 0;
+
+    fp1->sync.can_read  = TRUE;
+    fp1->sync.can_write = TRUE;
+
+    fp1->inode = NULL;
+
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con1_name);
+
+    devmgr_register_tty_device(
+        fp1,
+        __tmpname,
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole1 );
+
+// ============================================================
+// Console 2
+    file *fp2 = kmalloc(sizeof(file));
+    memset(fp2, 0, sizeof(file));
+
+    fp2->used = TRUE;
+    fp2->magic = 1234;
+
+    fp2->____object = ObjectTypeVirtualConsole;
+    fp2->isDevice   = TRUE;
+    fp2->device     = NULL;   // will be filled by devmgr
+    fp2->dev_major  = 0;
+    fp2->dev_minor  = 0;
+
+    fp2->_flags     = __SRD | __SWR;
+    fp2->_file      = -1;
+
+    fp2->_base      = NULL;
+    fp2->_p         = NULL;
+    fp2->_r         = 0;
+    fp2->_w         = 0;
+    fp2->_lbfsize   = 0;
+
+    fp2->sync.can_read  = TRUE;
+    fp2->sync.can_write = TRUE;
+
+    fp2->inode = NULL;
+
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con2_name);
+
+    devmgr_register_tty_device(
+        fp2,
+        __tmpname,
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole2 );
+
+// ============================================================
+// Console 3
+    file *fp3 = kmalloc(sizeof(file));
+    memset(fp3, 0, sizeof(file));
+
+    fp3->used = TRUE;
+    fp3->magic = 1234;
+
+    fp3->____object = ObjectTypeVirtualConsole;
+    fp3->isDevice   = TRUE;
+    fp3->device     = NULL;   // will be filled by devmgr
+    fp3->dev_major  = 0;
+    fp3->dev_minor  = 0;
+
+    fp3->_flags     = __SRD | __SWR;
+    fp3->_file      = -1;
+
+    fp3->_base      = NULL;
+    fp3->_p         = NULL;
+    fp3->_r         = 0;
+    fp3->_w         = 0;
+    fp3->_lbfsize   = 0;
+
+    fp3->sync.can_read  = TRUE;
+    fp3->sync.can_write = TRUE;
+
+    fp3->inode = NULL;
+
+    memset( __tmpname, 0, 64 );
+    ksprintf(__tmpname, con3_name);
+
+    devmgr_register_tty_device(
+        fp3,
+        __tmpname,
+        DEVICE_CLASS_CHAR,
+        DEVICE_TYPE_TTY,
+        Lconsole3 );
+
+    // #debug
+    // devmgr_show_device_list(ObjectTypeVirtualConsole);
+    // while(1){}
+}
+
+
+//
 // $
 // EARLY INITIALIZATION
 //
 
 // VirtualConsole_early_initialization:
 // Early initialization of the consoles.
-// It's gonna be reinitializad by __initialize_virtual_consoles()
+// It's gonna be reinitializad by VirtualConsole_initialization()
 // in kstdio.c
 // Intialize the support for virtual consoles.
 // #todo: Explain it better.
@@ -2672,6 +2972,9 @@ int VirtualConsole_early_initialization(void)
 
     return 0;
 }
+
+
+
 
 //
 // End
