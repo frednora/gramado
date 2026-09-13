@@ -1721,8 +1721,8 @@ int main(int argc, char *argv[])
         pump(client_fd, main_window);
 
         // 2. Pump events from Input Broker (system events)
-        for (iSysMsg=0; iSysMsg<32; iSysMsg++)
-        {
+        //for (iSysMsg=0; iSysMsg<32; iSysMsg++)
+        //{
             if (rtl_get_event() == TRUE)
             {
                 tbProcedure(
@@ -1734,7 +1734,7 @@ int main(int argc, char *argv[])
                     );
                 RTLEventBuffer[1] = 0; // clear after dispatch
             };
-        };
+        //};
 
         end_jiffie = rtl_jiffies();
 

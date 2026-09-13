@@ -682,21 +682,34 @@ int main(int argc, char *argv[])
         // pump(client_fd);
 
         // Get current mouse position
-        get_current_mouse_position();
+        // get_current_mouse_position();
 
-        if (is_drawing == TRUE)
-        {
+        //if (is_drawing == TRUE)
+        //{
             //printf("x=%d y=%d\n",CurrentMousePosition.x,CurrentMousePosition.y);
-            draw_pixel(CurrentMousePosition.x, CurrentMousePosition.y);
-            last_x = CurrentMousePosition.x;
-            last_y = CurrentMousePosition.y;
-        }
+            //draw_pixel(CurrentMousePosition.x, CurrentMousePosition.y);
+            //last_x = CurrentMousePosition.x;
+            //last_y = CurrentMousePosition.y;
+        //}
 
         // 2. Input-broker events
         //for (nSysMsg = 0; nSysMsg < 32; nSysMsg++)
         //{
             if (rtl_get_event() == TRUE)
             {
+                unsigned long l1 = RTLEventBuffer[2];
+                unsigned long l2 = RTLEventBuffer[3];
+
+                // In the case of this message
+                // the relative values are in long1, and long2,
+                // the absolute values are in long3 and long4.
+                // #ps: This app is using absolute values.
+                if (RTLEventBuffer[1] == MSG_MOUSEMOVE)
+                {
+                    l1 = RTLEventBuffer[4];   // long3
+                    l2 = RTLEventBuffer[5];   // long4
+                }
+
                 paintProcedure(
                     client_fd,
                     (int) RTLEventBuffer[0],

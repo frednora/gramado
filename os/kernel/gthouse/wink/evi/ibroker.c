@@ -4086,7 +4086,7 @@ wmMouseEvent(
             // is the GPU.
     
             // Update mouse position
-            bldisp_update_mouse_position(long1, long2);
+            bldisp_update_mouse_position(long1, long2, 0, 0);
             // Display mouse cursor
             bldisp_display_mouse_cursor();
 
@@ -4115,11 +4115,15 @@ wmMouseEvent(
                     // send absolute values to the display server.
                     if (wproxy_hover->hit_area == HIT_FRAME){
 
+                        // #todo: Update also the relative values
+                        // bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
+
                         //printk("frame\n");
                         ibroker_post_message_to_ds(
                             event_id, 
                             (unsigned long) long1, 
                             (unsigned long) long2 );
+
                         return 0;
 
                     // Inside the client area, 
@@ -4139,6 +4143,9 @@ wmMouseEvent(
                             rel_long2 = long2 - wproxy_hover->ca_t;
                         }
 
+                        // Update also the relative values
+                        bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
+
                         // printk("client: %d\n", wproxy_hover->tid);
                         ipc_post_message_to_tid(
                             (tid_t) __HARDWARE_TID, 
@@ -4146,6 +4153,7 @@ wmMouseEvent(
                             event_id, 
                             (unsigned long) rel_long1, 
                             (unsigned long) rel_long2 );
+
                         return 0;
 
                     // Send it only to the taskbar
@@ -4153,6 +4161,9 @@ wmMouseEvent(
 
                         rel_long1 = long1;
                         rel_long2 = long2;
+
+                        // Update also the relative values
+                        // bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
 
                         if (wproxy_hover != wproxy_shell)
                             return 0;

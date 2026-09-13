@@ -768,6 +768,7 @@ int wmInputReader(void)
     unsigned long long2=0;
     // --------
     unsigned long long3=0;
+    unsigned long long4=0;
     // #todo: Get the button numberfor mouse clicks.
 
     int IsCombination=FALSE;
@@ -803,8 +804,9 @@ ProcessEvent:
     msg   = (int) (RTLEventBuffer[1] & 0xFFFFFFFF);
     long1 = (unsigned long) RTLEventBuffer[2];
     long2 = (unsigned long) RTLEventBuffer[3];
-// #test
-    long3 = (unsigned long) RTLEventBuffer[4];  //jiffie
+
+    long3 = (unsigned long) RTLEventBuffer[4];
+    long4 = (unsigned long) RTLEventBuffer[5];
 
 // Limit
 // #ps: System messages has the range of [0~99]
@@ -828,8 +830,19 @@ ProcessEvent:
             DoubleClick.current = (unsigned long) long3;
         }
 
+        unsigned long l1 = long1;
+        unsigned long l2 = long2;
+
+        // In this case the relative values are in long1 and long2,
+        // but for now we are using the absolute valuesm found in long3 and long4.
+        if (msg == GWS_MouseMove)
+        {
+            l1 = long3;
+            l2 = long4;
+        }
+
         wmProcessMouseEvent(
-            (int) msg, (unsigned long) long1, (unsigned long) long2 ); 
+            (int) msg, (unsigned long) l1, (unsigned long) l2 ); 
 
         // LOOP: Processamos um evento de movimento,
         // provavelmente teremos outro subsequente.

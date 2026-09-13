@@ -114,6 +114,9 @@ static long __new_mouse_x=0;
 static long __new_mouse_y=0;
 
 
+static long __rel_mouse_x=0;
+static long __rel_mouse_y=0;
+
 
 
 // LFB - Esse é o endereço usado pelo driver de vídeo em /x
@@ -160,6 +163,15 @@ unsigned long bldisp_get_current_mouse_y(void)
     return (unsigned long) __new_mouse_y;
 }
 
+unsigned long bldisp_get_current_rel_mouse_x(void)
+{
+    return (unsigned long) __rel_mouse_x;
+}
+unsigned long bldisp_get_current_rel_mouse_y(void)
+{
+    return (unsigned long) __rel_mouse_y;
+}
+
 
 // Sinaliza que precisamos apagar o ponteiro do mouse,
 // copiando o conteudo do backbuffer no LFB.
@@ -173,10 +185,18 @@ void bldisp_do_we_need_to_erase_mouse_pointer(int value)
     __clear_mousebox = (int) value;
 }
 
-void bldisp_update_mouse_position(unsigned long x, unsigned long y)
+void 
+bldisp_update_mouse_position(
+	unsigned long x, 
+	unsigned long y,
+	unsigned long rel_x, 
+	unsigned long rel_y )
 {
     __new_mouse_x = x;
     __new_mouse_y = y;
+
+    __rel_mouse_x = rel_x;
+    __rel_mouse_y = rel_y;
 }
 
 // + Apaga o cursor antigo, copiando o conteudo do backbuffer

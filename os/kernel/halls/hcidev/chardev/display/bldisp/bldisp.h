@@ -116,11 +116,21 @@ void bldisp_show_info(void);
 unsigned long bldisp_get_current_mouse_x(void);
 unsigned long bldisp_get_current_mouse_y(void);
 
+unsigned long bldisp_get_current_rel_mouse_x(void);
+unsigned long bldisp_get_current_rel_mouse_y(void);
+
 
 // ++
 // Mouse support
 void bldisp_do_we_need_to_erase_mouse_pointer(int value);
-void bldisp_update_mouse_position(unsigned long x, unsigned long y);
+
+void 
+bldisp_update_mouse_position(
+	unsigned long x, 
+	unsigned long y,
+	unsigned long rel_x, 
+	unsigned long rel_y );
+
 void bldisp_display_mouse_cursor(void);
 // --
 

@@ -302,13 +302,42 @@ ipc_post_message_to_tid (
     }
     */
 
+//
+// flag‑based coalescing for high‑frequency events.
+//
+
     if (MessageCode == MSG_MOUSEMOVE)
     {
+        // #test
+        // Not sending the message, but only setting the flag.
+        // Mouse moved event detected
+        t->input_flags |= IFLAGS_MOUSEMOVE;
+
         //t->quantum = QUANTUM_MAX * 2;
         //t->state = READY;
+
+        return 0;
     }
 
+    if (MessageCode == MSG_PAINT)
+    {
+        // #test
+        // Not sending the message, but only setting the flag.
+        // Mouse moved event detected
+        t->input_flags |= IFLAGS_PAINT;
+
+        //t->quantum = QUANTUM_MAX * 2;
+        //t->state = READY;
+
+        return 0;
+    }
+
+
+/*
 // ======================================================
+// #suspended:
+// Suspended because we are using the new method above.
+//
 // Only coalesce for mouse move messages
 // Prevents queue flooding with excessive mouse move events.
 // Reduces input lag: The display server always receives the most recent mouse position.
@@ -347,6 +376,7 @@ ipc_post_message_to_tid (
         }
     }
 // ======================================================
+*/
 
 // ======================================================
 // #todo:
@@ -741,6 +771,44 @@ void *ipc_get_message(unsigned long ubuf)
     if (t->used != TRUE || t->magic != 1234){
         panic ("ipc_get_message: t validation\n");
     }
+// ===========================================================
+
+// #test
+// If the flag for mouse move is setted we get the current 
+// pointer position reset the flag and return with the position.
+// The message is built on the fly.
+
+    // #test
+    if (t->input_flags & IFLAGS_MOUSEMOVE)
+    {
+        // Build message dynamically
+        message_address[0] = (unsigned long) 0;  // window
+        message_address[1] = (unsigned long) (MSG_MOUSEMOVE & 0xFFFFFFFF);
+        message_address[2] = (unsigned long) bldisp_get_current_rel_mouse_x();
+        message_address[3] = (unsigned long) bldisp_get_current_rel_mouse_y();
+        message_address[4] = (unsigned long) bldisp_get_current_mouse_x();
+        message_address[5] = (unsigned long) bldisp_get_current_mouse_y();
+
+        // Clear the flag after consuming
+        t->input_flags &= ~IFLAGS_MOUSEMOVE;
+
+        return 1;
+    }
+
+    if (t->input_flags & IFLAGS_PAINT)
+    {
+        message_address[0] = (unsigned long) 0;  // window handle
+        message_address[1] = (unsigned long) (MSG_PAINT & 0xFFFFFFFF);
+        message_address[2] = (unsigned long) 0;  //dirty_region_x;
+        message_address[3] = (unsigned long) 0;  //dirty_region_y;
+
+        // Clear flag after consumption
+        t->input_flags &= ~IFLAGS_PAINT;
+        return 1;
+    }
+
+
+// ===========================================================
 
     // The thread wants to block on empty queue
     if (t->msgctl.block_on_empty == TRUE)

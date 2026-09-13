@@ -122,9 +122,20 @@ typedef enum {
 
 // Thread flags.
 // t->flags:
-#define TF_BLOCKED_SENDING      0x1000
-#define TF_BLOCKED_RECEIVING    0x2000
+#define TF_BLOCKED_SENDING      0x0001
+#define TF_BLOCKED_RECEIVING    0x0002
 // ...
+
+// Input flags for on‑the‑fly message synthesis
+// t->input_flags:
+#define IFLAGS_MOUSEMOVE    0x0001  // Cursor moved (coalesced)
+#define IFLAGS_MOUSEWHEEL   0x0002  // Wheel scrolled (delta stored until consumed)
+#define IFLAGS_KEYSTATE     0x0004  // Key pressed/released (queried as state)
+#define IFLAGS_CHARREADY    0x0008  // Character input available (after translation)
+#define IFLAGS_PAINT        0x0010  // Window marked dirty (synthesized WM_PAINT)
+#define IFLAGS_RESIZE       0x0020  // Window size changed (synthesized WM_SIZE)
+#define IFLAGS_ACTIVATE     0x0040  // Focus/activation change (synthesized WM_ACTIVATE)
+
 
 
 struct thread_transition_counter_d
@@ -296,6 +307,8 @@ struct thread_d
 // TF_BLOCKED_RECEIVING - Blocked when trying to receive.
 // ...
     unsigned long flags;
+
+    unsigned long input_flags;
 
 // Used to share a cmdline between father and child.
     char cmdline[512]; 
