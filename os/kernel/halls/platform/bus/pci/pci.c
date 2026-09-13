@@ -879,8 +879,30 @@ pciHandleDevice (
 
         if (pci_dev->classCode == PCI_CLASSCODE_DISPLAY)
         {
-            // Save the tmp name into the local buffer.
+
+            // Save the tmp name into the local buffer
+
+            // In the case of generic display device
             ksprintf(__tmpname, "DISPLAY%d", __pci_display_devices_found);
+
+            // In the case of quemu display device
+            if ( pci_dev->Vendor == QEMU_VGA_VENDOR_ID && 
+                 pci_dev->Device == QEMU_VGA_DEVICE_ID )
+            {
+                memset(__tmpname, 0, sizeof(__tmpname));
+                ksprintf(__tmpname, "QEMUDISP%d", __pci_display_devices_found);
+
+                // It plugs this pointer to a specific global pointer for
+                // qemu pci device.
+                DDINIT_qemudisp(pci_dev);
+            }
+
+            // #todo:
+            // The initialization routine realizes the precence of 
+            // a display device in Virtualbox too.
+            // I don't know who it is yet.
+
+
             __pci_display_devices_found++;
         }
 

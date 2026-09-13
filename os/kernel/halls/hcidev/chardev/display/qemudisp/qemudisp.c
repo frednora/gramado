@@ -332,117 +332,12 @@ struct pci_device_d *qemudisp_find_pci_device(void)
 // INITIALIZATION
 //
 
-int DDINIT_qemudisp(void)
+int DDINIT_qemudisp(struct pci_device_d *pci_dev)
 {
     int Status = -1;
 
-    // #breakpoint
-    panic("DDINIT_qemudisp: THIS IS A WORK IN PROGRESS!\n");
-
-
-    PROGRESS("DDINIT_qemudisp:\n");
-
-
-
-// #test
-// Sondando na lista de dispositivos encontrados 
-// pra ver se tem algum controlador de display.
-// #importante:
-// Estamos sondando uma lista que contruimos quando fizemos
-// uma sondagem no começo da inicializaçao do kernel.
-// #todo: 
-// Podemos salvar essa lista.
-// #todo
-// É uma estrutura para dispositivos pci. (pci_device_d)
-// Vamos mudar de nome.
-
-/*
-// pci device.
-    PCIDeviceQemuDisplay = 
-        (struct pci_device_d *) scan_pci_device_list2 ( 
-                                    (unsigned char) PCI_CLASSCODE_DISPLAY, 
-                                    (unsigned char) PCI_SUBCLASS_NONVGA );
-
-    if ((void *) PCIDeviceQemuDisplay == NULL){
-        printk("qemudisp_initialize: PCIDeviceQemuDisplay\n");
-        Status = (int) -1;
-        goto fail;
-    }
-    if ( PCIDeviceQemuDisplay->used != TRUE || 
-         PCIDeviceQemuDisplay->magic != 1234 )
-    {
-        printk ("qemudisp_initialize: PCIDeviceQemuDisplay validation\n");
-        Status = (int) -1;
-        goto fail;
-    }
-*/
-
-//
-// #test
-// Find the PCI device from a list of devices.
-//
-
-    struct pci_device_d *dev;
-    dev = (struct pci_device_d *) qemudisp_find_pci_device();
-    if ((void*) dev != NULL){
-        printk("Device was found\n");
-    }
-    printk("bus=%d dev=%d fun%d\n", dev->bus, dev->dev, dev->func);
-
-    dev->BAR0 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x10 );
-    dev->BAR1 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x14 );
-    dev->BAR2 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x18 );
-    dev->BAR3 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x1C );
-    dev->BAR4 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x20 );
-    dev->BAR5 = pci_ReadPCIConfigAddr ( dev->bus, dev->dev, dev->func, 0x24 );
-
-
-// Bits 31-4 : Actual base address
-// Bit  3    : Prefetchable (1 = yes)
-// Bits 2-1  : Type (00 = 32-bit, 10 = 64-bit)
-// Bit  0    : Always 0 for Memory BAR
-
-// clear flags
-    unsigned long lfb_pa  = dev->BAR0 & ~0xF;
-    unsigned long mmio_pa = dev->BAR2 & ~0xF;
-
-    printk("LFB  PA  = %x\n", lfb_pa);   // should be 0xFD000000 in your case
-    printk("MMIO PA  = %x\n", mmio_pa);
-
-// -------------------------
-// BAR0 = Framebuffer
-// bar0 → physical address of the framebuffer
-// Memory (prefetchable)
-// Linear Framebuffer (the real pixel memory)
-// 16 MB (default)
-// This is the address you should use as lfb_pa
-
-// -------------------------
-// BAR2 = MMIO (Bochs registers at +0x500)
-// bar2 → physical address of the MMIO control region
-// Memory (MMIO)
-// Control registers (Bochs DISPI + VGA ports)
-// 4 KB
-// Registers live at BAR2 + 0x500
-
-// #todo (IMPORTANT)
-// We need to map these addresses in order to access them 
-// using virtual addresses.
-
-    printk("BAR0=%x BAR1=%x BAR2=%x\n", 
-        dev->BAR0, dev->BAR1, dev->BAR2 );
-    // ...
-
-// Save the important addresses
-    qemudisp->lfb_pa   = lfb_pa;
-    qemudisp->mmio_pa  = mmio_pa;          // you may want to add this field
-    qemudisp->using_pci = TRUE;
-    qemudisp->bus = dev->bus;
-    qemudisp->dev = dev->dev;
-    qemudisp->fun = dev->func;
-
 // Keep a global pointer if you like
-    PCIDeviceQemuDisplay = dev;
+    PCIDeviceQemuDisplay = pci_dev;
 
     printk("DDINIT_qemudisp: OK\n");
 

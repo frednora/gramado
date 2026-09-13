@@ -123,7 +123,7 @@ qemudisp_ioctl (
     unsigned long request, 
     unsigned long arg );
 
-int DDINIT_qemudisp(void);
+int DDINIT_qemudisp(struct pci_device_d *pci_dev);
 
 #endif  
 

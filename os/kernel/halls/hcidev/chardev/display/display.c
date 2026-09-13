@@ -143,8 +143,15 @@ int displayInitialize(void)
 // Initialize the structure for the bootloader display device.
 // see: bldisp.c
 
+// #ps:
+// Basic early initialization.
+// We can't register a this as legacy device yet,
+// Because the list of devices was not initialized yet.
+// #ps: In the case of qemudisp it will be initialized from
+// PCI interface as PCI device.
+
     Status = (int) DDINIT_bldisp();
-    // qemudisp? DDINIT_qemudisp()
+
     // vga?
     // ...
 

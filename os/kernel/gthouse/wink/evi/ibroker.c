@@ -1397,16 +1397,6 @@ static int __shellParseCommandLine(char *cmdline_address, size_t buffer_size)
         goto exit_cmp;
     }
 
-    // qemu-disp
-    // #test: working on the initialization of 
-    // the qemu display device driver.
-    // see: qemudisp.c
-    if ( gramado_strncmp( cmdline, "qemu-disp", 9 ) == 0 )
-    {
-        DDINIT_qemudisp();
-        goto exit_cmp;
-    }
-
 
 // ps2-qemu:
 // Testing the full initialization of ps2 interface.
