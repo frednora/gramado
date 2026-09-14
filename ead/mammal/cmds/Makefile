@@ -55,9 +55,6 @@ all:
 	make -C shutdown/
 	make -C uname/
 
-
-	make -C lua1/
-
 #test
 	make -C http/
 	make -C httpsrv/

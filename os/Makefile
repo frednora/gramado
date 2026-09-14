@@ -202,7 +202,6 @@ build-extras:
 #	@-cp $(L1_CMDS)/bin/HEXDUMP.BIN  $(BUILD)/
 	@-cp $(L1_CMDS)/bin/GRAMCNF.BIN  $(BUILD)/
 	@-cp $(L1_CMDS)/bin/JS.BIN       $(BUILD)/
-#	@-cp $(L1_CMDS)/bin/LUA1.BIN     $(BUILD)/
 #	@-cp $(L1_CMDS)/bin/TASCII.BIN   $(BUILD)/
 #	@-cp $(L1_CMDS)/bin/TPRINTF.BIN  $(BUILD)/
 
