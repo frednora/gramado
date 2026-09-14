@@ -855,7 +855,8 @@ tbProcedure(
             switch (long1) 
             {
                 case VK_RETURN:
-                    trigger_default_responder(fd);
+                    // trigger_default_responder(fd);
+                    // do_launch_app(1);  // First responder
                     break;
 
                 case '<':   // ASCII '<'
@@ -873,6 +874,12 @@ tbProcedure(
                 case 'R':  // Refresh
                 case 'r': 
                     gws_update_desktop(fd); 
+                    break;
+
+                case 'S':  // Start menu
+                case 's': 
+                    // gws_update_desktop(fd);
+                    do_launch_app(1);  // First responder 
                     break;
 
                 default:
@@ -1725,6 +1732,7 @@ int main(int argc, char *argv[])
         //{
             if (rtl_get_event() == TRUE)
             {
+
                 tbProcedure(
                     client_fd,
                     (int) RTLEventBuffer[0],   // window id

@@ -302,6 +302,27 @@ ipc_post_message_to_tid (
     }
     */
 
+
+/*
+Guideline for Flag vs Queue:
+
+Use flags for coalescible state events
++ Mouse move
++ Paint
++ Resize
++ Activate
++ Timer tick (optional)
++ Resource warnings
+
+Keep in queue for discrete one‑shot events
++ Mouse button click
++ Key down/up
++ Close
++ Process creation/termination
++ File I/O completion
++ Interrupt‑driven signals
+*/
+
 //
 // flag‑based coalescing for high‑frequency events.
 //
@@ -408,10 +429,21 @@ ipc_post_message_to_tid (
         break;
     };
 
+
+//
+// coalescing for high‑frequency events
+//
+
+// #ps: 
+// Only for keydown and control + arrow combination.
+// It introduces the ideia of repeat counter.
+
     if (isMake == TRUE || isControlArrow == TRUE)
     {
+        // Get the last message injected
         int __last_index = 
             (t->MsgQueueTail - 1 + MSG_QUEUE_MAX) % MSG_QUEUE_MAX;
+
         struct msg_d *__last_msg = t->MsgQueue[__last_index];
         if ((void*) __last_msg == NULL){
             panic ("ipc_post_message_to_tid: __last_msg\n");
@@ -437,6 +469,7 @@ ipc_post_message_to_tid (
                 return 0;
             }
         }
+
         // Control arrow:
         if (isControlArrow == TRUE && __last_msg->receiver_tid == (tid_t) dst_tid) 
         {
@@ -789,6 +822,9 @@ void *ipc_get_message(unsigned long ubuf)
         message_address[4] = (unsigned long) bldisp_get_current_mouse_x();
         message_address[5] = (unsigned long) bldisp_get_current_mouse_y();
 
+        // #ps: What is maximum number of slots?
+        // message_address[6] = (unsigned long) jiffies;
+
         // Clear the flag after consuming
         t->input_flags &= ~IFLAGS_MOUSEMOVE;
 
@@ -801,6 +837,9 @@ void *ipc_get_message(unsigned long ubuf)
         message_address[1] = (unsigned long) (MSG_PAINT & 0xFFFFFFFF);
         message_address[2] = (unsigned long) 0;  //dirty_region_x;
         message_address[3] = (unsigned long) 0;  //dirty_region_y;
+
+        // #ps: What is maximum number of slots?
+        // message_address[6] = (unsigned long) jiffies;
 
         // Clear flag after consumption
         t->input_flags &= ~IFLAGS_PAINT;

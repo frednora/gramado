@@ -1,0 +1,15 @@
+
+Rule of Thumb for handling flags:
+
+Scheduler:
+    sets flags for lifecycle events (wakeups, alarms, exits).
+
+Task switcher:
+    sets flags for state transitions (preempted, yield, sleep, callback).
+
+Interrupt handlers:
+    set input flags (mouse, keyboard, paint).
+
+Resource managers:
+    set resource flags (low memory, disk, network).
+

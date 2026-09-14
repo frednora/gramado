@@ -492,6 +492,13 @@ int I_x64CreateInitialProcess(void)
         return FALSE;
     }
 
+
+// Initial flags
+    InitThread->flags |= TF_INIT;
+    InitThread->flags |= TF_SYSTEM_THREAD;
+    // ...
+
+
 //
 // Paging
 //

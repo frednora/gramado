@@ -431,9 +431,12 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
             if (TmpThread->state == WAITING)
             {
                 // Alarm check 
-                if (jiffies > TmpThread->alarm) { 
+                if (jiffies > TmpThread->alarm)
+                { 
                     TmpThread->alarm = 0; 
                     // #todo: signal handling 
+
+                    // TmpThread->flags |= TF_ALARM;
                 } 
             }
 
@@ -462,6 +465,10 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
                         //TmpThread->waiting_jiffy = 0;
                         //TmpThread->wake_jiffy = 0;
                         //printk("Thread is UP\n");
+
+                        // flag
+                        // The thread knows it was resumed by a timer/sleep expiration.
+                        // TmpThread->flags |= TF_WAKEUP;
                     }
                 }
             }
@@ -691,6 +698,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
     //if (jiffies >= Idle->wake_jiffy)
         //do_thread_ready(TmpThread->tid);
 
+    // Idle->flags |= TF_WAKEUP;
+
 // Start from init+1, because init we already got.
     static int Start = (INIT_TID +1);
     static int Max = THREAD_COUNT_MAX;
@@ -751,6 +760,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                         case WAIT_REASON_LOOP:     // Empty msg queue
                             do_thread_ready(TmpThread->tid);
                             TmpThread->wait_reason = WAIT_REASON_NULL;
+                            // TmpThread->flags |= TF_WAKEUP;
                             break;
                         };
                     }
@@ -784,6 +794,12 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                         // e ela for a thread flower dele.
                         TmpThread->state = ZOMBIE;
                         TmpThread->Deferred.exit_in_progress = FALSE;
+
+                        // #flag
+                        // You can set TF_EXIT_REQUEST here, 
+                        // so the thread (or its parent) gets a 
+                        // clean notification before cleanup.
+                        // TmpThread->flags |= TF_EXIT_REQUEST;
 
                         // Invalidate the foreground thread variable
                         if (TmpThread->tid == foreground_thread)
@@ -823,9 +839,12 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                  TmpThread->state == WAITING )
             {
                 // Check alarm
-                if (jiffies > TmpThread->alarm){
+                if (jiffies > TmpThread->alarm)
+                {
                     TmpThread->alarm=0;
                     //TmpThread->signal = ?
+                
+                    // TmpThread->flags |= TF_ALARM;
                 }
                 //if ( TmpThread->signal ){
                 //    TmpThread->state = READY;
@@ -855,6 +874,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                         //TmpThread->waiting_jiffy = 0;
                         //TmpThread->wake_jiffy = 0;
                         //printk("Thread is UP\n");
+
+                        // TmpThread->flags |= TF_WAKEUP;
                     }
                 }
             }

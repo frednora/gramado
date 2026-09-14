@@ -697,25 +697,13 @@ int main(int argc, char *argv[])
         //{
             if (rtl_get_event() == TRUE)
             {
-                unsigned long l1 = RTLEventBuffer[2];
-                unsigned long l2 = RTLEventBuffer[3];
-
-                // In the case of this message
-                // the relative values are in long1, and long2,
-                // the absolute values are in long3 and long4.
-                // #ps: This app is using absolute values.
-                if (RTLEventBuffer[1] == MSG_MOUSEMOVE)
-                {
-                    l1 = RTLEventBuffer[4];   // long3
-                    l2 = RTLEventBuffer[5];   // long4
-                }
-
                 paintProcedure(
                     client_fd,
                     (int) RTLEventBuffer[0],
                     (int) RTLEventBuffer[1],
                     (unsigned long) RTLEventBuffer[2],
                     (unsigned long) RTLEventBuffer[3]);
+
                 RTLEventBuffer[1] = 0;
             }
         //}

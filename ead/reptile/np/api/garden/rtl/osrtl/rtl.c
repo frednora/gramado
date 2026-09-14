@@ -531,7 +531,6 @@ int xxxScanApplicationQueue2(int index, int restart)
         restart );
     rtl_exit_critical_section(); 
 
-
     // Check if it is a valid event.
 
     // No, we do not have an event. 

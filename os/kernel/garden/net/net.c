@@ -552,6 +552,11 @@ network_register_ring3_display_server(
     if (t->magic != 1234)
         goto fail;
 
+
+// flags
+    t->flags |= TF_SYSTEM_THREAD;
+    // ...
+
 // #test
     t->pe_mode = PE_MODE_PERFORMANCE;
 

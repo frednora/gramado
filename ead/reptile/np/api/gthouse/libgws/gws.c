@@ -3169,7 +3169,7 @@ struct gws_event_d *gws_get_next_event(
 
         // #test
         // It gives more processing time to the server to do its job.
-        rtl_yield();
+        // rtl_yield();
     };
 
     e = (struct gws_event_d *) __gws_get_next_event_response(fd,event);

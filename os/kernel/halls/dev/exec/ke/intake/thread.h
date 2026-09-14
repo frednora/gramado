@@ -120,21 +120,66 @@ typedef enum {
 // a fila de mensagens na current thread.
 #define INPUT_MODEL_MESSAGEQUEUE  2
 
-// Thread flags.
-// t->flags:
-#define TF_BLOCKED_SENDING      0x0001
-#define TF_BLOCKED_RECEIVING    0x0002
-// ...
+//
+// Thread flags
+//
 
+// General system flags (t->flags)
+#define TF_BLOCKED_SENDING      0x00000001  // Thread blocked trying to send
+#define TF_BLOCKED_RECEIVING    0x00000002  // Thread blocked trying to receive
+#define TF_TIMER                0x00000004  // Timer tick pending (coalesced)
+#define TF_SIGNAL               0x00000008  // Process/thread signal pending
+#define TF_RESOURCE_LOW         0x00000010  // Resource warning (memory/disk/network)
+#define TF_SCHED_HINT           0x00000020  // Scheduler hint (priority boost/preemption)
+#define TF_MODECHANGE           0x00000040  // System mode change (power/performance)
+#define TF_INTERRUPT            0x00000080  // Hardware interrupt notification
+#define TF_DEADLOCK             0x00000100  // Thread detected in deadlock cycle
+#define TF_ALERTABLE            0x00000200  // Thread is in alertable wait state
+#define TF_ALARM                0x00000400  // Alarm() syscall triggered
+#define TF_PROFILE_EVENT        0x00000800  // Profiler tick/event pending
+#define TF_EXIT_REQUEST         0x00001000  // Thread/process requested to exit
+#define TF_WAKEUP               0x00002000  // Wakeup flag (sleep ended)
+#define TF_DEBUG_BREAK          0x00004000  // Debug breakpoint hit
+#define TF_TRACE_EVENT          0x00008000  // Tracing/profiling event
+#define TF_INIT             0x00010000  // Marks this thread as the system’s bootstrap thread
+#define TF_SYSTEM_THREAD    0x00020000  // Privileged system thread (kernel services, daemons)
+#define TF_PREEMPTED        0x00040000  // Thread was preempted (quantum expired)
+#define TF_YIELD            0x00080000  // Thread voluntarily yielded CPU
+#define TF_SLEEP            0x00100000  // Thread entered sleep routine
+#define TF_CALLBACK         0x00200000  // Callback in progress prevented context save
+#define TF_FOREGROUND       0x00400000  // Thread is the current foreground thread
+#define TF_BACKGROUND       0x00800000  // Thread is running in background plane
+#define TF_IO_PENDING       0x01000000  // Thread has pending I/O completion
+#define TF_PAGEFAULT        0x02000000  // Thread hit a page fault (pf_info_d updated)
+#define TF_RESOURCE_GRANTED 0x04000000  // Resource allocation succeeded (memory, credits)
+#define TF_RESOURCE_DENIED  0x08000000  // Resource allocation failed (out of quota)
+#define TF_SUSPENDED        0x10000000  // Thread suspended by external request
+#define TF_RESUMED          0x20000000  // Thread resumed after suspension
+#define TF_TERMINATED       0x40000000  // Thread terminated (final cleanup pending)
+#define TF_REUSE            0x80000000  // Thread marked for reuse (THREAD_STOCK)
+// TF_DISPLAYSERVER_READY ?
+
+
+
+// Input/UI flags (t->input_flags)
 // Input flags for on‑the‑fly message synthesis
-// t->input_flags:
-#define IFLAGS_MOUSEMOVE    0x0001  // Cursor moved (coalesced)
-#define IFLAGS_MOUSEWHEEL   0x0002  // Wheel scrolled (delta stored until consumed)
-#define IFLAGS_KEYSTATE     0x0004  // Key pressed/released (queried as state)
-#define IFLAGS_CHARREADY    0x0008  // Character input available (after translation)
-#define IFLAGS_PAINT        0x0010  // Window marked dirty (synthesized WM_PAINT)
-#define IFLAGS_RESIZE       0x0020  // Window size changed (synthesized WM_SIZE)
-#define IFLAGS_ACTIVATE     0x0040  // Focus/activation change (synthesized WM_ACTIVATE)
+#define IFLAGS_MOUSEMOVE        0x00000001  // Cursor moved (coalesced)
+#define IFLAGS_MOUSEWHEEL       0x00000002  // Wheel scrolled (delta stored until consumed)
+#define IFLAGS_KEYSTATE         0x00000004  // Key pressed/released (queried as state)
+#define IFLAGS_CHARREADY        0x00000008  // Character input available (after translation)
+#define IFLAGS_PAINT            0x00000010  // Window marked dirty (synthesized WM_PAINT)
+#define IFLAGS_RESIZE           0x00000020  // Window size changed (synthesized WM_SIZE)
+#define IFLAGS_ACTIVATE         0x00000040  // Focus/activation change (synthesized WM_ACTIVATE)
+#define IFLAGS_MOUSEHOVER       0x00000080  // Mouse hover/leave state
+#define IFLAGS_MOUSEENTER       0x00000100  // Mouse entered window region
+#define IFLAGS_MOUSELEAVE       0x00000200  // Mouse left window region
+#define IFLAGS_INPUTLANGCHANGE  0x00000400  // Input language/layout changed
+#define IFLAGS_CLIPBOARD_EVENT  0x00000800  // Clipboard content changed
+#define IFLAGS_DRAGDROP         0x00001000  // Drag/drop operation pending
+#define IFLAGS_TOUCH_EVENT      0x00002000  // Touch input detected
+#define IFLAGS_GESTURE_EVENT    0x00004000  // Gesture (pinch/zoom/swipe) detected
+#define IFLAGS_CARET_EVENT      0x00008000  // Caret moved/visibility changed
+// ...
 
 
 
