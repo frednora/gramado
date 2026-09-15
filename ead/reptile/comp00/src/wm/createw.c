@@ -1668,107 +1668,48 @@ void *doCreateAndDrawWindow (
 // Internal flags
 //
 
-// #todo:
-// Receberemos isso via parametro de função.
-// Default is FALSE.
-// We need to know the parent's bg color.
+// Main components of a window
+    int Shadow     = FALSE;
+    int Background = FALSE;
+    int Border     = FALSE;
+    int TitleBar = FALSE;
 
 // Styles (see: windows.h)
+
     int Maximized=FALSE;
     int Minimized=FALSE;
     int Fullscreen=FALSE;
-    // Status bar?
-    // locked?
-    // clip in client area?
-    // ...
-    int TitleBar = FALSE;
-    // ...
+
     int Transparent = FALSE;
-    // is child?
-    //
-    int MinimizeButton = FALSE;  // Controls
-    int MaximizeButton = FALSE;
-    int CloseButton    = FALSE;
-    int Shadow        = FALSE;
-    int Background    = FALSE;
-    int Border        = FALSE;  // Usado no edit box, na overlapped.
-    int ClientArea    = FALSE;
-    int ButtonDown    = FALSE;  // ??
-    int ButtonUp      = FALSE;  // ??
-    int ButtonSysMenu = FALSE;  // system menu na barra de títulos.
-    // ...
 
-// Desktop support
-    int ParentWindowDesktopId;    //Id do desktop da parent window.
-    int WindowDesktopId;          //Id do desktop da janela a ser criada.
 
-// Controle de janela
-    struct gws_window_d *windowButton1;  // minimize
-    struct gws_window_d *windowButton2;  // maximize
-    struct gws_window_d *windowButton3;  // close
-
-// Botões na barra de rolagem.
-    struct gws_window_d *windowButton4;
-    struct gws_window_d *windowButton5;
-    struct gws_window_d *windowButton6;
-
-// Border
-// Improvisando uma largura de borda.
-// Talvez devamos receber isso via parâmetros.
-// Ou ser baseado no estilo.
-
-    //unsigned int border_size = METRICS_BORDER_SIZE;
-    //unsigned int border_color = COLOR_BORDER;
-    unsigned int __tmp_color=0;
-
-// Device context
+// Device info
     unsigned long deviceLeft = 0;
     unsigned long deviceTop = 0;
     unsigned long deviceWidth  = (__device_width  & 0xFFFF);
     unsigned long deviceHeight = (__device_height & 0xFFFF);
 
-// Position and dimension.
-// Passado via argumento.
-// left, top, width, height.
-    unsigned long WindowLeft   = (unsigned long) (x & 0xFFFF);
-    unsigned long WindowTop    = (unsigned long) (y & 0xFFFF);
+// Position and dimension. (via parameters)
+    unsigned long WindowLeft   = (unsigned long) (    x  & 0xFFFF);
+    unsigned long WindowTop    = (unsigned long) (    y  & 0xFFFF);
     unsigned long WindowWidth  = (unsigned long) (width  & 0xFFFF);
     unsigned long WindowHeight = (unsigned long) (height & 0xFFFF);
 
-// #todo: right and bottom.
+// #todo: right and bottom
 
-// Full ?
-// Position and dimension for fullscreen mode.
-// Initial configuration.
-// It will change.
-// #bugbug
-// left and top needs to be '0'?
-
-/*
-    unsigned long fullWindowX      = (unsigned long) (WindowX + border_size);
-    unsigned long fullWindowY      = (unsigned long) (WindowY + border_size);
-    unsigned long fullWindowWidth  = (unsigned long) WindowWidth;
-    unsigned long fullWindowHeight = (unsigned long) WindowHeight;
-    // #todo: right and bottom.
-*/
-
-// Fullscreen support
+// Fullscreen support: Initial configuration
     unsigned long fullWindowX      = (unsigned long) deviceLeft;
     unsigned long fullWindowY      = (unsigned long) deviceTop;
     unsigned long fullWindowWidth  = (unsigned long) deviceWidth;
     unsigned long fullWindowHeight = (unsigned long) deviceHeight;
 
-// Style
-// Button suport
 
-// #test: renaming
-    unsigned int buttonBorder_tl2_color=0;  // tl2 inner
-    unsigned int buttonBorder_tl1_color=0;  // tl1 most inner
-    unsigned int buttonBorder_br2_color=0;  // br2 inner
-    unsigned int buttonBorder_br1_color=0;  // br1 most inner
-    unsigned int buttonBorder_outer_color=0;  //Essa cor muda de acordo com o foco 
-
-    //debug_print ("doCreateAndDrawWindow:\n");
+// Button suport: Just create. Not initialized yet.
+    unsigned int buttonBorder_tl2_color=0;    // tl2 inner
+    unsigned int buttonBorder_tl1_color=0;    // tl1 most inner
+    unsigned int buttonBorder_br2_color=0;    // br2 inner
+    unsigned int buttonBorder_br1_color=0;    // br1 most inner
+    unsigned int buttonBorder_outer_color=0;  // It changes when focus change
 
 // ROP (Raster Operations)
 // 0 means that there is no ROP. 
@@ -1804,90 +1745,21 @@ void *doCreateAndDrawWindow (
         // apply rop here?
     }
 
-//---------------------------------------------------------
-
-// Salvar para depois restaurar os valores originais no fim da rotina.
-	//unsigned long saveLeft;
-	//unsigned long saveTop;
-
-// Desktop:
-// #todo: Configurar desktop antes de tudo. 
-// #todo: Quando criamos uma janela temos de definir que ela
-// pertence ao desktop atual se não for enviado por argumento 
-// o desktop que desejamos que a janela pertença.
-// O argumento onde:
-// Indica onde devemos pintar a janela. Serve para indicar as janelas 
-// principais. Ex: Se o valor do argumento for 0, indica que devemos 
-// pintar na tela screen(background) etc...
-// full screen mode ??
-// Se a janela a ser criada estiver no modo full screen, ela não deve ter
-// um frame, então as dimensões da janela serão as dimensões do retângulo
-// que forma a janela. Talvez chamado de Client Area.
-
-// Parent window.
-// Se a parent window enviada por argumento for inválida, 
-// então usaremos a janela gui->screen. ?? 
-// Talvez o certo fosse retornar com erro.
-// ?? Qual deve ser a janela mãe ? Limites ?
-// #todo: devemos checar used e magic da janela mãe.
-// #bugbug: 
-// E quando formos criar a gui->screen, quem será a janela mãe?
-
-/*
-	if ( (void *) pWindow == NULL ){
-		Parent = (void *) gui->screen;
-	} else {
-		Parent = (void *) pWindow;
-	};
- */
-
-// Devemos checar se a janela está no mesmo desktop 
-// que a ajnela mãe.
-// No caso aqui, criarmos uma janela no mesmo desktop que a janela mãe.
-// Devemos setar uma flag que indique que essa 
-// é uma janela filha, caso seja uma. Essa flag 
-// deve ser passada via argumento @todo.
-// @todo: Checar se é uma janela filha, 
-// se for uma janela filha e não tiver uma janela mãe associada a ela, 
-// não permita e encerre a função.
-
-	//if (FlagChild == 1){
-		//if(pWindow = NULL) 
-        //    return NULL;
-	//}
-
-// #todo: A atualização da contagem de janela deve ficar aqui,
-// mas me parece que está em outro lugar, ou não tem. ainda.
-// @todo: Se essa não for uma janela filha, então temos que resetar 
-// as informações sobre a janela mãe. porque não procedem.	
-// ms. e se essa é uma janela filha de uma janela mãe que pertence à
-// outra thread e não está no desktop ??
-
-// Importante: 
-// Checando se o esquema de cores está funcionando.
-
-/*
-	if ( (void *) CurrentColorScheme == NULL ){
-		panic ("CreateWindow: CurrentColorScheme");
-	}else{
-		if ( CurrentColorScheme->used != 1 || CurrentColorScheme->magic != 1234 ){
-		    panic ("CreateWindow: CurrentColorScheme validation");
-		}
-		// Nothing
-	}
- */
-
 // Allocate and initialize base window object
     window = (struct gws_window_d *) __create_window_object();
     if ((void*) window == NULL){
         return NULL;
     }
 
-// ================
-// Creating a canvas for the window
+//
+// Canvases and DCs
+//
+
     size_t size_in_kb = 2048;  // 2 MB
+    // Canvases
     struct dccanvas_d *dc00;
     struct dccanvas_d *dc01;
+    // DCs
     struct canvas_information_d *ci00;
     struct canvas_information_d *ci01;
 
@@ -1917,6 +1789,9 @@ void *doCreateAndDrawWindow (
                 exit(1);
             }
 
+            // Let's created the canvases 
+            // for the frame and for the client area
+
             // frame/chrome canvas ---------
             dc00 = (struct dccanvas_d *) comp_create_dc_and_allocate_buffer(size_in_kb);
             ci00 = (struct canvas_information_d *) compCreateNewCanvas(dc00);
@@ -1924,9 +1799,10 @@ void *doCreateAndDrawWindow (
             ci00->owner_window = window;    // link to the window
             ci00->is_frame = TRUE;          // It's a frame
             window->frame_canvas = ci00;    // window keeps a pointer to its canvas
-            // add to the list for the compositor
+
             // #important:
-            // Only the frame canvas gets injected into the global linked 
+            // Add to the list for the compositor.
+            // Only the frame canvas gets injected into the global linked. 
             comp_add_to_list(ci00);
 
             // client area canvas ---------
@@ -1936,11 +1812,13 @@ void *doCreateAndDrawWindow (
             ci01->owner_window = window;    // link to the window
             ci01->is_frame = FALSE;         // Not a frame
             window->ca_canvas = ci01;       // window keeps a pointer to its canvas
-            // add to the list for the compositor
+
             // #ps #important
             // We do not put the client canvas into the list,
             // we create a pointer into its frame canvas
             //comp_add_to_list(ci01);
+
+            // Link
             ci00->clientarea_canvas = ci01;
         }
 
@@ -1953,13 +1831,17 @@ void *doCreateAndDrawWindow (
                 goto fail;
             if (pWindow->magic != 1234)
                 goto fail;
+            // Get the window that this button belongs to
+            // #ps: The parent of our parent?
             struct gws_window_d *app_window = pWindow->parent;
             if ((void*)app_window == NULL)
                 goto fail;
             if (app_window->magic != 1234)
                 goto fail;
+            // It needs to be an application window
             if (app_window->type != WT_OVERLAPPED)
                 goto fail;
+
             // Now we can get the pointers for canvases
             ci00 = app_window->frame_canvas;
             dc00 = ci00->dc;
@@ -1969,6 +1851,17 @@ void *doCreateAndDrawWindow (
     }
 // ================
 
+//
+// Device contexts
+//
+
+    // Not initialized yet
+    window->window_dc = NULL;
+    window->client_dc = NULL;
+
+// Depth buffer?
+    window->depth_buf = NULL;
+
 // Window class
     window->window_class.ownerClass  = gws_WindowOwnerClassNull;
     window->window_class.kernelClass = gws_KernelWindowClassNull;
@@ -1977,8 +1870,15 @@ void *doCreateAndDrawWindow (
     window->window_class.procedure_is_server_side = 0;
     window->window_class.procedure = 0;
 
+// ID:
+// We will get an id later when we register the window.
+// #important: So, we can't use the id in this routine yet.
+
+    window->id = -1;
+
     window->type = (unsigned long) type;
 
+// ----------------------------------
 // Style: design-time identity.
 // Defines window type and decorations/features.
 
@@ -1991,16 +1891,18 @@ void *doCreateAndDrawWindow (
     //if (style & (WS_DESKTOPICON | WS_BARICON | WS_TRAYICON | WS_BUTTONICON))
        //window->isIcon = TRUE;
 
+// ----------------------------------
 // State: runtime condition.
 // Tracks current behavior (minimized, maximized, fullscreen, etc).
 
     window->state = (int) state;
 
+// ----------------------------------
 // Status: interaction/activation.
 // Indicates focus, active/inactive, and user engagement.
+
     window->status = (int) (status & 0xFFFFFFFF);
 
-// Gravity
     window->gravity = DefaultGravity;
 
 // Confituration for the Non-Client Area
@@ -2027,21 +1929,9 @@ void *doCreateAndDrawWindow (
         ButtonState = (int) (status & 0xFFFFFFFF);
     }
 
-// Colors:
-// Background, client-area bg, bg when mouse hover.
-    window->bg_color = 
-        (unsigned int) FrameColor;
-    window->clientarea_bg_color = 
-        (unsigned int) ClientAreaColor;
-
-// buffers
-    window->depth_buf = NULL;
-
-// Device contexts
-// #todo:
-// We can create our own device contexts.
-    window->window_dc = NULL;
-    window->client_dc = NULL;
+// The bg color for the window and for the client area
+    window->bg_color = (unsigned int) FrameColor;
+    window->clientarea_bg_color = (unsigned int) ClientAreaColor;
 
     if (window->rop_bg != ROP_COPY){
         is_solid = FALSE;
@@ -2153,24 +2043,22 @@ void *doCreateAndDrawWindow (
     register int e=0;
     static int Max=32;
 
+    for (e=0; e<Max; e++)
+    {
+        window->ev_wid[e]=0;
+        window->ev_msg[e]=0;
+        window->ev_long1[e]=0;
+        window->ev_long2[e]=0;
+        window->ev_long3[e]=0;
+        window->ev_long4[e]=0;
+    };
     window->ev_head=0;
     window->ev_tail=0;
-    for (e=0; e<Max; e++){
-    window->ev_wid[e]=0;
-    window->ev_msg[e]=0;
-    window->ev_long1[e]=0;
-    window->ev_long2[e]=0;
-    window->ev_long3[e]=0;
-    window->ev_long4[e]=0;
-    };
 
-// Lock or unlock the window
+// Can't lock. We need permitions to do our work.
 
-    // window->locked = FALSE;
-
-// Can't lock,
-// We need permitions to do our work.
     //window->locked = FALSE;
+
     window->enabled = TRUE;
 
 // ===================================
@@ -2199,20 +2087,12 @@ void *doCreateAndDrawWindow (
 // The pointer is inside this window.
     window->is_mouse_hover = FALSE;
 
-// #test
-// #todo
+// Mouse:
 // The properties for the mouse pointer.
 // Valid only for this window.
 // See: window.h
     window->mpp.test_value = 1000;
-    window->mpp.bg_color = 
-        (unsigned int) (COLOR_BEIGE + rand());
-
-// == wid =================================
-// We will get an id when we register the window.
-// #bugbug: So, we can't use the id in this routine yet.
-
-    window->id = -1;
+    window->mpp.bg_color = (unsigned int) (COLOR_BEIGE + rand());
 
 // ===================================
 // Title: Just a pointer.
@@ -2516,70 +2396,19 @@ void *doCreateAndDrawWindow (
 
 // ==================================================
 
-//
-// Draw inside the canvas (provisory)
-//
-
-// #test
-// This is provosity. Here is not the right place to draw the frame 
-// and offcourse draw inside the client area.
-
-    // #ps: This is not the right moment to draw stuff
+    // #test (Provisory)
+    // Draw inside the canvas (provisory)
+    // #deprecated
     if (Compositor.is_composition_disabled == FALSE)
     {
         if (style & WS_APP)
         {
-            /*
-            // Draw a string into the frame canvas
-            dc_draw_horizontal_line( 
-                dc00, 
-                0,  // x1 
-                0,  // y
-                window->width,  // x2
-                COLOR_YELLOW, 
-                0 
-            );
-            */
-            /*
-            // Draw line into the ca canvas.
-            dc_draw_horizontal_line( 
-                dc01, 
-                1, //window->rcClient.left,  //0,  // x1 
-                1, //window->rcClient.top,   //  0,  // y
-                100, //window->rcClient.window,  //window->width,  // x2
-                COLOR_WHITE, 
-                0 
-            );
-            */
-
-            /*
-            // Draw string into de frame canvas
-            dc_drawstring ( 
-                dc00, 1, 1, COLOR_WHITE, COLOR_BLUE,
-                ROP_COPY, window->name );
-            */
-
-            /*
-            // Draw string into de client area canvas
-            dc_drawstring ( 
-                dc01, 2, 2, COLOR_WHITE, COLOR_BLUE,
-                ROP_COPY, "Client area" );
-            */
-
-            // #test OK
-            // Drawing a rectangle inside the client area canvas
-            //dc_draw_rectangle0 (
-            //    dc01,
-            //    4, 4, 4, 4,   // l,t,w,h
-            //    COLOR_RED,
-            //    0  //rop 
-            //);
-
             // Invalidate
             ci00->dirty = TRUE;
             ci01->dirty = TRUE;
         }
     }
+
 
 // ==================================================
 
@@ -2778,9 +2607,9 @@ void *doCreateAndDrawWindow (
             WindowManager.taskbar_window = window;
 
             // ---- Update Working Area --------------------------------
+            // #bugbug: Valid only for taskbars at bottom fo the screen.
             if (WindowManager.initialized == TRUE)
             {
-                // #bugbug: Valid only for taskbars at bottom fo the screen.
                 WindowManager.wa.left   = 0;
                 WindowManager.wa.top    = 0;
                 WindowManager.wa.width  = deviceWidth;
@@ -2788,12 +2617,9 @@ void *doCreateAndDrawWindow (
 
                 //printf ("window: l=%d t=%d w=%d h=%d\n",
                     //window->left, window->top, window->width, window->height );
-
                 //printf ("device: w=%d h=%d\n", deviceWidth, deviceHeight );
-
                 //printf ("taskbar: w=%d h=%d\n",
                     //WindowManager.wa.width, WindowManager.wa.height );
-
                 //while(1){}
             }
         }
@@ -2804,7 +2630,7 @@ void *doCreateAndDrawWindow (
             Shadow = FALSE;
         }
         Background = TRUE;
-        window->shadowUsed     = TRUE;
+        window->shadowUsed = TRUE;
         window->backgroundUsed = TRUE;
         window->background_style = 0;
         break;
@@ -2822,8 +2648,8 @@ void *doCreateAndDrawWindow (
         window->background_style = 0;
         break;
 
+    // Nothing for now
     //case WT_SCROLLBAR:
-        // Nothing for now.
         //break;
 
     // Only the bg for now.
@@ -2848,7 +2674,7 @@ void *doCreateAndDrawWindow (
         window->background_style = 0;
         break;
 
-    // Ícone na área de trabalho.
+    // Icons into the working area?
     // #todo: Icons has borders sometimes.
     // #todo: Icon window has an icon in it.
     case WT_ICON:
@@ -2859,21 +2685,14 @@ void *doCreateAndDrawWindow (
         window->background_style = 0;
         break;
 
-    // barra de rolagem
-    // botões de radio 
+    // Scrollbars?
+    // Radio buttons?
     // ...
 
-    // #todo
-    // #bugbug
-    // We need to work on this case.
-
+    // Unknown failure (provisory)
     default:
-        debug_print("doCreateAndDrawWindow: [DEBUG] default\n");
-             printf("doCreateAndDrawWindow: [DEBUG] default\n");
-
-        exit(1);
-        //return NULL;
-
+        printf("doCreateAndDrawWindow: default\n");
+        return NULL;
         break;
     };
 
@@ -2884,131 +2703,30 @@ void *doCreateAndDrawWindow (
 // == Draw ========
 //
 
-// Hora de pintar. 
-// Os elementos serão incluídos se foram 
-// selecionados anteriormente.
-// Obs: 
-// Se for uma janela, pintaremos apenas a janela.
-// Se for um frame, pintaremos todos os elementos
-// presentes nesse frame de acordo com as flags.
-// Obs:
-// A janela precisa ser pintada em seu buffer dedicado.
-// Nesse momento o buffer dedicado da janela já está na estutura
-// da janela. Rotinas de pintura que tenham acesso à estrutura da
-// janela devem utilizar o buffer dedicado que for indicado na estrutura.
-// Para que seja possível pintar uma janela em seu buffer dedicado,
-// devemos passar um ponteiro para a estrutura da janela em todas
-// as rotinas de pintura chamadas daqui pra baixo.
-// #todo: 
-// Passar estrutura de janela via argumento, para a rotina
-// de pintura ter acesso ao buffer dedicado.
+// It's time fo draw the window.
+// The window component is drawn only if it was selected previously.
 
-    //if(DedicatedBuffer == 1){};
-
-// Se o view for igual NULL talvez signifique não pintar.
-// The window state: minimized, maximized.
+// #bugbug: We need to investigate this condition
     if (window->state == WINDOW_STATE_NULL)
-    {
-        //#bugbug: fail.
-        //window->show_when_creating = FALSE;
-        //window->redraw = 0;
-        //return (void*) window;
-    }
+    {}
 
-// Minimized ? (Hide ?)
-// Se tiver minimizada, não precisa mostrar a janela, porém
-// é necessário pintar a janela no buffer dedicado, se essa técnica 
-// estiver disponível.
-// Talvez antes de retornarmos nesse caso seja necessário configurar 
-// mais elementos da estrutura.
-// #bugbug
-// se estamos contruindo a janela, então ela não foi registrada 
-// não podemos checar as coisas na estrutura ainda,
-// mas a estrutura ja existe a algumas coisas foram inicializadas.
-// #importante
-// Pois retornaremos no caso de janelas minimizadas.
-// Provavelmente isso foi usado quando criamos janelas 
-// de referência na inicialização da GUI.(root)
-
-/*
-    Minimized = 0;
-    Minimized = (int) is_window_minimized (window);
+// #bugbug: We need to investigate this condition
     if (Minimized == 1)
-    {
-        //window->draw = 1; //Devemos pintála no buffer dedicado.
-        window->show_when_creating = FALSE;
-        window->redraw = 0;
-        //...
-        //@todo: Não retornar. 
-        //como teste estamos retornando.
-        goto done;
-        //return (void *) window;
-    }
- */
+    {}
 
-// #todo: 
-// Maximized ?
-// Para maximizar devemos considerar as dimensões 
-// da área de cliente da janela mãe.
-// Se a jenela estiver maximizada, então deve ter o tamanho da área de 
-// cliente da janela main.
-// Essa área de cliente poderá ser a área de trabalho, caso a
-// janela mãe seja a janela principal.
-// Obs: se estiver maximizada, devemos usar as dimensão e coordenadas 
-// da janela gui->main.
-// #bugbug
-// Temos um problema com essa limitação.
-// Não conseguimos pintar janelas simples além do height da janela gui->main
-// para janelas overlapped funciona.
-
-/*
-    Maximized = 0;
-    Maximized = (int) is_window_maximized (window);
-
-    // #todo
+// #bugbug: We need to investigate this condition
     if (Maximized == 1)
-    {
-        //#debug
-        printf("file: createw.c: #debug\n");
-        printf ("original: l=%d t=%d w=%d h=%d \n", 
-            window->left, gui->main->top, 
-            window->width, window->height );
+    {}
 
-        //Margens da janela gui->main
-        window->left = gui->main->left;    
-        window->top  = gui->main->top;
 
-        //Dimensões da janela gui->main.
-        window->width  = gui->main->width;
-        window->height = gui->main->height; 
-        
-        window->absolute_right = (unsigned long) window->left + window->width;
-        window->absolute_bottom = (unsigned long) window->top  + window->height;       
-
-        // ??
-        // Deslocamentos em relação às margens.
-        // Os deslocamentos servem para inserir elementos na janela, 
-        // como barras, botões e textos.
-        window->x = 0;
-        window->y = 0;
-
-        //#debug
-        printf ("corrigido: l=%d t=%d w=%d h=%d \n", 
-            window->left, gui->main->top, 
-            window->width, window->height );
-
-        //#debug
-        while (1){}
-    }
-*/
 
 // =================================
+// 1:
 // ## Shadow ## (Shadow for the frame)
 // A sombra pertence à janela e ao frame.
 // A sombra é maior que a própria janela.
 // Se estivermos em full screen não tem sombra?
 // ========
-// 1
 
     // #todo: Use color scheme
     if (Shadow == TRUE)
@@ -3019,6 +2737,7 @@ void *doCreateAndDrawWindow (
     }
 
 // ===============================================
+// 2:
 // ## Background ## (Background for the frame)
 // Background para todo o espaço ocupado pela janela e pelo seu frame.
 // O posicionamento do background depende do tipo de janela.
@@ -3026,7 +2745,6 @@ void *doCreateAndDrawWindow (
 // à sua janela mãe. Já uma overlapped pode ser relativo a janela 
 // gui->main ou relativo à janela mãe.
 // ========
-// 2
 
     if (Background == TRUE)
     {
@@ -3393,7 +3111,6 @@ fail:
     debug_print ("doCreateAndDrawWindow: Fail\n");
     return NULL;
 }
-
 
 // CreateWindow:
 // This is the main function for creating windows.
