@@ -1014,20 +1014,22 @@ struct gws_window_d
 
 // #todo
 // Event queue.
-     //struct gws_event_d *event_queue;
+    //struct gws_event_d *event_queue;
 
-// Um alerta de que exite uma mensagem para essa janela.
-    int msgAlert;  //#todo: int ev_alert;
+// #test:
+// This alert tell us that there is a message for this window
+// #maybe: int ev_alert;
+    int msgAlert;
 
 // #todo:
 // Address for the server-side window procedure.
-// A flag can indicate if the procedure is server-side 
-// or client-side. 
-// (#ps: For client-side we need callback or some type of LPC)
-// Maybe we can use a pointer here or even a virtual function.
+// The flag indicates if its a client-side procedure or not.
+// #ps: 
+// For client-side we need callback or some type of LPC.
+// Probably its a very slow/risky operation.
 
-    unsigned long procedure;
-    // void *fn_procedure;
+    unsigned long procedure_va;
+    int is_client_procedure;
 
 // =========================================================
 // Window Class support.

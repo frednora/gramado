@@ -26,12 +26,20 @@
 #define HIT_CLIENT     2   // Client area
 #define HIT_DESKTOP    3   // Not inside a window
 
+// #bugbug
+// The values we have here normally are not sync with
+// the values inside the compositor in ring 3.
+// #todo: 
+// We need to figure out how to deal with this situation.
+// It affects the hit testing.
+// When is it acceptable? When it isn't?
+
 struct wproxy_d 
 {
     int used;
     int magic;
 
-// This is the thread id of the thread that owns the window.
+// This is the thread id for the thread that owns the window.
 // This is the target thread for sending messages when the 
 // hit-test is successful.
     tid_t tid;
@@ -74,7 +82,13 @@ struct wproxy_d
     char *data;
 
 // The size of the data buffer.
-    int data_size; 
+    int data_size;
+
+// The address for the wproxy procedure and 
+// if it is a ring 3 procedure or not.
+// For the ring 3 procedure it is inside the client, not the server.
+    unsigned long procedure_va;
+    int is_ring3_procedure;
 
 // Navigation
     struct wproxy_d *next;
