@@ -45,7 +45,6 @@
 #define __TTY_PTY_H  1
 
 
-
 // Exporting
 extern struct tty_d *legacy_pty_master;
 extern struct tty_d *legacy_pty_slave;

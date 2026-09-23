@@ -2,7 +2,6 @@
 // Kernsl-side support for TTYs.
 // Created by Fred Nora.
 
-
 #ifndef __TTY_TTY_H
 #define __TTY_TTY_H  1
 
@@ -12,6 +11,7 @@
 #define TTYCHARS_COUNT_MAX  25    //80 
 #define TTYLINES_COUNT_MAX  25    //25 
 
+// driver types
 //TTY_DRIVER_TYPE_SYSTEM
 //TTY_DRIVER_TYPE_CONSOLE
 //TTY_DRIVER_TYPE_SERIAL
@@ -19,9 +19,9 @@
 
 // type
 #define TTY_TYPE_UNDEFINED  0
-#define TTY_TYPE_CONSOLE    1000  //(Kernel Console)
-#define TTY_TYPE_PTY        2000  //(Virtual terminal)
-#define TTY_TYPE_SERIAL     3000 
+#define TTY_TYPE_CONSOLE    1000  // Kernel console
+#define TTY_TYPE_PTY        2000  // Virtual terminal
+#define TTY_TYPE_SERIAL     3000  // Serial port
 // ...
 
 // subtype

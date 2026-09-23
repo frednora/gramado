@@ -4244,9 +4244,6 @@ wmMouseEvent(
 
             //if (event_id == MSG_MOUSERELEASED)
             //{
-                // #test: Create a window and draw it into the front buffer.
-                // wproxy_test0(mouse_x, mouse_y);
-                // wproxy_test2(mouse_x, mouse_y);
 
                 /*
                 // #test: Send mouse button events to the foreground thread.

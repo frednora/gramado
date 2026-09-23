@@ -107,7 +107,6 @@ void wproxy_hit_test00(unsigned long x, unsigned long y);
 
 struct wproxy_d *wproxyCreateObject(void);
 
-
 int wproxy_set_shell(tid_t tid);
 
 struct wproxy_d *wproxy_create0(
@@ -128,7 +127,11 @@ int wproxy_drawframe(struct wproxy_d *wproxy, int back_or_front);
 int wproxy_redrawframe(struct wproxy_d *wproxy, int back_or_front);
 
 // Is it inside the frame?
-int wproxy_is_inside_frame(struct wproxy_d *wproxy, unsigned long x, unsigned long y);
+int 
+wproxy_is_inside_frame(
+    struct wproxy_d *wproxy, 
+    unsigned long x, 
+    unsigned long y );
 
 // Is it inside the client area?
 int 
@@ -136,9 +139,6 @@ wproxy_is_inside_client_area(
     struct wproxy_d *wproxy, 
     unsigned long x, 
     unsigned long y );
-
-void wproxy_test0(unsigned long x, unsigned long y);
-void wproxy_test2(unsigned long x, unsigned long y);
 
 // Update the values for wproxy given the owner's tid.
 void 

@@ -480,58 +480,6 @@ fail:
     return FALSE;
 }
 
-void wproxy_test0(unsigned long x, unsigned long y)
-{
-    struct wproxy_d *wproxy;
-    tid_t TargetTID = 0;
-
-    wproxy = 
-    (struct wproxy_d *) wproxy_create0(
-        TargetTID, x, y, 40, 40, COLOR_PINK );
-
-    if ((void *) wproxy == NULL)
-        return;
-
-    // Draw it in the front buffer
-    wproxy_drawframe(wproxy, 2);
-}
-
-// #test
-// Lets use the information in the fg thread structure
-// to draw a rectangle.
-void wproxy_test2(unsigned long x, unsigned long y)
-{
-    struct thread_d *t;
-
-    if (foreground_thread < 0)
-        return;
-    if (foreground_thread >= THREAD_COUNT_MAX)
-        return;
-    t = (struct thread_d *) threadList[foreground_thread];
-    if ((void *) t == NULL)
-        return;
-    if (t->used != TRUE || t->magic != 1234)
-        return;
-
-// Get the wproxy that belongs to the cureground thread
-    struct wproxy_d *wproxy;
-    wproxy = (struct wproxy_d *) t->wproxy;
-    if ((void *) wproxy == NULL)
-        return;
-    if (wproxy->used != TRUE || wproxy->magic != 1234)
-        return;
-
-// Change the color
-    // wproxy->color = COLOR_WHITE;
-
-// Change the position
-    wproxy->l = x;
-    wproxy->t = y;
-
-    // draw it in the front buffer
-    wproxy_drawframe(wproxy, 2);
-}
-
 // Update the values for wproxy given the owner's tid.
 void 
 wproxy_set_parameters_given_tid(

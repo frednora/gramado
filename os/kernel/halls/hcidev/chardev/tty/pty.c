@@ -78,7 +78,6 @@ the vt will display the data
 #include <kernel.h>
 
 
-
 struct tty_d *legacy_pty_master;
 struct tty_d *legacy_pty_slave;
 
@@ -93,7 +92,6 @@ struct tty_d *get_legacy_pty_slave(void)
     return (struct tty_d *) legacy_pty_slave;
 }
 
-
 //
 // INITIALIZE LEGACY PTYs.
 //
@@ -103,17 +101,16 @@ int tty_initialize_legacy_pty(void)
 {
 
 // #bugbug
-// We can not call this too easly in the kernel initialization.
+// We can not call this too early in the kernel initialization
 
     struct tty_d *pty_master;
     struct tty_d *pty_slave;
+    const char *tty_master_name = "PTYM";
+    const char *tty_slave_name  = "PTYS";
 
 //
 // Create
 //
-
-    const char *tty_master_name = "PTYM";
-    const char *tty_slave_name  = "PTYS";
 
 // Master
     pty_master = 
