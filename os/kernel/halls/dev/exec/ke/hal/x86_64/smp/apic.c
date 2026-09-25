@@ -2,7 +2,8 @@
  * File: apic.c
  * Document created by Fred Nora - (2023)
  * Credits:
- * Some parts was ported from Sirius-x86-64, created by Nelson Cole.
+ * + Some parts was ported from Sirius-x86-64, created by Nelson Cole.
+ * + Some code here was found in https://wiki.osdev.org/APIC tutorials.
  *
  *    APIC - Advanced Programmable Interrupt Controller.
  *    Controlador APIC.
@@ -59,7 +60,9 @@
 
 #include <kernel.h>
 
-// Initialization control
+// LAPIC INFO:
+// Global array of strutures for lapic information.
+// (Initialization control)
 struct lapic_info_d lapic_info[NR_CPUS];
 
 
@@ -339,10 +342,6 @@ inline void invalidate_cache_flush(void)
 //
 // ======================================================
 //
-
-// #todo
-// Testando um código encontrado em https://wiki.osdev.org/APIC.
-// setting up the APIC:
  
 /* 
  * has_apic:

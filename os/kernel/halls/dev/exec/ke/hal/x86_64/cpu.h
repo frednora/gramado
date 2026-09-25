@@ -63,7 +63,7 @@ struct processor_d
 
     unsigned char Type;
 
-	//@todo: ULONG MHz;
+	//#todo: ULONG MHz;
 
 // 0x0.
 // cpuid vars.
@@ -184,25 +184,22 @@ struct processor_d
 // Threads
 //
 
-// The idle thread for this processor.
     struct thread_d *IdleThread;
-// The current thread running in this processor.
-    struct thread_d *CurrentThread;
-// The next thread to run in this processor.
-    struct thread_d *NextThread;
-    //...
-// Number of total threads in this processor.
+    struct thread_d *CurrentThread;  // Running at this moment
+    struct thread_d *NextThread;     // Next thread to run
+    // ...
+
+// Total number of threads in this processor
     unsigned long threads_counter;
 
-    //...
+    // ...
 
-// Navigation.
-    struct processor_d  *next;
+    struct processor_d  *next;  // Navigation
 };
 extern struct processor_d  *processor;
 
-// List of processors.
-//unsigned long processorsList[PROCESSORS_MAX_COUNT];
+// List of processors
+// unsigned long processorList[PROCESSORS_MAX_COUNT];
 
 
 /*
@@ -233,15 +230,14 @@ struct UPProcessorBlock_d
 // Threads
 //
 
-// The idle thread for this processor
     struct thread_d *IdleThread;
-// The current thread running in this processor
-    struct thread_d *CurrentThread;
-// The next thread to run in this processor
-    struct thread_d *NextThread;
-    //...
-// Number of total threads in this processor
+    struct thread_d *CurrentThread;  // Running at this moment
+    struct thread_d *NextThread;     // Next thread to run
+    // ...
+
+// Total number of threads in this processor
     unsigned long threads_counter;
+
 
 // No navigation links in this case
 };
@@ -258,6 +254,4 @@ void cpuGetMSR(unsigned int msr, unsigned int *lo, unsigned int *hi);
 void cpuSetMSR(unsigned int msr, unsigned int lo, unsigned int hi);
 
 #endif    
-
-
 

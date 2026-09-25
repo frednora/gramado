@@ -1,9 +1,10 @@
-//  cpu.c
+// cpu.c
+// CPU support.
+// It manages the information about the CPU as a device.
+// Good when an user want to know something about the CPU.
 // Created by Fred Nora.
 
-
 #include <kernel.h>
-
 
 // ====================================
 // MSR

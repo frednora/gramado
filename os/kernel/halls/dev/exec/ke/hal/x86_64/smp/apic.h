@@ -1,18 +1,13 @@
-/*
- * File: apic.h
- * Descrição:
- *     Header para o driver do controlador APIC.
- *     Advanced Programmable Interrupt Controller
- *     Exemplo:
- *     82489DX.
- *     82093AA for PIIX3-based systems.
- * Variantes:
- *    xAPIC, x2APIC.
- * 2015 - Created by Fred Nora.
- */
+// apic.h
+// Advanced Programmable Interrupt Controller (APIC)
+// + 82489DX
+// + 82093AA for PIIX3-based systems
+// Variants: xAPIC, x2APIC.
+// 2015 - Created by Fred Nora.
 
 // See:
-// https://opensource.apple.com/source/xnu/xnu-2050.24.15/osfmk/i386/lapic.h.auto.html
+// https://opensource.apple.com
+// /source/xnu/xnu-2050.24.15/osfmk/i386/lapic.h.auto.html
 
 // APICs (both local and I/O) are memory mapped devices. 
 // The default location for the local APIC 
@@ -24,7 +19,7 @@
 #define APIC_NULL  0
 
 /*
-    LAPIC registers. 
+LAPIC registers:
 Software interacts with the local APIC by reading and writing its registers.
 APIC registers are memory-mapped to a 4-KByte region of the 
 processor’s physical address space with an initial 
