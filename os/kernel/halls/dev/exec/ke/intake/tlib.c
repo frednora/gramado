@@ -88,14 +88,13 @@ void show_slots(void)
     for ( i=0; i<THREAD_COUNT_MAX; i++ )
     {
         t = (void *) threadList[i];
-        if ( (void *) t != NULL && 
-             t->used == TRUE )
+        if ( (void *) t != NULL && t->used == TRUE )
         {
             show_slot(t->tid);
         }
     };
 
-    refresh_screen();
+    // refresh_screen();
 }
 
 /*
@@ -173,7 +172,7 @@ void show_thread_information(void)
     show_slots(); 
 
     printk("Done\n");
-    refresh_screen();
+    // refresh_screen();
 }
 
 // Link two threads.

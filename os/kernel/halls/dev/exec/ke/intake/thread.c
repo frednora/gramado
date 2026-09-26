@@ -662,8 +662,6 @@ void thread_show_profiler_info (void)
             }
         }
     };
-
-    //refresh_screen();
 }
 
 unsigned long thread_get_profiler_percentage(struct thread_d *thread)
@@ -1426,9 +1424,9 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // setup all the machine independent elements.
 // The second one will setup all the machine dependent elements.
 
-// Worker
 // Main worker for thread creation
 // #ps: The init_rip depends on the thread's type.
+
 struct thread_d *create_thread ( 
     thread_type_t thread_type,
     struct cgroup_d  *cg,
@@ -1449,7 +1447,7 @@ struct thread_d *create_thread (
     int i = (int) USER_THRESHOLD_TID;
     struct rect_d *r;
 
-// #debug
+    // #debug
     debug_print ("create_thread:\n");
     //printk ("create_thread:\n");
 
@@ -1480,34 +1478,38 @@ struct thread_d *create_thread (
 
 // PID
     if (pid < 0){
-        panic ("create_thread: [ERROR] pid\n");
+        printk("create_thread: pid\n");
+        return NULL;
     }
-
 // name
     if ((void*) name == NULL){
-        panic ("create_thread: [ERROR] name\n");
+        printk("create_thread: name\n");
+        return NULL;
     }
     if ( *name == 0 ){
-        panic ("create_thread: [ERROR] *name\n");
+        printk("create_thread: *name\n");
+        return NULL;
     }
 // cpl
     if ( cpl != RING0 && cpl != RING3 ){
-        panic ("create_thread: [ERROR] Invalid cpl\n");
+        printk("create_thread: Invalid cpl\n");
+        return NULL;
     }
 
 //======================================
-// Limits da thread atual.
-// #bugbug: 
-// Não sei pra que isso. 
-// Pois a thread atual não importa.
-// @todo: deletar isso. 
+// #bugbug:
+// Checking the current thread for the current core.
+// Actually this is irrelevant.
 
+/*
+// #suspended:
     if ( lapic_info[0].current_tid < 0 || 
          lapic_info[0].current_tid >= THREAD_COUNT_MAX )
     {
         printk ("create_thread: current_tid\n");
         goto fail;
     }
+*/
 
 //
 // Process
@@ -1517,18 +1519,22 @@ struct thread_d *create_thread (
     ProcessID = (pid_t) pid;
     if ( ProcessID < 0 || ProcessID >= PROCESS_COUNT_MAX )
     {
-        panic("create_thread: ProcessID");
+        printk("create_thread: ProcessID");
+        return NULL;
     }
     // Structure
     Process = (void *) teList[ProcessID]; 
     if ((void *) Process == NULL){
-        panic ("create_thread: Process\n");
+        printk("create_thread: Process\n");
+        return NULL;
     }
     if (Process->used != TRUE){
-        panic ("create_thread: Process->used\n");
+        printk("create_thread: Process->used\n");
+        return NULL;
     }
     if (Process->magic != 1234){
-        panic ("create_thread: Process->magic\n");
+        printk("create_thread: Process->magic\n");
+        return NULL;
     }
 
 //
@@ -1553,11 +1559,14 @@ struct thread_d *create_thread (
     Thread->affinity_processor[2] = -1;  // Not initialized
     Thread->affinity_processor[3] = -1;  // Not initialized
 
-// #todo
-// Is it a valid type?
-    Thread->type = thread_type;
+// Validate type
+    if (thread_type == THREAD_TYPE_SYSTEM){
+        Thread->type = THREAD_TYPE_SYSTEM;
+    } else {
+        Thread->type = THREAD_TYPE_NORMAL;
+    };
 
-// The thread was create, but the structure is not 
+// The thread is been created, but the structure is not 
 // fully initialized yet.
     Thread->state = THREAD_STATE_CREATED;
 
@@ -1574,10 +1583,10 @@ struct thread_d *create_thread (
 
 try_next_slot:
 
-    // 3 tentativas.
+    // Try 3 times
     if (Cycle >= 3){
-        panic ("create_thread: [FAIL] No more slots\n");
-        //return NULL;
+        printk("create_thread: No more slots\n");
+        return NULL;
     }
 
 // Get empty thread structure pointer.
@@ -1602,21 +1611,21 @@ try_next_slot:
 // ======================================
 // THREAD IDENTIFIERS
 
-// Index: Now we have an index number.
+// Index: Now we have an index number
     Thread->tid = (tid_t) i;
 // ======================================
 
 // Belongs to this thread environment (process)
-    Thread->te = (void *) Process;    // thread environment structure.
+    Thread->te = (void *) Process;      // thread environment structure
     Thread->tgid = (tgid_t) ProcessID;  // PID
 
-
 // =====================================
-// #test: 
 // wproxy support
-    // t->wproxy = NULL;
-    //t->wproxy = (struct wproxy_d *) wproxyCreateObject();
+// #bugbug: 
+// Maybe its not necessary for all the threads,
+// or maybe we can pass the parameters type and state.
 
+    // Thread->wproxy = (struct wproxy_d *) wproxyCreateObject();
     Thread->wproxy = 
         (struct wproxy_d *) wproxy_create0( 
             Thread->tid, 0, 0, 100, 100, COLOR_BLUE );
@@ -1626,15 +1635,10 @@ try_next_slot:
 
 // Thread name
 // #test 64 bytes max.
+
     Thread->name_address = (unsigned long) name;
     strcpy( Thread->__threadname, (const char *) name );
 
-// Validate type
-    if (thread_type == THREAD_TYPE_SYSTEM){
-        Thread->type = THREAD_TYPE_SYSTEM;
-    } else {
-        Thread->type = THREAD_TYPE_NORMAL;
-    };
 
 //
 // Priority
@@ -1678,8 +1682,8 @@ try_next_slot:
     Thread->pd0_VA   = (unsigned long ) Process->pd0_VA; 
     Thread->pd0_PA   = (unsigned long ) Process->pd0_PA; 
 
-// Page fault information.
-    Thread->PF.in_pf = FALSE;  // Not in a pf routine.
+// Page fault information
+    Thread->PF.in_pf = FALSE;  // Not in a pf routine
     Thread->PF.pf_counter = 0;
 
 //
@@ -1694,7 +1698,7 @@ try_next_slot:
     Thread->plane = FOREGROUND_THREAD;
 
 // ==============
-// Surface rectangle.
+// Surface rectangle
 
     r = (struct rect_d *) kmalloc(sizeof(struct rect_d));
     if ((void*) r == NULL){
@@ -1763,7 +1767,7 @@ try_next_slot:
     Thread->has_pending_event = FALSE;
     Thread->wait_reason = WAIT_REASON_NULL;
 
-// How many times it was scheduled.
+// How many times it was scheduled
     Thread->scheduledCount=0;
 
 // Not used now. But it works fine.
@@ -1818,7 +1822,8 @@ try_next_slot:
         );
     }
 
-//cpu.
+// cpu
+
     //Thread->cpuID = 0;
     //Thread->confined = 0;
     //Thread->CurrentProcessor = 0;
@@ -1854,7 +1859,6 @@ try_next_slot:
     threadList[ Thread->tid ] = (unsigned long) Thread;
     Thread->used = TRUE;
     Thread->magic = THREAD_MAGIC;
-    Thread->state = INITIALIZED;  // << New state
 // ===================================================
 
 //
@@ -1876,21 +1880,14 @@ try_next_slot:
         panic ("create_thread: [FAIL] UPProcessorBlock.threads_counter \n");
     }
 
-//done:
+    Thread->state = INITIALIZED;  // << New state
 
     // #debug
-    //debug_print ("create_thread: Done\n");
-    //printk ("create_thread: Done\n");
+    // debug_print ("create_thread: Done\n");
+    // printk ("create_thread: Done\n");
 
-// Warning !!! 
-// ( NÃO COLOCAR PARA EXECUÇÃO, 
-// OUTRA FUNÇÃO DEVE COLOCAR ISSO PARA EXECUÇÃO )
+    return (void *) Thread;  // Return the pointer
 
-// MOVEMENT 1 (Initialized ---> Standby)
-    //SelectForExecution(t);
-
-// Return the pointer.
-    return (void *) Thread;
 fail:
     return NULL;
 }

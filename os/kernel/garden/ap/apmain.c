@@ -5,81 +5,18 @@
 #include <kernel.h>
 
 
-static void __ap_animation_experiment(void);
-static void __ap_DPC_experiment(int lapic_id);
-static void AP_kmain2(void);
+static void __ap_DPC_loop(int lapic_id);
+static void __ap_ANIMATION_loop(void);
+static void __ap_kmain_imp(void);
 
 // ========================================
-
-
-static void __ap_animation_experiment(void)
-{
-    int i=0;
-
-//
-// Animation
-//
-
-    // #test
-    // Drawing rectangles
-    unsigned int Color = COLOR_BLACK;
-    int Counter = 0;
-
-    while (1){
-
-        //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
-
-        Counter++;
-        Color = COLOR_YELLOW;
-        if (Counter % 2 == 0)
-            Color = COLOR_RED;
-
-        for (i=0; i<100; i++){
-            frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
-        };
-
-        //wproxy_ap_test();
-
-        // #test
-        // Delay
-        // With this delay we can have performance enough 
-        // in both cores to make tests.
-        // #todo: Do not change it for now.
-        asm ("xorl %%eax, %%eax" ::);
-        asm ("pause \n");
-        asm ("outb %%al, $0x80"  ::);
-
-
-        // Syscall
-        // It needs only to be called from ring 3 actually
-        // #test: The handler was called.
-        // #bugbug:
-        // We can't do that because the AP still do not a 
-        // TSS or a ring 0 stack.
-
-        //if (system_state == SYSTEM_RUNNING)
-            //asm ("int $0x80 \n");
-
-        // spurious
-        // #bugbug
-        // It's not working. The system crashes.
-        // Probably still because the lack of tss and ring 0 stack.
-        //if (system_state == SYSTEM_RUNNING)
-            //asm ("int $0xFF \n");
-
-        // #bugbug
-        // Testing the handlers for taskswitching
-        // if (system_state == SYSTEM_RUNNING)
-            //asm ("int $32 \n");
-    };
-}
 
 
 // #test:
 // The AP is operating as a DPC dispatcher.
 // It reads a message from the BSP's structure.
 
-static void __ap_DPC_experiment(int lapic_id)
+static void __ap_DPC_loop(int lapic_id)
 {
     static int BSP_ID = 0;
     int i=0;
@@ -87,13 +24,13 @@ static void __ap_DPC_experiment(int lapic_id)
 // Parameter:
     if (lapic_id < 0 || lapic_id >= NR_CPUS)
     {
-        panic("__ap_DPC_experiment: lapic_id\n");
+        panic("__ap_DPC_loop: lapic_id\n");
     }
 
     // #todo
     // Probably the BSP can't use this routine.
     //if (lapic_id == BSP_ID){
-        //panic("__ap_DPC_experiment: core is BSP\n");
+        //panic("__ap_DPC_loop: core is BSP\n");
     //}
 
 
@@ -260,6 +197,68 @@ static void __ap_DPC_experiment(int lapic_id)
 }
 
 
+static void __ap_ANIMATION_loop(void)
+{
+    int i=0;
+
+//
+// Animation
+//
+
+    // #test
+    // Drawing rectangles
+    unsigned int Color = COLOR_BLACK;
+    int Counter = 0;
+
+    while (1){
+
+        //while (apic_SPINLOCK == TRUE){ asm ("pause \n"); };
+
+        Counter++;
+        Color = COLOR_YELLOW;
+        if (Counter % 2 == 0)
+            Color = COLOR_RED;
+
+        for (i=0; i<100; i++){
+            frontbuffer_draw_rectangle( 0, i, 4, 4, Color, 0 );
+        };
+
+        //wproxy_ap_test();
+
+        // #test
+        // Delay
+        // With this delay we can have performance enough 
+        // in both cores to make tests.
+        // #todo: Do not change it for now.
+        asm ("xorl %%eax, %%eax" ::);
+        asm ("pause \n");
+        asm ("outb %%al, $0x80"  ::);
+
+
+        // Syscall
+        // It needs only to be called from ring 3 actually
+        // #test: The handler was called.
+        // #bugbug:
+        // We can't do that because the AP still do not a 
+        // TSS or a ring 0 stack.
+
+        //if (system_state == SYSTEM_RUNNING)
+            //asm ("int $0x80 \n");
+
+        // spurious
+        // #bugbug
+        // It's not working. The system crashes.
+        // Probably still because the lack of tss and ring 0 stack.
+        //if (system_state == SYSTEM_RUNNING)
+            //asm ("int $0xFF \n");
+
+        // #bugbug
+        // Testing the handlers for taskswitching
+        // if (system_state == SYSTEM_RUNNING)
+            //asm ("int $32 \n");
+    };
+}
+
 //
 // $
 // AP INITIALIZATION
@@ -270,7 +269,7 @@ static void __ap_DPC_experiment(int lapic_id)
 // One IDT per-core (in x86-64 SMP)
 // #ps: We have support for GDT in C.
 
-static void AP_kmain2(void)
+static void __ap_kmain_imp(void)
 {
     int i=0;
     int lapic_id = -1;
@@ -323,20 +322,62 @@ static void AP_kmain2(void)
 */
 
 
+
 //
-//
+// Thread
 //
 
-    // #test: Using DPC via AP.
+/*
+
+// #test
+// Create the first thread for this code.
+// + ring 0
+// + not preemptable (for now)
+// + ...
+// #ps: For now we are simply creating it, not dispatching it.
+
+    unsigned long stack_base = (unsigned long) kmalloc(4096);
+    unsigned long entry_point = (unsigned long) &__ap_ANIMATION_loop;
+    ppid_t OwnerPID = GRAMADO_PID_KERNEL;
+
+    struct thread_d *t = 
+        create_thread (
+            THREAD_TYPE_SYSTEM,  // type
+            NULL,                // cgroup
+            entry_point,         // initial RIP
+            stack_base + 4096,   // initial RSP (top of stack)
+            OwnerPID,            // owner PID (0 for kernel)
+            "ap-thread-r0",      // thread name
+            RING0                // CPL = 0 (kernel mode)
+        );
+
+    // #bugbug
+    // Its returning NULL because the the process 
+    // is been considered invalid.
+    // Probably this routine do not have access to 
+    // the data structures or lists necessary to execute
+    // the threads creation
+
+    // #debug
+    if ((void*) t == NULL)
+        x_panic("__ap_kmain_imp: t");
+
+*/
+
+//
+// DPC
+//
+
+    // #test: Using DPC via AP
     if (CONFIG_USE_DPC_VIA_AP == 1){
-        __ap_DPC_experiment(lapic_id);
+        __ap_DPC_loop(lapic_id);
     }
 
 //
-//
+// Animation
 //
 
-    __ap_animation_experiment();
+    __ap_ANIMATION_loop();
 
 // Something went wrong with this AP.
 // #todo:
@@ -357,7 +398,7 @@ AP_die:
 
 void AP_kmain(void)
 {
-    AP_kmain2();
+    __ap_kmain_imp();
 }
 
 

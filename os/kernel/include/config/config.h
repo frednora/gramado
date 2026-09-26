@@ -71,7 +71,7 @@
 // This is case only for syscalls.
 #define CONFIG_PRINTK_TO_SERIAL_DURING_SYSCALLS  1
 
-// Progress bar during the kernel initialization.
+// Progress bar during the kernel initialization
 #define CONFIG_USE_PROGRESSBAR  0
 
 // ------------------------------------------------------
