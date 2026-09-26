@@ -311,6 +311,11 @@ static void __ap_kmain_imp(void)
 */
 
 /*
+
+// #ps:
+// Maybe we do not need to call this routine and 
+// have an initialization path for the AP different from the BSP.
+
     ProcessorNumber = id;  // ID
     Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
     if (Status == FALSE){
@@ -321,6 +326,35 @@ static void __ap_kmain_imp(void)
     }
 */
 
+
+/*
+// Ring 0 Stack for the AP
+    void *r0_stack = (void*) kmalloc(4096);
+    if ((void*) r0_stack == NULL)
+        x_panic("__ap_kmain_imp: r0_stack");
+    unsigned long Ring0StackBaseAddress = (unsigned long) r0_stack;
+*/
+
+// Initialize the GDT and the proper TSS for this core
+// IN: 
+// + index for lapic_info[i] table
+// + ring 0 stack base for the TSS that belongs to this core
+// + gdt
+// + gdtr
+
+// #bugbug
+// We cannot change the same GDT used by the BSP core.
+// Maybe we can simply load it for the AP.
+// We need a new gdt address for the GDT the belongs to the AP.
+
+/*
+    x64_init_ap_gdt(
+        lapic_id,
+        Ring0StackBaseAddress,
+        gdt,
+        gdtr
+    );
+*/
 
 
 //

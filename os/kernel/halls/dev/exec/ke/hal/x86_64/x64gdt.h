@@ -28,8 +28,8 @@
 // ========================
 // DPL
 // see: gdef.h
-#define SEL_KPL  RING0  // Kernel privilege level.
-#define SEL_UPL  RING3  // User privilege level.
+#define SEL_KPL  RING0    // Kernel privilege level
+#define SEL_UPL  RING3    // User privilege level
 
 #define DPL_RING0  RING0
 #define DPL_RING3  RING3
@@ -252,28 +252,33 @@ set_gdt_entry(
     unsigned char p, 
     unsigned char avl,
     unsigned char l,
-    unsigned char db,   //Sz 
+    unsigned char db,   // Sz 
     unsigned char g );
 
+// Load GDT
 static inline void native_load_gdt(struct gdt_ptr_d *dtr)
 {
     asm volatile ("lgdt %0"::"m" (*dtr));
 }
 
+// Store GDT
 static inline void native_store_gdt(struct gdt_ptr_d *dtr)
 {
     asm volatile ("sgdt %0":"=m" (*dtr));
 }
 
+// Aliases
 #define load_gdt(dtr)   native_load_gdt(dtr)
 #define store_gdt(dtr)  native_store_gdt(dtr)
 
+int x64_init_bsp_gdt(unsigned long rin0_stack_base_address);
+
 int 
-x64_init_gdt(
+x64_init_ap_gdt(
     int lapic_info_id, 
-    unsigned long rin0_stack_base_address );
+    unsigned long rin0_stack_base_address,
+    struct segment_descriptor_d *gdt,
+    struct gdt_ptr_d *gdtr );
 
 #endif    
-
-
 

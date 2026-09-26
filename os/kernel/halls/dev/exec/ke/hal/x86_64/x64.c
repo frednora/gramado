@@ -25,6 +25,13 @@ unsigned char isa_irqs[16] = {
 
 static void __get_cpu_intel_parameters(void);
 
+static int 
+__x64_init_gdt_imp(
+    int lapic_info_id, 
+    unsigned long rin0_stack_base_address,
+    struct segment_descriptor_d *gdt,
+    struct gdt_ptr_d *gdtr );
+
 //
 // =====================================
 //
@@ -120,292 +127,6 @@ void x64_setup_syscall64(void)
 // =====================================
 //
 
-
-/*
- * x64_init_gdt:
- *     It creates a TSS and sets up some entries in the GDT.
- *     See: x86gdt.h
- */
-// Called by I_x64main in init.c.
-// See: head_64.asm
-
-// extern void rsp0Stack(void);
-
-// See: x86_64.asm
-extern void asm_load_gdt(unsigned long gdtr_address);
-
-// Initialize GDT for a given processor.
-// IN: index for lapic_info[i] table.
-int 
-x64_init_gdt(
-    int lapic_info_id, 
-    unsigned long rin0_stack_base_address )
-{
-
-// #todo:
-// Each processor needs to have its own GDT and TSS.
-// We can include then inside the lapic_info structure.
-
-    struct tss_d  *tss;
-
-    // debug_print ("[x64] x64_init_gdt: [DANGER] \n");
-
-// Clean the GDT. #danger
-// 32 segment descriptors.
-// see: x64gdt.h
-
-    if (lapic_info_id < 0)
-        panic("x64_init_gdt: lapic_info_id\n");
-    if (lapic_info_id >= NR_CPUS)
-        panic("x64_init_gdt: lapic_info_id\n");
-
-//
-// The base address for the GDT
-//
-
-// #todo:
-// All cores are pointing to the SAME xxx_gdt array! 
-// This needs to be fixed.
-
-    // This is the pointer for an array os structures.
-    // This is the GDT with 32 entries.
-    //unsigned long GDT_Base = (unsigned long) &xxx_gdt[GNULL_SEL];
-    lapic_info[lapic_info_id].GDT_Base = (unsigned long) &xxx_gdt[GNULL_SEL];
-    unsigned long BaseAddress = lapic_info[lapic_info_id].GDT_Base;
-
-//
-// The number of entries. (32)
-//
-
-    //size_t GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
-    lapic_info[lapic_info_id].GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
-    size_t NumberOfEntries = lapic_info[lapic_info_id].GDT_NumberOfEntries;
-
-//
-// The size
-//
-
-    //size_t GDT_Size = 
-    //    (size_t) ( sizeof(struct segment_descriptor_d) * GDT_NumberOfEntries );
-    lapic_info[lapic_info_id].GDT_Size = 
-        (size_t) ( NumberOfEntries * sizeof(struct segment_descriptor_d) );
-    size_t gdt_size = lapic_info[lapic_info_id].GDT_Size;
-
-
-//
-// Clear the table
-//
-
-    memset ( BaseAddress, 0, gdt_size );
-
-
-// ---------------------------
-// Segment Descriptor
-
-// IN: 
-// (entry address, limit, base, type, s, dpl, p, avl, l, db, g)
-
-
-// ----------------
-// null
-// GNULL_SEL      0  // Null descriptor
-// Create the NULL entry.
-
-    set_gdt_entry ( 
-        &xxx_gdt[GNULL_SEL], 
-        0,0,0,0,0,0,0,0,0,0 );
-
-// ----------------
-// GCODE_SEL      1  // Kernel code descriptor
-// GDATA_SEL      2  // Kernel data descriptor
-// ring 0
-// dpl 0
-// (n, limit, base, type, s, dpl, p, avl, l, db, g)
-
-// k code
-// For long mode code: 
-// Kernel code (selector 0x08) L=1, DB=0, G=1
-    set_gdt_entry ( 
-        &xxx_gdt[GCODE_SEL], 
-        0,    // limit
-        0x0,  // base
-        SEG_CODE_EXRD, // type = 0xA (Execute/Read)
-        1,    // s (S = 1 → Code/Data segment) | S = 0 → System segment
-        DPL_RING0,  // dpl=0
-        1,    // p
-        0,    // avl
-        1,    // L = 1 → 64‑bit code segment.
-        0,    // DB = 0 → ignored when L=1.
-        1     // G = 1 → granularity (limit scaled in 4KB).
-        );   
-
-// k data
-// For long mode data:
-// Kernel data (selector 0x10) L=0, DB=1, G=1
-    set_gdt_entry ( 
-        &xxx_gdt[GDATA_SEL], 
-        0,    // limit
-        0x0,  // base
-        SEG_DATA_RDWR, // type = 0x2 (Read/Write)
-        1,    // s (S = 1 → Code/Data segment) | S = 0 → System segment
-        DPL_RING0,  // dpl=0
-        1,    // p
-        0,    // avl
-        0,    // L = 0 → must be 0 for data segments.
-        1,    // DB = 1 → required for data segments in long mode.
-        1     // G = 1 → granularity (limit scaled in 4KB).
-        );   
-
-// ----------------
-// GUCODE_SEL     3  // User code descriptor
-// GUDATA_SEL     4  // User data descriptor
-// ring 3
-// dpl 3
-// (n, limit, base, type, s, dpl, p, avl, l, db, g)
-
-// u code
-// For long mode code: 
-// User code (selector 0x) L=1, DB=0, G=1
-    set_gdt_entry ( 
-        &xxx_gdt[GUCODE_SEL], 
-        0,    // limit
-        0x0,  // base
-        SEG_CODE_EXRD, // type=0xA (Execute/Read)
-        1,    // s
-        DPL_RING3,  // dpl=3
-        1,    // p
-        0,    // avl
-        1,    // l
-        0,    // db
-        1     // g
-    );
-
-// u data
-// For long mode data:
-// User data (selector 0x) L=0, DB=1, G=1
-
-    set_gdt_entry ( 
-        &xxx_gdt[GUDATA_SEL], 
-        0,      // limit   
-        0x0,    // base
-        SEG_DATA_RDWR, // type=0x2 (Read/Write)
-        1,      // s
-        DPL_RING3,  // dpl=3
-        1,      // p
-        0,      // avl
-        0,      // l
-        1,      // db
-        1       // g
-    );
-
-// ----------------
-
-//
-// tss
-//
-
-// Creating a TSS and initializing it.
-// Save current tss.
-// Create gdt entry for the tss. (two entries)
-
-    //tss = (void *) kmalloc( sizeof(struct tss_d) );
-    tss = (struct tss_d *) &TSS[lapic_info_id];   // For a target cpu id
-
-    if ((void *) tss == NULL)
-    {
-        debug_print("x64_init_gdt:\n");
-              panic("x64_init_gdt:\n");
-    }
-    //memset( tss, 0, sizeof(struct tss_d) );
-    memset(&TSS[lapic_info_id], 0, sizeof(struct tss_d));
-
-
-// Initializing the tss structure,
-// given the ring0 stack pointer.
-// Old address used bu BSP: //&rsp0Stack
-
-    // IN:
-    // + TSS pointer
-    // + Ring 0 stack address for this processor
-
-    tss_init ( 
-        (struct tss_d *) tss,
-        (void *) rin0_stack_base_address 
-    );
-
-// System Segment Descriptor
-
-// GTSS_SEL       5  // tss
-// GTSS_CONT_SEL  6  // tss continuação
-// tss, dpl 3
-// Two entries.
-
-    // tss
-    set_gdt_entry( 
-        &xxx_gdt[GTSS_SEL], 
-        sizeof(struct tss_d) - 1,   // limit
-        (unsigned long) tss,    // base 
-        0x9,  // type = (64-bit TSS (Available))
-        0,    // S = 0 → system descriptor (not code/data)
-        DPL_RING0,  // DPL = ring 0
-        1,   // p
-        0,   // avl
-        0,   // l
-        0,   // db
-        1    // g
-    );
-
-    // tss cont.
-    set_gdt_entry( 
-        &xxx_gdt[GTSS_CONT_SEL], 
-        (unsigned long) tss >> 32,
-        (unsigned long) tss >> 48,
-        0,0,0,0,0,0,0,0);
-
-
-//
-// Save the tss pointer into the lapic_info structure.
-//
-
-    //lapic_info[lapic_info_id].tss = (struct tss_d *) tss;
-    lapic_info[lapic_info_id].tss = (struct tss_d *) &TSS[lapic_info_id];
-
-
-//
-// Load GDT
-//
-
-// ------------------
-// Register the GDT using assembly.
-// Limit and base.
-// See: x86_64.asm
-// See: x64gdt.h
-    xxx_gdt_ptr.limit = 
-        (unsigned short) ((DESCRIPTOR_COUNT_MAX * sizeof(struct segment_descriptor_d) ) -1);
-    xxx_gdt_ptr.base = 
-        (unsigned long) &xxx_gdt[GNULL_SEL];
-    asm_load_gdt( (unsigned long) &xxx_gdt_ptr );
-    //load_gdt (&xxx_gdt_ptr);
-// ------------------
-
-//
-// Load TR.
-//
-
-    // 0x2B = (0x28+3).
-    //x64_load_ltr(0x2B);  // Ring 3 DPL
-    x64_load_ltr(0x28);   // Ring 0 DPL
-
-// #todo
-// print gdt entries.
-
-    lapic_info[lapic_info_id].gdt_initialized = TRUE;
-    lapic_info[lapic_info_id].tss_initialized = TRUE;
-    // ...
-
-    return 0;
-}
-
 // Set segment.
 // Probably stolen from minix or netbsd.
 // See: x64gdt.h
@@ -459,6 +180,375 @@ void x64_load_ltr(int tr)
           ltrw %%ax \n    "\
         :: "a"(tr) );
 }
+
+
+
+/*
+ * __x64_init_gdt_imp:
+ *     It creates a TSS and sets up some entries in the GDT.
+ *     See: x86gdt.h
+ */
+
+// See: x86_64.asm
+extern void asm_load_gdt(unsigned long gdtr_address);
+
+
+// Initialize GDT for a given processor
+// IN: 
+// + index for lapic_info[i] table
+// + ring 0 stack base for the TSS that belongs to this core
+
+// #bugbug
+// Here we are using a defined GDT address valid only for the BSP core.
+// If the other cores want to use this function it needs to provide
+// the address for the gdt via parameter.
+
+static int 
+__x64_init_gdt_imp(
+    int lapic_info_id, 
+    unsigned long rin0_stack_base_address,
+    struct segment_descriptor_d *gdt,
+    struct gdt_ptr_d *gdtr )
+{
+
+// #todo:
+// Each processor needs to have its own GDT and TSS.
+// We can include then inside the lapic_info structure.
+
+    struct tss_d  *tss;
+
+    // debug_print ("[x64] __x64_init_gdt_imp: [DANGER] \n");
+
+    if ((void *) gdt == NULL){
+        panic("__x64_init_gdt_imp: gdt\n");
+    }
+    if ((void *) gdtr == NULL){
+        panic("__x64_init_gdt_imp: gdtr\n");
+    }
+
+// Clean the GDT. #danger
+// 32 segment descriptors.
+// see: x64gdt.h
+
+    if (lapic_info_id < 0)
+        panic("__x64_init_gdt_imp: lapic_info_id\n");
+    if (lapic_info_id >= NR_CPUS)
+        panic("__x64_init_gdt_imp: lapic_info_id\n");
+
+//
+// The base address for the GDT
+//
+
+// #todo:
+// All cores are pointing to the SAME xxx_gdt array! 
+// This needs to be fixed.
+
+    // This is the pointer for an array os structures.
+    // This is the GDT with 32 entries.
+    //unsigned long GDT_Base = (unsigned long) &gdt[GNULL_SEL];
+    lapic_info[lapic_info_id].GDT_Base = (unsigned long) &gdt[GNULL_SEL];
+    unsigned long BaseAddress = lapic_info[lapic_info_id].GDT_Base;
+
+//
+// The number of entries. (32)
+//
+
+    //size_t GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
+    lapic_info[lapic_info_id].GDT_NumberOfEntries = DESCRIPTOR_COUNT_MAX;  //32 
+    size_t NumberOfEntries = lapic_info[lapic_info_id].GDT_NumberOfEntries;
+
+//
+// The size
+//
+
+    //size_t GDT_Size = 
+    //    (size_t) ( sizeof(struct segment_descriptor_d) * GDT_NumberOfEntries );
+    lapic_info[lapic_info_id].GDT_Size = 
+        (size_t) ( NumberOfEntries * sizeof(struct segment_descriptor_d) );
+    size_t gdt_size = lapic_info[lapic_info_id].GDT_Size;
+
+
+//
+// Clear the table
+//
+
+    memset ( BaseAddress, 0, gdt_size );
+
+
+// ---------------------------
+// Segment Descriptor
+
+// IN: 
+// (entry address, limit, base, type, s, dpl, p, avl, l, db, g)
+
+
+// ----------------
+// null
+// GNULL_SEL      0  // Null descriptor
+// Create the NULL entry.
+
+    set_gdt_entry ( 
+        &gdt[GNULL_SEL], 
+        0,0,0,0,0,0,0,0,0,0 );
+
+// ----------------
+// GCODE_SEL      1  // Kernel code descriptor
+// GDATA_SEL      2  // Kernel data descriptor
+// ring 0
+// dpl 0
+// (n, limit, base, type, s, dpl, p, avl, l, db, g)
+
+// k code
+// For long mode code: 
+// Kernel code (selector 0x08) L=1, DB=0, G=1
+    set_gdt_entry ( 
+        &gdt[GCODE_SEL], 
+        0,    // limit
+        0x0,  // base
+        SEG_CODE_EXRD, // type = 0xA (Execute/Read)
+        1,    // s (S = 1 → Code/Data segment) | S = 0 → System segment
+        DPL_RING0,  // dpl=0
+        1,    // p
+        0,    // avl
+        1,    // L = 1 → 64‑bit code segment.
+        0,    // DB = 0 → ignored when L=1.
+        1     // G = 1 → granularity (limit scaled in 4KB).
+        );   
+
+// k data
+// For long mode data:
+// Kernel data (selector 0x10) L=0, DB=1, G=1
+    set_gdt_entry ( 
+        &gdt[GDATA_SEL], 
+        0,    // limit
+        0x0,  // base
+        SEG_DATA_RDWR, // type = 0x2 (Read/Write)
+        1,    // s (S = 1 → Code/Data segment) | S = 0 → System segment
+        DPL_RING0,  // dpl=0
+        1,    // p
+        0,    // avl
+        0,    // L = 0 → must be 0 for data segments.
+        1,    // DB = 1 → required for data segments in long mode.
+        1     // G = 1 → granularity (limit scaled in 4KB).
+        );   
+
+// ----------------
+// GUCODE_SEL     3  // User code descriptor
+// GUDATA_SEL     4  // User data descriptor
+// ring 3
+// dpl 3
+// (n, limit, base, type, s, dpl, p, avl, l, db, g)
+
+// u code
+// For long mode code: 
+// User code (selector 0x) L=1, DB=0, G=1
+    set_gdt_entry ( 
+        &gdt[GUCODE_SEL], 
+        0,    // limit
+        0x0,  // base
+        SEG_CODE_EXRD, // type=0xA (Execute/Read)
+        1,    // s
+        DPL_RING3,  // dpl=3
+        1,    // p
+        0,    // avl
+        1,    // l
+        0,    // db
+        1     // g
+    );
+
+// u data
+// For long mode data:
+// User data (selector 0x) L=0, DB=1, G=1
+
+    set_gdt_entry ( 
+        &gdt[GUDATA_SEL], 
+        0,      // limit   
+        0x0,    // base
+        SEG_DATA_RDWR, // type=0x2 (Read/Write)
+        1,      // s
+        DPL_RING3,  // dpl=3
+        1,      // p
+        0,      // avl
+        0,      // l
+        1,      // db
+        1       // g
+    );
+
+// ----------------
+
+//
+// tss
+//
+
+// Creating a TSS and initializing it.
+// Save current tss.
+// Create gdt entry for the tss. (two entries)
+
+    //tss = (void *) kmalloc( sizeof(struct tss_d) );
+    tss = (struct tss_d *) &TSS[lapic_info_id];   // For a target cpu id
+
+    if ((void *) tss == NULL)
+    {
+        debug_print("__x64_init_gdt_imp:\n");
+              panic("__x64_init_gdt_imp:\n");
+    }
+    //memset( tss, 0, sizeof(struct tss_d) );
+    memset(&TSS[lapic_info_id], 0, sizeof(struct tss_d));
+
+
+// Initializing the tss structure,
+// given the ring0 stack pointer.
+// IN:
+// + TSS pointer
+// + Ring 0 stack address for this processor
+
+    tss_init ( 
+        (struct tss_d *) tss,
+        (void *) rin0_stack_base_address 
+    );
+
+// System Segment Descriptor
+
+// GTSS_SEL       5  // tss
+// GTSS_CONT_SEL  6  // tss continuação
+// tss, dpl 3
+// Two entries.
+
+    // tss
+    set_gdt_entry( 
+        &gdt[GTSS_SEL], 
+        sizeof(struct tss_d) - 1,   // limit
+        (unsigned long) tss,    // base 
+        0x9,  // type = (64-bit TSS (Available))
+        0,    // S = 0 → system descriptor (not code/data)
+        DPL_RING0,  // DPL = ring 0
+        1,   // p
+        0,   // avl
+        0,   // l
+        0,   // db
+        1    // g
+    );
+
+    // tss cont.
+    set_gdt_entry( 
+        &gdt[GTSS_CONT_SEL], 
+        (unsigned long) tss >> 32,
+        (unsigned long) tss >> 48,
+        0,0,0,0,0,0,0,0);
+
+
+//
+// Save the tss pointer into the lapic_info structure.
+//
+
+    //lapic_info[lapic_info_id].tss = (struct tss_d *) tss;
+    lapic_info[lapic_info_id].tss = (struct tss_d *) &TSS[lapic_info_id];
+
+
+//
+// Load GDT
+//
+
+// ------------------
+// Register the GDT using assembly.
+// Limit and base.
+// See: x86_64.asm
+// See: x64gdt.h
+
+/*
+    xxx_gdt_ptr.limit = 
+        (unsigned short) ((DESCRIPTOR_COUNT_MAX * sizeof(struct segment_descriptor_d) ) -1);
+    xxx_gdt_ptr.base = 
+        (unsigned long) &xxx_gdt[GNULL_SEL];
+    asm_load_gdt( (unsigned long) &xxx_gdt_ptr );
+    //load_gdt (&xxx_gdt_ptr);
+*/
+
+    gdtr->limit =
+        (unsigned short) ((DESCRIPTOR_COUNT_MAX * sizeof(struct segment_descriptor_d)) - 1);
+    gdtr->base =
+        (unsigned long) &gdt[GNULL_SEL];
+
+    asm_load_gdt((unsigned long) gdtr);
+    //load_gdt (gdtr);
+
+// ------------------
+
+//
+// Load TR
+//
+
+    // 0x2B = (0x28+3).
+    //x64_load_ltr(0x2B);  // Ring 3 DPL
+    x64_load_ltr(0x28);   // Ring 0 DPL
+
+// #todo
+// print gdt entries.
+
+    lapic_info[lapic_info_id].gdt_initialized = TRUE;
+    lapic_info[lapic_info_id].tss_initialized = TRUE;
+    // ...
+
+    return 0;
+}
+
+/*
+ * x64_init_bsp_gdt:
+ *     // Setup GDT and TSS for the BSP core
+ *     It creates a TSS and sets up some entries in the GDT.
+ *     Called by hal.c
+ *     See: x86gdt.h
+ */
+
+int x64_init_bsp_gdt(unsigned long rin0_stack_base_address)
+{
+    static int LAPIC_INFO_ID = 0;  // Index in lapic_info[] table
+
+    // #breakpoint
+    // x_panic("x64_init_bsp_gdt: breakpoint");
+
+    // worker
+    __x64_init_gdt_imp(
+        LAPIC_INFO_ID,              // core id
+        rin0_stack_base_address,    // stack address for the TSS 
+        xxx_gdt,                    // gdt
+        &xxx_gdt_ptr                // gdtr
+    );
+
+    return 0;
+}
+
+// Setup GDT and TSS for the AP core
+int 
+x64_init_ap_gdt(
+    int lapic_info_id, 
+    unsigned long rin0_stack_base_address,
+    struct segment_descriptor_d *gdt,
+    struct gdt_ptr_d *gdtr )
+{
+
+    // #breakpoint
+    // x_panic("x64_init_ap_gdt: breakpoint");
+
+    if ((void *) gdt == NULL){
+        panic("x64_init_ap_gdt: gdt\n");
+    }
+    if ((void *) gdtr == NULL){
+        panic("x64_init_ap_gdt: gdtr\n");
+    }
+
+    // worker
+    __x64_init_gdt_imp(
+        lapic_info_id,              // core id
+        rin0_stack_base_address,    // stack address for the TSS 
+        gdt,                        // gdt
+        gdtr                        // gdtr
+    );
+
+    return 0;
+}
+
+
 
 // ==========================
 

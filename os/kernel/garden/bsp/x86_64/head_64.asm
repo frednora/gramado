@@ -2645,8 +2645,7 @@ START:
     mov r14, rax
     mov r15, rax
 
-; GDT
-; This gdt is here in this document
+; Loading an early GDT for the BSP core
     lgdt [EARLY_GDT64.Pointer]
 
 ; Segment registers:
@@ -2688,8 +2687,7 @@ START:
     mov fs, ax
     mov gs, ax
 
-; LDT
-; Initialize ldt with a NULL selector
+; Initialize LDT with a NULL selector for the BSP core
     xor rax, rax
     lldt ax
 
@@ -2725,8 +2723,7 @@ START:
 ; Some new vectors. (sw=0xEE00 hw=0x8E00)
     call setup_vectors
 
-; IDT
-; #danger:
+; Loading an early IDT for the BSP core
     lidt [_IDT_register] 
 
 ; TR
@@ -2745,12 +2742,8 @@ START:
     ;mov ax, word 0x2B
     ;ltr ax
 
-
-; PIC
-    call PIC_early_initialization 
-
-; PIT
-    call PIT_early_initialization
+    call PIC_early_initialization    ; PIC
+    call PIT_early_initialization    ; PIT
 
 ; Unmask all maskable interrupts
     mov al, 0
@@ -2895,15 +2888,14 @@ _asm_AP_entry_point:
     ;mov rsp, [_EarlySharedAPStack]   ; pointer provided by BSP
     ;mov rbp, rsp               ; optional, set frame base
 
-
-; LDT
-; Loading an early LDT for the AP core
-; Initialize ldt with a NULL selector.
+; Initialize LDT with a NULL selector for the BSP core
     xor rax, rax
     lldt ax
 
-; IDT
-; #danger:
+; #ps:
+; Here we will not change the vectors for the IDT 
+; that is still in use by the BSP.
+
 ; Loading an early IDT for the AP core
     lidt [_IDT_register] 
 
