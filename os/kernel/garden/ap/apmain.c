@@ -327,13 +327,7 @@ static void __ap_kmain_imp(void)
 */
 
 
-/*
-// Ring 0 Stack for the AP
-    void *r0_stack = (void*) kmalloc(4096);
-    if ((void*) r0_stack == NULL)
-        x_panic("__ap_kmain_imp: r0_stack");
-    unsigned long Ring0StackBaseAddress = (unsigned long) r0_stack;
-*/
+// =================================================================
 
 // Initialize the GDT and the proper TSS for this core
 // IN: 
@@ -342,26 +336,30 @@ static void __ap_kmain_imp(void)
 // + gdt
 // + gdtr
 
-// #bugbug
 // We cannot change the same GDT used by the BSP core.
 // Maybe we can simply load it for the AP.
 // We need a new gdt address for the GDT the belongs to the AP.
 
-/*
+    static struct segment_descriptor_d ap_gdt[DESCRIPTOR_COUNT_MAX];
+    static struct gdt_ptr_d ap_gdtr;
+
+    void *r0_stack;
+    r0_stack = kmalloc(4096);
+    if (!r0_stack)
+        panic("AP: r0_stack");
+
     x64_init_ap_gdt(
         lapic_id,
-        Ring0StackBaseAddress,
-        gdt,
-        gdtr
-    );
-*/
+        (unsigned long)r0_stack + 4096,
+        ap_gdt,
+        &ap_gdtr );
+
+// ======================================================================
 
 
 //
 // Thread
 //
-
-/*
 
 // #test
 // Create the first thread for this code.
@@ -370,33 +368,49 @@ static void __ap_kmain_imp(void)
 // + ...
 // #ps: For now we are simply creating it, not dispatching it.
 
-    unsigned long stack_base = (unsigned long) kmalloc(4096);
-    unsigned long entry_point = (unsigned long) &__ap_ANIMATION_loop;
+    unsigned long stack_base =
+        (unsigned long) kmalloc(4096);
+    unsigned long entry_point =
+        (unsigned long) &__ap_ANIMATION_loop;
     ppid_t OwnerPID = GRAMADO_PID_KERNEL;
 
-    struct thread_d *t = 
-        create_thread (
-            THREAD_TYPE_SYSTEM,  // type
-            NULL,                // cgroup
-            entry_point,         // initial RIP
-            stack_base + 4096,   // initial RSP (top of stack)
-            OwnerPID,            // owner PID (0 for kernel)
-            "ap-thread-r0",      // thread name
-            RING0                // CPL = 0 (kernel mode)
+    struct thread_d *t =
+        create_thread(
+            THREAD_TYPE_SYSTEM,
+            NULL,
+            entry_point,
+            stack_base + 4096,
+            OwnerPID,
+            "ap-thread-r0",
+            RING0 
         );
-
-    // #bugbug
-    // Its returning NULL because the the process 
-    // is been considered invalid.
-    // Probably this routine do not have access to 
-    // the data structures or lists necessary to execute
-    // the threads creation
 
     // #debug
     if ((void*) t == NULL)
         x_panic("__ap_kmain_imp: t");
 
+// This is what i am gonna do after the thread creation 
+// just as a safe measure ... 
+// in the case this thread eventually reaches the task swtiching
+
+    t->is_preemptable = UNPREEMPTABLE;
+
+
+/*
+This is the current situation
+
+BSP
+  Timer IRQ
+  Preemption
+  Scheduler
+
+AP
+  No timer scheduling yet
+  Dedicated thread
+  Runs forever
 */
+
+// ===============================
 
 //
 // DPC

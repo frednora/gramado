@@ -66,6 +66,7 @@
 // So, we can't see the output for the kernel console.
 #define CONFIG_PRINTK_TO_SERIAL  1
 
+
 // #test
 // It changes the whey printk will work. Sending bytes to the serial port.
 // This is case only for syscalls.
@@ -172,6 +173,7 @@
 // Using LAPIC TIMER for Task Switching
 #define CONFIG_USE_LAPIC_TIMER_FOR_TS  0  // BSP's LAPIC
 // ...
+
 
 //
 // == DPC ========

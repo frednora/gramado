@@ -239,13 +239,9 @@ __x64_init_gdt_imp(
 // The base address for the GDT
 //
 
-// #todo:
-// All cores are pointing to the SAME xxx_gdt array! 
-// This needs to be fixed.
-
     // This is the pointer for an array os structures.
     // This is the GDT with 32 entries.
-    //unsigned long GDT_Base = (unsigned long) &gdt[GNULL_SEL];
+
     lapic_info[lapic_info_id].GDT_Base = (unsigned long) &gdt[GNULL_SEL];
     unsigned long BaseAddress = lapic_info[lapic_info_id].GDT_Base;
 

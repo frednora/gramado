@@ -478,21 +478,17 @@ static unsigned long __task_switch(int lapic_info_id)
 // Maybe this is good for the case when a core has
 // only one thread an don't wans to change it.
 
-/*
-
-    // #todo: This is a test yet
-
     if (CurrentThread->is_preemptable != PREEMPTABLE)
     {
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
+
         // #important:
         // There was no taskswitching.
         // Here is the perfect moment to return the the flag 0x80,
         // that tells to Assembly code to skip the cr3 reload.
+
         return (unsigned long) 0x80;
     }
-*/
-
 
 // The task switching routine is state‑driven and 
 // revolves around the relationship between 

@@ -1215,7 +1215,6 @@ static int archinit(void)
         // see: x64info.c
         //x64_info();
 
-        /*
         // 5) - AP startup
         if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
         {
@@ -1235,7 +1234,6 @@ static int archinit(void)
             //while(1){asm ("cli"); asm ("hlt");}
 
         } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
-        */
     };
 
     return TRUE;
@@ -1831,43 +1829,6 @@ void I_kmain(int arch_type)
         debug_print ("Couldn't create the Initial process\n");
         goto L_die;
     }
-
-// ======================================================================
-
-
-//
-// #test
-//
-
-// AFTER the creation of the first process
-// we can launch the APs ... because maybe they can need the
-// kernel process structure
-
-    // 5) - AP startup
-    if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
-    {
-
-        PROGRESS("\n");
-        PROGRESS("I_kmain: Initializize second processor\n");
-
-        // Initialize AP processor.
-        // #bugbug: g_processor_count if faling
-        //if (g_processor_count >= 2)
-        if (smp_info.mptable_number_of_processors >= 2)
-        {
-            smp_info.nr_ap_running = 0;
-            __test_initialize_ap_processor(1);  // APIC ID 1
-            //__test_initialize_ap_processor(2); // APIC ID 2
-            // ...
-        }
-
-        // #debug
-        //printk(">>>> breakpoint\n");
-        //while(1){asm ("cli"); asm ("hlt");}
-
-    } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
-
-// ======================================================================
 
     // Spawn the main thread for the init process
     PROGRESS("\n");
