@@ -353,29 +353,33 @@ void welcome_ap_pause(void)
 }
 
 // Talk with the BSP in order to identify the current AP.
+// Called by __ap_kmain_imp() in apmain.c
 // OUT: id in lapic_info[] database.
 int __AP_BSP_handshake(void)
 {
-// Called by AP_main().
+    int my_lapic_id;  // ID for the lapic info
+    int localid;      // hw id
+    int localversion;
+
 
     ap_startup_counter++;  // Update counter
 
 // Get the slot id in lapic_info[] database.
 // The BSP is telling us what is our lapic info id.
 // Based on that, we are able to get the real hw cpu id.
-    int my_lapic_id = WelcomeAP.my_lapic_info_id;
+
+    my_lapic_id = WelcomeAP.my_lapic_info_id;
     if (my_lapic_id < 0)
         goto fail;
     if (my_lapic_id >= NR_CPUS)
         goto fail;
 
-    int localid;
-    int localversion;
 
 // ---------------
 // #important: (REAL CPU ID)
 // ID (the real id provided by the hardware)
 // Saving it into our structure
+
     localid = (int) apic_get_id(my_lapic_id);
     lapic_info[my_lapic_id].local_id = (int) (localid & 0xFF);
  
@@ -384,20 +388,22 @@ int __AP_BSP_handshake(void)
 // 8bits
 // 10H~15H
 // Saving it into our structure
+
     localversion = (int) apic_get_version(my_lapic_id);
     lapic_info[my_lapic_id].local_version = (int) (localversion & 0xFF);
 
     // Print:
-    printk("slot id:%d | HW ID: %d | VERSION: %x\n",
+    printk("__AP_BSP_handshake: slot id:%d | HW ID: %d | VERSION: %x\n",
         my_lapic_id,
         lapic_info[my_lapic_id].local_id,
         lapic_info[my_lapic_id].local_version 
     );
 
     apic_mark_cpu_as_running(my_lapic_id);  // The Core 1 is running now.
-    WelcomeAP.bsp_is_waiting = FALSE; // BSP can continue
+    WelcomeAP.bsp_is_waiting = FALSE;       // BSP can continue
 
-    return (int) my_lapic_id;  // Return an valid ID
+// Return a valid ID for the lapic info
+    return (int) my_lapic_id;
 
 fail:
     return (int) -1;  // Return an invalid ID
@@ -1043,7 +1049,7 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
 //
 
     // No APs processors yet
-    smp_info.nr_ap_running = 0;
+    // smp_info.nr_ap_running = 0;
     if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
     {
         // (Step 1) Load AP image into memory.
@@ -1097,7 +1103,8 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
             {
                 printk("kernel: AP is running in 64bit\n");
                 // Our first AP processor is running
-                smp_info.nr_ap_running = 1;
+                //smp_info.nr_ap_running = 1;
+                smp_info.nr_ap_running++;
 
                 while (1)
                 {
@@ -1886,8 +1893,8 @@ void I_kmain(int arch_type)
             // IN: hw id
 
             __test_initialize_ap_processor(1);    // ok
-            //__test_initialize_ap_processor(2);  // ok
-            //__test_initialize_ap_processor(3);  // ok
+            // __test_initialize_ap_processor(2);  // ok
+            // __test_initialize_ap_processor(3);  // ok
             // ...
         }
 

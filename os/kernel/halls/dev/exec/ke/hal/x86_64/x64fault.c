@@ -183,6 +183,10 @@ void x64_all_faults(unsigned long number)
 // Traps and Exceptions Request Level 
 // (page fault, general protection fault, double fault ...)
 
+// #todo
+// We got to get the core id here.
+// Because for now all the cores are using the same IDT.
+
 // For the case the trap happned during some special irqls.
     int last_irql = lapic_info[0].irql;
     int was_running_in_r0 = -1;

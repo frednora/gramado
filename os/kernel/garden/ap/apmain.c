@@ -288,8 +288,27 @@ static void __ap_kmain_imp(void)
 
 // Talk with the BSP in order to identify the current AP.
 // #ps: return the lapic info id, not the real hw cpu id.
+// see: kmain.c
 
     lapic_id = (int) __AP_BSP_handshake();
+
+// #bugbug
+// #important:
+// The handshake is fully working only for the first AP we launch.
+// for anyone of them, but not for more than one.
+
+    printk("AP_kmain: [DEBUG] handshake ok for core=%d\n", lapic_id);
+
+
+// #test
+/*
+    if (lapic_id > 1)
+    {
+        //panic("AP_kmain: id\n", lapic_id);
+        asm ("hlt");
+    }
+*/
+
 
 /*
     if (lapic_id <0 || lapic_id >= NR_CPUS)
@@ -389,14 +408,14 @@ static void __ap_kmain_imp(void)
     if ((void*) t == NULL)
         x_panic("__ap_kmain_imp: t");
 
+// Link it to this lapic id
+    t->current_processor = lapic_id;
+
 // This is what i am gonna do after the thread creation 
 // just as a safe measure ... 
 // in the case this thread eventually reaches the task swtiching
 
     t->is_preemptable = UNPREEMPTABLE;
-
-// Link it to this lapic id
-    t->current_processor = lapic_id;
 
 
 /*
