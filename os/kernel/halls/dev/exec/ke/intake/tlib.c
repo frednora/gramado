@@ -28,11 +28,12 @@ void show_slot(tid_t tid)
 
 // Show one slot
     printk ("\n");
-    printk ("TID   PID   pdPA  Prio  State Quan Jiffies initial_rip rflags  tName\n");
-    printk ("====  ====  ====  ====  ===== ==== ====    ==========  ======  =====\n");
-    printk ("%d    %d    %x   %d    %d    %d    %d      %x          %x      %s   \n", 
+    printk ("TID   PID   Core pdPA  Prio  State Quan Jiffies initial_rip rflags  tName\n");
+    printk ("====  ====  ==== ====  ====  ===== ==== ====    ==========  ======  =====\n");
+    printk ("%d    %d    %d   %x   %d    %d    %d    %d      %x          %x      %s   \n", 
         t->tid, 
         t->tgid,  // Thread Environment ID. (fka PID)
+        t->current_processor,   // lapic id
         t->pml4_PA,
         t->priority, 
         t->state,
@@ -93,8 +94,6 @@ void show_slots(void)
             show_slot(t->tid);
         }
     };
-
-    // refresh_screen();
 }
 
 /*
@@ -154,18 +153,21 @@ void show_thread_information(void)
     }
 
 // =================================
-// Current thread
-    Current = (void *) GetCurrentThread();
+// Current thread for the BSP
+
+    static int BSP_ID = 0;  // BSP
+
+    Current = (void *) GetCurrentThreadForThisCore(BSP_ID);
     if ((void *) Current != NULL)
     {
         if (Current->magic == 1234)
         {
-            printk ("Current->tid = %d\n", 
-                Current->tid );
-            printk ("lapic_info[0].current_tid = %d\n", 
-                lapic_info[0].current_tid );
+            printk ("Current->tid = %d\n", Current->tid );
+            printk ("lapic_info[BSP_ID].current_tid = %d\n", 
+                lapic_info[BSP_ID].current_tid );
         }
     }
+
 
 // Show all the slots
 // see: tlib.c

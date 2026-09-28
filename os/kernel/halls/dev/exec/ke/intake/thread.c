@@ -554,7 +554,7 @@ fail:
     return (thread_type_t) -1;
 }
 
-// Set the current TID
+// Set the current TID for a given core
 void SetCurrentTID(tid_t tid, int lapic_info_id)
 {
     if (lapic_info_id < 0)
@@ -589,9 +589,17 @@ void *GetThreadByTID(tid_t tid)
 }
 
 // Get the structure pointer
-void *GetCurrentThread(void)
+void *GetCurrentThreadForThisCore(int lapic_id)
 {
-    tid_t tid = lapic_info[0].current_tid;
+    tid_t tid;
+
+// Parameter:
+    if (lapic_id<0)
+        return NULL;
+    if (lapic_id >= NR_CPUS)
+        return NULL;
+
+    tid = lapic_info[lapic_id].current_tid;
 
     if (tid < 0)
         return NULL;
@@ -599,7 +607,27 @@ void *GetCurrentThread(void)
     return (void*) GetThreadByTID(tid);
 }
 
-// Get the structure pointer.
+// Get the structure pointer
+void *GetIdleThreadForThisCore(int lapic_id)
+{
+    tid_t tid;
+
+// Parameter:
+    if (lapic_id<0)
+        return NULL;
+    if (lapic_id >= NR_CPUS)
+        return NULL;
+
+    tid = lapic_info[lapic_id].idle_tid;
+
+    if (tid < 0)
+        return NULL;
+    // ...
+    return (void*) GetThreadByTID(tid);
+}
+
+
+// Get the structure pointer
 void *GetForegroundThread(void)
 {
     if (foreground_thread < 0)
@@ -674,7 +702,7 @@ unsigned long thread_get_profiler_percentage(struct thread_d *thread)
 
 // Called by timer.c.
 // #todo: Explain it better.
-int thread_profiler(int service)
+int thread_profiler(int service, int lapic_id)
 {
     struct thread_d  *Idle;
     struct thread_d  *__current;
@@ -689,6 +717,15 @@ int thread_profiler(int service)
        return -1;
     }
 
+// Parameter:
+    if (lapic_id<0)
+        return -1;
+    if (lapic_id >= NR_CPUS)
+        return -1;
+
+
+// #todo
+// We need to get the idle thread for this core
     Idle = (struct thread_d *) UPProcessorBlock.IdleThread;
     if ((void *) Idle == NULL){
         panic("thread_profiler: Idle\n");
@@ -698,7 +735,7 @@ int thread_profiler(int service)
     }
 
 // Current thread
-    __current = (struct thread_d *) GetCurrentThread();
+    __current = (struct thread_d *) GetCurrentThreadForThisCore(lapic_id);
     if ((void *) __current == NULL){
         panic ("thread_profiler: __current\n");
     }
@@ -1051,6 +1088,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
     if (father_cpl != RING3)
         panic("copy_thread_struct: father_cpl!=RING3\n");
 
+
+    // #debug
     debug_print("copy_thread_struct: create thread\n");
 
     clone = 
@@ -1078,10 +1117,17 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 //
 
 // Type, base priority and priority.
-    clone->type  = father->type; 
+    clone->type = father->type; 
     clone->base_priority = father->base_priority; 
-    clone->priority      = father->priority;
+    clone->priority = father->priority;
 
+
+// 
+// CPU info
+//
+
+    clone->current_processor = father->current_processor;
+    // ...
 
 //
 // Input

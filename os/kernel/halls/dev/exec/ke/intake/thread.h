@@ -959,7 +959,10 @@ tid_t GetCurrentTID(int lapic_info_id);
 
 
 void *GetThreadByTID(tid_t tid);
-void *GetCurrentThread(void);
+
+void *GetCurrentThreadForThisCore(int lapic_id);
+void *GetIdleThreadForThisCore(int lapic_id);
+
 void *GetForegroundThread(void);
 void *GetDSThread(void);
 
@@ -974,13 +977,13 @@ void threadi_power(
 
 void release(tid_t tid);
 
-void SelectForExecution ( struct thread_d *Thread );
+void SelectForExecution(struct thread_d *Thread);
 
 unsigned long 
 thread_get_profiler_percentage (struct thread_d *thread);
 
 void thread_show_profiler_info(void);
-int thread_profiler(int service);
+int thread_profiler(int service, int lapic_id);
 
 int sys_notify_event(tid_t caller_tid, tid_t target_tid, int event_number);
 int sys_msgctl(tid_t caller_tid, int option, int extra_value);

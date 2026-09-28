@@ -476,6 +476,7 @@ void local_apic_send_init(unsigned int apic_id, int lapic_info_id)
 }
 
 // ex: vector={0x08} =  address={0x8000}
+// IN: hw id, vector, lapic id
 void 
 local_apic_send_startup(
     unsigned int apic_id, 
@@ -529,6 +530,7 @@ void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id)
 // + Uses vector 0x08 → trampoline at 0x8000.
 // + Waits 200 ms between sends.
 // Twice
+// IN: hw id, lapic info id
 void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id)
 {
     unsigned int vector_number = 0x8;

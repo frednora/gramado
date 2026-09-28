@@ -292,7 +292,7 @@ static void __ap_kmain_imp(void)
     lapic_id = (int) __AP_BSP_handshake();
 
 /*
-    if (lapic_id <0 || lapic_id>NR_CPUS)
+    if (lapic_id <0 || lapic_id >= NR_CPUS)
     {
         panic("AP_kmain: id\n");
     }
@@ -394,6 +394,9 @@ static void __ap_kmain_imp(void)
 // in the case this thread eventually reaches the task swtiching
 
     t->is_preemptable = UNPREEMPTABLE;
+
+// Link it to this lapic id
+    t->current_processor = lapic_id;
 
 
 /*

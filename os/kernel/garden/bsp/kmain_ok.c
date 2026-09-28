@@ -146,7 +146,7 @@ static int archinit(void);
 static int deviceinit(void);
 static int lateinit(void);
 
-static int __test_initialize_ap_processor(int apic_id);
+static int __test_initialize_ap_processor(int target_hw_apic_id);
 
 static int I_initialize_kernel(int arch_type, int processor_number);
 
@@ -998,9 +998,15 @@ static int earlyinit(void)
     return 0;
 }
 
-// Initializing the AP processor.
-static int __test_initialize_ap_processor(int apic_id)
+// Initializing the AP processor
+static int __test_initialize_ap_processor(int target_hw_apic_id)
 {
+
+    // #important:
+    // Let the hw id indicates us what is the slot we need to use
+    // in lapic info. #ps: 0 is not valid one, because its the bsp.
+    unsigned int target_lapic_info_id = target_hw_apic_id;
+
     // AP base address
     //unsigned char *ap_base = (unsigned char *) 0x00020000; 0x8000;  // AP trampoline base address.
     // AP signature pointer.
@@ -1018,6 +1024,18 @@ static int __test_initialize_ap_processor(int apic_id)
 
 
     unsigned long *ap_shmm = (unsigned long *) ____DANGER_TRAMPOLINE_SHARED_AREA;
+
+
+//
+// #debug
+//
+
+    printk("__test_initialize_ap_processor: hw id=%d | lapicid=%d\n",
+        target_hw_apic_id, target_lapic_info_id );
+
+
+    if (target_hw_apic_id <= 0)
+        panic("__test_initialize_ap_processor: Invalid hw id");
 
 
 //
@@ -1052,18 +1070,22 @@ static int __test_initialize_ap_processor(int apic_id)
         //unsigned int apic_id = lapic_info[target_index].local_id;
 
         WelcomeAP.bsp_is_waiting = TRUE;  // Waiting for the AP
-        WelcomeAP.my_lapic_info_id = 1;   // AP's slot in lapic_info[] table.
+        //WelcomeAP.my_lapic_info_id = 1;   // AP's slot in lapic_info[] table.
+        WelcomeAP.my_lapic_info_id = target_lapic_info_id;
 
         // (Step 2)
         printk("Sending INIT IPI ...\n");
-        local_apic_send_startup(1,vector,1);  // APIC ID 1, lapic_info index 0
+        // IN: hw id, vector, lapic id
+        //local_apic_send_startup(1,vector,1);  // APIC ID 1, lapic_info index 0
+        local_apic_send_startup(target_hw_apic_id, vector, target_lapic_info_id);
 
         // (Step 3)
         printk("Sending STARTUP IPI twice ...\n");
         refresh_screen(); //wait
 
-        // IN: apic id, lapic info id
-        Send_STARTUP_IPI_Twice(1, 1);  // APIC ID 1, lapic_info index 0
+        // IN: hw id, lapic info id
+        //Send_STARTUP_IPI_Twice(1, 1);  // APIC ID 1, lapic_info index 0
+        Send_STARTUP_IPI_Twice(target_hw_apic_id, target_lapic_info_id);
 
         // Check if we have at least one AP running.
         // #todo
@@ -1215,6 +1237,7 @@ static int archinit(void)
         // see: x64info.c
         //x64_info();
 
+        /*
         // 5) - AP startup
         if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
         {
@@ -1224,8 +1247,8 @@ static int archinit(void)
             if (smp_info.mptable_number_of_processors >= 2)
             {
                 smp_info.nr_ap_running = 0;
-                __test_initialize_ap_processor(1);  // APIC ID 1
-                //__test_initialize_ap_processor(2); // APIC ID 2
+                __test_initialize_ap_processor(1);  
+                //__test_initialize_ap_processor(2); 
                 // ...
             }
 
@@ -1234,6 +1257,7 @@ static int archinit(void)
             //while(1){asm ("cli"); asm ("hlt");}
 
         } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
+        */
     };
 
     return TRUE;
@@ -1829,6 +1853,51 @@ void I_kmain(int arch_type)
         debug_print ("Couldn't create the Initial process\n");
         goto L_die;
     }
+
+// ======================================================================
+
+
+//
+// #test
+//
+
+// AFTER the creation of the first process
+// we can launch the APs ... because maybe they can need the
+// kernel process structure
+
+    // 5) - AP startup
+    if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
+    {
+
+        PROGRESS("\n");
+        PROGRESS("I_kmain: Initializize second processor\n");
+
+        // Initialize AP processor.
+        // #bugbug: g_processor_count if faling
+        //if (g_processor_count >= 2)
+        if (smp_info.mptable_number_of_processors >= 2)
+        {
+            smp_info.nr_ap_running = 0;
+
+            // #bugbug
+            // We crashed when trying to launch more than one core.
+            // But for onw single core we are able to launch any one of them.
+
+            // IN: hw id
+
+            __test_initialize_ap_processor(1);    // ok
+            //__test_initialize_ap_processor(2);  // ok
+            //__test_initialize_ap_processor(3);  // ok
+            // ...
+        }
+
+        // #debug
+        //printk(">>>> breakpoint\n");
+        //while(1){asm ("cli"); asm ("hlt");}
+
+    } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
+
+// ======================================================================
 
     // Spawn the main thread for the init process
     PROGRESS("\n");
