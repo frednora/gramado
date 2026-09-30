@@ -353,29 +353,46 @@ void welcome_ap_pause(void)
 }
 
 // Talk with the BSP in order to identify the current AP.
+// Called by __ap_kmain_imp() in apmain.c
 // OUT: id in lapic_info[] database.
 int __AP_BSP_handshake(void)
 {
-// Called by AP_main().
+    //int my_lapic_id;  // ID for the lapic info
+    int localid;      // hw id
+    int localversion;
+
+    unsigned long *ap_shmm = (unsigned long *) ____DANGER_TRAMPOLINE_SHARED_AREA;
+
 
     ap_startup_counter++;  // Update counter
 
 // Get the slot id in lapic_info[] database.
 // The BSP is telling us what is our lapic info id.
 // Based on that, we are able to get the real hw cpu id.
-    int my_lapic_id = WelcomeAP.my_lapic_info_id;
+
+    /*
+    my_lapic_id = WelcomeAP.my_lapic_info_id;
     if (my_lapic_id < 0)
         goto fail;
     if (my_lapic_id >= NR_CPUS)
         goto fail;
+    */
 
-    int localid;
-    int localversion;
+    // On the AP side (inside __AP_BSP_handshake or earlier):
+    int my_lapic_id = (int) ap_shmm[1];
+    if (my_lapic_id < 0 || my_lapic_id >= NR_CPUS)
+        goto fail;
+
+
+    // Print:
+    printk("__AP_BSP_handshake: Slot id:%d\n", my_lapic_id );
+
 
 // ---------------
 // #important: (REAL CPU ID)
 // ID (the real id provided by the hardware)
 // Saving it into our structure
+
     localid = (int) apic_get_id(my_lapic_id);
     lapic_info[my_lapic_id].local_id = (int) (localid & 0xFF);
  
@@ -384,20 +401,23 @@ int __AP_BSP_handshake(void)
 // 8bits
 // 10H~15H
 // Saving it into our structure
+
     localversion = (int) apic_get_version(my_lapic_id);
     lapic_info[my_lapic_id].local_version = (int) (localversion & 0xFF);
 
     // Print:
-    printk("slot id:%d | HW ID: %d | VERSION: %x\n",
+    printk("__AP_BSP_handshake: slot id:%d | HW ID: %d | VERSION: %x\n",
         my_lapic_id,
         lapic_info[my_lapic_id].local_id,
         lapic_info[my_lapic_id].local_version 
     );
 
     apic_mark_cpu_as_running(my_lapic_id);  // The Core 1 is running now.
-    WelcomeAP.bsp_is_waiting = FALSE; // BSP can continue
+    WelcomeAP.bsp_is_waiting = FALSE;       // BSP can continue
+    ap_shmm[2] = 0;   // clear “BSP is waiting”
 
-    return (int) my_lapic_id;  // Return an valid ID
+// Return a valid ID for the lapic info
+    return (int) my_lapic_id;
 
 fail:
     return (int) -1;  // Return an invalid ID
@@ -1038,12 +1058,22 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
         panic("__test_initialize_ap_processor: Invalid hw id");
 
 
+// -------------------------------------------------
+// Reset shared state (important for 2nd, 3rd... AP)
+// -------------------------------------------------
+    WelcomeAP.my_lapic_info_id = -1;
+    WelcomeAP.bsp_is_waiting   = FALSE;
+
+    ap_signature_pointer[0] = 0;
+    ap_signature_pointer[1] = 0;
+    ap_shmm[0] = 0;
+
 //
 // How many processors?
 //
 
     // No APs processors yet
-    smp_info.nr_ap_running = 0;
+    // smp_info.nr_ap_running = 0;
     if (CONFIG_INITIALIZE_SECOND_PROCESSOR == 1)
     {
         // (Step 1) Load AP image into memory.
@@ -1064,7 +1094,9 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
         // See: head_64.asm
         printk("Updating shared area ...\n");
         //ap_shmm[0] = (unsigned long) &AP_kmain; 
-        ap_shmm[0] = (unsigned long) &asm_AP_entry_point; // In Assembly
+        ap_shmm[0] = (unsigned long) &asm_AP_entry_point;  // In Assembly
+        ap_shmm[1] = (unsigned long) target_lapic_info_id;   // ← the slot this AP should use
+        ap_shmm[2] = 1;   // “BSP is waiting” flag for this launch
 
         //int target_index = 1;  // array slot for the first AP
         //unsigned int apic_id = lapic_info[target_index].local_id;
@@ -1073,37 +1105,44 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
         //WelcomeAP.my_lapic_info_id = 1;   // AP's slot in lapic_info[] table.
         WelcomeAP.my_lapic_info_id = target_lapic_info_id;
 
-        // (Step 2)
-        printk("Sending INIT IPI ...\n");
-        // IN: hw id, vector, lapic id
-        //local_apic_send_startup(1,vector,1);  // APIC ID 1, lapic_info index 0
-        local_apic_send_startup(target_hw_apic_id, vector, target_lapic_info_id);
 
-        // (Step 3)
-        printk("Sending STARTUP IPI twice ...\n");
-        refresh_screen(); //wait
+        // #ps: This is correct. The sequence is INIT, STARTUP, STARTUP.
 
-        // IN: hw id, lapic info id
-        //Send_STARTUP_IPI_Twice(1, 1);  // APIC ID 1, lapic_info index 0
-        Send_STARTUP_IPI_Twice(target_hw_apic_id, target_lapic_info_id);
+
+        printk("=== Launching AP %d ===\n", target_hw_apic_id);
+        Send_INIT_IPI_Once(target_hw_apic_id, target_lapic_info_id);
+        printk("INIT done\n");
+
+        Send_STARTUP_IPI_TwiceEx(target_hw_apic_id, target_lapic_info_id, vector);
+        printk("SIPIs done, waiting for signature...\n");
+
+
 
         // Check if we have at least one AP running.
         // #todo
         // Well, we don't need to stay in this loop waiting for signature.
         // We can check it later after the kernel full initialization.
         while (1){
+
             if (ap_signature_pointer[0] == 0x64 && 
                 ap_signature_pointer[1] == 0x64 )
             {
-                printk("kernel: AP is running in 64bit\n");
+
+                printk("kernel: [Sig found] AP is running in 64bit\n");
+
                 // Our first AP processor is running
-                smp_info.nr_ap_running = 1;
+                //smp_info.nr_ap_running = 1;
+                smp_info.nr_ap_running++;
 
                 while (1)
                 {
                     asm (" pause \n ");
-                    if (WelcomeAP.bsp_is_waiting != TRUE)
+                    //if (WelcomeAP.bsp_is_waiting != TRUE)
+                    if (ap_shmm[2] != 1)
+                    {
+                        printk("kernel: BSP is not waiting anymore\n");
                         break;
+                    }
                 };
 
                 //apic_mark_cpu_as_running(1);  // The Core 1 is running now.
@@ -1130,6 +1169,26 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
         // #debug
         //printk(">>>> breakpoint\n");
         //while(1){asm ("cli"); asm ("hlt");}
+
+
+        // -------------------------------------------------
+        // Clean up shared state so the next AP can use it
+        // -------------------------------------------------
+        WelcomeAP.my_lapic_info_id = -1;
+        WelcomeAP.bsp_is_waiting   = FALSE;
+
+        // Clear signature so the next wait loop works
+        ap_signature_pointer[0] = 0;
+        ap_signature_pointer[1] = 0;
+
+        // Clear shared parameter area (entry point, etc.)
+        ap_shmm[0] = 0;
+        // if you later store stack pointer / other params:
+        // ap_shmm[1] = 0;
+        // ap_shmm[2] = 0;
+        // ...
+
+        return 0;
 
     } // End of CONFIG_INITIALIZE_SECOND_PROCESSOR
 
@@ -1887,7 +1946,7 @@ void I_kmain(int arch_type)
 
             __test_initialize_ap_processor(1);    // ok
             //__test_initialize_ap_processor(2);  // ok
-            //__test_initialize_ap_processor(3);  // ok
+            // __test_initialize_ap_processor(3);  // ok
             // ...
         }
 

@@ -445,6 +445,7 @@ void APIC::wakeupSequence(U32 apicId, U8 pvect)
 // NOTE: ICRLow and ICRHigh are types in the Silcos kernel. If your code uses direct bit
 // manipulations you must replace some code with bit operations.
 
+// // sends proper INIT
 void local_apic_send_init(unsigned int apic_id, int lapic_info_id)
 {
 // Send one time.
@@ -475,6 +476,7 @@ void local_apic_send_init(unsigned int apic_id, int lapic_info_id)
     };
 }
 
+// sends STARTUP
 // ex: vector={0x08} =  address={0x8000}
 // IN: hw id, vector, lapic id
 void 
@@ -516,6 +518,7 @@ local_apic_send_startup(
 
 // Send INIT IPI
 // One single time
+// clear ESR + INIT + delay
 void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id)
 {
     local_apic_write_command(0x280, 0, lapic_info_id);  // Clear APIC errors
@@ -523,6 +526,7 @@ void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id)
     mdelay(100);  // wait 10 msec
 }
 
+// two STARTUPs with delay
 // Send STARTUP IPI (twice)
 // + What the function does
 // + Loops twice, sending a STARTUP IPI to the target APIC ID.
@@ -543,6 +547,27 @@ void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id)
         mdelay(200);  // wait 200 msec
     };
 }
+
+void Send_STARTUP_IPI_TwiceEx(unsigned int apic_id, int lapic_info_id, unsigned int vector)
+{
+    //unsigned int vector_number = 0x8;
+    unsigned int vector_number = vector;
+    long i=0;
+
+    printk("Send_STARTUP_IPI_TwiceEx: start (apic=%u, info=%d, vector=0x%x)\n",
+        apic_id, lapic_info_id, vector_number);
+
+    for (i=0; i<2; i++)
+    {
+        local_apic_write_command(0x280, 0, lapic_info_id);  // Clear APIC errors.
+        local_apic_send_startup(apic_id, vector_number, lapic_info_id);
+        mdelay(20);  // wait 200 msec
+    };
+}
+
+
+
+
 
 /*
 // Disable all interrupts at the legacy PIC.

@@ -378,6 +378,7 @@ void local_apic_send_init(unsigned int apic_id, int lapic_info_id);
 void local_apic_send_startup(unsigned int apic_id, unsigned int vector, int lapic_info_id);
 void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id);
 void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id);
+void Send_STARTUP_IPI_TwiceEx(unsigned int apic_id, int lapic_info_id, unsigned int vector);
 
 void apic_setup_registers(int lapic_info_id);
 int lapic_info_initializing(unsigned long lapic_pa, int lapic_info_id);

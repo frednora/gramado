@@ -286,6 +286,8 @@ static void __ap_kmain_imp(void)
 
     //PROGRESS("AP_kmain: \n")
 
+    printk("AP_kmain: [DEBUG] Calling __AP_BSP_handshake\n");
+
 // Talk with the BSP in order to identify the current AP.
 // #ps: return the lapic info id, not the real hw cpu id.
 // see: kmain.c
