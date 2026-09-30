@@ -523,7 +523,7 @@ void Send_INIT_IPI_Once(unsigned int apic_id, int lapic_info_id)
 {
     local_apic_write_command(0x280, 0, lapic_info_id);  // Clear APIC errors
     local_apic_send_init(apic_id, lapic_info_id);
-    mdelay(100);  // wait 10 msec
+    mdelay(20);  // wait 10 msec
 }
 
 // two STARTUPs with delay
@@ -544,7 +544,7 @@ void Send_STARTUP_IPI_Twice(unsigned int apic_id, int lapic_info_id)
     {
         local_apic_write_command(0x280, 0, lapic_info_id);  // Clear APIC errors.
         local_apic_send_startup(apic_id, vector_number, lapic_info_id);
-        mdelay(200);  // wait 200 msec
+        mdelay(20);  // wait 200 msec
     };
 }
 

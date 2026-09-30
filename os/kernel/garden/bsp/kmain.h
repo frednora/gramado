@@ -179,7 +179,6 @@ int qf_get_message(void);
 // #test: For dialog with APs
 void welcome_ap_hlt(void);
 void welcome_ap_pause(void);
-int __AP_BSP_handshake(void);
 
 
 //

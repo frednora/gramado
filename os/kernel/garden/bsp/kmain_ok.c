@@ -352,77 +352,6 @@ void welcome_ap_pause(void)
     // #todo
 }
 
-// Talk with the BSP in order to identify the current AP.
-// Called by __ap_kmain_imp() in apmain.c
-// OUT: id in lapic_info[] database.
-int __AP_BSP_handshake(void)
-{
-    //int my_lapic_id;  // ID for the lapic info
-    int localid;      // hw id
-    int localversion;
-
-    unsigned long *ap_shmm = (unsigned long *) ____DANGER_TRAMPOLINE_SHARED_AREA;
-
-
-    ap_startup_counter++;  // Update counter
-
-// Get the slot id in lapic_info[] database.
-// The BSP is telling us what is our lapic info id.
-// Based on that, we are able to get the real hw cpu id.
-
-    /*
-    my_lapic_id = WelcomeAP.my_lapic_info_id;
-    if (my_lapic_id < 0)
-        goto fail;
-    if (my_lapic_id >= NR_CPUS)
-        goto fail;
-    */
-
-    // On the AP side (inside __AP_BSP_handshake or earlier):
-    int my_lapic_id = (int) ap_shmm[1];
-    if (my_lapic_id < 0 || my_lapic_id >= NR_CPUS)
-        goto fail;
-
-
-    // Print:
-    printk("__AP_BSP_handshake: Slot id:%d\n", my_lapic_id );
-
-
-// ---------------
-// #important: (REAL CPU ID)
-// ID (the real id provided by the hardware)
-// Saving it into our structure
-
-    localid = (int) apic_get_id(my_lapic_id);
-    lapic_info[my_lapic_id].local_id = (int) (localid & 0xFF);
- 
-// ---------------
-// Version
-// 8bits
-// 10H~15H
-// Saving it into our structure
-
-    localversion = (int) apic_get_version(my_lapic_id);
-    lapic_info[my_lapic_id].local_version = (int) (localversion & 0xFF);
-
-    // Print:
-    printk("__AP_BSP_handshake: slot id:%d | HW ID: %d | VERSION: %x\n",
-        my_lapic_id,
-        lapic_info[my_lapic_id].local_id,
-        lapic_info[my_lapic_id].local_version 
-    );
-
-    apic_mark_cpu_as_running(my_lapic_id);  // The Core 1 is running now.
-    WelcomeAP.bsp_is_waiting = FALSE;       // BSP can continue
-    ap_shmm[2] = 0;   // clear “BSP is waiting”
-
-// Return a valid ID for the lapic info
-    return (int) my_lapic_id;
-
-fail:
-    return (int) -1;  // Return an invalid ID
-}
-
 
 /*
  * panic_at_init()
@@ -1115,6 +1044,9 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
 
         Send_STARTUP_IPI_TwiceEx(target_hw_apic_id, target_lapic_info_id, vector);
         printk("SIPIs done, waiting for signature...\n");
+
+
+        return 0;   // #test
 
 
 
@@ -1943,10 +1875,12 @@ void I_kmain(int arch_type)
             // But for onw single core we are able to launch any one of them.
 
             // IN: hw id
-
-            __test_initialize_ap_processor(1);    // ok
-            //__test_initialize_ap_processor(2);  // ok
-            // __test_initialize_ap_processor(3);  // ok
+            __test_initialize_ap_processor(1);   // ok
+            mdelay(40);            
+            __test_initialize_ap_processor(2);  // ok
+            mdelay(40);
+            __test_initialize_ap_processor(3);  // ok
+            mdelay(40);
             // ...
         }
 
