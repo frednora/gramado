@@ -99,6 +99,12 @@ extern void systemcall64(void);  // entry point from assembly
 #define USER_CS   0x18  // Base address, without the extra bits.
 //#define USER_SS   0x20  // Base address, without the extra bits.
 
+// #todo
+// Basically we are creating a segment that will be used 
+// to store information about the current core.
+// The swapgs instruction will swap the gs base with the kernel gs base.
+// This way we have the normal usage of the gs segment in user mode 
+// and a special usage of the gs segment in kernel mode.
 
 void x64_setup_syscall64(void)
 {

@@ -290,6 +290,7 @@ struct lapic_info_d
 // The idle thread for this processor:
 // This thread will run here when there is no other job to do.
     tid_t idle_tid;   // TID
+    pid_t idle_pid;   // PID
 
 // The current thread running on this core.
 // Currently having the processing time on this core.

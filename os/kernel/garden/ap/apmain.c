@@ -17,10 +17,13 @@ static void __ap_dummy_r0_thread(void);
 
 static void __ap_dummy_r0_thread(void)
 {
+    printk("AP: Dummy thread for AP core\n");
     while(1){
+        asm ("cli");
         asm ("hlt");
-    }
+    };
 }
+
 
 // #test:
 // The AP is operating as a DPC dispatcher.
@@ -350,6 +353,15 @@ static void __ap_kmain_imp(void)
     unsigned long *ap_shmm = (unsigned long *) ____DANGER_TRAMPOLINE_SHARED_AREA;
     lapic_id = (int) ap_shmm[1];
     printk("AP_kmain: lapic info ID %d\n", ap_shmm[1]);
+    // #ps:
+    // The lapic_info_id is the index for the lapic_info[] table.
+    // It can't be zero because the first entry is for the BSP.
+    if (lapic_id <= 0 || lapic_id >= NR_CPUS)
+    {
+        printk("__ap_kmain_imp: lapic_id\n");
+        goto fail;
+    }
+
 
     int hw_id = (int) apic_get_id(lapic_id);
     lapic_info[lapic_id].local_id = (int) (hw_id & 0xFF);
@@ -361,74 +373,6 @@ static void __ap_kmain_imp(void)
 
     apic_mark_cpu_as_running(lapic_id);  // The Core 1 is running now.
     printk("AP_kmain: Core %d is RUNNING ... :) \n", lapic_id);
-
-    //printk("AP_kmain: #hang\n");
-    //while (1){
-        //asm ("hlt");
-    //}
-
-    //printk("AP_kmain: [DEBUG] Calling __AP_BSP_handshake\n");
-
-// Talk with the BSP in order to identify the current AP.
-// #ps: return the lapic info id, not the real hw cpu id.
-// see: kmain.c
-
-    //#deprecated
-    // lapic_id = (int) __AP_BSP_handshake();
-
-// #bugbug
-// #important:
-// The handshake is fully working only for the first AP we launch.
-// for anyone of them, but not for more than one.
-
-    //printk("AP_kmain: [DEBUG] handshake ok for core=%d\n", lapic_id);
-
-
-// #test
-/*
-    if (lapic_id > 1)
-    {
-        //panic("AP_kmain: id\n", lapic_id);
-        asm ("hlt");
-    }
-*/
-
-
-/*
-    if (lapic_id <0 || lapic_id >= NR_CPUS)
-    {
-        panic("AP_kmain: id\n");
-    }
-*/
-
-//
-// Compare
-//
-
-/*
-    int MyHardwareID = (int) apic_get_id_00();
-    if (lapic_info[id].local_id == MyHardwareID)
-    {
-        panic("AP_kmain: MyHardwareID\n");
-    }
-*/
-
-/*
-
-// #ps:
-// Maybe we do not need to call this routine and 
-// have an initialization path for the AP different from the BSP.
-
-    ProcessorNumber = id;  // ID
-    Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
-    if (Status == FALSE){
-        PROGRESS("on I_initialize_kernel()\n");
-    }
-    if (system_state == SYSTEM_ABORTED){
-        PROGRESS("SYSTEM_ABORTED\n");
-    }
-*/
-
 
 // =================================================================
 
@@ -495,6 +439,21 @@ static void __ap_kmain_imp(void)
 // Link it to this lapic id
     t->current_processor = lapic_id;
 
+//
+// Idle thread and idle process
+//
+
+    lapic_info[lapic_id].idle_tid = (tid_t) t->tid;
+    lapic_info[lapic_id].idle_pid = (pid_t) t->tgid;
+
+//
+// Current thread and current process
+//
+
+    lapic_info[lapic_id].current_tid = (tid_t) t->tid;
+    lapic_info[lapic_id].current_pid = (pid_t) t->tgid;
+
+
 // This is what i am gonna do after the thread creation 
 // just as a safe measure ... 
 // in the case this thread eventually reaches the task swtiching
@@ -522,23 +481,26 @@ AP
 // DPC
 //
 
-    // #test: Using DPC via AP
-    //if (CONFIG_USE_DPC_VIA_AP == 1){
-    //    __ap_DPC_loop(lapic_id);
-    //}
+    // #test: 
+    // Using DPC via AP
+    // if (CONFIG_USE_DPC_VIA_AP == 1)
+    // {
+    //     __ap_DPC_loop(lapic_id);
+    // }
+
 
 //
-// Animation
+// Go to the dummy thread
 //
 
-    // __ap_ANIMATION_loop();
-    //__ap_ANIMATION_loop2(lapic_id);
+    __ap_dummy_r0_thread();
+
 
 // Something went wrong with this AP.
 // #todo:
 // Call a system routine in order to report this.
 
-AP_die:
+fail:
     while (1){
         asm (" cli ");
         asm (" hlt ");
