@@ -356,13 +356,16 @@ Standard Linux Runlevels (0-6)
 // The quantum multiplier.
 // See: quantum.h
 
-// ++ More responsive
-#define __QUANTUM_MULTIPLIER    1
-//#define __QUANTUM_MULTIPLIER    2
+// #test
+// ++ More responsive (But it spends more time in the scheduler)
+//#define __QUANTUM_MULTIPLIER    1
+#define __QUANTUM_MULTIPLIER    2
 //#define __QUANTUM_MULTIPLIER    3
 //#define __QUANTUM_MULTIPLIER    9
+//#define __QUANTUM_MULTIPLIER    20
 // ...
 // -- Less responsive
+
 
 #define CONFIG_QUANTUM_MULTIPLIER  __QUANTUM_MULTIPLIER  
 
