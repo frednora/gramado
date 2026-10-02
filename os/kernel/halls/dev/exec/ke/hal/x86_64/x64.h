@@ -4,6 +4,42 @@
 #ifndef ____X64_H
 #define ____X64_H    1
 
+
+//
+// MSR indices
+//
+
+#define IA32_EFER             0xC0000080
+#define IA32_STAR             0xC0000081
+#define IA32_LSTAR            0xC0000082
+#define IA32_FMASK            0xC0000084
+// ...
+#define IA32_GS_BASE          0xC0000101
+#define IA32_KERNEL_GS_BASE   0xC0000102
+// ...
+
+//
+//
+//
+
+// Per-CPU data that will be pointed by GS
+struct cpu_local_d 
+{
+    uint32_t cpu_id;                 // index into lapic_info[]
+    // You can add more fields later if you want
+    // lapic_info_t *lapic;
+    // void *current_thread;
+    // etc.
+};
+
+struct cpu_local_d cpu_locals[NR_CPUS];
+
+
+//
+//
+//
+
+
 // Interrupt vectors for x64.
 
 /*
@@ -78,8 +114,13 @@
 // == prototypes ============================================
 //
 
+// Setup fast privilege transition user <--> kernel
+void x64_setup_syscall64(unsigned long handler_address);
 
-void x64_setup_syscall64(void);
+// Setup the GS base for a given core
+// Call this once for every core (BSP + APs)
+void x64_setup_cpu_local(int cpu_id);
+
 
 void x64_load_cr8(unsigned long value);
 

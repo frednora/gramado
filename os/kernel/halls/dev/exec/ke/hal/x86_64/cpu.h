@@ -4,7 +4,7 @@
 #ifndef __KE_CPU_H
 #define __KE_CPU_H    1
 
-// Supported brands.
+// Supported brands
 #define Processor_NULL   0 
 #define Processor_INTEL  1
 #define Processor_AMD    2
@@ -13,12 +13,12 @@
 // #define Processor_ARM  3
 //...
 
-// Intel modes.
-// #todo: We need better names.
-#define SI_RM 0    // Real Mode.
-#define SI_PM 1    // Protected Mode.
-#define SI_LM 2    // Long Mode.
-#define SI_SM 3    // SMM.
+// Intel modes
+// #todo: We need better names
+#define SI_RM  0    // Real Mode
+#define SI_PM  1    // Protected Mode
+#define SI_LM  2    // Long Mode
+#define SI_SM  3    // SMM
 
 // APIC
 #define IA32_APIC_BASE_MSR          0x1B

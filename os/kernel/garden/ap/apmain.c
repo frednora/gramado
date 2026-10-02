@@ -362,6 +362,10 @@ static void __ap_kmain_imp(void)
         goto fail;
     }
 
+    // Setup some information in the lapic_info structure for this core
+    // #ps:
+    // Probably some elements were already set by the BSP before calling this AP.
+    // see: apic.c
 
     int hw_id = (int) apic_get_id(lapic_id);
     lapic_info[lapic_id].local_id = (int) (hw_id & 0xFF);
@@ -373,6 +377,22 @@ static void __ap_kmain_imp(void)
 
     apic_mark_cpu_as_running(lapic_id);  // The Core 1 is running now.
     printk("AP_kmain: Core %d is RUNNING ... :) \n", lapic_id);
+
+
+// ===============================
+
+// Setup the GS base for a given core
+// We're gonna use it to point to the cpu_locals structure for this core.
+// This way we can retrieve the current core's id.
+// see:
+// x64.h and x64.c
+
+    x64_setup_cpu_local(lapic_id);
+
+// Setup the usage of syscall in long mode for this AP core
+// #todo: Pick an address for the syscall handler for this AP core.
+
+    // x64_setup_syscall64( (unsigned long) &systemcall64 );
 
 // =================================================================
 
@@ -474,6 +494,7 @@ AP
   Dedicated thread
   Runs forever
 */
+
 
 // ===============================
 

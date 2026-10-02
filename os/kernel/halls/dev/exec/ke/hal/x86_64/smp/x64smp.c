@@ -234,8 +234,12 @@ int x64smp_initialization(void)
     };
 
 // The bsp
-// Check the lapix initialization status
+// Check the lapic initialization status
     if (lapic_info[0].initialized == TRUE){
+
+        // Setup the GS base for the BSP core
+        x64_setup_cpu_local(0);
+
         return TRUE;
 
     } else if (lapic_info[0].initialized != TRUE){

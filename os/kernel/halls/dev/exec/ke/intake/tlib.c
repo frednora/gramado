@@ -28,8 +28,8 @@ void show_slot(tid_t tid)
 
 // Show one slot
     printk ("\n");
-    printk ("TID   PID   Core pdPA  Prio  State Quan Jiffies initial_rip rflags  tName\n");
-    printk ("====  ====  ==== ====  ====  ===== ==== ====    ==========  ======  =====\n");
+    printk ("TID   PID   Core pdPA  Prio  State Quan Steps   initial_rip rflags  tName\n");
+    printk ("====  ====  ==== ====  ====  ===== ==== =====   ==========  ======  =====\n");
     printk ("%d    %d    %d   %x   %d    %d    %d    %d      %x          %x      %s   \n", 
         t->tid, 
         t->tgid,  // Thread Environment ID. (fka PID)
@@ -38,7 +38,7 @@ void show_slot(tid_t tid)
         t->priority, 
         t->state,
         t->quantum,    // Quantum
-        t->step,       // >>> Jiffies
+        t->step,       // Steps
         t->initial_rip,
         t->context.rflags,
         t->name_address );

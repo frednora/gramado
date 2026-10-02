@@ -84,50 +84,88 @@ void x64_load_cr8(unsigned long value)
 
 */
 
-
 extern void systemcall64(void);  // entry point from assembly
 
-// MSR indices
-#define IA32_EFER   0xC0000080
-#define IA32_STAR   0xC0000081
-#define IA32_LSTAR  0xC0000082
-#define IA32_FMASK  0xC0000084
 
 // Segment selectors (from your GDT setup in x64.c)
-#define KERNEL_CS 0x08
+#define KERNEL_CS  0x08
 //#define KERNEL_SS 0x10
-#define USER_CS   0x18  // Base address, without the extra bits.
-//#define USER_SS   0x20  // Base address, without the extra bits.
+#define USER_CS    0x18  // Base address, without the extra bits.
+//#define USER_SS  0x20  // Base address, without the extra bits.
 
-// #todo
-// Basically we are creating a segment that will be used 
-// to store information about the current core.
-// The swapgs instruction will swap the gs base with the kernel gs base.
-// This way we have the normal usage of the gs segment in user mode 
-// and a special usage of the gs segment in kernel mode.
 
-void x64_setup_syscall64(void)
+// IA32_EFER  → enable SCE
+// IA32_STAR  → which CS selectors to load
+// IA32_LSTAR → the kernel entry point (systemcall64)
+// IA32_FMASK → which flags to clear on entry
+
+// Setup fast privilege transition user <--> kernel
+void x64_setup_syscall64(unsigned long handler_address)
 {
     unsigned int lo=0; 
     unsigned int hi=0;
 
-    // 1. Enable SYSCALL/SYSRET in EFER
+    // 1. EFER:
+    // Enable SYSCALL/SYSRET in EFER. (set SCE bit)
     cpuGetMSR(IA32_EFER, &lo, &hi);
-    lo |= 1; // set SCE bit
+    lo |= 1;
     cpuSetMSR(IA32_EFER, lo, hi);
 
-    // 2) STAR: [63:48] = User CS (for sysret), [47:32] = Kernel CS
+    // 2. STAR: 
+    // [63:48] = User CS (for sysret)
+    // [47:32] = Kernel CS
     unsigned long star = ((unsigned long)USER_CS << 48) | ((unsigned long)KERNEL_CS << 32);
     cpuSetMSR(IA32_STAR, (unsigned int)star, (unsigned int)(star >> 32));
 
-    // 3. LSTAR: entry point RIP for SYSCALL
-    unsigned long lstar = (unsigned long) &systemcall64;
+    // 3. LSTAR: 
+    // entry point RIP for SYSCALL
+    unsigned long lstar = (unsigned long) handler_address;
     cpuSetMSR(IA32_LSTAR, (unsigned int)lstar, (unsigned int)(lstar >> 32));
 
-    // 4. FMASK: clear TF|DF|IF on entry
+    // 4. FMASK: 
+    // clear TF|DF|IF on entry
     unsigned long fmask = (1 << 8) | (1 << 9) | (1 << 10);
     cpuSetMSR(IA32_FMASK, (unsigned int)fmask, (unsigned int)(fmask >> 32));
 }
+
+
+// Local worker
+// Helper to write the MSR
+static inline void x64_write_gsbase(uint64_t value)
+{
+    unsigned int lo = (unsigned int)(value & 0xFFFFFFFF);
+    unsigned int hi = (unsigned int)(value >> 32);
+    cpuSetMSR(IA32_KERNEL_GS_BASE, lo, hi);
+    // Optional: also set the active one if you want
+    // cpuSetMSR(IA32_GS_BASE, lo, hi);
+}
+
+
+// Setup the GS base for a given core
+// Call this once for every core (BSP + APs)
+void x64_setup_cpu_local(int cpu_id)
+{
+    if (cpu_id < 0 || cpu_id >= NR_CPUS)
+        panic("x64_setup_cpu_local: invalid cpu_id");
+
+//
+// Fill the structure
+//
+
+    // id
+    cpu_locals[cpu_id].cpu_id = (uint32_t) cpu_id;
+
+    // Optional: store a pointer to your existing structure
+    // cpu_locals[cpu_id].lapic = &lapic_info[cpu_id];
+
+    // ...
+
+    // Point KERNEL_GS_BASE to this core's structure
+    x64_write_gsbase(
+        (uint64_t) &cpu_locals[cpu_id]
+    );
+}
+
 
 //
 // =====================================
@@ -1161,8 +1199,10 @@ int x64_init_intel (void)
     __get_cpu_intel_parameters();
 
 
-// Setup the usage of syscall in long mode.
-    x64_setup_syscall64();
+// Setup the usage of syscall in long mode for BSP core only
+
+    x64_setup_syscall64( (unsigned long) &systemcall64 );
+
 
 // Clear cr8. Allowing all the 16 interrupts.
 // #bugbug: 
