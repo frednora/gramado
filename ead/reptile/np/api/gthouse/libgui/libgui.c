@@ -2652,6 +2652,7 @@ void libgui_set_mouse_pointer(unsigned long x, unsigned long y)
     __new_mouse_y = y;
 }
 
+
 // Draw button given the dc and the ui component
 void 
 __draw_button_borders_dc(
@@ -2867,6 +2868,8 @@ struct ui_component_d *libgui_create_ui_component(
     uic->width = width;
     uic->height = height;
 
+    uic->status = 0;  // default status
+
 // ================================
 
     if (label != NULL) {
@@ -2917,16 +2920,19 @@ struct ui_component_d *libgui_create_ui_component(
             0   //rop 
         );
 
-		// Draw button's borders
+        // Button status:
+		// Draw button's borders depending on the button's status
+        // #todo: Hardcoded for now. Maybe the function can receive a parameter for the status.
+        uic->status = BS_DEFAULT;  // default status for buttons
         __draw_button_borders_dc(
-            dc,
-            uic,
-            0x00E0E0E0,  // tl 2 inner (light)
-            0x00FAFAFA,  // tl 1 most inner (lighter)
-            0x00505050,  // br 2 inner (dark)
-            0x00989898,  // br 1 most inner (light) 
-            0x00101010   // outer 
-		);
+                dc,
+                uic,
+                0x00E0E0E0,  // tl 2 inner (light)
+                0x00FAFAFA,  // tl 1 most inner (lighter)
+                0x00505050,  // br 2 inner (dark)
+                0x00989898,  // br 1 most inner (light) 
+                0x00101010   // outer 
+		    );
 
         /*
 		// Draw button's label
@@ -3030,6 +3036,17 @@ struct ui_component_d *libgui_create_ui_component(
     return (struct ui_component_d *) uic;
 }
 
+
+/*
+Raised button
+top/left = light
+bottom/right = dark
+
+Pressed button
+top/left = dark
+bottom/right = light
+*/
+
 int 
 libgui_redraw_ui_component(
 	struct ui_component_d *uic,
@@ -3038,7 +3055,7 @@ libgui_redraw_ui_component(
     unsigned long text_x=0;
     unsigned long text_y=0;
     unsigned long LongSize=0;
-    unsigned long scale = 1; // default
+    unsigned long scale = 1;  // default
 
 	// uic
     if ((void*) uic == NULL)
@@ -3085,6 +3102,57 @@ libgui_redraw_ui_component(
             0x00C0C0C0,  //color
             0   //rop 
         );
+
+        unsigned long tl1_color = 0;  // inner
+        unsigned long tl2_color = 0;  // most inner
+        unsigned long br1_color = 0;  // inner
+        unsigned long br2_color = 0;  // most inner
+
+        // #test: Changing colors based on the button's status
+        switch (uic->status){
+        case BS_RELEASED:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_FOCUS:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_PRESSED:
+            tl1_color = 0x00505050;  // tl 1 most inner (dark)
+            tl2_color = 0x00989898;  // tl 2 inner (light)
+            br1_color = 0x00E0E0E0;  // br 1 most inner (light) 
+            br2_color = 0x00FAFAFA;  // br 2 inner (lighter)
+            break;
+        case BS_HOVER:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_DISABLED:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_PROGRESS:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        default:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        };
 
 		// Draw button's borders
         __draw_button_borders_dc(
@@ -3234,6 +3302,36 @@ libgui_set_ui_component_dimension(
 	uic->width = width;
 	uic->height = height;
 	return 0;
+}
+
+int
+libgui_set_ui_component_status(
+    struct ui_component_d *uic,
+    int status )
+{
+    if ((void*) uic == NULL)
+        return -1;
+
+    if (uic->magic != 1234)
+        return -1;
+
+    switch (status)
+    {
+        case BS_RELEASED:
+        case BS_FOCUS:
+        case BS_PRESSED:
+        case BS_HOVER:
+        case BS_DISABLED:
+        case BS_PROGRESS:
+
+            uic->status = status;
+            return 0;
+
+        default:
+            return -1;
+    };
+
+    return -1;
 }
 
 int 

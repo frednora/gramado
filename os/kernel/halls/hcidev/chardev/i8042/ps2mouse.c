@@ -563,22 +563,26 @@ void DeviceInterface_PS2Mouse(void)
 
 
 // =============================================
-// #test
+
 // Get status
+// Check is the buffer is full
+// Check if it is a mouse device
+// Return if it is not a mouse device
+
     status = in8(I8042_STATUS);
-// buffer full?
+
     if (!(status & I8042_BUFFER_FULL)){
         return;
     }
-// which device?
-// Is it a mouse device?
-// Return if it is not a mouse device.
+
     is_mouse_device = 
         ((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) 
         ? TRUE 
         : FALSE;
+
     if (is_mouse_device == FALSE)
         return;
+
 // =============================================
 
     PS2Mouse.last_jiffy = (unsigned long) get_ticks();
@@ -630,9 +634,11 @@ void DeviceInterface_PS2Mouse(void)
         }
         mouse_stage++;
         break;
+
     case 1:
         mouse_stage++;
         break;
+
     // If we have wheel, so we got another stage.
     // If we do not have the wheel.
     // Commit packet.
@@ -645,11 +651,13 @@ void DeviceInterface_PS2Mouse(void)
         mouse_stage = 0;
         goto done;
         break;
+
     case 3:
         __ps2mouse_parse_data_packet();
         mouse_stage = 0;
         goto done;
         break;
+
     // Error: drain and clean
     default:
         //in8(0x60);
@@ -682,8 +690,14 @@ ps2mouse_ioctl (
     }
 
     switch (request){
+
     //case ?:
         //break;
+
+    //case ?:
+        //break;
+
+
     default:
         return (int) (-EINVAL);
         break;
@@ -733,6 +747,10 @@ void ps2mouse_initialize_device(void)
     PS2Mouse.use_polling = FALSE;
     PS2Mouse.last_jiffy = jiffies;
 
+// Clear the buffer
+    buffer_mouse[0] = (char) 0x00;
+    buffer_mouse[1] = (char) 0x00;
+    buffer_mouse[2] = (char) 0x00;
 
 // Pointer
     __initialize_mouse_position();
@@ -794,7 +812,7 @@ void ps2mouse_initialize_device(void)
 
 // Enable mouse
 // #ps: Do not expect ACK after controller command. Only from device. 
-    wait_then_write(0x64,0xA8);
+    wait_then_write(0x64, 0xA8);
 
 // ========================================
 // Reset
@@ -995,14 +1013,9 @@ None	Ancient AT keyboard with translation enabled in the PS/Controller (not poss
     i8042_mouse_expect_ack();
     PS2Mouse.resolution = PS2MOUSE_RESULUTION;
 
-// OK
-    PS2Mouse.initialized = TRUE;
+    PS2Mouse.initialized = TRUE;  // OK
 }
 
 //
 // End
 //
-
-
-
-

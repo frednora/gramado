@@ -4,6 +4,19 @@
 #ifndef __LIBGUI_UI_H
 #define __LIBGUI_UI_H    1
 
+
+// Button states (int)
+#define BS_NULL      0 
+#define BS_RELEASED  1
+#define BS_FOCUS     2
+#define BS_PRESSED   3
+#define BS_HOVER     4
+#define BS_DISABLED  5
+#define BS_PROGRESS  6
+// ...
+#define BS_DEFAULT   BS_RELEASED
+
+
 // Char
 struct libgui_char_initialization_d
 {
@@ -127,6 +140,16 @@ struct ui_component_d
     int magic;
     int id;
     int type;
+
+// status = interaction state
+    int status;
+
+// state = lifecycle/runtime state
+    int state;
+
+// style = appearance
+    int style;
+
 
 // 0x0001 - (centered horizontally) (header, label, footer ...)
 // 0x0002 - (centered vertically)   (header, label, footer ...)

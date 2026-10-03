@@ -86,7 +86,10 @@ static void set_default_responder(int wid);
 static void switch_responder(int fd);
 static void trigger_default_responder(int fd);
 
-static void on_button_clicked(int id);
+static void on_button_pressed(int button_id);
+static void on_button_released(int button_id);
+static void on_button_clicked(int button_id);
+
 static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
 static void update_children(int fd);
 
@@ -130,22 +133,92 @@ syscall3 (
 }
 
 
-// Handle click events for components
-static void on_button_clicked(int id)
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_pressed(int button_id)
 {
-    if (id < 0)
+    if (button_id < 0)
         return;
 
-    switch (id)
+    if (button_id == MyButton_Restart.button_id)
+    {
+        libgui_set_ui_component_status(
+            uic_button_restart,
+            BS_PRESSED );
+
+        libgui_redraw_ui_component(
+            uic_button_restart,
+            dc00 );
+    }
+    else if (button_id == MyButton_Shutdown.button_id)
+    {
+        libgui_set_ui_component_status(
+            uic_button_shutdown,
+            BS_PRESSED );
+
+        libgui_redraw_ui_component(
+            uic_button_shutdown,
+            dc00 );
+
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+
+}
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_released(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == MyButton_Restart.button_id)
+    {
+        libgui_set_ui_component_status(
+            uic_button_restart,
+            BS_RELEASED );
+
+        libgui_redraw_ui_component(
+            uic_button_restart,
+            dc00 );
+    }
+    else if (button_id == MyButton_Shutdown.button_id)
+    {
+        libgui_set_ui_component_status(
+            uic_button_shutdown,
+            BS_RELEASED );
+
+        libgui_redraw_ui_component(
+            uic_button_shutdown,
+            dc00 );
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+}
+
+// Handle click events for components
+static void on_button_clicked(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    switch (button_id)
     {
         case 1:  // MyButton_Restart.icon_id
-            printf("Button %d clicked!\n", id);
+            // printf("Button %d clicked!\n", button_id);
             rtl_clone_and_execute("reboot.bin");
             exit(0);
             break;
 
         case 2:  // MyButton_Shutdown.icon_id
-            printf("Button %d clicked!\n", id);
+            // printf("Button %d clicked!\n", button_id);
             rtl_clone_and_execute("shutdown.bin");
             //printf("power: Send QUIT message\n");
             //gws_async_command(fd,88,0,0);  // Send quit message
@@ -153,7 +226,7 @@ static void on_button_clicked(int id)
             break;
 
         default:
-            printf("Unknown button clicked: %d\n", id);
+            printf("Unknown button clicked: %d\n", button_id);
             break;
     };
 }
@@ -514,20 +587,28 @@ powerProcedure(
         // instead of relative values.
         //printf("%d %d\n", long1, long2);
         ButtonId = (int) __hit_test_button(long1, long2);
-        if (ButtonId > 0)
-            __hover_button_id = ButtonId;
-        if (ButtonId <= 0)
+
+        if (ButtonId <= 0){
             __hover_button_id = -1;
+        }
+        if (ButtonId > 0){
+            __hover_button_id = ButtonId;
+        }
+        // #we can create a worker called on_mouse_move()
         break;
 
     case MSG_MOUSEPRESSED:
         //printf("power: MSG_MOUSEPRESSED:\n");
+        on_button_pressed(__hover_button_id);  // Visual effect
         break;
 
     case MSG_MOUSERELEASED:
-        printf("power: Button released: %d\n", __hover_button_id);
+
+        //printf("power: Button released: %d\n", __hover_button_id);
         //printf("power: MSG_MOUSERELEASED:\n");
-        on_button_clicked(__hover_button_id);
+
+        on_button_released(__hover_button_id);  // Visual effect
+        // on_button_clicked(__hover_button_id);  // Action
 
         // #test: Testing the activation
         // We gotta do this only when the window is not active
