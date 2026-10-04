@@ -402,7 +402,7 @@ struct thread_d
 
 // #test
 // see: wproxy.c
-    struct wproxy_d *wproxy;
+    struct WND_d *wproxy;
 
 // #todo
 // Other process can't take some actions on this thread

@@ -9,10 +9,16 @@
 // Global list for all the Thread Environment structures.
 unsigned long teList[PROCESS_COUNT_MAX];
 
-// The 'thread environment' structure.
-struct te_d  *TEKernelProcess;  // Kernel process
-struct te_d  *TEInitProcess;    // Init process
 
+//
+// Main processes
+//
+
+// The 'thread environment' structure for the main processes
+struct te_d  *TEKernelProcess;         // Kernel process
+struct te_d  *TEInitProcess;           // Init process
+struct te_d  *TEDisplayServerProcess;  // Display Server process
+// ...
 
 // See: kpid.h
 pid_t __gpidBoot=0;
@@ -111,6 +117,10 @@ struct te_d *get_kernel_process(void){
 
 struct te_d *get_init_process(void){
     return (struct te_d *) TEInitProcess;
+}
+
+struct te_d *get_display_server_process(void){
+    return (struct te_d *) TEDisplayServerProcess;
 }
 
 void close_all_threads_of_this_process(struct te_d *process)

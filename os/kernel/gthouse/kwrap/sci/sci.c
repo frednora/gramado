@@ -2460,8 +2460,8 @@ void *sci2 (
 // This is a work in progress.
     if (number == 850)
     {
-        struct wproxy_d *tmp_wproxy;
-        tmp_wproxy = (struct wproxy_d *) wproxyCreateObject();
+        struct WND_d *tmp_wproxy;
+        tmp_wproxy = (struct WND_d *) wproxyCreateObject();
         if ((void*) tmp_wproxy == NULL) {
             return NULL;
         }

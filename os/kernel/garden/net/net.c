@@ -460,8 +460,11 @@ network_register_ring3_display_server(
     // Maybe we can move the workers for this job from here to dispsrv.c.
     // Keeping here only the wrapper.
 
+    // Process
     struct te_d *p;
     pid_t current_process = (pid_t) -1;
+
+    // Thread
     struct thread_d *t;
 
 // Parameters: 
@@ -485,7 +488,7 @@ network_register_ring3_display_server(
 
     current_process = (pid_t) get_current_process(0);
 
-    if ( current_process < 0 || current_process >= PROCESS_COUNT_MAX )
+    if (current_process < 0 || current_process >= PROCESS_COUNT_MAX)
     {
         panic("network_register_ring3_display_server: current_process\n");
     }
@@ -505,13 +508,18 @@ network_register_ring3_display_server(
 // Save
 //
 
+// Savint the pointer to the display server process into a global variable
+
+    TEDisplayServerProcess = (struct te_d *) p;
+
 // Let's setup who own the primary display device.
 // 'System display device'
 // The owner pid.
 
     if ((void*) primary_display_device != NULL)
     {
-        if (primary_display_device->magic == 1234){
+        if (primary_display_device->magic == 1234)
+        {
             primary_display_device->owner_pid = (pid_t) current_process;
         }
     }
@@ -537,14 +545,22 @@ network_register_ring3_display_server(
         goto fail;
     }
 
-// Setup priority
+// Setup the process priority
     __maximize_ds_priority(current_process);
 
-// Change the foreground console.
-// Setup c1/
+// #test:
+// Change the foreground console
     console_set_current_virtual_console(CONSOLE1);
 
-// #test
+// #todo
+// Maybe we can associate a console to the display server process.
+// In this case no other process will be able to access the display device.
+// Only if the process invokes a syscall that stops the display server/compositor,
+// and allow the process to take the control of the display device.
+// ex: applications like games, video players, etc. 
+// will be able to take the control of the display device.
+
+// #test:
 // Is the flower thread valid?
     t = p->flower;
     if ((void*) t == NULL)

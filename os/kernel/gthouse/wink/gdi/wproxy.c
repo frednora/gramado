@@ -7,25 +7,25 @@
 
 
 // List of window proxy objects.
-struct wproxy_d *wproxy_head;
+struct WND_d *wproxy_head;
 // The window proxy that is under the mouse cursor.
-struct wproxy_d *wproxy_hover;
+struct WND_d *wproxy_hover;
 // Shell window proxy. It is the taskbar.
-struct wproxy_d *wproxy_shell;
+struct WND_d *wproxy_shell;
 // The desktop area wproxy
-struct wproxy_d *wproxy_desktop;
+struct WND_d *wproxy_desktop;
 // ...
 
 
 // Add the window proxy to the list of window proxy objects.
-static int __wproxy_add_to_list(struct wproxy_d *wproxy);
-static int __wproxy_drawframe0(struct wproxy_d *wproxy, int back_or_front);
+static int __wproxy_add_to_list(struct WND_d *wproxy);
+static int __wproxy_drawframe0(struct WND_d *wproxy, int back_or_front);
 
 
 // ==============================
 
 // Add the window proxy to the list of window proxy objects.
-static int __wproxy_add_to_list(struct wproxy_d *wproxy)
+static int __wproxy_add_to_list(struct WND_d *wproxy)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -34,10 +34,10 @@ static int __wproxy_add_to_list(struct wproxy_d *wproxy)
         goto fail;
     }
 
-    struct wproxy_d *w;
+    struct WND_d *w;
 
 // Empty list
-    w = (struct wproxy_d *) wproxy_head;
+    w = (struct WND_d *) wproxy_head;
     if (w == NULL)
     {
         wproxy_head = wproxy;
@@ -78,8 +78,8 @@ fail:
 
 void wproxy_hit_test00(unsigned long x, unsigned long y)
 {
-    struct wproxy_d *hover = NULL;
-    struct wproxy_d *w = NULL;
+    struct WND_d *hover = NULL;
+    struct WND_d *w = NULL;
 
     unsigned long Left = 0;
     unsigned long Top = 0;
@@ -95,7 +95,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
 
 // ----------------------------------------------
 // Start with the system shell. The taskbar.
-    w = (struct wproxy_d *) wproxy_shell;
+    w = (struct WND_d *) wproxy_shell;
     if (w != NULL)
     {
         if (w->magic == 1234)
@@ -120,7 +120,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
 
 // ----------------------------------------------
 // Walk the list of window proxy objects and check against the mouse cursor.
-    w = (struct wproxy_d *) wproxy_head;
+    w = (struct WND_d *) wproxy_head;
     while (w != NULL)
     {
         if (w->magic == 1234)
@@ -183,12 +183,12 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
 }
 
 // Create a window proxy object and add it into the list.
-struct wproxy_d *wproxyCreateObject(void)
+struct WND_d *wproxyCreateObject(void)
 {
-    struct wproxy_d *wproxy;
+    struct WND_d *wproxy;
     int status = -1;
 
-    wproxy = (struct wproxy_d *) kmalloc (sizeof(struct wproxy_d));
+    wproxy = (struct WND_d *) kmalloc(sizeof(struct WND_d));
     if ((void *) wproxy == NULL){
         goto fail;
     }
@@ -200,7 +200,8 @@ struct wproxy_d *wproxyCreateObject(void)
     if (status != 0){
         goto fail;
     }
-    return (struct wproxy_d *) wproxy;
+    return (struct WND_d *) wproxy;
+
 fail:
     return NULL;
 }
@@ -211,7 +212,7 @@ fail:
 int wproxy_set_shell(tid_t tid)
 {
     struct thread_d *t;
-    struct wproxy_d *wproxy;
+    struct WND_d *wproxy;
 
 // parameter:
     if (tid <0 || tid >= THREAD_COUNT_MAX)
@@ -227,7 +228,7 @@ int wproxy_set_shell(tid_t tid)
     }
 
 // wproxy
-    wproxy = (struct wproxy_d *) t->wproxy;
+    wproxy = (struct WND_d *) t->wproxy;
     if ((void *) wproxy == NULL){
         goto fail;
     }
@@ -253,7 +254,7 @@ fail:
 // Create a window proxy object and initialize it with the given parameters.
 // The wproxy holds the pointer to the tid.
 // But the thread do not have a pointer for this wproxy.
-struct wproxy_d *wproxy_create0(
+struct WND_d *wproxy_create0(
     tid_t tid,
     unsigned long l, 
     unsigned long t, 
@@ -261,7 +262,7 @@ struct wproxy_d *wproxy_create0(
     unsigned long h, 
     unsigned int color)
 {
-    struct wproxy_d *wproxy;
+    struct WND_d *wproxy;
 
     if (tid < 0)
         return NULL;
@@ -286,9 +287,10 @@ struct wproxy_d *wproxy_create0(
     wproxy->ca_w = w;
     wproxy->ca_h = h;
 
-    wproxy->tid = (tid_t) tid;
+    wproxy->owner.tid = (tid_t) tid;
 
-    return (struct wproxy_d *) wproxy;
+    return (struct WND_d *) wproxy;
+
 fail:
     return NULL;
 }
@@ -296,11 +298,11 @@ fail:
 // #test: Called by AP processor for testing purpose.
 void wproxy_ap_test(void)
 {
-    struct wproxy_d *w;
+    struct WND_d *w;
     int i=0;
     unsigned int Color = COLOR_RED;
 
-    w = (struct wproxy_d *) wproxy_shell;
+    w = (struct WND_d *) wproxy_shell;
     while (w != NULL){
         if ((void*)w != NULL)
         {
@@ -327,7 +329,7 @@ void wproxy_ap_test(void)
 // Create a data buffer for the window proxy.
 // This is used for off-screen rendering.
 // #todo This is a work in progress.
-char *wproxy_create_data_buffer(struct wproxy_d *wproxy, int size)
+char *wproxy_create_data_buffer(struct WND_d *wproxy, int size)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -349,7 +351,7 @@ fail:
 
 // #test:
 // #todo This is a work in progress.
-char *wproxy_get_data_buffer(struct wproxy_d *wproxy)
+char *wproxy_get_data_buffer(struct WND_d *wproxy)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -364,7 +366,7 @@ fail:
 
 
 // Worker: Draw the window using the wproxy structure.
-static int __wproxy_drawframe0(struct wproxy_d *wproxy, int back_or_front)
+static int __wproxy_drawframe0(struct WND_d *wproxy, int back_or_front)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -407,7 +409,7 @@ fail:
 }
 
 // Draw
-int wproxy_drawframe(struct wproxy_d *wproxy, int back_or_front)
+int wproxy_drawframe(struct WND_d *wproxy, int back_or_front)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -421,7 +423,7 @@ fail:
 }
 
 // Redraw
-int wproxy_redrawframe(struct wproxy_d *wproxy, int back_or_front)
+int wproxy_redrawframe(struct WND_d *wproxy, int back_or_front)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -432,7 +434,7 @@ fail:
 }
 
 // Is it inside the frame?
-int wproxy_is_inside_frame(struct wproxy_d *wproxy, unsigned long x, unsigned long y)
+int wproxy_is_inside_frame(struct WND_d *wproxy, unsigned long x, unsigned long y)
 {
     if ((void *) wproxy == NULL){
         goto fail;
@@ -456,7 +458,7 @@ fail:
 // Is it inside the client area?
 int 
 wproxy_is_inside_client_area(
-    struct wproxy_d *wproxy, 
+    struct WND_d *wproxy, 
     unsigned long x, 
     unsigned long y )
 {
@@ -506,8 +508,8 @@ wproxy_set_parameters_given_tid(
         return;
 
 // Get the wproxy that belongs to the cureground thread
-    struct wproxy_d *wproxy;
-    wproxy = (struct wproxy_d *) target_thread->wproxy;
+    struct WND_d *wproxy;
+    wproxy = (struct WND_d *) target_thread->wproxy;
     if ((void *) wproxy == NULL)
         return;
     if (wproxy->used != TRUE || wproxy->magic != 1234)

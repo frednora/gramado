@@ -505,8 +505,6 @@ network_mouse_event(
 // + Default browser
 // ...
 
-
-// -------------------------------------------
 // Display server: (Service: sci0 513)
 // Register display server into a given valid cgroup.
 int 
@@ -514,23 +512,18 @@ network_register_ring3_display_server(
     struct cgroup_d *cg,
     pid_t caller_pid );
 
-// -------------------------------------------
 // Network server:
-// (Server)
 int 
 network_register_ring3_network_server(
     struct cgroup_d *cg,
     pid_t caller_pid );
 
-// -------------------------------------------
 // OS Shell (explorer/taskbar)
 int 
 network_register_ring3_osshell(
     struct cgroup_d *cg,
     pid_t caller_pid );
   
-
-// -------------------------------------------
 // Default browser - (service: sc0 518)
 // Register browser into a given valid cgroup.
 int 

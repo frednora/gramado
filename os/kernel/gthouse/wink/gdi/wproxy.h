@@ -26,6 +26,30 @@
 #define HIT_CLIENT     2   // Client area
 #define HIT_DESKTOP    3   // Not inside a window
 
+
+// Thread/Desktop related with this window.
+struct WND_OWNER_d 
+{
+    struct process_d *process;
+    struct thread_d  *thread;
+    // ...
+
+// This is the thread id for the thread that owns the window.
+// This is the target thread for sending messages when the 
+// hit-test is successful.
+
+    tid_t tid;   // #bugbug: It sounds redundant now
+
+};
+
+// Header for information about the structure itself.
+struct WND_HEADER_d 
+{
+    int dummy;
+    // ...
+};
+
+
 // #bugbug
 // The values we have here normally are not sync with
 // the values inside the compositor in ring 3.
@@ -34,15 +58,23 @@
 // It affects the hit testing.
 // When is it acceptable? When it isn't?
 
-struct wproxy_d 
+//struct wproxy_d (#ps: This name was deprecated)
+struct WND_d 
 {
+
+// #todo
+// The first main fields here will be two substructures:
+// One for the Thread/Desktop related with this window and 
+// the Header for information about the struture itself.
+
     int used;
     int magic;
 
-// This is the thread id for the thread that owns the window.
-// This is the target thread for sending messages when the 
-// hit-test is successful.
-    tid_t tid;
+// Thread/Desktop related with this window.
+    struct WND_OWNER_d  owner;
+
+// Header for information about the structure itself.
+    struct WND_HEADER_d  header;
 
 // The same id used in the display server. 
 // It is used to identify the window in the display server.
@@ -91,25 +123,25 @@ struct wproxy_d
     int is_ring3_procedure;
 
 // Navigation
-    struct wproxy_d *next;
+    struct WND_d *next;
     // ...
 };
 
-extern struct wproxy_d *wproxy_head;  // List of window proxy objects.
-extern struct wproxy_d *wproxy_hover;  // mouse hover
-extern struct wproxy_d *wproxy_shell;  // The shell window proxy. The taskbar is the shell. 
-extern struct wproxy_d *wproxy_desktop;  // The desktop area.
+extern struct WND_d *wproxy_head;  // List of window proxy objects.
+extern struct WND_d *wproxy_hover;  // mouse hover
+extern struct WND_d *wproxy_shell;  // The shell window proxy. The taskbar is the shell. 
+extern struct WND_d *wproxy_desktop;  // The desktop area.
 // ...
 
 // ======================
 
 void wproxy_hit_test00(unsigned long x, unsigned long y);
 
-struct wproxy_d *wproxyCreateObject(void);
+struct WND_d *wproxyCreateObject(void);
 
 int wproxy_set_shell(tid_t tid);
 
-struct wproxy_d *wproxy_create0(
+struct WND_d *wproxy_create0(
     tid_t tid,
     unsigned long l, 
     unsigned long t, 
@@ -119,24 +151,24 @@ struct wproxy_d *wproxy_create0(
 
 void wproxy_ap_test(void);
 
-char *wproxy_create_data_buffer(struct wproxy_d *wproxy, int size);
-char *wproxy_get_data_buffer(struct wproxy_d *wproxy);
+char *wproxy_create_data_buffer(struct WND_d *wproxy, int size);
+char *wproxy_get_data_buffer(struct WND_d *wproxy);
 
 // Draw frame
-int wproxy_drawframe(struct wproxy_d *wproxy, int back_or_front);
-int wproxy_redrawframe(struct wproxy_d *wproxy, int back_or_front);
+int wproxy_drawframe(struct WND_d *wproxy, int back_or_front);
+int wproxy_redrawframe(struct WND_d *wproxy, int back_or_front);
 
 // Is it inside the frame?
 int 
 wproxy_is_inside_frame(
-    struct wproxy_d *wproxy, 
+    struct WND_d *wproxy, 
     unsigned long x, 
     unsigned long y );
 
 // Is it inside the client area?
 int 
 wproxy_is_inside_client_area(
-    struct wproxy_d *wproxy, 
+    struct WND_d *wproxy, 
     unsigned long x, 
     unsigned long y );
 

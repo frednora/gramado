@@ -351,12 +351,12 @@ static void process_command(void)
 
     // Built-in commands
     if (strcmp(argv[0], "about") == 0) {
-        write(__fd_stdout, "shell: minimal stdin/stdout shell\n", 34);
+        write(__fd_stdout, "shell: Minimal stdin/stdout shell\n", 34);
         write( __fd_stdout, "\n", 1 );  // Go to next line
     }
     else if (strcmp(argv[0], "help") == 0) {
         
-        write(__fd_stdout, "shell: commands: about, help, run\n", 34);
+        write(__fd_stdout, "Embedded commands: about, help, run\n", 36);
         write( __fd_stdout, "\n", 1 );  // Go to next line
 
         //printf("Start\x1B[8CEnd\n");// move cursor right 8 columns

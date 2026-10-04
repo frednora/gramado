@@ -907,9 +907,16 @@ struct te_d
     struct te_d  *next;
 };
 
+//
+// Main processes
+//
+
+// The 'thread environment' structure for the main processes
 // see: process.c
-extern struct te_d  *TEKernelProcess;  // Base kernel.
-extern struct te_d  *TEInitProcess;    // Init process.
+extern struct te_d  *TEKernelProcess;         // Kernel process
+extern struct te_d  *TEInitProcess;           // Init process
+extern struct te_d  *TEDisplayServerProcess;  // Display Server process
+// ...
 
 // Max number of processes.
 #define  PROCESS_COUNT_MAX  1024 
@@ -918,8 +925,7 @@ extern unsigned long teList[PROCESS_COUNT_MAX];
 
 // ----------------------------------------------------------
 
-// Invalidate pml4.
-// Linux style. 
+// Invalidate pml4. (Linux style)
 
 #define invalidate() \
     asm ("movq %%rax, %%cr3"::"a" (0))
@@ -937,6 +943,7 @@ int gc_process_structure(struct te_d *process);
 
 struct te_d *get_kernel_process(void);
 struct te_d *get_init_process(void);
+struct te_d *get_display_server_process(void);
 
 void close_all_threads_of_this_process(struct te_d *process);
 

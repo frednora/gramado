@@ -4146,10 +4146,10 @@ wmMouseEvent(
                         // Update also the relative values
                         bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
 
-                        // printk("client: %d\n", wproxy_hover->tid);
+                        // printk("client: %d\n", wproxy_hover->owner.tid);
                         ipc_post_message_to_tid(
                             (tid_t) __HARDWARE_TID, 
-                            (tid_t) wproxy_hover->tid,
+                            (tid_t) wproxy_hover->owner.tid,
                             event_id, 
                             (unsigned long) rel_long1, 
                             (unsigned long) rel_long2 );
@@ -4174,14 +4174,14 @@ wmMouseEvent(
                         
                         //ipc_post_message_to_tid(
                             //(tid_t) __HARDWARE_TID, 
-                            //(tid_t) wproxy_hover->tid,
+                            //(tid_t) wproxy_hover->owner.tid,
                             //event_id, 
                             //(unsigned long) rel_long1, 
                             //(unsigned long) rel_long2 );
 
                         //ipc_post_message_to_tid2 (
                         //    (tid_t) __HARDWARE_TID, 
-                        //    (tid_t) wproxy_hover->tid,
+                        //    (tid_t) wproxy_hover->owner.tid,
                         //    event_id, 
                         //    (unsigned long) rel_long1, 
                         //    (unsigned long) rel_long2,
@@ -4278,10 +4278,10 @@ wmMouseEvent(
                         if (wproxy_hover->hit_area == HIT_CLIENT)
                         {
 
-                            //printk("send mouse release %d\n",wproxy_hover->tid);
+                            //printk("send mouse release %d\n",wproxy_hover->owner.tid);
                             ipc_post_message_to_tid(
                                 (tid_t) __HARDWARE_TID, 
-                                (tid_t) wproxy_hover->tid,
+                                (tid_t) wproxy_hover->owner.tid,
                                 event_id, 
                                 (unsigned long) button_number, 
                                 (unsigned long) button_number );
