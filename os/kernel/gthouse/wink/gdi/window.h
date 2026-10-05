@@ -1,10 +1,10 @@
-// wproxy.h
-// Window proxy. This is a lighteight proxy for the window structure 
+// window.h
+// Window. This is a lighteight proxy for the window structure 
 // that lives in the display server in the user space.
 // It can accelerate some operations that uses the window structure.
 
-#ifndef __GDI_WPROXY_H
-#define __GDI_WPROXY_H    1
+#ifndef __GDI_WINDOW_H
+#define __GDI_WINDOW_H    1
 
 // Structure for window proxy. 
 // This is a lighteight proxy for the window structure 
@@ -127,21 +127,21 @@ struct WND_d
     // ...
 };
 
-extern struct WND_d *wproxy_head;  // List of window proxy objects.
-extern struct WND_d *wproxy_hover;  // mouse hover
-extern struct WND_d *wproxy_shell;  // The shell window proxy. The taskbar is the shell. 
-extern struct WND_d *wproxy_desktop;  // The desktop area.
+extern struct WND_d *window_head;  // List of window proxy objects.
+extern struct WND_d *window_hover;  // mouse hover
+extern struct WND_d *window_shell;  // The shell window proxy. The taskbar is the shell. 
+extern struct WND_d *window_desktop;  // The desktop area.
 // ...
 
 // ======================
 
 void wproxy_hit_test00(unsigned long x, unsigned long y);
 
-struct WND_d *wproxyCreateObject(void);
+struct WND_d *windowCreateObject(void);
 
 int wproxy_set_shell(tid_t tid);
 
-struct WND_d *wproxy_create0(
+struct WND_d *window_create0(
     tid_t tid,
     unsigned long l, 
     unsigned long t, 
@@ -174,7 +174,7 @@ wproxy_is_inside_client_area(
 
 // Update the values for wproxy given the owner's tid.
 void 
-wproxy_set_parameters_given_tid(
+window_set_parameters_given_tid(
     tid_t tid, 
     unsigned long l, 
     unsigned long t,

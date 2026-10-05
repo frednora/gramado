@@ -1671,9 +1671,9 @@ try_next_slot:
 // Maybe its not necessary for all the threads,
 // or maybe we can pass the parameters type and state.
 
-    // Thread->wproxy = (struct WND_d *) wproxyCreateObject();
+    // Thread->wproxy = (struct WND_d *) windowCreateObject();
     Thread->wproxy = 
-        (struct WND_d *) wproxy_create0( 
+        (struct WND_d *) window_create0( 
             Thread->tid, 0, 0, 100, 100, COLOR_BLUE );
 
 // =====================================

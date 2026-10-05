@@ -597,7 +597,7 @@ void *sci0 (
         
         // Create a wproxy.
         // #ps: Not associated with a thread
-        wproxy_create0 (
+        window_create0 (
             (tid_t) CurrentTID,
             (unsigned long) message_address[0],
             (unsigned long) message_address[1],
@@ -613,8 +613,8 @@ void *sci0 (
 // Update the parameters for the wproxy associated with this thread.
     if (number == 48)
     {
-        // Update the values for wproxy given the owner's tid.
-        wproxy_set_parameters_given_tid(
+        // Update the values for wproxy given the owner's tid
+        window_set_parameters_given_tid(
             (tid_t) (message_address[0] & 0xFFFFFFFF),   // tid
             (unsigned long) message_address[1],  // l
             (unsigned long) message_address[2],  // t
@@ -2455,13 +2455,13 @@ void *sci2 (
     }
 
 // #test
-// 850 - Create a wproxy object.
+// 850 - Create a window object
 // #todo
 // This is a work in progress.
     if (number == 850)
     {
         struct WND_d *tmp_wproxy;
-        tmp_wproxy = (struct WND_d *) wproxyCreateObject();
+        tmp_wproxy = (struct WND_d *) windowCreateObject();
         if ((void*) tmp_wproxy == NULL) {
             return NULL;
         }

@@ -1,47 +1,50 @@
-// wproxy.h
-// Window proxy. This is a lighteight proxy for the window structure 
+// window.c
+// Window. This is a lighteight proxy for the window structure 
 // that lives in the display server in the user space.
 // It can accelerate some operations that uses the window structure.
 
 #include <kernel.h>
 
+//
+// Windows
+//
 
-// List of window proxy objects.
-struct WND_d *wproxy_head;
-// The window proxy that is under the mouse cursor.
-struct WND_d *wproxy_hover;
-// Shell window proxy. It is the taskbar.
-struct WND_d *wproxy_shell;
-// The desktop area wproxy
-struct WND_d *wproxy_desktop;
+// List of window objects
+struct WND_d *window_head;
+// The window that is under the mouse cursor
+struct WND_d *window_hover;
+// Shell window. It is the taskbar.
+struct WND_d *window_shell;
+// The desktop area window. It is the background window.
+struct WND_d *window_desktop;
 // ...
 
 
 // Add the window proxy to the list of window proxy objects.
-static int __wproxy_add_to_list(struct WND_d *wproxy);
-static int __wproxy_drawframe0(struct WND_d *wproxy, int back_or_front);
+static int __wproxy_add_to_list(struct WND_d *window);
+static int __wproxy_drawframe0(struct WND_d *window, int back_or_front);
 
 
 // ==============================
 
 // Add the window proxy to the list of window proxy objects.
-static int __wproxy_add_to_list(struct WND_d *wproxy)
+static int __wproxy_add_to_list(struct WND_d *window)
 {
-    if ((void *) wproxy == NULL){
+    if ((void *) window == NULL){
         goto fail;
     }
-    if (wproxy->used != TRUE || wproxy->magic != 1234){
+    if (window->used != TRUE || window->magic != 1234){
         goto fail;
     }
 
     struct WND_d *w;
 
 // Empty list
-    w = (struct WND_d *) wproxy_head;
+    w = (struct WND_d *) window_head;
     if (w == NULL)
     {
-        wproxy_head = wproxy;
-        wproxy_head->next = NULL;
+        window_head = window;
+        window_head->next = NULL;
         return (int) 0;
     }
 
@@ -54,8 +57,8 @@ static int __wproxy_add_to_list(struct WND_d *wproxy)
         {
             if (w->next == NULL)
             {
-                w->next = wproxy;
-                wproxy->next = NULL;
+                w->next = window;
+                window->next = NULL;
                 return (int) 0;
             }
             w = w->next;
@@ -95,7 +98,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
 
 // ----------------------------------------------
 // Start with the system shell. The taskbar.
-    w = (struct WND_d *) wproxy_shell;
+    w = (struct WND_d *) window_shell;
     if (w != NULL)
     {
         if (w->magic == 1234)
@@ -111,7 +114,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
             if ( x >= Left && x <= Right &&
                  y >= Top  && y <= Bottom )
             {
-                wproxy_hover = w;
+                window_hover = w;
                 w->hit_area = HIT_CLIENT;  // Inside client area
                 return;
             }
@@ -120,7 +123,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
 
 // ----------------------------------------------
 // Walk the list of window proxy objects and check against the mouse cursor.
-    w = (struct WND_d *) wproxy_head;
+    w = (struct WND_d *) window_head;
     while (w != NULL)
     {
         if (w->magic == 1234)
@@ -160,47 +163,47 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
     };
 
 // New hover
-    //if (hover != wproxy_hover)
-        //wproxy_hover = hover;
+    //if (hover != window_hover)
+        //window_hover = hover;
 
 
 // After walking the list
     if (hover != NULL) {
-        wproxy_hover = hover;
+        window_hover = hover;
     } else {
 
-        if ((void*) wproxy_shell != NULL)
+        if ((void*) window_shell != NULL)
         {
-            if (wproxy_shell->magic == 1234)
+            if (window_shell->magic == 1234)
             {
                 // Fallback: route to taskbar as desktop controller
-                wproxy_hover = wproxy_shell;
-                if (wproxy_hover != NULL)
-                    wproxy_hover->hit_area = HIT_DESKTOP;
+                window_hover = window_shell;
+                if (window_hover != NULL)
+                    window_hover->hit_area = HIT_DESKTOP;
             }
         }
     };
 }
 
-// Create a window proxy object and add it into the list.
-struct WND_d *wproxyCreateObject(void)
+// Create a window proxy object and add it into the list
+struct WND_d *windowCreateObject(void)
 {
-    struct WND_d *wproxy;
+    struct WND_d *w;
     int status = -1;
 
-    wproxy = (struct WND_d *) kmalloc(sizeof(struct WND_d));
-    if ((void *) wproxy == NULL){
+    w = (struct WND_d *) kmalloc(sizeof(struct WND_d));
+    if ((void *) w == NULL){
         goto fail;
     }
-    wproxy->used = TRUE;
-    wproxy->magic = 1234;
-    //wproxy->has_frame = TRUE;  // By default, assume it has a frame/chrome.
+    w->used = TRUE;
+    w->magic = 1234;
+    //w->has_frame = TRUE;  // By default, assume it has a frame/chrome.
 
-    status = (int) __wproxy_add_to_list(wproxy);
+    status = (int) __wproxy_add_to_list(w);
     if (status != 0){
         goto fail;
     }
-    return (struct WND_d *) wproxy;
+    return (struct WND_d *) w;
 
 fail:
     return NULL;
@@ -212,7 +215,7 @@ fail:
 int wproxy_set_shell(tid_t tid)
 {
     struct thread_d *t;
-    struct WND_d *wproxy;
+    struct WND_d *w;
 
 // parameter:
     if (tid <0 || tid >= THREAD_COUNT_MAX)
@@ -227,20 +230,20 @@ int wproxy_set_shell(tid_t tid)
         goto fail;
     }
 
-// wproxy
-    wproxy = (struct WND_d *) t->wproxy;
-    if ((void *) wproxy == NULL){
+// window
+    w = (struct WND_d *) t->wproxy;
+    if ((void *) w == NULL){
         goto fail;
     }
-    if (wproxy->used != TRUE){
+    if (w->used != TRUE){
         goto fail;
     }
-    if (wproxy->magic != 1234){
+    if (w->magic != 1234){
         goto fail;
     }
 
 // Set the shell window proxy. The taskbar is the shell.
-    wproxy_shell = wproxy;
+    window_shell = w;
     //->has_frame = FALSE;  // No frame/chrome, only client area.
     return (int) 0;
 
@@ -254,7 +257,7 @@ fail:
 // Create a window proxy object and initialize it with the given parameters.
 // The wproxy holds the pointer to the tid.
 // But the thread do not have a pointer for this wproxy.
-struct WND_d *wproxy_create0(
+struct WND_d *window_create0(
     tid_t tid,
     unsigned long l, 
     unsigned long t, 
@@ -262,34 +265,34 @@ struct WND_d *wproxy_create0(
     unsigned long h, 
     unsigned int color)
 {
-    struct WND_d *wproxy;
+    struct WND_d *wnd;
 
     if (tid < 0)
         return NULL;
     if (tid >= THREAD_COUNT_MAX)
         return NULL;
 
-    wproxy = wproxyCreateObject();
-    if ((void *) wproxy == NULL){
+    wnd = windowCreateObject();
+    if ((void *) wnd == NULL){
         goto fail;
     }
 
 // Frame/chrome
-    wproxy->l = l;
-    wproxy->t = t;
-    wproxy->w = w;
-    wproxy->h = h;
-    wproxy->color = color;
+    wnd->l = l;
+    wnd->t = t;
+    wnd->w = w;
+    wnd->h = h;
+    wnd->color = color;
 
 // Client area
-    wproxy->ca_l = l;
-    wproxy->ca_t = t;
-    wproxy->ca_w = w;
-    wproxy->ca_h = h;
+    wnd->ca_l = l;
+    wnd->ca_t = t;
+    wnd->ca_w = w;
+    wnd->ca_h = h;
 
-    wproxy->owner.tid = (tid_t) tid;
+    wnd->owner.tid = (tid_t) tid;
 
-    return (struct WND_d *) wproxy;
+    return (struct WND_d *) wnd;
 
 fail:
     return NULL;
@@ -302,7 +305,7 @@ void wproxy_ap_test(void)
     int i=0;
     unsigned int Color = COLOR_RED;
 
-    w = (struct WND_d *) wproxy_shell;
+    w = (struct WND_d *) window_shell;
     while (w != NULL){
         if ((void*)w != NULL)
         {
@@ -364,14 +367,13 @@ fail:
     return NULL;
 }
 
-
-// Worker: Draw the window using the wproxy structure.
-static int __wproxy_drawframe0(struct WND_d *wproxy, int back_or_front)
+// Worker: Draw the window using the wproxy structure
+static int __wproxy_drawframe0(struct WND_d *window, int back_or_front)
 {
-    if ((void *) wproxy == NULL){
+    if ((void *) window == NULL){
         goto fail;
     }
-    if (wproxy->used != TRUE || wproxy->magic != 1234){
+    if (window->used != TRUE || window->magic != 1234){
         goto fail;
     }
 
@@ -389,8 +391,8 @@ static int __wproxy_drawframe0(struct WND_d *wproxy, int back_or_front)
     {
         rv = 
             (int) backbuffer_draw_rectangle(
-                wproxy->l, wproxy->t, wproxy->w, wproxy->h,
-                wproxy->color, rop );
+                window->l, window->t, window->w, window->h,
+                window->color, rop );
 
         return (int) rv;
     }
@@ -398,8 +400,8 @@ static int __wproxy_drawframe0(struct WND_d *wproxy, int back_or_front)
     {
         rv = 
             (int) frontbuffer_draw_rectangle(
-                wproxy->l, wproxy->t, wproxy->w, wproxy->h,
-                wproxy->color, rop );
+                window->l, window->t, window->w, window->h,
+                window->color, rop );
 
         return (int) rv;
     }
@@ -482,9 +484,9 @@ fail:
     return FALSE;
 }
 
-// Update the values for wproxy given the owner's tid.
+// Update the values for wproxy given the owner's tid
 void 
-wproxy_set_parameters_given_tid(
+window_set_parameters_given_tid(
     tid_t tid, 
     unsigned long l, 
     unsigned long t,
@@ -507,27 +509,27 @@ wproxy_set_parameters_given_tid(
     if (target_thread->used != TRUE || target_thread->magic != 1234)
         return;
 
-// Get the wproxy that belongs to the cureground thread
-    struct WND_d *wproxy;
-    wproxy = (struct WND_d *) target_thread->wproxy;
-    if ((void *) wproxy == NULL)
+// Get the window that belongs to the cureground thread
+    struct WND_d *wnd;
+    wnd = (struct WND_d *) target_thread->wproxy;
+    if ((void *) wnd == NULL)
         return;
-    if (wproxy->used != TRUE || wproxy->magic != 1234)
+    if (wnd->used != TRUE || wnd->magic != 1234)
         return;
 
 // Change the color
-    // wproxy->color = COLOR_WHITE;
+    // wnd->color = COLOR_WHITE;
 
 // Change values
-    wproxy->l = l;
-    wproxy->t = t;
-    wproxy->w = w;
-    wproxy->h = h;
+    wnd->l = l;
+    wnd->t = t;
+    wnd->w = w;
+    wnd->h = h;
 
-    wproxy->ca_l = ca_l;
-    wproxy->ca_t = ca_t;
-    wproxy->ca_w = ca_w;
-    wproxy->ca_h = ca_h;
+    wnd->ca_l = ca_l;
+    wnd->ca_t = ca_t;
+    wnd->ca_w = ca_w;
+    wnd->ca_h = ca_h;
 
     // #todo: Client area?
 }

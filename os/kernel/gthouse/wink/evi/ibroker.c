@@ -4105,15 +4105,14 @@ wmMouseEvent(
             // Client area hit → send to the app (relative coordinates).
             // Non‑client area hit → send to the server (absolute coordinates).
 
-            // #test
             // Send it to the target app
-            if (wproxy_hover != NULL)
+            if (window_hover != NULL)
             {
-                if (wproxy_hover->magic == 1234)
+                if (window_hover->magic == 1234)
                 {
                     // Inside the frame, 
                     // send absolute values to the display server.
-                    if (wproxy_hover->hit_area == HIT_FRAME){
+                    if (window_hover->hit_area == HIT_FRAME){
 
                         // #todo: Update also the relative values
                         // bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
@@ -4128,28 +4127,28 @@ wmMouseEvent(
 
                     // Inside the client area, 
                     // send relative values to the application.
-                    } else if (wproxy_hover->hit_area == HIT_CLIENT) {
+                    } else if (window_hover->hit_area == HIT_CLIENT) {
 
                         // Good for regular apps
                         // For regular app windows, 
                         // the correct relative calculation is this.
-                        rel_long1 = long1 - (wproxy_hover->l + wproxy_hover->ca_l);
-                        rel_long2 = long2 - (wproxy_hover->t + wproxy_hover->ca_t);
+                        rel_long1 = long1 - (window_hover->l + window_hover->ca_l);
+                        rel_long2 = long2 - (window_hover->t + window_hover->ca_t);
 
                         // #hack: Good for taskbar
-                        if (wproxy_hover == wproxy_shell)
+                        if (window_hover == window_shell)
                         {
-                            rel_long1 = long1 - wproxy_hover->ca_l;
-                            rel_long2 = long2 - wproxy_hover->ca_t;
+                            rel_long1 = long1 - window_hover->ca_l;
+                            rel_long2 = long2 - window_hover->ca_t;
                         }
 
                         // Update also the relative values
                         bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
 
-                        // printk("client: %d\n", wproxy_hover->owner.tid);
+                        // printk("client: %d\n", window_hover->owner.tid);
                         ipc_post_message_to_tid(
                             (tid_t) __HARDWARE_TID, 
-                            (tid_t) wproxy_hover->owner.tid,
+                            (tid_t) window_hover->owner.tid,
                             event_id, 
                             (unsigned long) rel_long1, 
                             (unsigned long) rel_long2 );
@@ -4157,7 +4156,7 @@ wmMouseEvent(
                         return 0;
 
                     // Send it only to the taskbar
-                    } else if (wproxy_hover->hit_area == HIT_DESKTOP) {
+                    } else if (window_hover->hit_area == HIT_DESKTOP) {
 
                         rel_long1 = long1;
                         rel_long2 = long2;
@@ -4165,7 +4164,7 @@ wmMouseEvent(
                         // Update also the relative values
                         // bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
 
-                        if (wproxy_hover != wproxy_shell)
+                        if (window_hover != window_shell)
                             return 0;
 
                         // We need more parameters for this kind of message.
@@ -4174,14 +4173,14 @@ wmMouseEvent(
                         
                         //ipc_post_message_to_tid(
                             //(tid_t) __HARDWARE_TID, 
-                            //(tid_t) wproxy_hover->owner.tid,
+                            //(tid_t) window_hover->owner.tid,
                             //event_id, 
                             //(unsigned long) rel_long1, 
                             //(unsigned long) rel_long2 );
 
                         //ipc_post_message_to_tid2 (
                         //    (tid_t) __HARDWARE_TID, 
-                        //    (tid_t) wproxy_hover->owner.tid,
+                        //    (tid_t) window_hover->owner.tid,
                         //    event_id, 
                         //    (unsigned long) rel_long1, 
                         //    (unsigned long) rel_long2,
@@ -4260,12 +4259,12 @@ wmMouseEvent(
 
                 // #test
                 // Send it to the target app
-                if (wproxy_hover != NULL)
+                if (window_hover != NULL)
                 {
-                    if (wproxy_hover->magic == 1234)
+                    if (window_hover->magic == 1234)
                     {
                         // Inside the frame, send message to the server.
-                        if (wproxy_hover->hit_area == HIT_FRAME)
+                        if (window_hover->hit_area == HIT_FRAME)
                         {
                             ibroker_post_message_to_ds( 
                                 event_id, 
@@ -4275,13 +4274,13 @@ wmMouseEvent(
                         }
 
                         // Inside the client area, send message to the app.
-                        if (wproxy_hover->hit_area == HIT_CLIENT)
+                        if (window_hover->hit_area == HIT_CLIENT)
                         {
 
-                            //printk("send mouse release %d\n",wproxy_hover->owner.tid);
+                            //printk("send mouse release %d\n",window_hover->owner.tid);
                             ipc_post_message_to_tid(
                                 (tid_t) __HARDWARE_TID, 
-                                (tid_t) wproxy_hover->owner.tid,
+                                (tid_t) window_hover->owner.tid,
                                 event_id, 
                                 (unsigned long) button_number, 
                                 (unsigned long) button_number );
