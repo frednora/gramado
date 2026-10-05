@@ -146,24 +146,27 @@ static void on_button_pressed(int button_id)
 
     if (button_id == MyButton_Restart.button_id)
     {
-        libgui_set_ui_component_status(
-            uic_button_restart,
-            BS_PRESSED );
+        //libgui_set_ui_component_status(
+        //    uic_button_restart,
+        //    BS_PRESSED );
 
-        libgui_redraw_ui_component(
-            uic_button_restart,
-            dc00 );
+        //libgui_redraw_ui_component(
+        //    uic_button_restart,
+        //    dc00 );
+
+        libgui_on_button_pressed(uic_button_restart, dc00);
     }
     else if (button_id == MyButton_Shutdown.button_id)
     {
-        libgui_set_ui_component_status(
-            uic_button_shutdown,
-            BS_PRESSED );
+        //libgui_set_ui_component_status(
+        //    uic_button_shutdown,
+        //    BS_PRESSED );
 
-        libgui_redraw_ui_component(
-            uic_button_shutdown,
-            dc00 );
+        //libgui_redraw_ui_component(
+        //    uic_button_shutdown,
+        //    dc00 );
 
+        libgui_on_button_pressed(uic_button_shutdown, dc00);
     }
     else
     {
@@ -182,23 +185,27 @@ static void on_button_released(int button_id)
 
     if (button_id == MyButton_Restart.button_id)
     {
-        libgui_set_ui_component_status(
-            uic_button_restart,
-            BS_RELEASED );
+        //libgui_set_ui_component_status(
+        //    uic_button_restart,
+        //    BS_RELEASED );
 
-        libgui_redraw_ui_component(
-            uic_button_restart,
-            dc00 );
+        //libgui_redraw_ui_component(
+        //    uic_button_restart,
+        //    dc00 );
+
+        libgui_on_button_released(uic_button_restart, dc00);
     }
     else if (button_id == MyButton_Shutdown.button_id)
     {
-        libgui_set_ui_component_status(
-            uic_button_shutdown,
-            BS_RELEASED );
+        //libgui_set_ui_component_status(
+        //    uic_button_shutdown,
+        //    BS_RELEASED );
 
-        libgui_redraw_ui_component(
-            uic_button_shutdown,
-            dc00 );
+        //libgui_redraw_ui_component(
+        //    uic_button_shutdown,
+        //    dc00 );
+
+        libgui_on_button_released(uic_button_shutdown, dc00);
     }
     else
     {
@@ -671,6 +678,7 @@ powerProcedure(
         //printf("power: MSG_MOUSERELEASED:\n");
 
         on_button_released(__hover_button_id);  // Visual effect
+
         on_button_clicked(__hover_button_id);  // Action
 
         // #test: Testing the activation

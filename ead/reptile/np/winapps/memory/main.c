@@ -88,12 +88,94 @@ static void update_children(int fd);
 static void set_default_responder(int wid);
 static void switch_responder(int fd);
 static void trigger_default_responder(int fd);
-static void on_button_clicked(int fd, int id);
+
 static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
+
+static void on_button_pressed(int button_id);
+static void on_button_released(int button_id);
+static void on_button_clicked(int fd, int id);
 
 // ----------------------------------------------------
 // Helpers
 // ----------------------------------------------------
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_pressed(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == MyButton_Refresh.button_id)
+    {
+        //libgui_set_ui_component_status(
+        //    uic_button_refresh,
+        //    BS_PRESSED );
+
+        //libgui_redraw_ui_component(
+        //    uic_button_refresh,
+        //    dc00 );
+
+        libgui_on_button_pressed(uic_button_refresh, dc00);
+    }
+    else if (button_id == MyButton_Close.button_id)
+    {
+        //libgui_set_ui_component_status(
+        //    uic_button_close,
+        //    BS_PRESSED );
+
+        //libgui_redraw_ui_component(
+        //    uic_button_close,
+        //    dc00 );
+
+        libgui_on_button_pressed(uic_button_close, dc00);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+
+}
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_released(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == MyButton_Refresh.button_id)
+    {
+        //libgui_set_ui_component_status(
+        //    uic_button_refresh,
+        //    BS_RELEASED );
+
+        //libgui_redraw_ui_component(
+        //    uic_button_refresh,
+        //    dc00 );
+
+        libgui_on_button_released(uic_button_refresh, dc00);
+    }
+    else if (button_id == MyButton_Close.button_id)
+    {
+        //libgui_set_ui_component_status(
+        //    uic_button_close,
+        //    BS_RELEASED );
+
+        //libgui_redraw_ui_component(
+        //    uic_button_close,
+        //    dc00 );
+
+        libgui_on_button_released(uic_button_close, dc00);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+}
+
 
 // Handle click events for components
 static void on_button_clicked(int fd, int id)
@@ -112,8 +194,9 @@ static void on_button_clicked(int fd, int id)
             //printf("Button %d clicked!\n", id);
             //gws_destroy_window(fd, refresh_button);
             //gws_destroy_window(fd, close_button);
-            gws_destroy_window(fd, main_window);
-            exit(0);
+            //gws_destroy_window(fd, main_window);
+            //exit(0);
+            isTimeToQuit = TRUE;  // #test
             break;
 
         default:
@@ -535,12 +618,13 @@ memoryProcedure(
     case MSG_KEYDOWN:
     switch (long1) {
     case VK_RETURN:  // Enter key
-        trigger_default_responder(fd);
+        //trigger_default_responder(fd);
         break;
 
     case 'R':
     case 'r':
-        update_children(fd);
+        //update_children(fd);
+        libgui_on_button_pressed(uic_button_refresh, dc00);
         break;
 
     case 'C':
@@ -548,7 +632,8 @@ memoryProcedure(
         //gws_destroy_window(fd, refresh_button);
         //gws_destroy_window(fd, close_button);
         //gws_destroy_window(fd, main_window);
-        exit(0);
+        //exit(0);
+        libgui_on_button_pressed(uic_button_close, dc00);
         break;
 
     // #test: Shut display server down
@@ -560,6 +645,39 @@ memoryProcedure(
 
     }
     break;
+
+    case MSG_KEYUP:
+    switch (long1) {
+    case VK_RETURN:  // Enter key
+        trigger_default_responder(fd);
+        break;
+
+    case 'R':
+    case 'r':
+        libgui_on_button_released(uic_button_refresh, dc00);
+        update_children(fd);
+        break;
+
+    case 'C':
+    case 'c':
+        libgui_on_button_released(uic_button_close, dc00);
+        isTimeToQuit = TRUE;
+        //gws_destroy_window(fd, refresh_button);
+        //gws_destroy_window(fd, close_button);
+        //gws_destroy_window(fd, main_window);
+        //exit(0);
+        break;
+
+    // #test: Shut display server down
+    // case 'Q':
+    // case 'q':
+        // printf("memory: Send QUIT message\n");
+        // gws_async_command(fd,88,0,0);  // Send quit message
+        // break;
+
+    }
+    break;
+
 
     case MSG_SYSKEYDOWN:
         switch (long1) {
@@ -621,9 +739,17 @@ memoryProcedure(
             __hover_button_id = -1;
         break;
 
+
+    case MSG_MOUSEPRESSED:
+        on_button_pressed(__hover_button_id);  // Visual effect
+        break;
+
     case MSG_MOUSERELEASED:
         printf("memory: Button released: %d\n", __hover_button_id);
         //printf("power: MSG_MOUSERELEASED:\n");
+
+        on_button_released(__hover_button_id);  // Visual effect
+
         on_button_clicked(fd, __hover_button_id);
 
         // #test: Testing the activation
@@ -1052,12 +1178,11 @@ int main(int argc, char *argv[])
             //}
     }
 
-
     // 1. Pump events from Display Server
-    pump(client_fd);
+    // pump(client_fd);
 
     // 2. Pump events from Input Broker (system events)
-    for (nSysMsg=0; nSysMsg<32; nSysMsg++){
+    //for (nSysMsg=0; nSysMsg<32; nSysMsg++){
     if (rtl_get_event() == TRUE)
     {
         memoryProcedure(
@@ -1069,7 +1194,7 @@ int main(int argc, char *argv[])
         );
         RTLEventBuffer[1] = 0; // clear after dispatch
     }
-    };
+    //};
 
     };
 
