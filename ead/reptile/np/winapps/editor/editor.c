@@ -1943,6 +1943,16 @@ static int __editor_initialize(void)
     }
 */
 
+//
+// Event loop
+//
+
+// #ps:
+// The purpose of this loop is only get system events,
+// not to get events from the display server.
+// Will will try this way for performance reasons.
+
+
     int nSysMsg = 0;
 
     while (1)
@@ -1973,10 +1983,10 @@ static int __editor_initialize(void)
         }
 
         // 1. Pump events from Display Server
-        pump(client_fd, main_window);
+        // pump(client_fd, main_window);
 
         // 2. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
+        //for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             editorProcedure(
@@ -1988,8 +1998,9 @@ static int __editor_initialize(void)
             );
             RTLEventBuffer[1] = 0;
         }
-        };
+        //};
     };
+
 
 
 /*

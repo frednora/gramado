@@ -2652,6 +2652,40 @@ void libgui_set_mouse_pointer(unsigned long x, unsigned long y)
     __new_mouse_y = y;
 }
 
+// Visual effect on button pressed
+// #todo: Maybe the dc can be a field of ui component structure
+void libgui_on_button_pressed(struct ui_component_d *uic, struct dccanvas_d *dc)
+{
+    if ((void*) uic == NULL)
+        return;
+    if (uic->magic != 1234)
+        return;
+    if ((void*) dc == NULL)
+        return;
+    if (dc->magic != 1234)
+        return;
+
+    libgui_set_ui_component_status(uic, BS_PRESSED);
+    libgui_redraw_ui_component(uic, dc);
+}
+
+// Visual effect on button pressed
+// #todo: Maybe the dc can be a field of ui component structure
+void libgui_on_button_released(struct ui_component_d *uic, struct dccanvas_d *dc)
+{
+    if ((void*) uic == NULL)
+        return;
+    if (uic->magic != 1234)
+        return;
+    if ((void*) dc == NULL)
+        return;
+    if (dc->magic != 1234)
+        return;
+
+    libgui_set_ui_component_status(uic, BS_RELEASED);
+    libgui_redraw_ui_component(uic, dc);
+}
+
 
 // Draw button given the dc and the ui component
 void 
@@ -2836,6 +2870,9 @@ __draw_button_borders_dc(
     );
 }
 
+// #todo:
+// We need to handle the ID of the component.
+// Maybe listing them in a linked list or array.
 struct ui_component_d *libgui_create_ui_component(
     struct dccanvas_d *dc,
     int type,
@@ -2862,6 +2899,7 @@ struct ui_component_d *libgui_create_ui_component(
 	    return NULL;
     uic->used = TRUE;
 	uic->magic = 1234;
+    uic->id = -1;  // #todo: We need to handle the ID of the component
 
     uic->left = left;
     uic->top = top;

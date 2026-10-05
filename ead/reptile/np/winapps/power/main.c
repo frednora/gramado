@@ -36,13 +36,17 @@ struct dccanvas_d *dc00;  // shared dc
 static unsigned long __sh_flags = 0;
 
 
-struct ui_component_d *uic_button_restart;
-struct ui_component_d *uic_button_shutdown;
-struct ui_component_d *uic_footer;
+struct ui_component_d *uic_button_restart;    // id 0
+struct ui_component_d *uic_button_shutdown;   // id 1
+struct ui_component_d *uic_footer;            // id 2
+
 
 struct button_info_d
 {
     int button_id;
+
+    // #test
+    int uic_id;  // The id of the ui component associated with this button.
 
 // This is the window id that represents the icon.
     int wid;
@@ -214,7 +218,8 @@ static void on_button_clicked(int button_id)
         case 1:  // MyButton_Restart.icon_id
             // printf("Button %d clicked!\n", button_id);
             rtl_clone_and_execute("reboot.bin");
-            exit(0);
+            isTimeToQuit = TRUE;  // #test
+            // exit(0);
             break;
 
         case 2:  // MyButton_Shutdown.icon_id
@@ -222,7 +227,8 @@ static void on_button_clicked(int button_id)
             rtl_clone_and_execute("shutdown.bin");
             //printf("power: Send QUIT message\n");
             //gws_async_command(fd,88,0,0);  // Send quit message
-            exit(0);
+            isTimeToQuit = TRUE;  // #test
+            // exit(0);
             break;
 
         default:
@@ -481,30 +487,87 @@ powerProcedure(
 
         case 'R':
         case 'r':
-            printf("power: VK_F1 >> Restart\n");
-            rtl_clone_and_execute("reboot.bin");
+            // printf("power: R >> Restart\n");
+            
+            //on_button_pressed(MyButton_Restart.button_id);  // Visual effect
+            libgui_on_button_pressed(uic_button_restart, dc00);
+
+            //rtl_clone_and_execute("reboot.bin");
             // #todo: Close our windows.
-            exit(0);
+            //exit(0);
             break;
 
         case 'S':
         case 's':
-            printf("power: VK_F2 >> Shutdown\n");
-            //rtl_clone_and_execute("shutdown.bin");
-            printf("power: Send QUIT message\n");
-            gws_async_command(fd,88,0,0);  // Send quit message
+            // printf("power: S >> Shutdown\n");
 
+            //on_button_pressed(MyButton_Shutdown.button_id);  // Visual effect
+            libgui_on_button_pressed(uic_button_shutdown, dc00);
+
+            //rtl_clone_and_execute("shutdown.bin");
+            //printf("power: Send QUIT message\n");
+            //gws_async_command(fd,88,0,0);  // Send quit message
             // #todo: Close our windows.
-            exit(0);
+            //exit(0);
             break;
 
         // #test: Shut display server down
         case 'Q':
         case 'q':
-            printf("power: Send QUIT message\n");
-            gws_async_command(fd,88,0,0);  // Send quit message
+            // printf("power: Send QUIT message\n");
+
+            // gws_async_command(fd,88,0,0);  // Send quit message
             // #todo: Close our windows.
-            exit(0);
+            //exit(0);
+            break;
+
+        };
+        break;
+
+    case MSG_KEYUP:
+        switch (long1){
+
+        case VK_RETURN:
+            //trigger_default_responder(fd);
+            break;
+
+        case 'R':
+        case 'r':
+            printf("power: R >> Restart\n");
+            //on_button_released(MyButton_Restart.button_id);  // Visual effect
+            libgui_on_button_released(uic_button_restart, dc00);
+
+            rtl_clone_and_execute("reboot.bin");
+            isTimeToQuit = TRUE;  // #test
+            // #todo: Close our windows.
+            //exit(0);
+            break;
+
+        case 'S':
+        case 's':
+            printf("power: S >> Shutdown\n");
+            //on_button_released(MyButton_Shutdown.button_id);  // Visual effect
+            libgui_on_button_released(uic_button_shutdown, dc00);
+            //rtl_clone_and_execute("shutdown.bin");
+            //printf("power: Send QUIT message\n");
+            
+            gws_async_command(fd,88,0,0);  // Send quit message
+            isTimeToQuit = TRUE;  // #test
+
+            // #todo: Close our windows.
+            // exit(0);
+            break;
+
+        // #test: Shut display server down
+        case 'Q':
+        case 'q':
+            printf("power: Q >> Send QUIT message\n");
+            
+            gws_async_command(fd,88,0,0);  // Send quit message
+            isTimeToQuit = TRUE;  // #test
+            
+            // #todo: Close our windows.
+            //exit(0);
             break;
 
         };
@@ -608,7 +671,7 @@ powerProcedure(
         //printf("power: MSG_MOUSERELEASED:\n");
 
         on_button_released(__hover_button_id);  // Visual effect
-        // on_button_clicked(__hover_button_id);  // Action
+        on_button_clicked(__hover_button_id);  // Action
 
         // #test: Testing the activation
         // We gotta do this only when the window is not active
@@ -902,6 +965,8 @@ int main(int argc, char *argv[])
         "Restart",
         (0x0001 | 0x0002)
     );
+    uic_button_restart->id = 0;  // #ps: Arbitraty for now
+    MyButton_Restart.uic_id = uic_button_restart->id;
 
 // ============================================================
 // Create shutdown button
@@ -933,6 +998,8 @@ int main(int argc, char *argv[])
         "Shutdown",
         (0x0001 | 0x0002)
     );
+    uic_button_shutdown->id = 1;  // #ps: Arbitraty for now
+    MyButton_Shutdown.uic_id = uic_button_shutdown->id;
 // ---------------------
 
 // -----------------------------------------------------
@@ -978,6 +1045,7 @@ int main(int argc, char *argv[])
             "-- footer --", 
             (0x0001 | 0x0002)
         );
+    uic_footer->id = 2;  // #ps: Arbitraty for now
 
 // ================================================================================
 
@@ -1006,6 +1074,11 @@ int main(int argc, char *argv[])
 //
 // Event loop
 //
+
+// #ps:
+// The purpose of this loop is only get system events,
+// not to get events from the display server.
+// Will will try this way for performance reasons.
 
     while (1){
 
@@ -1038,10 +1111,11 @@ int main(int argc, char *argv[])
         // #bugbug:
         // This pump is very slow, affecting the responsivity
         // for the other pump that gets events from the system.
-        pump(client_fd);
+        
+        // pump(client_fd);
 
         // 2. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
+        //for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             // IN: wid, event type, VK, scancode.
@@ -1053,7 +1127,7 @@ int main(int argc, char *argv[])
                 (unsigned long) RTLEventBuffer[3] );
             RTLEventBuffer[1] = 0;  // Clear after dispatch
         }
-        };
+        // };
     };
 
     if (isTimeToQuit == TRUE){

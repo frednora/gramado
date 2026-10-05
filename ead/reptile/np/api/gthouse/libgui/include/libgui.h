@@ -210,6 +210,9 @@ libgui_drawstringblock_dc(
 
 void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
 
+void libgui_on_button_pressed(struct ui_component_d *uic, struct dccanvas_d *dc);
+void libgui_on_button_released(struct ui_component_d *uic, struct dccanvas_d *dc);
+
 void 
 __draw_button_borders_dc(
     struct dccanvas_d *dc,
