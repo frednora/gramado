@@ -73,6 +73,8 @@ static unsigned long current_color = COLOR_BLACK;  // default pen
 // Toolbar height
 #define TOOLBAR_H  80
 
+static int CantPaint = TRUE;
+
 // The current height for the area where the
 // pointer is allowed to paint.
 unsigned long current_cr_height=0;
@@ -171,8 +173,11 @@ static void draw_pixel(unsigned long x, unsigned long y)
     //if (y >= (wi.cr_height - TOOLBAR_H - 2))
         //return;
 
-    if (y >= current_cr_height)
-       return;
+    // if (y >= current_cr_height)
+       // return;
+
+    if (is_drawing != TRUE)
+        return;
 
     lingui_draw_rectangle0_dc (
         dc00,
@@ -374,8 +379,8 @@ paintProcedure(
     if (event_window < 0) return -1;
     if (event_type < 0) return -1;
 
-    switch (event_type)
-    {
+    switch (event_type){
+
     case 0:
         return 0;
 
@@ -429,6 +434,7 @@ paintProcedure(
         break;
 
     case MSG_MOUSEMOVE:
+
         // printf(".\n");
         // long1/long2 are currently absolute – the hit-test still works
         // for the toolbar.  For drawing we use the relative values
@@ -440,6 +446,7 @@ paintProcedure(
             __hover_button_id = -1;
         }
 
+        /*
         // Freehand drawing
         if (is_drawing)
         {
@@ -452,10 +459,45 @@ paintProcedure(
                 is_drawing = FALSE;
             }
         }
+        */
+        
+        CantPaint = FALSE;
+        if (long2 >= current_cr_height)
+            CantPaint = TRUE;
+
+        if (CantPaint != TRUE)
+        {
+            if (is_drawing == TRUE)
+            {
+                draw_pixel(long1, long2);
+                last_x = long1;
+                last_y = long2;
+            }
+        }
         break;
 
     case MSG_MOUSEPRESSED:
 
+        // It started inside the valid area
+        if (long2 < current_cr_height)
+            is_drawing = TRUE;
+
+        if (is_drawing == TRUE)
+        {
+            // #debug
+            // In the case of pressed, long1 and long2 
+            // carries the button numbers.
+            // The mouse positions are in long3 and long4
+            // That were saved in last_x and last_y
+
+            if (last_y >= current_cr_height)
+                CantPaint = TRUE;
+
+            if (CantPaint != TRUE)
+                draw_pixel(last_x, last_y);
+        }
+
+        /*
         // Start a stroke if we are over the canvas (not toolbar)
         if (long2 < current_cr_height)
         {
@@ -467,6 +509,7 @@ paintProcedure(
         } else if (long2 >= current_cr_height){
             is_drawing = FALSE;
         }
+        */
 
         // Start a stroke if we are over the canvas (not toolbar)
         //{
@@ -485,6 +528,10 @@ paintProcedure(
 
     case MSG_MOUSERELEASED:
 
+        // Not drawing anymore
+        is_drawing = FALSE;
+
+        /*
         if (is_drawing == TRUE){
             is_drawing = FALSE;
         } else {
@@ -492,6 +539,16 @@ paintProcedure(
             printf("paint: Button released: %d\n", __hover_button_id);
             on_button_clicked(__hover_button_id);
         }
+        */
+        
+        // #bugbug:
+        // We can't use this condition. Why?
+        //if (long2 >= current_cr_height)
+        //{
+            printf("paint: Button released: %d\n", __hover_button_id);
+            on_button_clicked(__hover_button_id);
+        //}
+
         break;
 
     case MSG_CLOSE:
@@ -531,6 +588,7 @@ int main(int argc, char *argv[])
     int client_fd = -1;
 
     isTimeToQuit = FALSE;
+    CantPaint = TRUE;
 
     Display = gws_open_display(display_name);
     if ((void*)Display == NULL) {
@@ -765,12 +823,16 @@ int main(int argc, char *argv[])
         //{
             if (rtl_get_event() == TRUE)
             {
+
+                last_x = (unsigned long) RTLEventBuffer[4];
+                last_y = (unsigned long) RTLEventBuffer[5];
+
                 paintProcedure(
                     client_fd,
                     (int) RTLEventBuffer[0],
                     (int) RTLEventBuffer[1],
                     (unsigned long) RTLEventBuffer[2],
-                    (unsigned long) RTLEventBuffer[3]);
+                    (unsigned long) RTLEventBuffer[3] );
 
                 RTLEventBuffer[1] = 0;
             }

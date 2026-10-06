@@ -363,9 +363,13 @@ network_mouse_event(
         goto fail;
         break;
     };
+
 // Send it to the event broker.
 // See: wink/evi/ibroker.c
-    wmMouseEvent( event_id, data1, data2 );
+// #todo: the parameters long3 and long4
+
+    wmMouseEvent( event_id, data1, data2, 0, 0 );
+
     return 0;
 fail:
     return (int) -1;

@@ -87,7 +87,14 @@ wmRawKeyEvent(
     unsigned char raw_byte_2,
     unsigned char raw_prefix );
 
-int wmMouseEvent(int event_id,long long1, long long2);
+int 
+wmMouseEvent(
+    int event_id, 
+    long long1, 
+    long long2,
+    long long3,
+    long long4 );
+
 int wmKeyboardEvent(int event_id,long long1, long long2);
 int wmTimerEvent(int signature);
 

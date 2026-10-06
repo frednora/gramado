@@ -108,7 +108,9 @@ static void __ap_DPC_loop(int lapic_id)
                             wmMouseEvent( 
                                 mouse_event_id,  //event_id, 
                                 lapic_info[BSP_ID].DPC_QUEUE.cache_longs[1],  //long1, 
-                                lapic_info[BSP_ID].DPC_QUEUE.cache_longs[2]  //long2 
+                                lapic_info[BSP_ID].DPC_QUEUE.cache_longs[2],  //long2 
+                                0,  // #todo: long3
+                                0   // #todo: long4
                             );
                             break;
 

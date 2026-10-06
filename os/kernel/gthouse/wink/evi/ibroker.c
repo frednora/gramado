@@ -4007,11 +4007,14 @@ fail:
 
 // Called by __ps2mouse_parse_data_packet() in ps2mouse.c.
 // Right after the ps2 mouse interrupt handler.
+
 int 
 wmMouseEvent(
-    int event_id,
+    int event_id, 
     long long1, 
-    long long2 )
+    long long2,
+    long long3,
+    long long4 )
 {
     int Status = -1;
     //static long old_x=0;
@@ -4086,7 +4089,9 @@ wmMouseEvent(
             // is the GPU.
     
             // Update mouse position
+            // bldisp_update_mouse_position(long1, long2, 0, 0);
             bldisp_update_mouse_position(long1, long2, 0, 0);
+
             // Display mouse cursor
             bldisp_display_mouse_cursor();
 
@@ -4235,6 +4240,7 @@ wmMouseEvent(
 // atraves do segundo long.
 // IN: window pointer, event id, button number. button number.
 // #todo: Send control keys status.
+
     if ( event_id == MSG_MOUSEPRESSED || 
          event_id == MSG_MOUSERELEASED )
     {
@@ -4257,8 +4263,7 @@ wmMouseEvent(
                 );
                 */
 
-                // #test
-                // Send it to the target app
+                // #test: Send it to the target app
                 if (window_hover != NULL)
                 {
                     if (window_hover->magic == 1234)
@@ -4278,13 +4283,32 @@ wmMouseEvent(
                         {
 
                             //printk("send mouse release %d\n",window_hover->owner.tid);
+
+                            // Good for regular apps
+                            // For regular app windows, 
+                            // the correct relative calculation is this.
+                            rel_long1 = long3 - (window_hover->l + window_hover->ca_l);
+                            rel_long2 = long4 - (window_hover->t + window_hover->ca_t);
+
+                            /*
                             ipc_post_message_to_tid(
                                 (tid_t) __HARDWARE_TID, 
                                 (tid_t) window_hover->owner.tid,
                                 event_id, 
                                 (unsigned long) button_number, 
                                 (unsigned long) button_number );
-                        
+                            */
+
+                            ipc_post_message_to_tid2(
+                                (tid_t) __HARDWARE_TID, 
+                                (tid_t) window_hover->owner.tid,
+                                event_id, 
+                                (unsigned long) button_number, 
+                                (unsigned long) button_number,
+                                (unsigned long) rel_long1,  // long3
+                                (unsigned long) rel_long2   // long4 
+                                );
+
                             return 0;
                         }
                     }

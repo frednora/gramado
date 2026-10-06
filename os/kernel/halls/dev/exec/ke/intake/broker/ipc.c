@@ -895,9 +895,33 @@ void *ipc_get_message(unsigned long ubuf)
 
 // ---------------------------------
 // Get the extra payload
-// The data here depends on the message code,
+// The data here depends on the message code
+
     message_address[4] = (unsigned long) m->long3;
     message_address[5] = (unsigned long) m->long4;
+
+// Get the current mouse position in the case of button events
+
+    if ( message_address[1] == MSG_MOUSEPRESSED || 
+         message_address[1] == MSG_MOUSERELEASED )
+    {
+        // If there is an updated position
+        if (t->input_flags & IFLAGS_MOUSEMOVE)
+        {
+            // Build message dynamically
+            message_address[4] = (unsigned long) bldisp_get_current_rel_mouse_x();
+            message_address[5] = (unsigned long) bldisp_get_current_rel_mouse_y();
+            //message_address[?] = (unsigned long) bldisp_get_current_mouse_x();
+            //message_address[?] = (unsigned long) bldisp_get_current_mouse_y();
+            // #ps: What is maximum number of slots?
+            // message_address[6] = (unsigned long) jiffies;
+
+            // Clear the flag after consuming
+            t->input_flags &= ~IFLAGS_MOUSEMOVE;
+
+            return 1;
+        }
+    }
 
 // ---------------------------------
 // Get the identification field

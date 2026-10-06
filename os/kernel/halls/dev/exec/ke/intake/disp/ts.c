@@ -265,8 +265,10 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
                             ( lapic_info[0].DPC_QUEUE.cache_longs[0] & 0xFFFFFFFF); 
                         wmMouseEvent( 
                             mouse_event_id,  //event_id, 
-                            lapic_info[0].DPC_QUEUE.cache_longs[1],  //long1, 
-                            lapic_info[0].DPC_QUEUE.cache_longs[2]  //long2 
+                            lapic_info[0].DPC_QUEUE.cache_longs[1],  // long1 
+                            lapic_info[0].DPC_QUEUE.cache_longs[2],  // long2
+                            0,  // #todo: long3
+                            0   // #todo: long4 
                         );
                         break;
 

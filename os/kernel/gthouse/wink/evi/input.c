@@ -11,7 +11,9 @@ unsigned long ksys_mouse_event(int event_id,long long1, long long2)
 
     if (event_id<0)
         return 0;
-    rv = (int) wmMouseEvent(event_id, long1, long2);
+
+    // #todo: Pass the parameters long3 and long4
+    rv = (int) wmMouseEvent(event_id, long1, long2, 0, 0);
 
     return (unsigned long) (rv & 0xFFFFFFFF);
 }
