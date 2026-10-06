@@ -956,14 +956,17 @@ int main(int argc, char *argv[])
     // Absolute coordinates (relative to screen)
     MyButton_Restart.absolute_left = wi.left + wi.cr_left + MyButton_Restart.left;
     MyButton_Restart.absolute_top  = wi.top + wi.cr_top + MyButton_Restart.top;
-    MyButton_Restart.width         = button_w;
-    MyButton_Restart.height        = button_h;
+
+    // Relative values
+    MyButton_Restart.width = button_w;
+    MyButton_Restart.height = button_h;
 
     // Initial state
     // MyButton_Restart.state = 0;
 
 // Create a button
-    uic_button_restart = libgui_create_ui_component (
+    uic_button_restart = 
+        libgui_create_ui_component (
         dc00, 
         1,   // type = button 
         MyButton_Restart.left, 

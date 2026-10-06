@@ -63,6 +63,7 @@ static struct button_info_d  MyBtn_Blue;
 
 static int __hover_button_id = -1;
 
+
 // Drawing state
 static int is_drawing = FALSE;
 static unsigned long last_x = 0;
@@ -71,6 +72,10 @@ static unsigned long current_color = COLOR_BLACK;  // default pen
 
 // Toolbar height
 #define TOOLBAR_H  80
+
+// The current height for the area where the
+// pointer is allowed to paint.
+unsigned long current_cr_height=0;
 
 // Window
 static int main_window = -1;
@@ -148,6 +153,10 @@ static void clear_canvas(void)
         wi.cr_height - TOOLBAR_H,
         COLOR_WHITE,
         0 );
+
+// The current height for the area where the
+// pointer is allowed to paint.
+    current_cr_height = wi.cr_height - TOOLBAR_H;
 }
 
 // Draw a small “pixel” (3×3 rect) at relative coordinates
@@ -161,6 +170,9 @@ static void draw_pixel(unsigned long x, unsigned long y)
     //gws_get_window_info(Display->fd, main_window, &wi);
     //if (y >= (wi.cr_height - TOOLBAR_H - 2))
         //return;
+
+    if (y >= current_cr_height)
+       return;
 
     lingui_draw_rectangle0_dc (
         dc00,
@@ -215,7 +227,10 @@ static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my)
          rel_mx <= MyBtn_Clear.left + MyBtn_Clear.width &&
          rel_my >= MyBtn_Clear.top  &&
          rel_my <= MyBtn_Clear.top  + MyBtn_Clear.height )
+    {
+        // printf("CLEAR: BINGO!\n");
         return MyBtn_Clear.button_id;
+    }
 
     if ( rel_mx >= MyBtn_Black.left &&
          rel_mx <= MyBtn_Black.left + MyBtn_Black.width &&
@@ -251,7 +266,8 @@ static void update_children(int fd)
 {
     gws_get_window_info(fd, main_window, &wi);
 
-    if ((void*)dc00 == NULL) return;
+    if ((void*)dc00 == NULL) 
+        return;
 
     unsigned long btn_w = (wi.cr_width - 40) / 5;
     unsigned long btn_h = 28;
@@ -267,7 +283,8 @@ static void update_children(int fd)
         0 );
 
     // ---- Clear ----
-    MyBtn_Clear.left = gap;
+    // Relative values
+    MyBtn_Clear.left = gap;  
     MyBtn_Clear.top  = btn_y;
     MyBtn_Clear.width  = btn_w;
     MyBtn_Clear.height = btn_h;
@@ -336,6 +353,10 @@ static void update_children(int fd)
     libgui_set_ui_component_dimension(uic_footer, wi.cr_width, 18);
     libgui_set_ui_component_flags(uic_footer, (0x0001 | 0x0002));
     libgui_redraw_ui_component(uic_footer, dc00);
+
+// The current height for the area where the
+// pointer is allowed to paint.
+    current_cr_height = wi.cr_height - TOOLBAR_H;
 }
 
 // ----------------------------------------------------
@@ -422,14 +443,31 @@ paintProcedure(
         // Freehand drawing
         if (is_drawing)
         {
-            draw_pixel(long1, long2);
-            last_x = long1;
-            last_y = long2;
+            if (long2 < current_cr_height)
+            {
+                draw_pixel(long1, long2);
+                last_x = long1;
+                last_y = long2;
+            } else if (long2 >= current_cr_height) {
+                is_drawing = FALSE;
+            }
         }
         break;
 
     case MSG_MOUSEPRESSED:
-        is_drawing = TRUE;
+
+        // Start a stroke if we are over the canvas (not toolbar)
+        if (long2 < current_cr_height)
+        {
+            is_drawing = TRUE;
+            draw_pixel(long1, long2);
+            last_x = long1;
+            last_y = long2;
+
+        } else if (long2 >= current_cr_height){
+            is_drawing = FALSE;
+        }
+
         // Start a stroke if we are over the canvas (not toolbar)
         //{
             // #bugbug: This is a very expensive function
@@ -599,14 +637,27 @@ int main(int argc, char *argv[])
     unsigned long btn_y = wi.cr_height - TOOLBAR_H + 6;
     unsigned long gap   = 8;
 
+//
+// Clear
+//
+
     MyBtn_Clear.button_id = 1;
-    MyBtn_Clear.left = gap;  MyBtn_Clear.top = btn_y;
-    MyBtn_Clear.width = btn_w; MyBtn_Clear.height = btn_h;
+
+    // relative values
+    MyBtn_Clear.left = gap;  
+    MyBtn_Clear.top = btn_y;
+    MyBtn_Clear.width = btn_w; 
+    MyBtn_Clear.height = btn_h;
+
     uic_btn_clear = libgui_create_ui_component(
             dc00, 1,
             MyBtn_Clear.left, MyBtn_Clear.top,
             MyBtn_Clear.width, MyBtn_Clear.height,
             "Clear", (0x0001 | 0x0002));
+
+//
+// Black
+//
 
     MyBtn_Black.button_id = 2;
     MyBtn_Black.left = gap + (btn_w+gap)*1; MyBtn_Black.top = btn_y;
@@ -617,6 +668,10 @@ int main(int argc, char *argv[])
             MyBtn_Black.width, MyBtn_Black.height,
             "Black", (0x0001 | 0x0002));
 
+//
+// Red
+//
+
     MyBtn_Red.button_id = 3;
     MyBtn_Red.left = gap + (btn_w+gap)*2; MyBtn_Red.top = btn_y;
     MyBtn_Red.width = btn_w; MyBtn_Red.height = btn_h;
@@ -626,6 +681,10 @@ int main(int argc, char *argv[])
             MyBtn_Red.width, MyBtn_Red.height,
             "Red", (0x0001 | 0x0002));
 
+//
+// Green
+//
+
     MyBtn_Green.button_id = 4;
     MyBtn_Green.left = gap + (btn_w+gap)*3; MyBtn_Green.top = btn_y;
     MyBtn_Green.width = btn_w; MyBtn_Green.height = btn_h;
@@ -634,6 +693,10 @@ int main(int argc, char *argv[])
             MyBtn_Green.left, MyBtn_Green.top,
             MyBtn_Green.width, MyBtn_Green.height,
             "Green", (0x0001 | 0x0002));
+
+//
+// Blue
+//
 
     MyBtn_Blue.button_id = 5;
     MyBtn_Blue.left = gap + (btn_w+gap)*4; MyBtn_Blue.top = btn_y;
@@ -652,6 +715,11 @@ int main(int argc, char *argv[])
             wi.cr_width, 18,
             "-- paint --",
             (0x0001 | 0x0002));
+
+
+// The current height for the area where the
+// pointer is allowed to paint.
+    current_cr_height = wi.cr_height - TOOLBAR_H;
 
     // First toolbar paint
     update_children(client_fd);
