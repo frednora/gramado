@@ -82,7 +82,10 @@ unsigned long current_cr_height=0;
 // Window
 static int main_window = -1;
 
+static void on_button_pressed(int button_id);
+static void on_button_released(int button_id);
 static void on_button_clicked(int id);
+
 static int  __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
 static void update_children(int fd);
 static void draw_pixel(unsigned long x, unsigned long y);
@@ -187,7 +190,75 @@ static void draw_pixel(unsigned long x, unsigned long y)
         0 );
 }
 
-// ----------------------------------------------------
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_pressed(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == MyBtn_Clear.button_id)
+    {
+        libgui_on_button_pressed(uic_btn_clear, dc00);
+    }
+    else if (button_id == MyBtn_Black.button_id)
+    {
+        libgui_on_button_pressed(uic_btn_black, dc00);
+    }
+    else if (button_id == MyBtn_Red.button_id)
+    {
+        libgui_on_button_pressed(uic_btn_red, dc00);
+    }
+    else if (button_id == MyBtn_Green.button_id)
+    {
+        libgui_on_button_pressed(uic_btn_green, dc00);
+    }
+    else if (button_id == MyBtn_Blue.button_id)
+    {
+        libgui_on_button_pressed(uic_btn_blue, dc00);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+
+}
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_released(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == MyBtn_Clear.button_id)
+    {
+        libgui_on_button_released(uic_btn_clear, dc00);
+    }
+    else if (button_id == MyBtn_Black.button_id)
+    {
+        libgui_on_button_released(uic_btn_black, dc00);
+    }
+    else if (button_id == MyBtn_Red.button_id)
+    {
+        libgui_on_button_released(uic_btn_red, dc00);
+    }
+    else if (button_id == MyBtn_Green.button_id)
+    {
+        libgui_on_button_released(uic_btn_green, dc00);
+    }
+    else if (button_id == MyBtn_Blue.button_id)
+    {
+        libgui_on_button_released(uic_btn_blue, dc00);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+}
+
 static void on_button_clicked(int id)
 {
     if (id < 0) 
@@ -196,28 +267,28 @@ static void on_button_clicked(int id)
     switch (id)
     {
         case 1:  // Clear
-            printf("paint: Clear canvas\n");
+            //printf("paint: Clear canvas\n");
             clear_canvas();
             break;
 
         case 2:  // Black
             current_color = COLOR_BLACK;
-            printf("paint: Pen = Black\n");
+            //printf("paint: Pen = Black\n");
             break;
 
         case 3:  // Red
             current_color = COLOR_RED;
-            printf("paint: Pen = Red\n");
+            //printf("paint: Pen = Red\n");
             break;
 
         case 4:  // Green
             current_color = COLOR_GREEN;
-            printf("paint: Pen = Green\n");
+            //printf("paint: Pen = Green\n");
             break;
 
         case 5:  // Blue
             current_color = COLOR_BLUE;
-            printf("paint: Pen = Blue\n");
+            //printf("paint: Pen = Blue\n");
             break;
 
         default:
@@ -445,21 +516,6 @@ paintProcedure(
         } else {
             __hover_button_id = -1;
         }
-
-        /*
-        // Freehand drawing
-        if (is_drawing)
-        {
-            if (long2 < current_cr_height)
-            {
-                draw_pixel(long1, long2);
-                last_x = long1;
-                last_y = long2;
-            } else if (long2 >= current_cr_height) {
-                is_drawing = FALSE;
-            }
-        }
-        */
         
         CantPaint = FALSE;
         if (long2 >= current_cr_height)
@@ -497,33 +553,13 @@ paintProcedure(
                 draw_pixel(last_x, last_y);
         }
 
-        /*
-        // Start a stroke if we are over the canvas (not toolbar)
-        if (long2 < current_cr_height)
+        // #test
+        // Inside the toolbar
+        if (is_drawing != TRUE)
         {
-            is_drawing = TRUE;
-            draw_pixel(long1, long2);
-            last_x = long1;
-            last_y = long2;
-
-        } else if (long2 >= current_cr_height){
-            is_drawing = FALSE;
+            if (last_y >= current_cr_height)
+                on_button_pressed(__hover_button_id);
         }
-        */
-
-        // Start a stroke if we are over the canvas (not toolbar)
-        //{
-            // #bugbug: This is a very expensive function
-            //struct gws_window_info_d wi;
-            //gws_get_window_info(fd, main_window, &wi);
-            //if (long2 < (wi.cr_height - TOOLBAR_H))
-            //{
-                //is_drawing = TRUE;
-                //last_x = long1;
-                //last_y = long2;
-                //draw_pixel(long1, long2);
-            //}
-        //}
         break;
 
     case MSG_MOUSERELEASED:
@@ -531,21 +567,12 @@ paintProcedure(
         // Not drawing anymore
         is_drawing = FALSE;
 
-        /*
-        if (is_drawing == TRUE){
-            is_drawing = FALSE;
-        } else {
-            // Click on a toolbar button
-            printf("paint: Button released: %d\n", __hover_button_id);
-            on_button_clicked(__hover_button_id);
-        }
-        */
-        
         // #bugbug:
         // We can't use this condition. Why?
         //if (long2 >= current_cr_height)
         //{
-            printf("paint: Button released: %d\n", __hover_button_id);
+            //printf("paint: Button released: %d\n", __hover_button_id);
+            on_button_released(__hover_button_id);
             on_button_clicked(__hover_button_id);
         //}
 

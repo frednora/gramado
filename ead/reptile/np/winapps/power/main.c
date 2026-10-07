@@ -136,7 +136,6 @@ syscall3 (
     return (unsigned long) ret;
 }
 
-
 // For visual effects
 // #todo: We need to implement this kind of worker inside the library
 static void on_button_pressed(int button_id)
