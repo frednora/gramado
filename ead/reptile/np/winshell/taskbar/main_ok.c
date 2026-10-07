@@ -203,7 +203,17 @@ struct button_info_d
 // (running, minimized, etc.).
     int state;
 };
-static struct button_info_d StartButton;
+
+//
+// Buttons
+//
+
+static struct button_info_d  StartButton;
+
+
+//
+// UI components
+//
 
 struct ui_component_d *uic_button_start;
 
@@ -261,7 +271,10 @@ static void print_ascii_table(int fd);
 
 static int do_launch_app(int app_number);
 
-static void on_button_clicked(int id);
+static void on_button_pressed(int button_id);
+static void on_button_released(int button_id);
+static void on_button_clicked(int button_id);
+
 static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my);
 
 static int 
@@ -696,28 +709,66 @@ updateStatusBar(
    // gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_YELLOW, second_number );
 }
 
-// Handle click events for components
-static void on_button_clicked(int id)
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_pressed(int button_id)
 {
-    if (id < 0)
+    if (button_id < 0)
         return;
 
-    switch (id)
+    if (button_id == StartButton.button_id)
+    {
+        libgui_on_button_pressed(uic_button_start, dc00);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+
+}
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_released(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == StartButton.button_id)
+    {
+        libgui_on_button_released(uic_button_start, dc00);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+}
+
+// Handle click events for components
+static void on_button_clicked(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    switch (button_id)
     {
         case 1:  // StartButton.button_id
-            printf("Button %d clicked!\n", id);
+            //printf("Button %d clicked!\n", button_id);
             // Example: launch an app
             do_launch_app(1);
             break;
 
         // Future buttons/icons
         case 2:
-            printf("Button %d clicked!\n", id);
-            do_launch_app(2);
+            printf("Button %d clicked!\n", button_id);
+            //do_launch_app(2);
             break;
 
         default:
-            printf("Unknown button clicked: %d\n", id);
+            printf("Unknown button clicked: %d\n", button_id);
             break;
     }
 }
@@ -855,7 +906,8 @@ tbProcedure(
             switch (long1) 
             {
                 case VK_RETURN:
-                    trigger_default_responder(fd);
+                    // trigger_default_responder(fd);
+                    // do_launch_app(1);  // First responder
                     break;
 
                 case '<':   // ASCII '<'
@@ -873,6 +925,12 @@ tbProcedure(
                 case 'R':  // Refresh
                 case 'r': 
                     gws_update_desktop(fd); 
+                    break;
+
+                case 'S':  // Start menu
+                case 's': 
+                    // gws_update_desktop(fd);
+                    do_launch_app(1);  // First responder 
                     break;
 
                 default:
@@ -1718,13 +1776,14 @@ int main(int argc, char *argv[])
         // #bugbug:
         // This pump is very slow, affecting the responsivity
         // for the other pump that gets events from the system.
-        pump(client_fd, main_window);
+        // pump(client_fd, main_window);
 
         // 2. Pump events from Input Broker (system events)
-        for (iSysMsg=0; iSysMsg<32; iSysMsg++)
-        {
+        //for (iSysMsg=0; iSysMsg<32; iSysMsg++)
+        //{
             if (rtl_get_event() == TRUE)
             {
+
                 tbProcedure(
                     client_fd,
                     (int) RTLEventBuffer[0],   // window id
@@ -1734,7 +1793,7 @@ int main(int argc, char *argv[])
                     );
                 RTLEventBuffer[1] = 0; // clear after dispatch
             };
-        };
+        //};
 
         end_jiffie = rtl_jiffies();
 
@@ -1748,14 +1807,24 @@ int main(int argc, char *argv[])
                 // We are still implementing the sleep() support.
                 // if (UseSleep == TRUE)
                     // rtl_sleep(MainLoopIntervalMS - delta_jiffie);
+
+                //#test
+                rtl_yield();
             }    
         }
     };
 
-// Close the socket
-    close(client_fd);
+
+    if (isTimeToQuit == TRUE){
+        printf("taskbar: Close window\n");
+        gws_destroy_window(client_fd, main_window);
+    }
+
+    // Close the socket
+    if (client_fd > 0)
+        close(client_fd);
  
-    return EXIT_SUCCESS;  // done
+    return EXIT_SUCCESS;  // OK
 }
 
 //

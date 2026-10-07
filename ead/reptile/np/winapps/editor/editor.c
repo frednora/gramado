@@ -937,22 +937,6 @@ editorProcedure(
         return 0;
         break;
 
-    /*
-    // If the event window is the main window, redraw all client windows.
-    case MSG_PAINT:
-        if (event_window == main_window)
-        {
-            // Update the text for address bar.
-            //__test_text(fd,addressbar_window);
-            // Update the text for the client window.
-            //__test_text(fd,client_window);
-            // Redraw the client windows.
-            update_clients(fd);
-            return 0;
-        }
-        break;
-        */
-
     case MSG_PAINT:
         if (event_window == main_window)
         {
@@ -969,20 +953,24 @@ editorProcedure(
         }
         break;
 
-
+    // Key stroke
     case MSG_KEYDOWN:
         editorHandleKey(long1);
         // Draw the status bar
         editorDrawStatusBar();
+        return 0;
         break;
 
     case MSG_KEYUP:
         //printf("editor: MSG_KEYUP\n");
-         switch (long1) {
+         switch (long1) 
+         {
+            // #ps: Its working
             case VK_RETURN: 
-                printf("Editor: MSG_KEYUP VK_RETURN\n");
+                // printf("Editor: MSG_KEYUP VK_RETURN\n");
                 break;
         };
+        return 0;
         break;
 
     case MSG_SYSKEYDOWN:
@@ -1042,7 +1030,6 @@ editorProcedure(
         return 0;
         break;
 
-    // #test
     case MSG_MOUSEMOVE:
         // #bugbug
         // Kernel is sending us absolute values
@@ -1053,36 +1040,35 @@ editorProcedure(
             __hover_button_id = ButtonId;
         if (ButtonId <= 0)
             __hover_button_id = -1;
-        break; 
+        break;
 
+    // #todo: Visual effects for buttons
+    case MSG_MOUSEPRESSED:
+        break;
+
+    // #todo: Visual effects for buttons
     case MSG_MOUSERELEASED:
         printf("editor: Button released: %d\n", __hover_button_id);
         //printf("editor: MSG_MOUSERELEASED:\n");
         on_button_clicked(__hover_button_id);
 
-            // #test: Testing the activation
+        // #test: Testing the activation
         // We gotta do this only when the window is not active
         //gws_set_active( fd, main_window );
         //gws_refresh_window (fd, main_window);
 
         break;
 
-
     // Mouse clicked on a button.
+    // #ps: This message comes from the server
     case GWS_MouseClicked:
         printf("editor: GWS_MouseClicked\n");
         return 0;
         break;
 
     case MSG_CLOSE:
-        printf ("editor.bin: MSG_CLOSE\n");
-        editorShutdown(fd);
-        //isTimeToQuit = TRUE;
-        // #test
-        //if ((void*) Display != NULL){
-            //gws_close_display(Display);
-        //}
-        exit(0);
+        // printf ("editor.bin: MSG_CLOSE\n");
+        isTimeToQuit = TRUE;
         break;
     
     // After a resize event.
@@ -2002,66 +1988,12 @@ static int __editor_initialize(void)
     };
 
 
-
-/*
-    while (1)
-    {
-        if (isTimeToQuit == TRUE)
-            break;
-
-        // It needs to be the main window for now.
-        // Calls gws_get_next_event() to fetch the next event from the DS.
-        // And dispatch it to the procedure.
-        pump( client_fd, main_window );
-
-        C = fgetc(stdin);
-        if (C > 0)
-        {
-            editorProcedure ( 
-                client_fd,    // socket
-                client_window,    // window ID
-                MSG_KEYDOWN,  // message code
-                C,            // long1 (ascii)
-                C );          // long2 (ascii)
-        }
-
-    };
-*/
-
-// ===========================================
-
-// loop
-// The server will return an event from the client's event queue.
-// Call the local window procedure if a valid event was found.
-// #todo: 
-// Por enquanto, a rotina no servidor somente lida com 
-// eventos na janela com foco de entrada.
-// Talvez a ideia é lidar com eventos em todas as janelas
-// do processo cliente.
-
-    //Display->running = TRUE;
-
-// Getting the asynchronous events 
-// from the window server via socket.
-// Processing this events.
-
-/*
-    while (1)
-    {
-        //if ( Display->running != TRUE )
-            //break;
-        if (isTimeToQuit == TRUE)
-            break;
-
-        // It needs to be the main window for now.
-        pump( client_fd, main_window );
-    };
-*/
-
 // Quit the application
+
     if (isTimeToQuit == TRUE)
     {
-        printf("editor.bin: isTimeToQuit\n");
+        // printf("editor.bin: isTimeToQuit\n");
+
         editorShutdown(client_fd);
 
         if (client_fd > 0)
@@ -2069,65 +2001,6 @@ static int __editor_initialize(void)
 
         return EXIT_SUCCESS;  // OK
     }
-
-    // Hang
-    //printf("editor.bin: main loop failedn");
-    //while (1){
-    //};
-
-/*
-    int C=0;
-    //char data[2];
-    //int nread=0;
-
-    //fputc('A',stdin);
-    //fputs("This is a string in stdin",stdin);
-
-    rewind(stdin);
-
-    while (1){
-        C=fgetc(stdin);
-        if(C>0){
-            editorProcedure( 
-                client_fd,     // socket
-                NULL,          // opaque window object
-                MSG_KEYDOWN,   // message code
-                C,             // long1 (ascii)
-                C );           // long2 (ascii)
-        }
-    };
-*/
-
-//==============================================
-
-
-//
-// loop
-//
-
-/*
-//=================================
-// Set foreground thread.
-// Get events scanning a queue in the foreground queue.
-    rtl_focus_on_this_thread();
-    
-    while (1){
-        if ( rtl_get_event() == TRUE )
-        {  
-            editorProcedure( 
-                client_fd,
-                (void*) RTLEventBuffer[0], 
-                RTLEventBuffer[1], 
-                RTLEventBuffer[2], 
-                RTLEventBuffer[3] );
-        }
-    };
-
-//=================================
-*/
-
-    // printf("editor: exit 0\n");
-    // return EXIT_SUCCESS;
 
 fail:
     return EXIT_FAILURE;
