@@ -7,6 +7,14 @@
 
 extern unsigned long task_switch_status;
 
+
+struct taskswitch_info_d 
+{
+    int initialized;
+    // ...
+};
+extern struct taskswitch_info_d  TaskSwitchInfo;
+
 // ------------------------
 
 unsigned long get_taskswitch_status (void);

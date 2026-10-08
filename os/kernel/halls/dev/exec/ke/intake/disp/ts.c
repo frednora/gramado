@@ -5,6 +5,9 @@
 
 #include <kernel.h>
 
+
+struct taskswitch_info_d  TaskSwitchInfo;
+
 //Status do mecanismo de task switch. 
 unsigned long task_switch_status=0; // locked
 
@@ -114,9 +117,12 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
     if (t->magic != 1234)
         panic("__tsOnFinishedExecuting: t magic\n");
 
-// #bugbug
-//  Isso está acontecendo.
 
+// #test: Can't preempt this thread
+    //if (t->is_preemptable != PREEMPTABLE)
+        //return;
+
+// #bugbug: This is happning sometimes
     //if ( CurrentThread->state != RUNNING )
     //    panic("task_switch: CurrentThread->state != RUNNING");
 
@@ -128,6 +134,7 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
     {
         t->state = READY;
         t->readyCount = 0;
+        t->preempted = TRUE;
     }
 
 // Spawn thread 
@@ -337,8 +344,6 @@ static unsigned long __task_switch(int lapic_info_id)
     //tid_t tmp_tid = -1;
 // =======================================================
 
-
-
 //
 // Current thread
 //
@@ -480,6 +485,7 @@ static unsigned long __task_switch(int lapic_info_id)
 // Maybe this is good for the case when a core has
 // only one thread an don't wans to change it.
 
+    // Do not preempt
     if (CurrentThread->is_preemptable != PREEMPTABLE)
     {
         IncrementDispatcherCount (SELECT_CURRENT_COUNT);
@@ -526,6 +532,7 @@ static unsigned long __task_switch(int lapic_info_id)
 // The thread still have some processing time in its quantum value.
 // Let's return and allow the thread to run for again.
 
+    // Do not preempt
     if (CurrentThread->runningCount < CurrentThread->quantum){
 
         if (CurrentThread->Deferred.sleep_in_progress == TRUE && 
@@ -565,7 +572,9 @@ static unsigned long __task_switch(int lapic_info_id)
 // check for a new thread in standby, check for signals, etc ...
 // Preempt: >> MOVEMENT 3 (Running --> Ready).
 
+    // Do preempt
     } else if (CurrentThread->runningCount >= CurrentThread->quantum){
+
 
         // #preempt
         // The context is already saved,
@@ -1085,7 +1094,6 @@ unsigned long tsTaskSwitch(void)
     pid_t current_process_pid = -1;
     pid_t ws_pid = -1;
 
-
 // #ps:
 // Dispacher Request Level
 // (save context, Task switching, restore context, spawn)
@@ -1141,8 +1149,7 @@ unsigned long tsTaskSwitch(void)
 // This variable was set at the last release or the last spawn.
 // Global variable.
 
-    if ( CurrentTID < 0 || 
-         CurrentTID >= THREAD_COUNT_MAX )
+    if (CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX)
     {
         printk ("psTaskSwitch: CurrentTID %d", CurrentTID); 
         die();
@@ -1157,7 +1164,6 @@ unsigned long tsTaskSwitch(void)
 // This is the moment where this routine to setup the assembly variables and 
 // do not make the taskswtiching ... 
 // so at the end of the routine it will check the flags in assembly and to the iretq
-
 
 /*
 // #suspended
@@ -1224,12 +1230,10 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
     }
 
 
-//
 // #bugbug (trade off)
 // We are changing it. But we are still in ring 0.
 // If it crashes after that and before resume the thread,
 // we are lost. But if we dont change it, we are lost too.
-//
 
 // Running normal thread in ring 0
     if (t->cpl == 0){
@@ -1253,7 +1257,11 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
 
 int init_ts(void)
 {
+    TaskSwitchInfo.initialized = FALSE;
+
     taskswitch_lock();
+
+    TaskSwitchInfo.initialized = TRUE;
     return 0;
 }
 

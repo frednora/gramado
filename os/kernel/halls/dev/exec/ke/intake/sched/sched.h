@@ -59,7 +59,6 @@ struct scheduler_info_d
     unsigned long stage;
 // Max number of stages
     unsigned long max_stage;
-
 };
 extern struct scheduler_info_d  SchedulerInfo;
 

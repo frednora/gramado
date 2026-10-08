@@ -476,9 +476,11 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
             // Filter by priority
             if (TmpThread->priority == priority)
             {
-                // For all the READY threads.
+                // For all the READY threads
                 if (TmpThread->state == READY) 
                 {
+                    TmpThread->preempted = FALSE;
+
                     // Clear linkage before appending
                     TmpThread->next = NULL;
 
@@ -960,6 +962,8 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                  TmpThread->magic == 1234 && 
                  TmpThread->state == READY )
             {
+                TmpThread->preempted = FALSE;
+
                 // Recreate the linked list.
                 // The lapic_info[0].p1q and it's next.
 

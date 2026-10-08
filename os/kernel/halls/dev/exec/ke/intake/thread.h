@@ -580,6 +580,13 @@ struct thread_d
 // Is preemptable or not.
     int is_preemptable;
 
+// The thread was preempted.
+// It can help the scheduler decide if the thread
+// goes to the end of the queue or not.
+
+    int preempted;
+
+
 // ========================================================
 // ORDEM: 
 // O que segue é referenciado durante o processo de dispatch.
@@ -784,8 +791,8 @@ struct thread_d
 // para privilégios de acesso.
 
 // usersession and cgroup
-    struct usession_d *usession;  // user session.
-    struct cgroup_d *cg;          // cgroup.
+    struct usession_d *usession;  // user session
+    struct cgroup_d *cg;          // cgroup
 
 // #ORDEM:  
 // O que segue é referenciado durante as trocas de mensagens.
@@ -885,10 +892,12 @@ struct thread_d
 // Context
 //
 
+// #bugbug: This is only for x64 machines.
 // see: x64cont.h
     struct x64_context_d  context;
 // The context is already saved or not?
     int saved;
+
 // Para o kernel saltar para o novo processo.
     unsigned long ring0_rip;  //usado com o pd do kernel?
     unsigned long ripPA;
