@@ -935,8 +935,9 @@ extern unsigned long teList[PROCESS_COUNT_MAX];
 // == Prototypes =====================================================
 //
 
-// Create process object - (Thread Environment)
-struct te_d *processObject(void);
+// Create te object. (Thread Environment)
+// fka Process ControlBlock
+struct te_d *teObject(void);
 
 int destroy_process_structure(struct te_d *process);
 int gc_process_structure(struct te_d *process);

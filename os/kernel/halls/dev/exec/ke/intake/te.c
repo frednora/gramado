@@ -1125,8 +1125,9 @@ static void __initialize_process_common_elements(struct te_d *p)
     return;
 }
 
-// Create process object - (Thread Environment)
-struct te_d *processObject(void)
+// Create te object. (Thread Environment)
+// fka Process ControlBlock
+struct te_d *teObject(void)
 {
     struct te_d *p_obj;
 
@@ -1153,7 +1154,7 @@ struct te_d *create_and_initialize_process_object(void)
     register int i=0;
 
 // Process structure
-    new_process = (struct te_d *) processObject();
+    new_process = (struct te_d *) teObject();
     if ((void *) new_process == NULL){
         printk ("create_and_initialize_process_object: new_process\n");
         goto fail;
@@ -1382,9 +1383,9 @@ struct te_d *create_process (
 
 // ---- Create process object -------------------------------
 
-    Process = (void *) processObject();
+    Process = (void *) teObject();
     if ((void *) Process == NULL){
-        printk("create_process: on processObject()\n");
+        printk("create_process: on teObject()\n");
         return NULL;
     }
     Process->type = PROCESS_TYPE_NULL;  // #todo
