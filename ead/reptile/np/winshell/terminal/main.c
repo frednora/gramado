@@ -62,9 +62,10 @@ FILE *__terminal_input_fp;
 // Windows
 struct gws_window_info_d *wi;  // Window info for the main window.
 
-// Private
+// wid
 static int main_window=0;
-static int terminal_window=0;
+// ...
+
 
 // color
 static unsigned int __bg_color = COLOR_BLACK;
@@ -1391,14 +1392,6 @@ static void compareStrings(int fd)
         goto exit_cmp;
     }
 
-// Get window info: terminal window
-// Terminal.client_window_id
-// IN: fd, wid
-    if ( gramado_strncmp(prompt,"w-terminal",10) == 0 ){
-        __test_winfo( fd, terminal_window );
-        goto exit_cmp;
-    }
-
     if ( gramado_strncmp(prompt,"tputc",5) == 0 )
     {
         tputc(fd, dc00, 'x', __fg_color, __bg_color, 0);
@@ -1576,19 +1569,12 @@ exit_cmp:
 // Close the terminal application
 static void doClose(int fd)
 {
-    //printf("terminal.bin: MSG_CLOSE\n");
     tputstring(fd, "terminal.bin: MSG_CLOSE\n");
-    //while(1){}
 
     // Notify the child app with ETX/EOT
     terminal_notify_child_close();
 
-    // Tear down the terminal windows
-    //gws_destroy_window(fd, terminal_window);
     gws_destroy_window(fd, main_window);
-
-    // Exit the terminal process itself. (quick and dirty)
-    // exit(0);
 }
 
 static void doHelp(int fd)
@@ -3022,7 +3008,6 @@ terminalProcedure (
     // Close the terminal application
     case MSG_CLOSE:
         isTimeToQuit = TRUE;
-        // doClose(fd);
         break;
 
     //case MSG_QUIT:
@@ -3733,7 +3718,6 @@ static void __initialize_basics(void)
 
 // Windows
     main_window=0;
-    terminal_window=0;
 
 // Cursor
     cursor_x=0;
@@ -3786,7 +3770,6 @@ int terminal_init(unsigned short flags)
 // Initializing basic variables
     __initialize_basics();
 
-
     __terminal_init_text_buffer();
 
 // Device info
@@ -3797,7 +3780,7 @@ int terminal_init(unsigned short flags)
     //...
 
     // pid=2 fd=4
-    //printf ("TERMINAL.BIN: pid{%d} fd{%d}\n",
+    // printf ("TERMINAL.BIN: pid{%d} fd{%d}\n",
     //    Terminal.pid, Terminal.client_fd );
 
 // Open display.
@@ -3815,11 +3798,6 @@ int terminal_init(unsigned short flags)
     }
     Terminal.client_fd = (int) client_fd;
 
-// Windows: it's global now.
-    //int main_window = 0;
-    //int terminal_window = 0;
-
-
 // =========================================
 // Library initialization
 
@@ -3829,7 +3807,6 @@ int terminal_init(unsigned short flags)
         printf("terminal: libgui_initialize fail\n");
         exit(1);
     }
-
 
 // --------------------------------------
 // main window
@@ -3912,16 +3889,6 @@ int terminal_init(unsigned short flags)
 // We're gonna need this to fit the terminal window
 // into the client area of the main window.
 
-    /*
-    // #test: Now it's a global thing.
-    //struct gws_window_info_d *wi;
-    wi = (void*) malloc( sizeof(struct gws_window_info_d) );
-    if ((void*) wi == NULL){
-        printf("terminal: wi\n");
-        exit (1);
-    }
-    */
-
     struct gws_window_info_d lWi;
 
     // IN: fd, wid, window info structure
@@ -3968,10 +3935,8 @@ int terminal_init(unsigned short flags)
         exit (1);
     }
 
-
-// ============================================================
-// #test
-// Update the wproxy structure that belongs to this thread.
+// =======================================================
+// Update the wproxy structure that belongs to this thread
 
     unsigned long m[10];
     int mytid = gettid();
@@ -3994,7 +3959,6 @@ int terminal_init(unsigned short flags)
 
 
 // ============================================================
-// #test
 // Getting the flag earlier. This way we can use it in the loop.
 
     __sh_flags = (unsigned long) lWi.sh_flags;
@@ -4060,64 +4024,9 @@ int terminal_init(unsigned short flags)
     wWidth  = lWi.cr_width;
     wHeight = lWi.cr_height;
 
-/*
-// Create terminal window
-// (Inside the client area)
-    terminal_window = 
-        (int) gws_create_window (
-                  client_fd,
-                  WT_SIMPLE, 
-                  1, 
-                  1, 
-                  cw_string,
-                  wLeft, wTop, wWidth, wHeight,
-                  main_window,
-                  WS_CHILD,
-                  COLOR_BLACK, COLOR_BLACK );
-
-    if (terminal_window < 0){
-        printf("terminal: fail on terminal_window\n");
-        exit(1);
-    }
-    Terminal.client_window_id = terminal_window;
-*/
-
-
-
-    /*
-    // Background
-    libgui_backbuffer_draw_rectangle0(
-        frame_left + cr_left + wLeft, 
-        frame_top  + cr_top  + wTop, 
-        wWidth, 
-        wHeight,
-        COLOR_BLACK, 1, 0, FALSE );
-    */
-
-    // #debug
-    //gws_draw_rectangle(client_fd, main_window,
-        //0, 0, wWidth, wHeight,
-        //COLOR_WHITE, TRUE, 0);
-
-    //#debug
-    //gws_refresh_window(client_fd, terminal_window);
-
-    /*
-    // Refresh
-    libgui_refresh_rectangle_via_kernel(
-        frame_left + cr_left + wLeft, 
-        frame_top  + cr_top  + wTop, 
-        wWidth, 
-        wHeight
-        );
-    */
-    
-
-    // #bugbug
-    // Its not returning the right client area values.
-    // while(1){}
 
     Terminal._mode = 0;
+
 
 // #bugbug
 // Something is wrong here.
@@ -4137,37 +4046,13 @@ int terminal_init(unsigned short flags)
 
     Terminal.initialized = TRUE;
 
-// Set window with focus
-    //gws_async_command(client_fd,9,0,terminal_window);
-
-// Invalidate surface.
+// Invalidate surface
     invalidate_surface_retangle();
 
-    //while(1){}
-
-//
-// Test 3
-//
-
-/*
-    __tmp_x = 40;
-    __tmp_y = 40;
-    // Testing draw a char in a window.
-    terminal_drawchar_request (
-        (int) client_fd,          //fd,
-        (int) __response_wid,     //window_id,
-        (unsigned long) __tmp_x,  //left,
-        (unsigned long) __tmp_y,  //top,
-        (unsigned long) COLOR_BLACK,
-        (unsigned long) 'X' );
-    terminal_drawchar_response((int) client_fd);
- */
-
     //#debug
-    //hanging
     //while(1){}
 
-// Initialize globals.
+// Initialize globals
 // #importante: 
 // Isso será definido somente uma vez.
 
@@ -4218,17 +4103,6 @@ int terminal_init(unsigned short flags)
     // test_standard_stream(client_fd);
 
 // ============================================
-// focus
-// #bugbug
-// It needs to be an 'editbox' for typing messages.
-
-/*
-    gws_async_command(
-         client_fd,
-         9,             // set focus
-         terminal_window,
-         terminal_window );
-*/
 
     //rtl_focus_on_this_thread();
 
@@ -4242,7 +4116,7 @@ int terminal_init(unsigned short flags)
 */
 
 // Inicialize prompt[]
-// #bugbug: Maybe its not good.
+// #bugbug: Maybe its not good
     input('\0');
 // Clear the terminal window
     clear_terminal_client_window(client_fd);
@@ -4260,7 +4134,6 @@ int terminal_init(unsigned short flags)
 
     //#debug
     //gws_refresh_window(client_fd, main_window);
-
 
 // Open PTYM
     terminal_initialize_pty();
@@ -4304,7 +4177,6 @@ int terminal_init(unsigned short flags)
 // Only the foreground thread can change this.
     sc82(10013, tid, tid, tid);
 
-
 /*
 // =================================================
     unsigned long j1 = rtl_jiffies();
@@ -4347,6 +4219,7 @@ int terminal_init(unsigned short flags)
 
     char coolCharBuffer[4];
     int ch_read=0;
+
     while (1){
 
         if (isTimeToQuit == TRUE)
@@ -4375,17 +4248,18 @@ int terminal_init(unsigned short flags)
         }
 
         // 1. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++)
-        {
-            //__get_system_event(client_fd, Terminal.client_window_id);
+        //for (nSysMsg=0; nSysMsg<32; nSysMsg++)
+        //{
             __get_system_event(client_fd, main_window);
-        };
+        // };
 
         // 2. Read what comes from the shell and print it
 
         coolCharBuffer[0] = 0;
         coolCharBuffer[1] = 0;
 
+        // #todo
+        // Maybe we can optimize this, reading more than one single byte
         while (1){
             ch_read = (int) read(ptym_fd, coolCharBuffer, 1);
             if (ch_read <= 0)
@@ -4395,7 +4269,7 @@ int terminal_init(unsigned short flags)
         };
 
         // 3. Pump events from Display Server
-        __get_ds_event( client_fd, main_window );
+        // __get_ds_event( client_fd, main_window );
     };
 
 
