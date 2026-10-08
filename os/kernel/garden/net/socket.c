@@ -376,6 +376,7 @@ int sys_socket(int family, int type, int protocol)
     }
     */
 
+    // #ps: Using core 0
     //debug_print("sys_socket:\n");
     do_credits_by_tid( lapic_info[0].current_tid );
 
@@ -464,9 +465,13 @@ int sys_socket(int family, int type, int protocol)
     // ip:port
     sk->ip_ipv4 = (unsigned int) _ipv4;
     sk->port = (unsigned short) _port;
-    // pid, uid, gid.
+
+    // #ps: Redundant. It was already done during the
+    // creationg of the socket object.
+    // pid, tid, uid, gid.
     // #todo: Use methods to grab these informations.
     sk->pid = (pid_t) current_process;
+    sk->tid = (tid_t) lapic_info[0].current_tid;
     sk->uid = (uid_t) current_user;
     sk->gid = (gid_t) current_group;
 // -----------------------------------

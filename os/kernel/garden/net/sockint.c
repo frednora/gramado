@@ -81,6 +81,7 @@ struct socket_d *create_socket_object(void)
     // IN: core id
 
     s->pid = (pid_t) get_current_process(0);
+    s->tid = (tid_t) lapic_info[0].current_tid;
     s->uid = (uid_t) current_user;
     s->gid = (gid_t) current_group;
 

@@ -534,18 +534,18 @@ static unsigned long __task_switch(int lapic_info_id)
             CurrentThread->Deferred.sleep_phase = 2;
     
             CurrentThread->runningCount = CurrentThread->quantum;
-                // We do not preempt. we keep the thread
-                // in the waiting state
-                CurrentThread->state = WAITING;
+            // We do not preempt. we keep the thread
+            // in the waiting state
+            CurrentThread->state = WAITING;
 
-                CurrentThread->waiting_jiffy = jiffies;
-                CurrentThread->wake_jiffy =  
-                    jiffies + CurrentThread->Deferred.desired_sleep_ms;
+            CurrentThread->waiting_jiffy = jiffies;
+            CurrentThread->wake_jiffy =  
+                jiffies + CurrentThread->Deferred.desired_sleep_ms;
 
-                //printk("ts: RUNNING >> WAITING now=%d j1=%d  j2=%d\n",
-                    //jiffies, 
-                    //CurrentThread->waiting_jiffy, 
-                    //CurrentThread->wake_jiffy );
+            //printk("ts: RUNNING >> WAITING now=%d j1=%d  j2=%d\n",
+                //jiffies, 
+                //CurrentThread->waiting_jiffy, 
+                //CurrentThread->wake_jiffy );
 
             goto ZeroGravity;
         }
@@ -603,23 +603,23 @@ static unsigned long __task_switch(int lapic_info_id)
         if (CurrentThread->Deferred.sleep_in_progress == TRUE && 
             CurrentThread->Deferred.sleep_phase == 1 )
         {
-                CurrentThread->Deferred.sleep_phase = 2;
+            CurrentThread->Deferred.sleep_phase = 2;
     
-                CurrentThread->runningCount = CurrentThread->quantum;
-                // We do not preempt. we keep the thread
-                // in the waiting state
-                CurrentThread->state = WAITING;
+            CurrentThread->runningCount = CurrentThread->quantum;
+            // We do not preempt. we keep the thread
+            // in the waiting state
+            CurrentThread->state = WAITING;
 
-                CurrentThread->waiting_jiffy = jiffies;
-                CurrentThread->wake_jiffy =  
-                    jiffies + CurrentThread->Deferred.desired_sleep_ms;
+            CurrentThread->waiting_jiffy = jiffies;
+            CurrentThread->wake_jiffy =  
+                jiffies + CurrentThread->Deferred.desired_sleep_ms;
 
-                //printk("ts: READY >> WAITING now=%d j1=%d  j2=%d\n",
-                    //jiffies, 
-                    //CurrentThread->waiting_jiffy, 
-                    //CurrentThread->wake_jiffy );
+            //printk("ts: READY >> WAITING now=%d j1=%d  j2=%d\n",
+                //jiffies, 
+                //CurrentThread->waiting_jiffy, 
+                //CurrentThread->wake_jiffy );
 
-                goto ZeroGravity;
+            goto ZeroGravity;
         }
 
         // # todo: 

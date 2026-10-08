@@ -834,6 +834,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
             // only evaluated when the scheduler runs. That means wakeups 
             // aren’t real-time — threads may oversleep until the 
             // next scheduling tick.
+
             if ( TmpThread->used == TRUE && 
                  TmpThread->magic == 1234 && 
                  TmpThread->state == WAITING )
@@ -856,6 +857,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 //printk ("sched [RR]: jiffies=%d | j1=%d | j2=%d \n", 
                     //jiffies, TmpThread->waiting_jiffy, TmpThread->wake_jiffy );
 
+                // #debug
                 if (TmpThread->state != WAITING)
                     printk("Thread was NOT WAITING\n");
 

@@ -1021,7 +1021,7 @@ __read_imp (
             fp->_flags = 0;
             fp->_flags |= __SWR;                  // pode escrever
             //do_thread_ready( fp->tid_waiting );   // acorda escritores. 
-            fp->tid_waiting = -1;
+            //fp->tid_waiting = -1;
 
             // #bugbug
             // Isso pode ser ruim pela natureza da chamada sys_read()
@@ -1032,7 +1032,7 @@ __read_imp (
                 debug_print("__read_imp: SLEEP READER\n");
                 panic("__read_imp: [DEBUG] Couldn't read socket. Buffer not full\n");
 
-                fp->tid_waiting = lapic_info[0].current_tid;
+                //fp->tid_waiting = lapic_info[0].current_tid;
                 //do_thread_waiting (lapic_info[0].current_tid);
                 yield (lapic_info[0].current_tid);
                 goto fail;
@@ -1073,7 +1073,7 @@ __read_imp (
                     fp->_flags |= __SWR;   // pode escrever também
                     //debug_print("__read_imp: WAKEUP WRITER\n");
                     //do_thread_ready( fp->tid_waiting );  // acorda escritores.
-                    fp->tid_waiting = -1;
+                    //fp->tid_waiting = -1;
                     //debug_print("__read_imp:done\n");
 
                     return (ssize_t) nbytes;    // bytes escritos.
@@ -1769,13 +1769,13 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
             
             fp->_flags = 0; // não pode mais escrever.
             fp->_flags |= __SRD;                 // pode ler.
-            do_thread_ready( fp->tid_waiting );  // acorda leitores
-            fp->tid_waiting = -1;
+            //do_thread_ready( fp->tid_waiting );  // acorda leitores
+            //fp->tid_waiting = -1;
             if (fp->sync.block_on_write_full == TRUE)
             {
                 //#debug
                 //debug_print("__write_imp: SLEEP WRITER\n");
-                fp->tid_waiting = lapic_info[0].current_tid;
+                //fp->tid_waiting = lapic_info[0].current_tid;
                 //do_thread_waiting(lapic_info[0].current_tid);
                 yield (lapic_info[0].current_tid);
                 goto fail;
@@ -1820,7 +1820,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                     fp->_flags &= ~__SWR;              // nao posso mais ESCREVER.            
                     fp->_flags |= __SRD;               // pode ler 
                     //do_thread_ready(fp->tid_waiting);  // acorda leitores
-                    fp->tid_waiting = -1;
+                    //fp->tid_waiting = -1;
                 
                     // #bugbug
                     // Isso pode ser ruim pela natureza da chamada sys_write()
@@ -1830,7 +1830,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                         // #debug
                         //debug_print("__write_imp: SLEEP WRITER\n");
                         
-                        fp->tid_waiting = lapic_info[0].current_tid;
+                        //fp->tid_waiting = lapic_info[0].current_tid;
                         //do_thread_waiting(lapic_info[0].current_tid);
                     }
                     // #bugbug: test ...
@@ -1886,7 +1886,7 @@ RegularFile:
             if (nbytes>0){
                 fp->_flags = __SRD;
                 fp->sync.can_read = TRUE;
-                do_thread_ready(fp->tid_waiting);
+                //do_thread_ready(fp->tid_waiting);
                 return (ssize_t) nbytes;
             }
 

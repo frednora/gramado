@@ -310,6 +310,9 @@ struct file_d
     int filetable_index;
 
     pid_t pid;  // Process
+    // tid_t tid;  // Thread
+    int tid;       // #ps: tid_t undefined for this document
+
     uid_t uid;  // User 
     gid_t gid;  // Group
 
@@ -444,19 +447,22 @@ struct file_d
 
     int iopl;
 
-// The list of threads that are waiting for this object.
-    //struct thread_d *waiting;
-    int tid_waiting;
 
+//
+// Wait queues
+//
 
-    // #test: suspended
-    // struct file_d  *link;
+    struct thread_d *reader_head;
+    struct thread_d *writer_head;
 
 // Pipe support
 // See: pipe.h
     struct pipe_info_d *pipe_info;  // shared pipe state
 
-// Navigation?
+    // #test: suspended
+    // struct file_d  *link;
+
+// Navigation
     struct file_d  *next;
 };
 

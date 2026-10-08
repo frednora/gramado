@@ -691,7 +691,7 @@ int sys_sleep_if_socket_is_empty(int fd)
         debug_print("sys_sleep_if_socket_is_empty: Buffer is empty. we can not read. sleeping\n");
         object->_flags |= __SWR;                  // pode escrever
         //todo: falg que nege a leitura.
-        object->tid_waiting = lapic_info[0].current_tid;     // thread atual dorme   
+        //object->tid_waiting = lapic_info[0].current_tid;     // thread atual dorme   
         //do_thread_waiting (lapic_info[0].current_tid);
         return FALSE;  // nao pode ler
     }

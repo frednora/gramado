@@ -1917,6 +1917,12 @@ file *new_file(object_type_t object_type)
         (const void*) new_file->_tmpfname, 
               sizeof( new_file->inode->path ) );
 
+    
+    // #test
+    // Waiting lists
+    new_file->writer_head = NULL;
+    new_file->reader_head = NULL;
+ 
     new_file->used = TRUE;
     new_file->magic = 1234;
 
@@ -2030,6 +2036,11 @@ static void __initialize_stdin(void)
         (const void*) stdin->_tmpfname, 
               sizeof( stdin->inode->path ) );
 
+    // #test
+    // Waiting lists
+    stdin->writer_head = NULL;
+    stdin->reader_head = NULL;
+
     stdin->used = TRUE;
     stdin->magic = 1234;
 }
@@ -2131,6 +2142,11 @@ static void __initialize_stdout(void)
         (const void*) stdout->_tmpfname, 
               sizeof( stdout->inode->path ) );
 
+    // #test
+    // Waiting lists
+    stdout->writer_head = NULL;
+    stdout->reader_head = NULL;
+
     stdout->used = TRUE;
     stdout->magic = 1234;
 }
@@ -2223,6 +2239,11 @@ static void __initialize_stderr(void)
         (void*)       stderr->inode->path, 
         (const void*) stderr->_tmpfname, 
               sizeof( stderr->inode->path ) );
+
+    // #test
+    // Waiting lists
+    stderr->writer_head = NULL;
+    stderr->reader_head = NULL;
 
     stderr->used = TRUE;
     stderr->magic = 1234;

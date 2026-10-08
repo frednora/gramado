@@ -160,11 +160,19 @@ struct socket_d
     int type;      // e.g. SOCK_STREAM, SOCK_DGRAM
     int protocol;  // e.g. IPPROTO_TCP, IPPROTO_UDP
 
-// Ownership information.
-// process, user, group.
-    pid_t pid;
+// Ownership information
+// process, thread, user, group.
+
+    pid_t pid;  // Process
+    tid_t tid;  // Thread
+
     uid_t uid; 
     gid_t gid;
+
+
+//
+// #test
+//
 
     // maybe
     //struct sockpeercred  peercred;
