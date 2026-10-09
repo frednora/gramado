@@ -1,20 +1,26 @@
 // gws.h 
-// Gramado Window System.
+// Gramado Window System (GWS)
 // Master file for the client-side library. 
 // The main goal for this routines is to send requests to the 
 // display server, Gramland.
 // 2020 -  Created by Fred Nora.
 
 //
+// == Definitions ===========================================
+//
+
+// Basic type definitions
+
+#include "gwsdefs.h"  // Definitions and types
+
+//
 // == Base ===========================================
 //
 
-// Basic components.
-// Sometimes OS dependent components.
-// Connection support.
+// Basic system components
+// Connection support
 
 #include "version.h"
-#include "gwsdefs.h"  // Definitions and types.
 //h:d.s
 #include "base/screen.h"
 #include "base/display.h"
@@ -31,13 +37,6 @@
 // The lingws protocol.
 #include "protocol.h"
 #include "grambase.h"
-
-//
-// == Gr ===========================================
-//
-
-// Client-side 3D graphics support.
-#include "gr/gr.h"
 
 //
 // == User ===========================================

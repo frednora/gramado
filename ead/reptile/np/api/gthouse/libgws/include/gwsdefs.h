@@ -4,6 +4,14 @@
 #ifndef __LIBGWS_GWSDEFS_H
 #define __LIBGWS_GWSDEFS_H    1
 
+
+// #define True 1
+// #define False 0
+
+//#define Status int
+//#define Bool int
+
+
 /*
 // wid
 typedef int  _wid;
