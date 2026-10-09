@@ -30,7 +30,7 @@
 #include <unistd.h>
 #include <rtl/gramado.h> 
 
-#include "gramado/syscalls.h"
+#include "osdep/gramado/syscalls.h"
 
 #include <pthread.h>
 

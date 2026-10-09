@@ -1,5 +1,6 @@
-
 // syscalls.h
+// Syscalls for Gramado OS kernel
+
 
 #ifndef __GRAMADO_SYSCALLS_H
 #define __GRAMADO_SYSCALLS_H    1

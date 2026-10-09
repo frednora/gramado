@@ -2,10 +2,10 @@
 # Language Interpreter for Gramado OS.
 # 2019 - Created by Fred Nora.
 
-VERSION = 0
-PATCHLEVEL = 0
-SUBLEVEL = 0
-EXTRAVERSION =
+#VERSION = 0
+#PATCHLEVEL = 0
+#SUBLEVEL = 0
+#EXTRAVERSION =
 #NAME = gramcnf
 
 # usermode cross compiler flags.
