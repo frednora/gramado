@@ -110,12 +110,9 @@ libc-content:
 
 libc-footer:
 
-# The top level part for the library. The wrapper.
-# + rtl.c - The core toolkit for this library.
-# todo: Actually we need to remove the syscalls(lowlevel) 
-# from this file and put it in osdep/xxxsyscalls.c.
+# This is the low level component for the API
 
-	gcc -c rtl.c  $(CFLAGS) -I. -I include/ -o rtl.o
+	gcc -c osdep/gramado/rtl.c  $(CFLAGS) -I. -I include/ -o rtl.o
 
 # create 'ar'
 # #todo: 

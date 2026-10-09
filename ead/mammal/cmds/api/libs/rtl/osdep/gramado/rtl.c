@@ -2,7 +2,7 @@
  * File: rtl.c 
  * Low level code used by all the rtl files.
  * Environment:
- *     Ring3, Gramado OS. (For init process)
+ *     Ring3, Gramado OS.
  * Created by Fred Nora.
  */
 
@@ -28,9 +28,9 @@
 #include <errno.h>
 #include <string.h>
 #include <unistd.h>
-
 #include <rtl/gramado.h> 
-#include <sysdeps/gramado/syscall.h>
+
+#include "syscalls.h"
 
 #include <pthread.h>
 
@@ -38,6 +38,11 @@
 // rtl system events support.
 // Buffer to save a event. (one msg)
 unsigned long RTLEventBuffer[32];
+
+static int 
+__rtl_clone_and_execute_imp(
+    const char *name,
+    unsigned long flags );
 
 // =========================
 
@@ -113,181 +118,31 @@ void *sc83 (
     return (void *) __Ret; 
 }
 
+
 // =============================================================
 
-struct cb_trampoline_info_d 
+int 
+rtl_is_either_this_or_that(
+    char *str, 
+    int offset, 
+    char __this, 
+    char __that )
 {
-// It was initialized by the library.
-// We have a handler installed on the trampoline.
-    int initialized;
-    int isRunning;
-    int reentrancy_detected;
+    char ch=0;
+    char *p;
 
-// Underline for addresses
-    unsigned long __rtl_cb_handler;
-
-    int has_handler;
-};
-struct cb_trampoline_info_d  CBTrampolineInfo;
-
-
-// Fixed trampoline entry: Kernel invokes a single library entry point.
-void __rtl_cb_trampoline( 
-    unsigned long param1, 
-    unsigned long param2, 
-    unsigned long param3, 
-    unsigned long param4 )
-{
-    void (*handler)(unsigned long, unsigned long, unsigned long, unsigned long);
-
-    if (CBTrampolineInfo.isRunning == TRUE)
-        goto on_reentrancy;
-    CBTrampolineInfo.isRunning = TRUE;
-
-// Not initialized
-    if (CBTrampolineInfo.initialized != TRUE){
-        printf("__rtl_cb_trampoline: Not initialized\n");
-        goto restore;
+// #danger
+// Get the byte from the given offset.
+    p = (str + offset);
+    ch = *p;
+// Is either?
+    if ( ch == __this || 
+         ch == __that )
+    {
+        return TRUE;
     }
 
-// No valid handler
-    if (CBTrampolineInfo.has_handler != TRUE)
-        goto restore;
-    if (CBTrampolineInfo.__rtl_cb_handler == 0)
-        goto restore;
-
-// Setup our local caller.
-// Handler indirection: The library decides whether and which user handler runs.
-    handler = (void*) CBTrampolineInfo.__rtl_cb_handler;
-
-// Call the procedure inside the user's program.
-    handler(param1, param2, param3, param4);
-
-// Restore and change the flag to Not running anymore.
-restore:
-    CBTrampolineInfo.isRunning = FALSE;
-    asm ("int $198");
-
-// Restore but keep the flag in the running state.
-on_reentrancy:
-    CBTrampolineInfo.reentrancy_detected = TRUE;
-    asm ("int $198");
-}
-
-
-/**
- * rtl_enter_alertable_state_for_callback
- *
- * Purpose:
- *   Put the current thread into alertable state so the kernel can deliver
- *   callbacks to the trampoline previously registered by
- *   rtl_initialize_callback_support().
- *
- * Behavior:
- *   - Checks if the callback subsystem has been initialized.
- *   - If not initialized, returns -1 and does not issue the syscall.
- *   - If initialized, issues sc82(44001, 0, 0, 0) to mark the thread
- *     as alertable.
- *
- * Notes:
- *   - Must be called after rtl_initialize_callback_support().
- *   - The thread will only receive callbacks if a handler has been
- *     registered via rtl_register_callback_handler().
- *   - This call is per-thread; each thread that wants callbacks must
- *     enter alertable state individually.
- *
- * Returns:
- *   0 on success, -1 if not initialized.
- */
-int rtl_enter_alertable_state_for_callback(void)
-{
-    if (CBTrampolineInfo.initialized != TRUE) {
-        printf("rtl_enter_alertable_state_for_callback: subsystem not initialized\n");
-        return -1;
-    }
-
-    sc82(44001, 0, 0, 0);
-    return 0;
-}
-
-
-/**
- * rtl_register_callback_handler
- *
- * Purpose:
- *   Register a user-defined callback handler function that will be invoked
- *   whenever the kernel delivers a callback to this thread.
- *
- * Parameters:
- *   new_handler - Address of the handler function in user space.
- *                 The handler must have the signature:
- *                 void handler(unsigned long p1,
- *                              unsigned long p2,
- *                              unsigned long p3,
- *                              unsigned long p4);
- *
- * Behavior:
- *   - Stores the handler address in the internal callback state structure.
- *   - Marks that a valid handler is present.
- *   - The trampoline will call this handler when a callback arrives.
- *
- * Notes:
- *   - If no handler is registered, callbacks are ignored (restorer is still called).
- *   - Passing NULL (0) is invalid and returns -1.
- *   - The handler should be short and non-blocking, since it runs asynchronously.
- *
- * Returns:
- *   0 on success, -1 if new_handler is NULL.
- */
-
-int rtl_register_callback_handler(unsigned long new_handler)
-{
-    if (new_handler == 0){
-        return (int) -1;
-    }
-    CBTrampolineInfo.__rtl_cb_handler = (unsigned long) new_handler;
-    CBTrampolineInfo.has_handler = TRUE;
-    return 0;
-}
-
-/**
- * rtl_initialize_callback_support
- *
- * Purpose:
- *   Initialize the ring3 callback subsystem for the current process/thread.
- *   This function sets up the trampoline entry point and registers it with
- *   the kernel so that callbacks can be delivered safely into user space.
- *
- * Behavior:
- *   - Clears and resets the internal callback state structure.
- *   - Registers the fixed trampoline (__rtl_cb_trampoline) with the kernel
- *     using syscall 44000.
- *   - Marks the subsystem as initialized.
- *
- * Notes:
- *   - This function MUST be called before any callback handler is registered.
- *   - It does NOT put the thread into alertable state; that is done separately.
- *   - Should be called once per thread that wants to receive callbacks.
- *
- * Returns:
- *   0 on success, negative value on error.
- */
-
-void rtl_initialize_callback_support(void)
-{
-    CBTrampolineInfo.initialized = FALSE;
-    CBTrampolineInfo.isRunning = FALSE;
-    CBTrampolineInfo.reentrancy_detected = FALSE;
-
-// No handler provided yet.
-    CBTrampolineInfo.__rtl_cb_handler = 0;
-    CBTrampolineInfo.has_handler = FALSE;
-
-// Simply register the trampoline.
-// Fixed trampoline entry: Kernel invokes a single library entry point.
-// Do NOT put the tread into alertable state;
-    sc82( 44000, (unsigned long) &__rtl_cb_trampoline, 0, 0);
-    CBTrampolineInfo.initialized = TRUE;
+    return FALSE;
 }
 
 
@@ -365,6 +220,7 @@ int rtl_get_key_state(int vk)
     return (int) (value & 0xFFFFFFFF);
 }
 
+
 // #test
 // 2mb shared memory surface.
 // ring3
@@ -411,10 +267,10 @@ int rtl_get_input_mode(void)
 // Explain it better.
 void rtl_set_input_mode(int mode)
 {
-    if (mode < 0)
+    if (mode < 0){
         return;
-
-    sc80 ( 912, mode, mode, mode );
+    }
+    sc80( 912, mode, mode, mode );
 }
 
 //
@@ -447,6 +303,7 @@ int rtl_get_global_sync(int sync_id, int request)
 
 // ========================
 
+
 void rtl_set_file_sync(int fd, int request, int data)
 {
     if (fd<0)
@@ -460,13 +317,13 @@ void rtl_set_file_sync(int fd, int request, int data)
 
 int rtl_get_file_sync(int fd, int request)
 {
-    //if (fd<0)
-        //return -1;
+    //if(fd<0)
+    //    return -1;
 
     //if(request<0)
     //    return -1;
 
-    return (int) sc82(10007,fd,request,0);
+    return (int) sc82 (10007,fd,request,0);
 }
 
 unsigned char rtl_to_uchar (char ch)
@@ -495,6 +352,7 @@ unsigned long rtl_to_ulong (long ch)
 // Maybe a boolian 'int' for TRUE or FALSE.
 unsigned long rtl_get_system_message(unsigned long message_buffer)
 {
+// (Input port).
 // #todo: Handle the return value.
     //unsigned long res=0;
     if (message_buffer == 0){
@@ -559,6 +417,47 @@ rtl_post_system_message(
 
     return 0;
 }
+
+//====================================================
+
+void 
+rtl_post_to_tid(
+    int tid, 
+    int msg_code, 
+    unsigned long long1, 
+    unsigned long long2 )
+{
+// Send async hello. 44888.
+    unsigned long message_buffer[32];
+    int target_tid = tid;
+    unsigned long msg = (unsigned long) (msg_code & 0xFFFFFFFF);
+// Response support.
+    //int __src_tid = -1;
+    //int __dst_tid = -1;
+
+// The hello message
+    register int i=0;
+    for (i=0; i<32; i++)
+        message_buffer[i]=0;
+
+    message_buffer[0] = 0; //window
+    message_buffer[1] = (unsigned long) msg;  // message code
+    message_buffer[2] = (unsigned long) long1;   // 
+    message_buffer[3] = (unsigned long) long2;   // 
+    message_buffer[4] = 0;  // Receiver
+    message_buffer[5] = 0;  // Sender
+
+// ---------------------------------
+// Post
+// Add the message into the queue. In tail.
+// IN: tid, message buffer address
+    rtl_post_system_message( 
+        (int) target_tid, 
+        (unsigned long) message_buffer );
+}
+
+
+
 
 //=====================================
 
@@ -699,15 +598,11 @@ struct rtl_event_d *rtl_next_event (void)
 // For this routine the system call needs to respect 
 // the limit of this structure. Only 8 elements.
 
-    rtl_enter_critical_section();
-
-    sc80 ( 
-        111,
+    rtl_enter_critical_section(); 
+    sc80 ( 111,
         (unsigned long) &rtlEvent,
         (unsigned long) &rtlEvent,
-        (unsigned long) &rtlEvent 
-    );
-
+        (unsigned long) &rtlEvent );
     rtl_exit_critical_section(); 
 
  // Check if it is a valid event.
@@ -745,15 +640,13 @@ struct rtl_event_d *rtl_next_event (void)
 void rtl_enter_critical_section (void)
 {
     int S=0;
-
-    while (TRUE)
-    {
-        S = (int) sc80 ( SYSTEMCALL_GET_KERNELSEMAPHORE, 0, 0, 0 );
+    while (TRUE){
+        S = (int) sc80 ( 
+                      SYSTEMCALL_GET_KERNELSEMAPHORE, 0, 0, 0 );
         if (S == 1){
             goto done;
         }
     };
-
 // Nothing
 done:
 // #todo
@@ -773,8 +666,7 @@ void rtl_exit_critical_section (void)
         SYSTEMCALL_OPEN_KERNELSEMAPHORE, 
         0, 
         0, 
-        0 
-    );
+        0 );
 }
 
 // Create empty file.
@@ -822,7 +714,7 @@ int rtl_create_empty_directory(char *dir_name)
 
 // #todo
 // Quais são os valores de retorno.
-// TRUE or FALSE ?
+// TRUE or FALSE?
 
     Value = 
         (unsigned long) sc80 ( 
@@ -839,25 +731,11 @@ int rtl_create_empty_directory(char *dir_name)
 
 void *rtl_create_process(const char *file_name)
 {
-// #todo
-// We can have more parameters in the function.
-
     char pName[32];
-    size_t StringSize=0;
-    unsigned long Priority = 3;  //#bugbug #todo
-    unsigned long long_rv = 0;
 
     debug_print("rtl_create_process:\n #todo\n");
-
-// Name support
-    if ((void*)file_name == NULL)
-        return NULL;
-    memset(pName,0,32);
-    StringSize = (size_t) strlen(file_name);
-    if (StringSize < 0)
-        return NULL;
-    if (StringSize >= 32)
-        return NULL;
+    //return NULL;
+    
     strncpy(pName,file_name,16);
     pName[17] = 0;
     pName[31] = 0;
@@ -866,16 +744,11 @@ void *rtl_create_process(const char *file_name)
 // Retorna o ponteiro para uma estrutura de processo
 // que esta em ring0, ou NULL.
 
-    long_rv = 
-        (unsigned long) sc80 ( 
-            (unsigned long) 73,         // Syscall number
-            (unsigned long) &pName[0],  // Process name
-            (unsigned long) Priority,   // Process priority
-            (unsigned long) 0 );        // ? #todo
-
-// #todo
-// We need to work on that return value.
-    return (void*) long_rv;
+    return (void*) sc80( 
+        73, 
+        (unsigned long) &pName[0],
+        3,  //priority
+        0 );
 }
 
 int rtl_start_process(void *process)
@@ -899,53 +772,46 @@ int rtl_start_process_pid( pid_t pid )
 }
 */
 
-// Create a thread
-// #todo: 
-// This is gonna be a worker for pthreads.
-// We need a function with more arguments.
-// #define	SYSTEMCALL_CREATETHREAD     72
-// IN:
-// inti_rip: initial instruction pointer
-// init_stack: initial stack pointer
-// name: thread name
+
+/*
+ * rtl_create_thread:
+ *     Create a thread.
+ *     #todo: 
+ *     Precisamos uma função que envie mais argumentos.
+ *     Essa será uma rotina de baixo nível para pthreads.
+ */
+
 void *rtl_create_thread ( 
     unsigned long init_rip, 
     unsigned long init_stack, 
-    const char *name )
+    char *name )
 {
-    // #debug
-    //debug_print ("rtl_create_thread:\n");
-    //     printf ("rtl_create_thread:\n");
-
+    //#define	SYSTEMCALL_CREATETHREAD     72
+    debug_print ("rtl_create_thread:\n");
     return (void *) sc80 ( 
-                        72, 
+                        72,    //SYSTEMCALL_CREATETHREAD, 
                         init_rip, 
                         init_stack, 
                         (unsigned long) name );
 }
 
-// Start a thread
-// Put it into the standby state to run for the first time.
-// IN: 
-// thread_r0_pointer: Ring 0 pointer for a thread. (unsafe)
-int rtl_start_thread(void *thread_r0_pointer)
+
+/*
+ * rtl_start_thread:
+ *     Coloca no estado standby para executar pela primeira vez
+ */
+
+// #todo: Change return to 'int'
+void rtl_start_thread (void *thread)
 {
     debug_print ("rtl_create_thread:\n");
-
-    if ((void*) thread_r0_pointer == NULL)
-        return (int) -1;
-
-// Call the service in ring 0
-
     sc80 ( 
         SYSTEMCALL_STARTTHREAD, 
-        (unsigned long) thread_r0_pointer, 
-        (unsigned long) thread_r0_pointer, 
-        (unsigned long) thread_r0_pointer 
-    );
-
-    return 0;
+        (unsigned long) thread, 
+        (unsigned long) thread, 
+        (unsigned long) thread );
 }
+
 
 /*
 int rtl_get_thread_tid( void *thread);
@@ -1064,84 +930,33 @@ rtl_draw_text (
     msg[7] = (unsigned long) 0; 
 
     return (int) sc80 ( 
-                    SYSTEMCALL_DRAWTEXT, 
+                     SYSTEMCALL_DRAWTEXT, 
                     (unsigned long) &msg[0], 
                     (unsigned long) &msg[0], 
                     (unsigned long) &msg[0] );
 }
 
-// 
-int 
-rtl_create_wproxy ( 
-    unsigned long left, 
-    unsigned long top, 
-    unsigned long width, 
-    unsigned long height, 
-    unsigned long color )
+/*
+ * rtl_show_backbuffer:
+ *     Refresh Screen.
+ *     Passa o conteúdo do backbuffer para o lfb. 
+ */
+void rtl_show_backbuffer (void)
 {
-    unsigned long msg[8];
 
-// #todo:
-// This is a work in progress. (We need more parameters)
-    msg[0] = (unsigned long) left;
-    msg[1] = (unsigned long) top;
-    msg[2] = (unsigned long) width;
-    msg[3] = (unsigned long) height;
-    msg[4] = (unsigned long) color;
-    msg[5] = (unsigned long) 0;
-    msg[6] = (unsigned long) 0;
-    msg[7] = (unsigned long) 0; 
-
-    // 47 - SYSTEMCALL_CREATE_WPROXY
-    return (int) sc80 ( 
-                    SYSTEMCALL_CREATE_WPROXY, 
-                    (unsigned long) &msg[0], 
-                    (unsigned long) &msg[0], 
-                    (unsigned long) &msg[0] );
-}
-
-// Update the parameters for the wproxy associated with this thread.
-int 
-rtl_update_wproxy_parameters ( 
-    unsigned long left, 
-    unsigned long top, 
-    unsigned long width, 
-    unsigned long height, 
-    unsigned long color )
-{
-    unsigned long msg[8];
-
-// #todo:
-// This is a work in progress. (We need more parameters)
-    msg[0] = (unsigned long) left;
-    msg[1] = (unsigned long) top;
-    msg[2] = (unsigned long) width;
-    msg[3] = (unsigned long) height;
-    msg[4] = (unsigned long) color;
-    msg[5] = (unsigned long) 0;
-    msg[6] = (unsigned long) 0;
-    msg[7] = (unsigned long) 0; 
-
-    // 47 - SYSTEMCALL_UPDATE_WPROXY_PARAMETERS
-    return (int) sc80 ( 
-                    SYSTEMCALL_UPDATE_WPROXY_PARAMETERS, 
-                    (unsigned long) &msg[0], 
-                    (unsigned long) &msg[0], 
-                    (unsigned long) &msg[0] );
-}
-
-// Flush backbuffer into the LFB.
 // #todo
 // trocar o nome dessa systemcall.
 // refresh screen será associado à refresh all windows.
-
-void rtl_show_backbuffer (void)
-{
-    // #bugbug ?    
     sc80 ( SYSTEMCALL_REFRESHSCREEN, 0, 0, 0 );
 }
 
-// Get system metrics
+
+/*
+ * rtl_get_system_metrics:
+ *     Obtem informações sobre dimensões e posicionamentos. 
+ *     #importante
+ */
+
 unsigned long rtl_get_system_metrics (int index)
 {
     //if (index<0){
@@ -1166,6 +981,8 @@ int rtl_is_qemu(void)
     return (int) (isQEMU & 0xFFFFFFFF);
 }
 
+
+
 pid_t rtl_current_process(void)
 {
     return (int) rtl_get_system_metrics(140);
@@ -1174,12 +991,6 @@ pid_t rtl_current_process(void)
 int rtl_current_thread(void)
 {
     return (int) rtl_get_system_metrics(141);
-}
-
-unsigned long rtl_instance_id(void)
-{
-    unsigned long ID = sc82(800,102,0,0);
-    return (unsigned long) ( ID & 0xFFFFFFFF );
 }
 
 // #todo: __pthread_self ?
@@ -1279,6 +1090,7 @@ rtl_copy_text (
     return 0; 
 }
 
+
 /*
 char *johncarmack_strstr(const char *haystack, const char *needle);
 char *johncarmack_strstr(const char *haystack, const char *needle)
@@ -1322,13 +1134,14 @@ int rtl_file_exists (const char *filename)
 }
 */
 
-// #todo
-// We need some arguments here.
-int rtl_reboot(void)
+
+
+int __rtl_reboot_imp(unsigned long flags)
 {
     int value = -1;
-    debug_print ("rtl_reboot:\n");
-    value = (int) sc80(110,0,0,0);
+    unsigned long Flags = flags;
+    debug_print ("__rtl_reboot_imp:\n");
+    value = (int) sc80(110,Flags,Flags,Flags);
     if (value<0)
     {
         errno = (-value);
@@ -1337,13 +1150,19 @@ int rtl_reboot(void)
     return (int) value;
 }
 
+int rtl_reboot(void)
+{
+    unsigned long Flags=0;
+    return (int) __rtl_reboot_imp(Flags);
+}
+
 // check if a file is full or not.
 // whe can't read an empty file.
 // IN: fd
 // OUT: -1= error; FALSE= nao pode ler; TRUE= pode ler.
 int rtl_sleep_if_socket_is_empty(int fd)
 {
-    if (fd < 0){
+    if (fd<0){
         return -1;   //error
     }
     return (int) sc80(913,fd,fd,fd);
@@ -2139,54 +1958,60 @@ int rtl_vector_count (char **vector)
 }
 */
 
-void rtl_test_pipe(void)
+
+
+void rtl_test_pipe (void)
 {
     int pipefd[2];
+    int res=0;
     char buf[512];
-    int nwrite, nread;
+    int nwrite=0;
+    int nread=0;
 
-    printf("rtl_test_pipe:\n");
 
-    // Create pipe
-    if (pipe(pipefd) < 0) {
-        perror("pipe");
+    printf ("rtl_test_pipe:\n");
+
+    //0 if no error.
+    res = pipe (pipefd);
+    if (res<0){
+        printf("pipe() fail\n");
         return;
     }
 
-    printf("Pipe created: read=%d write=%d\n", pipefd[0], pipefd[1]);
-
-    // Write to pipe
-    const char *msg = "hello";
-    nwrite = write(pipefd[1], msg, strlen(msg));
-    if (nwrite < 0) {
-        perror("write");
-        close(pipefd[0]);
-        close(pipefd[1]);
+    printf("PIPES: %d %d\n",pipefd[0], pipefd[1]);
+ 
+    // write on pipe 1
+    nwrite = write (pipefd[1], "hello", sizeof ("hello"));
+    if (nwrite<=0){
+        printf("write() fail\n");
         return;
     }
-    printf("Wrote %d bytes: \"%s\"\n", nwrite, msg);
+    // clear buffer.
+    memset (buf, 0, sizeof (buf));
 
-    // Clear buffer
-    memset(buf, 0, sizeof(buf));
+// Read pipe 0.
+    nread = (int) read (
+                      pipefd[0], 
+                      buf, 
+                      sizeof(buf) - 1 );
 
-    // Read from pipe
-    nread = read(pipefd[0], buf, sizeof(buf) - 1);
-    if (nread < 0) {
-        perror("read");
-        close(pipefd[0]);
-        close(pipefd[1]);
+    if (nread<0){
+        printf("read() fail\n");
         return;
     }
-    buf[nread] = '\0'; // Null-terminate string
+    // finalize the string.  
+    buf[nread] = '\0';
 
-    printf("Read %d bytes: \"%s\"\n", nread, buf);
+    // Close
+    close (pipefd[0]);
+    close (pipefd[1]);
 
-    // Close pipe ends
-    close(pipefd[0]);
-    close(pipefd[1]);
+    // show buffer.
+    printf("BUFFER={%s}\n",buf);
 
-    printf("rtl_test_pipe finished.\n");
+    return;
 }
+
 
 // =========================
 // path count
@@ -2244,17 +2069,13 @@ rtl_load_path (
     //    return -1;
     //}
 
-    status = 
-        (int) sc80 ( 
-            4004, 
-            (unsigned long) path, 
-            (unsigned long) buffer, 
-            (unsigned long) buffer_len 
-        );
+    status = (int) sc80 ( 4004, 
+                       (unsigned long) path, 
+                       (unsigned long) buffer, 
+                       (unsigned long) buffer_len );
 
     return (int) status;
 }
-
 
 ssize_t rtl_console_beep(void)
 {
@@ -2265,7 +2086,6 @@ ssize_t rtl_console_beep(void)
                          1 );
 }
 
-// 
 void rtl_nice(void){
     sc82( 777, 0, 0, 0 );
 }
@@ -2286,7 +2106,8 @@ __rtl_clone_and_execute_imp(
     unsigned long ServiceNumber = 900;
 // Address for the image name.
     unsigned long NameAddress;
-// Reserved parameter. (flags for clone_process()).
+// Reserved parameter.
+    //unsigned long clone_flags=0;  // (flags for clone_process()).
     unsigned long clone_flags = flags;
 // Reserved parameter.
     unsigned long long2=0;  // 
@@ -2415,19 +2236,20 @@ rtl_clone_and_execute_return_tid_ex(
     return (int) tid;
 }
 
+
+
 int rtl_spawn_process(const char *path)
 {
-    if ((void *) path == NULL){
+    if ( (void *) path == NULL ){
         printf ("rtl_spawn_process: [FAIL] name\n");
-        goto fail;
+        return -1;
     }
     if (*path == 0){
         printf ("rtl_spawn_process: [FAIL] *name\n");
-        goto fail;
+        return -1;
     }
+
     return (int) rtl_clone_and_execute((char*)path);
-fail:
-    return (int) -1;
 }
 
 // get current thread
@@ -2440,7 +2262,8 @@ int rtl_focus_on_this_thread(void)
     return (int) tid;
 }
 
-int rtl_focus_on_me(void){
+int rtl_focus_on_me(void)
+{
     return (int) rtl_focus_on_this_thread();
 }
 
@@ -2456,7 +2279,7 @@ void rtl_yield(void)
 // allowing us to create more different sort of wrappers.
 void rtl_sleep_until(unsigned long ms)
 {
-    if (ms == 0){
+    if (ms==0){
         ms=1;
     }
     sc82( 266, ms, ms, ms );
@@ -2492,10 +2315,10 @@ void rtl_show_heap_info(void)
 // Use the kernel allocator for ring 3 shared memory.
 void *shAlloc(size_t size_in_bytes)
 {
-    if (size_in_bytes == 0){
+    if (size_in_bytes==0){
         size_in_bytes++;
     }
-    return (void*) sc80 ( 891, size_in_bytes, 0, 0 ); 
+    return (void*) sc80 (891,size_in_bytes,0,0); 
 }
 
 /* compare two ASCII strings ignoring case */
@@ -2602,7 +2425,7 @@ unsigned long rtl_memory_size_in_kb(void)
 // Send the command lint to stdin,
 // and execute a cloned process where it's name
 // is in the first word of the cmdline string.
-int rtl_execute_cmdline(char *cmdline)
+int rtl_execute_cmdline( char *cmdline )
 {
     char cmd[512];
     char filename_buffer[12]; //8+3+1
@@ -2749,76 +2572,5 @@ int rtl_send_raw_packet(const char *frame_address, size_t frame_lenght)
                 0 );
 
     return (int) (RetVal & 0xFFFFFFFF);
-}
-
-// Default handler for processing system events.
-int 
-rtl_default_procedure(
-    int msg_code, 
-    unsigned long long1, 
-    unsigned long long2 )
-{
-
-// #todo
-// Just some few msg codes
-
-    switch (msg_code)
-    {
-        case 0:
-            break;
-        
-        // ...
-    };
-
-// OK
-    return (int) 0;
-}
-
-
-// OUT: 0=ok, -1=fail.
-int rtl_use_wink_windowing_system(void)
-{
-    sc80( 940, 0, 0, 0 );
-    return 0;
-}
-
-
-//
-// $
-// INITIALIZATION
-//
-
-// rtl_cinit:
-// This function calls:
-// + stdlibInitializeRT() - Initialize heap support
-// + stdioInitialize() - Initialize the standard stream support
-// See:
-// stdlib.c and stdio.c.
-
-int rtl_cinit(void)
-{
-// Called by initcrt0.c
-// #ps: We gotta work on this initialization.
-// It is so weak for now.
-
-// Initialize heap support
-// See: stdlib.c
-    int rt_status = -1;  //fail
-    rt_status = (int) stdlibInitializeRT();
-    if (rt_status != 0){
-        // #debug: put char
-        sc80(65,'e',0,0);
-    }
-
-    // Stage 2
-    // #debug: put char
-    //sc80(65,'2',0,0);
-
-// Initialize the standard stream support
-// return void.
-// See: stdio.c
-    stdioInitialize();
-
-    return (int) rt_status;
 }
 

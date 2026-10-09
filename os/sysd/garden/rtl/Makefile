@@ -2,10 +2,10 @@
 # libc for Gramado 64bit ring3 part.
 # 2019 - Created by Fred Nora.
 
-VERSION = 0
-PATCHLEVEL = 0
-SUBLEVEL = 0
-EXTRAVERSION = 0
+#VERSION = 0
+#PATCHLEVEL = 0
+#SUBLEVEL = 0
+#EXTRAVERSION = 0
 NAME = rtl
 
 # Target operating system.
@@ -74,10 +74,9 @@ libc-header:
 ifeq ($(TARGETOS),gramado)
 
 # crt0 - C library initialization
-	$(CC) -c crt0/crt0.c  $(CFLAGS) $(LIBS) -o crt0.o
-
-# crt - Wrapper
-	$(CC) -c crt/rtl.c  $(CFLAGS) $(LIBS) -o rtl.o
+	$(CC) -c osdep/crt0/crt0.c  $(CFLAGS) $(LIBS) -o crt0.o
+# crt - rtl
+	$(CC) -c osdep/gramado/rtl.c  $(CFLAGS) $(LIBS) -o rtl.o
 
 endif  
 
