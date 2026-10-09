@@ -29,7 +29,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <rtl/gramado.h> 
-#include <sysdeps/gramado/syscall.h>
+
+#include <osdep/gramado/syscall.h>
+
 #include <pthread.h>
 
 // global

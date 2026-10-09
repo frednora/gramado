@@ -2,10 +2,10 @@
 # libc for Gramado 64bit ring3 part.
 # 2019 - Created by Fred Nora.
 
-VERSION = 0
-PATCHLEVEL = 0
-SUBLEVEL = 0
-EXTRAVERSION = 0
+#VERSION = 0
+#PATCHLEVEL = 0
+#SUBLEVEL = 0
+#EXTRAVERSION = 0
 NAME = rtl
 
 # Target operating system.
@@ -64,10 +64,12 @@ link install clean
 	@echo "Ok?"
 
 libc-header:
-# student
-	gcc  -c  entrance/student/crt0.c  $(CFLAGS) -I. -I include/ -o crt0.o
-# visitor
-	gcc -c entrance/visitor/rtl.c  $(CFLAGS) -I. -I include/ -o rtl.o
+
+# crt0: Entrypoint for the application. (codename: student)
+	gcc -c osdep/gramado/crt0.c  $(CFLAGS) -I. -I include/ -o crt0.o
+
+# rtl: Low leel component for the API. (codename: visitor)
+	gcc -c osdep/gramado/rtl.c  $(CFLAGS) -I. -I include/ -o rtl.o
 
 libc-content:
 
@@ -115,11 +117,11 @@ libc-content:
 
 
 #ifeq ($(TARGETOS),gramado)
-#	gcc  -c  sysdeps/gramado/gramado.c  $(CFLAGS) -I. -I include/ -o gramado.o
+#	gcc  -c  osdep/gramado/gramado.c  $(CFLAGS) -I. -I include/ -o gramado.o
 #endif
 
 #ifeq ($(TARGETOS),linux)
-#	gcc  -c  sysdeps/gramado/linux.c  $(CFLAGS) -I. -I include/ -o linux.o
+#	gcc  -c  osdep/gramado/linux.c  $(CFLAGS) -I. -I include/ -o linux.o
 #endif
 
 
