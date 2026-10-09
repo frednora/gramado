@@ -7,11 +7,11 @@
 # libraries and toolkits in the folder libs/.
 # 2019 - Created by Fred Nora.
 
-VERSION = 0
-PATCHLEVEL = 0
-SUBLEVEL = 0
-EXTRAVERSION = 0
-NAME = rtl
+#VERSION = 0
+#PATCHLEVEL = 0
+#SUBLEVEL = 0
+#EXTRAVERSION = 0
+#NAME = rtl
 
 # Target operating system.
 
@@ -71,48 +71,50 @@ link install clean
 libc-header:
 
 # crt0 - initialization
-	gcc -c  os/crt0/crt0.c  $(CFLAGS) -I. -I include/ -o crt0.o
+	gcc -c osdep/crt0/crt0.c  $(CFLAGS) -I. -I include/ -o crt0.o
 
 libc-content:
 
+# osdep - OS dependent
+	gcc  -c  osdep/conio.c     $(CFLAGS) -I. -I include/ -o conio.o
+	gcc  -c  osdep/err.c       $(CFLAGS) -I. -I include/ -o err.o
+	gcc  -c  osdep/linkaddr.c  $(CFLAGS) -I. -I include/ -o linkaddr.o
+	gcc  -c  osdep/mmap.c      $(CFLAGS) -I. -I include/ -o mmap.o
+	gcc  -c  osdep/pty.c       $(CFLAGS) -I. -I include/ -o pty.o
+	gcc  -c  osdep/sched.c     $(CFLAGS) -I. -I include/ -o sched.o
+	gcc  -c  osdep/_split.c    $(CFLAGS) -I. -I include/ -o _split.o
+	gcc  -c  osdep/tty.c       $(CFLAGS) -I. -I include/ -o tty.o
+# ...
+
 # libc - Standard
-	gcc -c libc/assert.c  $(CFLAGS) -I. -I include/ -o assert.o
-	gcc -c libc/ctype.c   $(CFLAGS) -I. -I include/ -o ctype.o
-	gcc -c libc/fcntl.c   $(CFLAGS) -I. -I include/ -o fcntl.o
-	gcc -c libc/fscanf.c  $(CFLAGS) -I. -I include/ -o fscanf.o
-	gcc -c libc/inet.c    $(CFLAGS) -I. -I include/ -o inet.o
-	gcc -c libc/ioctl.c   $(CFLAGS) -I. -I include/ -o ioctl.o
-	gcc -c libc/locale.c  $(CFLAGS) -I. -I include/ -o locale.o
-	gcc -c libc/math.c    $(CFLAGS) -I. -I include/ -o math.o
-	gcc -c libc/signal.c  $(CFLAGS) -I. -I include/ -o signal.o
-	gcc -c libc/socket.c  $(CFLAGS) -I. -I include/ -o socket.o
-	gcc -c libc/stdio.c   $(CFLAGS) -I. -I include/ -o stdio.o
-	gcc -c libc/stdlib.c  $(CFLAGS) -I. -I include/ -o stdlib.o
-	gcc -c libc/string.c  $(CFLAGS) -I. -I include/ -o string.o
-	gcc -c libc/strtol.c  $(CFLAGS) -I. -I include/ -o strtol.o
+	gcc -c libc/assert.c   $(CFLAGS) -I. -I include/ -o assert.o
+	gcc -c libc/ctype.c    $(CFLAGS) -I. -I include/ -o ctype.o
+	gcc -c libc/fcntl.c    $(CFLAGS) -I. -I include/ -o fcntl.o
+	gcc -c libc/fscanf.c   $(CFLAGS) -I. -I include/ -o fscanf.o
+	gcc -c libc/inet.c     $(CFLAGS) -I. -I include/ -o inet.o
+	gcc -c libc/ioctl.c    $(CFLAGS) -I. -I include/ -o ioctl.o
+	gcc -c libc/locale.c   $(CFLAGS) -I. -I include/ -o locale.o
+	gcc -c libc/math.c     $(CFLAGS) -I. -I include/ -o math.o
+	gcc -c libc/signal.c   $(CFLAGS) -I. -I include/ -o signal.o
+	gcc -c libc/socket.c   $(CFLAGS) -I. -I include/ -o socket.o
+	gcc -c libc/stdio.c    $(CFLAGS) -I. -I include/ -o stdio.o
+	gcc -c libc/stdlib.c   $(CFLAGS) -I. -I include/ -o stdlib.o
+	gcc -c libc/string.c   $(CFLAGS) -I. -I include/ -o string.o
+	gcc -c libc/strtol.c   $(CFLAGS) -I. -I include/ -o strtol.o
 	gcc -c libc/strtoul.c  $(CFLAGS) -I. -I include/ -o strtoul.o
 	gcc -c libc/termios.c  $(CFLAGS) -I. -I include/ -o termios.o
 	gcc -c libc/time.c     $(CFLAGS) -I. -I include/ -o time.o
 	gcc -c libc/unistd.c   $(CFLAGS) -I. -I include/ -o unistd.o
 	gcc -c libc/wait.c     $(CFLAGS) -I. -I include/ -o wait.o
 
-# os - OS dependent
-	gcc  -c  os/conio.c     $(CFLAGS) -I. -I include/ -o conio.o
-	gcc  -c  os/err.c       $(CFLAGS) -I. -I include/ -o err.o
-	gcc  -c  os/linkaddr.c  $(CFLAGS) -I. -I include/ -o linkaddr.o
-	gcc  -c  os/mmap.c      $(CFLAGS) -I. -I include/ -o mmap.o
-	gcc  -c  os/pty.c       $(CFLAGS) -I. -I include/ -o pty.o
-	gcc  -c  os/sched.c     $(CFLAGS) -I. -I include/ -o sched.o
-	gcc  -c  os/_split.c    $(CFLAGS) -I. -I include/ -o _split.o
-	gcc  -c  os/tty.c       $(CFLAGS) -I. -I include/ -o tty.o
-# ...
-
 libc-footer:
-# The higher part of the library.
+
+# Top level component for the rtl. The wrapper.
 # + rtl.c - The core toolkit for this library.
 # todo: Actually we need to remove the syscalls(lowlevel) 
-# from this file and put it in os/xxxsyscalls.c.
-	gcc -c  osrtl/rtl.c  $(CFLAGS) -I. -I include/ -o rtl.o
+# from this file and put it in osdep/xxxsyscalls.c.
+
+	gcc -c osdep/gramado/rtl.c  $(CFLAGS) -I. -I include/ -o rtl.o
 
 # create 'ar'
 # #todo: 
