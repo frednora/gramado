@@ -24,6 +24,6 @@ In res/cpu/ → Resource
 
 ```
 * kd/ - Kernel Debugger.
-* ke/ - Kernel Executive.
+* ke/ - This is the kernel.
 ```
 

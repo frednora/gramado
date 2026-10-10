@@ -36,6 +36,30 @@ In Halls:
 + human-driven events: (user interaction)
 ```
 
+
+## Where is the kernel?
+
+```
+(The kernel proper)
+
+halls/dev/exec/ke/intake/:
++ Inter-process communication (IPC)
++ Dispatcher 
++ Scheduler
++ Low-level synchronization primitives
+
+garden/bsp/x86_64/ints/:
++ Interrupt and exception handling
+```
+
+```
+(System service interface)
+
++ gthouse/sys/sys.c
+```
+
+
+
 ## Kernel initialization
 
 ```

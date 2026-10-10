@@ -1,4 +1,4 @@
-# Compiling kwrap/ folder.
+# Compiling sys/ folder
 # Created by Fred Nora
 
 INCLUDE = ../../include
@@ -106,16 +106,9 @@ all:
 	$(CC) -c request.c    $(KERNEL_INCLUDE) $(CFLAGS) -o request.o
 	$(CC) -c system.c     $(KERNEL_INCLUDE) $(CFLAGS) -o system.o
 
-# Wrapper functions
-	$(CC) -c wrappers.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wrappers.o
-
 # Module manager
 	$(CC) -c mod/mod.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mod.o
 	$(CC) -c mod/public.c  $(KERNEL_INCLUDE) $(CFLAGS) -o public.o
-
-# System calls suppor
-	$(CC) -c sci/sys.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sys.o
-	$(CC) -c sci/sci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sci.o    
 
 # container: ns and cg
 	$(CC) -c cont/ns.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ns.o
@@ -124,13 +117,25 @@ all:
 # Virtualization routines
 	$(CC) -c virt/hv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o
 
-# kmain
-#	$(CC) -c kmain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o kmain.o
+# System calls suppor
+
+	$(CC) -c sci/sci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sci.o    
+
+# Wrapper functions
+
+	$(CC) -c wrappers.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wrappers.o
+
+# Main service inteface
+# It is a mirror for the libc functions in ring 3 and 
+# some other Gramado specific APIs.
+
+	$(CC) -c sys.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sys.o
+
 
 # ----------------------------------------------
 # link
-	$(LD) -r -o p1_kwrap.o $(OBJS)
-	cp p1_kwrap.o ../../
+	$(LD) -r -o p1_sys.o $(OBJS)
+	cp p1_sys.o ../../
 
 # ----------------------------------------------
 	rm *.o

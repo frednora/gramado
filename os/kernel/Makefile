@@ -107,7 +107,7 @@ MYTEST_CONFIG=n
 # gthouse/ (HOT)
 objects-y := head_64.o 
 objects-y += p1_ke.o  
-objects-y += p1_kwrap.o  
+objects-y += p1_sys.o  
 objects-y += p1_gnet.o  
 
 # ==[Part 02]======================
@@ -194,7 +194,7 @@ clean-all:
 	rm -rf garden/ap/*.o   
 	rm -rf garden/bsp/*.o   
 
-	rm -rf gthouse/kwrap/*.o   
+	rm -rf gthouse/sys/*.o   
 	rm -rf gthouse/libk/*.o   
 	rm -rf gthouse/wink/*.o   
 

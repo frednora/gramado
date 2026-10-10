@@ -83,17 +83,17 @@ extern int system_state;
 
 
 //
-// Core control kwrap/
+// Core control sys/
 //
 
-#include "../gthouse/kwrap/mode.h"
-#include "../gthouse/kwrap/irql.h"    // Micro moments related with interrupts.
-#include "../gthouse/kwrap/system.h"
-#include "../gthouse/kwrap/klimits2.h"
+#include "../gthouse/sys/mode.h"
+#include "../gthouse/sys/irql.h"    // Micro moments related with interrupts.
+#include "../gthouse/sys/system.h"
+#include "../gthouse/sys/klimits2.h"
 
-#include "../gthouse/kwrap/globals.h"
+#include "../gthouse/sys/globals.h"
 
-#include "../gthouse/kwrap/bootblk/bootblk.h"
+#include "../gthouse/sys/bootblk/bootblk.h"
 
 // ==================================
 // halls/dev/exec/ke/
@@ -116,11 +116,11 @@ extern int system_state;
 
 
 // ===============================
-// kwrap/
-#include "../gthouse/kwrap/info.h"
-#include "../gthouse/kwrap/request.h"
+// sys/
+#include "../gthouse/sys/info.h"
+#include "../gthouse/sys/request.h"
 
-#include "../gthouse/kwrap/klog/klog.h"
+#include "../gthouse/sys/klog/klog.h"
 
 // ==================================
 // halls/dev/exec/ke/
@@ -129,7 +129,7 @@ extern int system_state;
 
 
 // Kernel objects
-#include "../gthouse/kwrap/kobject.h"
+#include "../gthouse/sys/kobject.h"
 
 // ==================================
 // libk/
@@ -198,7 +198,7 @@ extern int system_state;
 
 // ==================================
 // virt/
-#include "../gthouse/kwrap/virt/hv.h"
+#include "../gthouse/sys/virt/hv.h"
 
 // ==========================================
 #include "../halls/platform/acpi/acpi.h"
@@ -449,31 +449,37 @@ extern int system_state;
 #include "../gthouse/wink/wink.h"
 
 // Reboot system.
-#include "../gthouse/kwrap/reboot.h"
+#include "../gthouse/sys/reboot.h"
 // Kernel layers. (Work in progress)
-#include "../gthouse/kwrap/layers.h"
+#include "../gthouse/sys/layers.h"
 
 // -------------------------------
 // mod/
 // Ring 0 kernel modules.
 
-#include "../gthouse/kwrap/mod/mod.h"
-#include "../gthouse/kwrap/mod/public.h"
+#include "../gthouse/sys/mod/mod.h"
+#include "../gthouse/sys/mod/public.h"
+
+
+// The handlers for the services.
+// Main service inteface.
+// It is a mirror for the libc functions in ring 3 and 
+// some other Gramado specific APIs.
+
+#include "../gthouse/sys/sys.h"
+
 
 // -------------------------------
 // sci/
 
-// The handlers for the services
-#include "../gthouse/kwrap/sci/sys.h"
-
 // The definitions for the syscall numbers
-#include "../gthouse/kwrap/sci/sci0.h"
-#include "../gthouse/kwrap/sci/sci1.h"
-#include "../gthouse/kwrap/sci/sci2.h"
-#include "../gthouse/kwrap/sci/sci3.h"
+#include "../gthouse/sys/sci/sci0.h"
+#include "../gthouse/sys/sci/sci1.h"
+#include "../gthouse/sys/sci/sci2.h"
+#include "../gthouse/sys/sci/sci3.h"
 
 // The handlers for the four syscalls
-#include "../gthouse/kwrap/sci/sci.h" 
+#include "../gthouse/sys/sci/sci.h" 
 
 // ==================================
 // hal/
@@ -483,15 +489,15 @@ extern int system_state;
 
 // ==================================
 
-#include "../gthouse/kwrap/wrappers.h"
-#include "../gthouse/kwrap/panic.h"
+#include "../gthouse/sys/wrappers.h"
+#include "../gthouse/sys/panic.h"
 
 // ==================================
 // cont/
 // cgroups and namespaces
 
-#include "../gthouse/kwrap/cont/cg.h"
-#include "../gthouse/kwrap/cont/ns.h"
+#include "../gthouse/sys/cont/cg.h"
+#include "../gthouse/sys/cont/ns.h"
 
 // ==================================
 // gramnet/

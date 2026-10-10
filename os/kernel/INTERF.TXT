@@ -1,0 +1,10 @@
+
+On Linux, `open()` in user mode calls `sys_open()` within the kernel, while 
+on Windows, `NtCreateFile()` in user mode calls `NtCreateFile()` within the kernel. 
+
+Lets understand the significance of this: 
+The 'target' routine is what matters, not the various transition maneuvers required to reach it. 
+The target is neither the handler function involved in the transition nor 
+the service implementation itself, but rather the specific service interface being provided.
+ 
+In this respect, the NT interface makes much more sense than the Linux interface.
