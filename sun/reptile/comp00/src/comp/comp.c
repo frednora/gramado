@@ -897,8 +897,15 @@ void compComposeFullscreen(void)
 // #todo: We need use the cashed values,
 // and update the cached values if the resolution changes.
 
-    unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
-    unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+    // #old: Getting values via syscall
+    //unsigned long DeviceWidth  = (unsigned long) server_get_system_metrics(1);
+    //unsigned long DeviceHeight = (unsigned long) server_get_system_metrics(2);
+
+    // #test: Getting cached values
+    unsigned long DeviceWidth  = (unsigned long) gws_get_device_width();
+    unsigned long DeviceHeight = (unsigned long) gws_get_device_height();
+
+
 
     comp_blit_canvas_to_canvas(
         CANVAS_BACKBUFFER,    // source >>>
