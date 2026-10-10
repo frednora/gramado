@@ -1657,26 +1657,15 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
 // #bugbug: 
 // Constant cursor size.
 // cursor limits.
-    __tty->cursor_right  = 0+(gSavedX/8) -1;  // (screen width / char width)
-    __tty->cursor_bottom = 0+(gSavedY/8) -1;  // (screen height/ char height)
+// #todo: We need to get the current values.
 
-// #bugbug
-// Temos que completar as estruturas.
-// São muitos elementos ...
-// ...
+    unsigned long ScreenWidth  = gSavedX;
+    unsigned long ScreenHeight = gSavedY;
+    unsigned long CharWidth    = 8;
+    unsigned long CharHeight   = 8;
 
-    // goto __ok_register;
-    //return (struct tty_d *) __tty;
-
-    //panic ("tty_create: Crazy error!\n");
-    //return NULL;
-
-// ==========================================
-//__ok_register:
-
-    if ((void *) __tty == NULL){
-        panic("tty_create: __tty\n");
-    }
+    __tty->cursor_right  = (ScreenWidth/CharWidth) -1;
+    __tty->cursor_bottom = (ScreenHeight/CharHeight) -1;
 
 // mount point. 
 // pathname.
@@ -1684,7 +1673,7 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
     // Choose device name
     const char *name_to_use = devname;
     char default_name[64];
-    memset(default_name,0,64);
+    memset(default_name, 0, 64);
 
     if (devname == NULL)
     {
@@ -1779,6 +1768,8 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
         panic("tty_create: [FAIL] __tty\n");
     }
     __tty->initialized = TRUE;
+
+// Return the pointer for a tty structure
     return (struct tty_d *) __tty;
 }
 

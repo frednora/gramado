@@ -2958,8 +2958,7 @@ int VirtualConsole_early_initialization(void)
     unsigned int fg_colors[CONSOLETTYS_COUNT_MAX];
 
 // -----------------------------
-// c0 console:
-// Default kernel console
+// c0 console: Default kernel console
     bg_colors[0] = (unsigned int) COLOR_BLUE;
     fg_colors[0] = (unsigned int) COLOR_WHITE;
 // -----------------------------
@@ -2967,31 +2966,27 @@ int VirtualConsole_early_initialization(void)
     bg_colors[1] = (unsigned int) COLOR_BLUE;
     fg_colors[1] = (unsigned int) COLOR_YELLOW;
 // -----------------------------
-// c2 console:
-// Warning console
+// c2 console: Warning console
     bg_colors[2] = (unsigned int) COLOR_ORANGE;
     fg_colors[2] = (unsigned int) COLOR_WHITE;
 // -----------------------------
-// c3 console:
-// Danger console.
+// c3 console: Danger console
     bg_colors[3] = (unsigned int) COLOR_RED;
     fg_colors[3] = (unsigned int) COLOR_YELLOW;
-
 
 // IN: console index, bg color, fg color
     for (i=0; i<CONSOLETTYS_COUNT_MAX; i++){
         DDINIT_console( i, bg_colors[i], fg_colors[i] );
     };
-    //debug_print("Breakpoint 1\n");
 
 // Setup foreground console
     jobcontrol_switch_console(0);
-    //debug_print("Breakpoint 2\n");
 
+// Setup console session type
     if (CONFIG_PRINTK_TO_SERIAL == 1)
         console_set_session_type(0, TTY_SESSION_TYPE_DEBUG);
 
-// Cursor for the current console
+// Cursor position for the current console
 // See: system.c
     set_up_cursor(0,0);
 
@@ -2999,12 +2994,8 @@ int VirtualConsole_early_initialization(void)
     kstdio_info.kstdio_in_terminalmode = TRUE;
     kstdio_info.kstdio_in_verbosemode = TRUE;
 
-    //debug_print("Done\n");
-
     return 0;
 }
-
-
 
 
 //
