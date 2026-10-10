@@ -583,11 +583,13 @@ fail:
 
 ssize_t __tty_write(struct tty_d *tty, const char *buf, size_t size)
 {
+    size_t i=0;
+
     if (!tty || !buf || size == 0)
         return 0;
 
     struct tty_queue_d *q = &tty->raw_queue;
-    size_t i=0;
+
     for (i=0; i < size; i++)
         tty_queue_putchar(q, buf[i]);
 
@@ -611,27 +613,31 @@ int __tty_write2(struct tty_d *tty, char *buffer, int nr)
         {
             break;  // queue full
         }
-        // ok
-        // Echo it?
+
+        // ok. Echo it?
         //tty_flush(tty);
 
         written++;
-    }
+    };
 
     //#debug
     //printk("__tty_write: [DONE] %d/%d bytes written\n", written, nr);
 
     //tty_flush_output_queue_ex(tty);
+
     return (int) written;
 }
 
 // Using canonical or raw modes.
 int __tty_write3(struct tty_d *tty, char *buffer, int nr)
 {
-    if (!tty || tty->magic != TTY_MAGIC) return -1;
-    if (!buffer || nr <= 0) return -1;
-
     int written = 0;
+
+    if (!tty || tty->magic != TTY_MAGIC)
+        return -1;
+    if (!buffer || nr <= 0) 
+        return -1;
+
     while (written < nr) {
         char c = buffer[written];
 
@@ -739,15 +745,14 @@ tty_read (
     file *f;
 
 // Parameters:
-    if ( fd < 0 || fd > 31 ){
+    if (fd < 0 || fd > 31){
         return (int) (-EBADF);
     }
-//#todo
-    //if( (void*) buffer == NULL ){
-    //    return (int) (-EINVAL);
-    //}
-// #todo: 
-// 'n'
+    if ((void*) buffer == NULL){
+        return (int) (-EINVAL);
+    }
+    if (n <= 0)
+        return (int) (-EINVAL);
 
 
 // process.
@@ -820,13 +825,16 @@ sys_tty_read (
     char *buffer, 
     int n )
 {
-    if (fd < 0)
-        goto fail;
+// Parameters:
+    if (fd < 0 || fd > 31){
+        return (int) (-EBADF);
+    }
     if ((void*)buffer == NULL)
-        goto fail;
-    return (int) tty_read(fd,buffer,n);
-fail:
-    return (int) -1;
+        return (int) (-EINVAL);
+    if (n <= 0)
+        return (int) (-EINVAL);
+
+    return (int) tty_read(fd, buffer, n);
 }
 
 // service 273
@@ -843,16 +851,15 @@ tty_write (
     pid_t current_process = -1;
     file *f;
 
-// Parameters
+// Parameters:
     if (fd < 0 || fd > 31){
         return (int) (-EBADF);
     }
     if ((void*) buffer == NULL){
         return (int) (-EINVAL);
     }
-// #todo: 'n'
-    //if (n<0)
-        //return (int) (-EINVAL);
+    if (n <= 0)
+        return (int) (-EINVAL);
 
 // process
 // vamos pegar o ponteiro do processo
@@ -884,7 +891,7 @@ tty_write (
     if (f->magic != 1234){
         goto fail;
     }
-    if ( f->____object != ObjectTypeTTY ){
+    if (f->____object != ObjectTypeTTY){
         debug_print("tty_write: ____object\n");
         goto fail;
     }
@@ -923,16 +930,17 @@ sys_tty_write (
     char *buffer, 
     int n )
 {
+
+// Parameters:
     if (fd < 0 || fd > 31){
         return (int) (-EBADF);
     }
     if ((void*)buffer == NULL)
-        goto fail;
-    //if (n < 0)
-        //goto fail;
-    return (int) tty_write(fd,buffer,n);
-fail:
-    return (int) -1;
+        return (int) (-EINVAL);
+    if (n <= 0)
+        return (int) (-EINVAL);
+
+    return (int) tty_write(fd, buffer, n);
 }
 
 /*
