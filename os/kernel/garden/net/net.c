@@ -552,9 +552,18 @@ network_register_ring3_display_server(
 // Setup the process priority
     __maximize_ds_priority(current_process);
 
+
 // #test:
-// Change the foreground console
-    console_set_current_virtual_console(CONSOLE1);
+// Change the session type for this console.
+// #ps: With this new session type, printf will not be allowed
+// to access the display device.
+
+    console_set_session_type(CONSOLE0, TTY_SESSION_TYPE_GUI);
+
+// #test:
+// Change the foreground console.
+
+    console_set_current_virtual_console(CONSOLE0);
 
 // #todo
 // Maybe we can associate a console to the display server process.

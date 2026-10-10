@@ -57,6 +57,14 @@
 // Console modes
 //
 
+// Shift + Fn handling
+// The session manager decides what the hotkeys switch to. ex:
+// F1 -> Console 0
+// F2 -> Console 1
+// F3 -> Console 2
+// F4 -> Console 3 (gui session)
+
+
 // The prefix KD_ explicitly stands for Keyboard and Display.
 
 // This is the standard mode for a text console. 
@@ -76,6 +84,7 @@
 // are ignored in this mode; 
 // output must be handled by the application 
 // directly manipulating the display memory.
+
 #define KD_GRAPHICS  2000 
 
 // For tty_ioctl
@@ -199,6 +208,47 @@ struct tty_queue
     struct thread_d *thread_list;
 };
 
+//
+// TTY session types
+//
+
+// Text-mode interactive session.
+// Traditional text console session.
+// The tty is rendered directly by the kernel console renderer.
+#define TTY_SESSION_TYPE_CONSOLE   1000
+
+// Graphical interactive session.
+// Graphical desktop session.
+// The display server owns the display device and framebuffer.
+#define TTY_SESSION_TYPE_GUI       2000
+
+// Remote interactive session.
+// Remote terminal session.
+// Input/output is redirected through a network connection.
+#define TTY_SESSION_TYPE_REMOTE    3000
+
+// Diagnostic and kernel-debug session.
+// Debugging session.
+// Used for kernel diagnostics, serial consoles, and debug output.
+// #ps: We can redirect to the serial port for example.
+#define TTY_SESSION_TYPE_DEBUG     4000
+
+// Non-interactive session without a local display.
+// Headless session.
+// No local display device is available; output is redirected elsewhere.
+#define TTY_SESSION_TYPE_HEADLESS  5000
+
+struct tty_session_d 
+{
+    int type;
+    // ...
+
+    // #todo:
+    // User information, like user session structure.
+    // #ps: We already have information related with the user.
+    // We only need to connect those information with this one.
+};
+
 // Selects the worker given the destination 
 // when writing into the tty's output queue.
 // see: int output_worker_number;
@@ -221,6 +271,8 @@ struct tty_d
     int magic;
 // Where?
     int index;
+
+    struct tty_session_d  session;
 
 // File pointer:
 // To setup the device.
@@ -337,17 +389,13 @@ struct tty_d
 // ==  properties ========================
 //
 
-// Virtual console mode
-// Options: KD_TEXT and KD_GRAPHICS
-// See: console.h
-    int vc_mode;
-
 // TTY's operation mode.
     int operation_mode;
+
 // TTY QUEUE's operation mode.
     int queue_operation_mode;
 
-// tty flags.
+// tty flags
     unsigned long flags;
 
 //

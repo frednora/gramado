@@ -20,7 +20,7 @@ void panic( const char *format, ... )
         fg_console = DEFAULT_CONSOLE;
 
 // Kernel draws glyphs into the framebuffer
-    CONSOLE_TTYS[fg_console].vc_mode = KD_TEXT;
+    console_set_session_type(fg_console, TTY_SESSION_TYPE_CONSOLE);
 
 // If we can log into the serial device
     if (Initialization.is_serial_log_initialized == TRUE)

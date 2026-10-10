@@ -703,6 +703,31 @@ void jobcontrol_switch_console(int n)
     //printk ("Console number {%d}\n", n);
 }
 
+void console_set_session_type(int console_id, int session_type)
+{
+    if (console_id < 0){ 
+        return;
+    }
+    if (console_id >= CONSOLETTYS_COUNT_MAX){
+        return;
+    }
+
+    CONSOLE_TTYS[console_id].session.type = session_type;
+}
+
+int console_get_session_type(int console_id)
+{
+    if (console_id < 0){ 
+        return -1;
+    }
+    if (console_id >= CONSOLETTYS_COUNT_MAX){
+        return -1;
+    }
+
+    return (int) CONSOLE_TTYS[console_id].session.type;
+}
+
+
 /*
  * set_up_cursor:
  *     Setup cursor for the current virtual console.
@@ -2351,7 +2376,7 @@ DDINIT_console(
     CONSOLE_TTYS[ConsoleIndex].initialized = FALSE;
 
 // Console mode
-    CONSOLE_TTYS[ConsoleIndex].vc_mode = (int) KD_TEXT;
+    CONSOLE_TTYS[ConsoleIndex].session.type = TTY_SESSION_TYPE_CONSOLE;
 
 // Owner tid
 // Uninitialized
@@ -2375,7 +2400,7 @@ DDINIT_console(
     // Security stuff.
     // Nao sei se essas estruturas estao prontas para isso nesse momento
     // ou se esses ponteiros sao nulos.
-    CONSOLE_TTYS[ConsoleIndex].user_session = NULL;  // Current user session;
+    CONSOLE_TTYS[ConsoleIndex].user_session = NULL;  // Current user session
     CONSOLE_TTYS[ConsoleIndex].cgroup = NULL;        // Current cgroup
 
     // file pointer
@@ -2718,6 +2743,9 @@ void VirtualConsole_initialization(void)
 // The foreground console
     jobcontrol_switch_console(DEFAULT_CONSOLE);  //  Console 0
 
+    if (CONFIG_PRINTK_TO_SERIAL == 1)
+        console_set_session_type(DEFAULT_CONSOLE, TTY_SESSION_TYPE_DEBUG);
+
 // Setup the pointer for the current console
     set_up_cursor(0,0);
 
@@ -2959,6 +2987,9 @@ int VirtualConsole_early_initialization(void)
 // Setup foreground console
     jobcontrol_switch_console(0);
     //debug_print("Breakpoint 2\n");
+
+    if (CONFIG_PRINTK_TO_SERIAL == 1)
+        console_set_session_type(0, TTY_SESSION_TYPE_DEBUG);
 
 // Cursor for the current console
 // See: system.c

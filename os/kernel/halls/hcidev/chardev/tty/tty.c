@@ -101,11 +101,20 @@ void tty_flush_canonical_queue(struct tty_d *tty, int console_number)
 // Place this in tty.c and declare in tty.h if needed.
 void tty_flush_output_queue(struct tty_d *tty, int console_number)
 {
+    int SessionType;
     char c=0;
 
     if (!tty || tty->magic != TTY_MAGIC)
         return;
+        
     struct tty_queue *q = &tty->output_queue;
+
+// Can't print
+// The console doesn't own the display device 
+
+    SessionType = console_get_session_type(console_number);
+    if (SessionType != TTY_SESSION_TYPE_CONSOLE)
+        return;
 
 // Render and refresh the characters on the console
     while (q->tail != q->head)
@@ -184,7 +193,7 @@ Handles four cases:
 */
 void tty_flush_output_queue_ex(struct tty_d *tty) 
 {
-    struct tty_d *link;  // Redirection for pty master.
+    struct tty_d *link;  // Redirection for pty master
 
     if (!tty || tty->magic != TTY_MAGIC)
         return;
@@ -209,7 +218,7 @@ void tty_flush_output_queue_ex(struct tty_d *tty)
             if (link->magic != 1234)
                 break;
             // Send to slave
-            tty_copy_output_buffer(link,tty);
+            tty_copy_output_buffer(link, tty);
             break;
 
         default:
@@ -1460,14 +1469,15 @@ tty_ioctl (
     // Set console mode
     case KDSETMODE:
         switch (arg) {
+
         case KD_TEXT:
-            tty->vc_mode = KD_TEXT;
+            tty->session.type = TTY_SESSION_TYPE_CONSOLE;
             /* Optional: notify console driver */
             // console_set_text_mode(tty);
             return 0;
 
         case KD_GRAPHICS:
-            tty->vc_mode = KD_GRAPHICS;
+            tty->session.type = TTY_SESSION_TYPE_GUI;
             /* Optional: notify console driver */
             // console_set_graphics_mode(tty);
             return 0;
@@ -1519,8 +1529,8 @@ struct tty_d *tty_create(short type, short subtype, const char *devname)
     __tty->magic = 1234;
     __tty->initialized = FALSE;
 
-// Console mode
-    __tty->vc_mode = (int) KD_TEXT;
+// Session type. (Console mode)
+    __tty->session.type = TTY_SESSION_TYPE_CONSOLE;
 
 // Clear name field
     memset( __tty->name, 0, TTY_NAME_SIZE );

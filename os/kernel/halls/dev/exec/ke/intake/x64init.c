@@ -875,8 +875,20 @@ void I_x64ExecuteInitialProcess(int cpu_id)
     PROGRESS(":: Go to ring3!\n");
     PROGRESS("\n");
 
-    //while(1){}
+//
+// Changing session type
+//
 
+// #test
+// Allowing the init process to print into the fg console.
+// #ps: Maybe its not valid for all the cases.
+// For example: Depending on the runlevel we can be in headless mode.
+// #todo: Check runlevel
+// ...
+
+    console_set_session_type(fg_console, TTY_SESSION_TYPE_CONSOLE);
+
+    //while(1){}
 
 // Running normal thread in ring 3
     lapic_info[0].irql = IRQL_R3_THREAD_IS_RUNNING;

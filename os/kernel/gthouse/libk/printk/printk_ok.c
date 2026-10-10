@@ -81,50 +81,18 @@ int kinguio_printf(const char *fmt, ...)
 
     size_t BufferSize = (size_t) sizeof(dst_buffer);
 
-//
-// Console session type
-//
+    // Send it to the serial port
+    if (Initialization.printk_to_serial == TRUE){
 
-    int SessionType = console_get_session_type(fg_console);
-
-    switch (SessionType)
-    {
-        case TTY_SESSION_TYPE_CONSOLE:
-            kinguio_puts(dst_buffer);
-            return 0;  // #bugbug: We need the number of bytes
-            break;
-
-        case TTY_SESSION_TYPE_GUI:
             return (int) debug_print_nbytes( 
-                    (const void *) dst_buffer, 
-                    (size_t) BufferSize );
-            break;
+                        (const void *) dst_buffer, 
+                        (size_t) BufferSize );
 
-        // #todo: This is a work in progress
-        case TTY_SESSION_TYPE_REMOTE:
-            return (int) debug_print_nbytes( 
-                    (const void *) dst_buffer, 
-                    (size_t) BufferSize );
-            break;
+    // Print it into the screen
+    } else {
 
-        // #todo: This is a work in progress
-        case TTY_SESSION_TYPE_DEBUG:
-            return (int) debug_print_nbytes( 
-                    (const void *) dst_buffer, 
-                    (size_t) BufferSize );
-            break;
-
-        // #todo: This is a work in progress
-        case TTY_SESSION_TYPE_HEADLESS:
-            return (int) debug_print_nbytes( 
-                    (const void *) dst_buffer, 
-                    (size_t) BufferSize );
-            break;
-
-        default:
-            return (int) -1;
-            break;
-    };    
+        kinguio_puts(dst_buffer);
+    };
 
     return (int) ret;
 }

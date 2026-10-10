@@ -92,6 +92,9 @@ void console_set_current_virtual_console(int console_number);
 int console_get_current_virtual_console(void);
 void jobcontrol_switch_console(int n);
 
+void console_set_session_type(int console_id, int session_type);
+int console_get_session_type(int console_id);
+
 //
 // cursor
 //

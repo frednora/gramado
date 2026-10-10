@@ -1582,7 +1582,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                     nbytes = (ssize_t) __tty_write2(fp->tty, ubuf, count);
                     fp->tty->output_worker_number = TTY_OUTPUT_WORKER_FGCONSOLE;
                     tty_flush_output_queue_ex(fp->tty);
-                    return (ssize_t) nbytes;  
+                    return (ssize_t) nbytes;
                 //}
             }
             if (fp->tty == NULL){
@@ -1652,7 +1652,7 @@ ssize_t __write_imp (int fd, char *ubuf, size_t count)
                         //(const void *) ubuf, 
                         //(size_t) count );
                 //} else {
-                    nbytes = (ssize_t) __tty_write2(fp->tty,ubuf,count);
+                    nbytes = (ssize_t) __tty_write2(fp->tty, ubuf, count);
                     fp->tty->output_worker_number = TTY_OUTPUT_WORKER_FGCONSOLE;
                     tty_flush_output_queue_ex(fp->tty);
                     return (ssize_t) nbytes;

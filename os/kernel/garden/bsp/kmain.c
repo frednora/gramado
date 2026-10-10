@@ -1763,19 +1763,13 @@ void I_kmain(int arch_type)
 // Config headless mode.
 // In headless mode stdout sends data to the serial port.
     Initialization.headless_mode = FALSE;
-    Initialization.printk_to_serial = FALSE;
     // ...
 
-// Redirect printk to serial port?
-// It affects printk during all the time.
-    if (CONFIG_PRINTK_TO_SERIAL == 1){
-        Initialization.printk_to_serial = TRUE;
-    }
+
 // Headless mode?
     if (CONFIG_HEADLESS_MODE == 1)
     {
         Initialization.headless_mode = TRUE;
-        Initialization.printk_to_serial = TRUE;
         // ...
     }
 
@@ -1893,6 +1887,7 @@ void I_kmain(int arch_type)
 // ======================================================================
 
     // Spawn the main thread for the init process
+    // see: ke.c
     PROGRESS("\n");
     PROGRESS("I_kmain: Spawn init thread\n");
     if (Status == TRUE){

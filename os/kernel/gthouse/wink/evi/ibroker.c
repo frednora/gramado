@@ -568,12 +568,13 @@ static void do_enter_embedded_shell(int kernel_in_debug_mode)
     int console_index = fg_console;
     // InputBrokerInfo.shell_flag = FALSE;
 
-// #test
-// Reactivate the usage of printk in the kernel console.
-    Initialization.printk_to_serial = FALSE;
-
 // Set up console
     jobcontrol_switch_console(0);
+
+// Change the session type.
+// This way the console owns the display device.
+    console_set_session_type(0, TTY_SESSION_TYPE_CONSOLE);
+
 // Message
     if (kernel_in_debug_mode){
         printk("[[ KERNEL IN DEBUG MODE ]]\n");
@@ -595,16 +596,15 @@ static void do_exit_embedded_shell(void)
     printk("\n");
     refresh_screen();
 
-// Supress the use of printk in the kernel console 
-// if it is what the configuration wants.
-    if (CONFIG_PRINTK_TO_SERIAL == 1){
-        Initialization.printk_to_serial = TRUE;
-    }else{
-        Initialization.printk_to_serial = FALSE;
-    }
+// Change the session type.
+// This way the display server owns the display device.
+// #todo:
+// We gotta check if we have a valid display server associated
+// with this console.
 
-// done
-    InputBrokerInfo.shell_flag = FALSE;
+    console_set_session_type(0, TTY_SESSION_TYPE_GUI);
+
+    InputBrokerInfo.shell_flag = FALSE;  // done
 }
 
 // Launch an app via init process.
