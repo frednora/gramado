@@ -28,7 +28,7 @@ INIT_PROCESS = sysd
 # =================================
 # L1: Mammal - POSIX-like commands and experiments
 
-__DEP_L1 = ../ead/mammal
+__DEP_L1 = ../sun/mammal
 L1_CMDS  = $(__DEP_L1)/cmds
 L1_CPP00 = $(__DEP_L1)/cpp00
 
@@ -36,7 +36,7 @@ L1_CPP00 = $(__DEP_L1)/cpp00
 # =================================
 # L2: Reptile UI
 
-__DEP_L2 = ../ead/reptile
+__DEP_L2 = ../sun/reptile
 # Display server/compositor
 L2_COMP     = $(__DEP_L2)/comp00
 L2_ASSETS   = $(__DEP_L2)/np/assets

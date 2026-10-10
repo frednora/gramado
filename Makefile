@@ -1,10 +1,10 @@
 
 
 all:
-	make -C ead/
+	make -C sun/
 	make -C os/
-ead:
-	make -C ead/
+sun:
+	make -C sun/
 os:
 	make -C os/
 tools:

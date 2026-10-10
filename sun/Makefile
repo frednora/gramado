@@ -1,4 +1,4 @@
-
+# project Sun
 
 all:
 	make -C mammal/

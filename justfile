@@ -1,6 +1,6 @@
 # justfile
 
-projects_dir := "ead"
+projects_dir := "sun"
 os_dir := "os"
 
 # Default recipe
