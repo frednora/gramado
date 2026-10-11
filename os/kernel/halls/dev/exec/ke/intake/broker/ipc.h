@@ -119,10 +119,7 @@ void *sys_get_message(unsigned long ubuf);
 void *sys_get_message2(unsigned long ubuf, int index, int restart);
 
 // Service 112
-unsigned long
-sys_post_message_to_tid( 
-    int tid, 
-    unsigned long ubuf );
+unsigned long sys_post_message_to_tid(int target_tid, unsigned long ubuf);
 
 // #todo
 // Broadcast system message to all the threads.

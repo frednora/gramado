@@ -60,10 +60,8 @@ ipc_post_message_to_tid2 (
     if (MessageCode<0){
         goto fail;
     }
-
-// tid
-    if ( dst_tid < 0 || 
-         dst_tid >= THREAD_COUNT_MAX )
+// Destination tid
+    if (dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX)
     {
         panic("ipc_post_message_to_tid2: dst_tid\n");
         //goto fail;
@@ -74,11 +72,13 @@ ipc_post_message_to_tid2 (
     if ((void *) t == NULL){
         panic ("ipc_post_message_to_tid2: t\n");
     }
-    if ( t->used != TRUE || t->magic != 1234 )
+    if (t->used != TRUE || t->magic != 1234)
     {
         // Thread is waiting for reuse
         if (t->magic == 4321)
+        {
             goto fail;
+        }
 
         panic ("ipc_post_message_to_tid2: t validation\n");
     }
@@ -90,6 +90,8 @@ ipc_post_message_to_tid2 (
 
 
 // Wakeup target thread
+// #ps: Maybe it depends on the reason its waiting for
+
     thread_wait_reason_t Reason = t->wait_reason;
 
     if (t->state == WAITING || t->state == BLOCKED)
@@ -144,7 +146,7 @@ ipc_post_message_to_tid2 (
     if ((void*) m == NULL){
         panic ("ipc_post_message_to_tid2: m\n");
     }
-    if ( m->used != TRUE || m->magic != 1234 ){
+    if (m->used != TRUE || m->magic != 1234){
         panic ("ipc_post_message_to_tid2: m validation\n");
     }
 
@@ -223,9 +225,8 @@ ipc_post_message_to_tid (
     if (MessageCode <= 0){
         goto fail;
     }
-
 // Destination TID
-    if ( dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX )
+    if (dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX)
     {
         panic("ipc_post_message_to_tid: dst_tid\n");
         //goto fail;
@@ -240,7 +241,9 @@ ipc_post_message_to_tid (
     {
         // Thread is waiting for reuse
         if (t->magic == 4321)
+        {
             goto fail;
+        }
 
         panic("ipc_post_message_to_tid: t validation\n");
     }
@@ -261,6 +264,8 @@ ipc_post_message_to_tid (
 
 
 // Wakeup target thread
+// #ps: Maybe it depends on the reason its waiting for
+
     thread_wait_reason_t Reason = t->wait_reason;
 
 // Check the reasons
@@ -1206,16 +1211,20 @@ fail:
 
 // Service 112
 // Post message to tid.
-// Asynchronous.
-unsigned long
-sys_post_message_to_tid( 
-    int tid, 
-    unsigned long ubuf )
+// (Asynchronous)
+
+unsigned long sys_post_message_to_tid(int target_tid, unsigned long ubuf)
 {
 // TID: Sender and receiver
     tid_t src_tid = (tid_t) lapic_info[0].current_tid;
-    tid_t dst_tid = (tid_t) tid;
+    tid_t dst_tid = (tid_t) target_tid;
 
+// #todo
+// Invalid sender tid
+    //if (src_tid < 0 || src_tid >= THREAD_COUNT_MAX)
+    //{
+    //    return 0;
+    //}
 // Invalid target tid
     if (dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX)
     {
@@ -1250,7 +1259,7 @@ sys_post_message_to_tid(
         (unsigned long) m[3] );
     */
 
-    // #ps: Newm implementation. Sending more data.
+    // #ps: New implementation. Sending more data.
     ipc_post_message_to_tid2(
         (tid_t) src_tid,    // sender tid
         (tid_t) dst_tid,    // receiver tid
@@ -1266,7 +1275,7 @@ sys_post_message_to_tid(
 }
 
 // #todo
-// Not implemented i ring 3 yet.
+// Not implemented in ring 3 yet.
 // Broadcast system message to all the threads.
 // IN: Buffer
 // OUT: The number of posted messages.
@@ -1277,6 +1286,13 @@ unsigned long sys_broadcast_system_message(unsigned long ubuf)
     tid_t Sender_TID = (tid_t) lapic_info[0].current_tid;
 
     unsigned long long_rv=0;
+
+
+// #todo: Invalid sender tid
+    //if (Sender_TID < 0 || Sender_TID >= THREAD_COUNT_MAX)
+    //{
+        //return 0;
+    //}
 
 // Pointer to a ring 3 buffer.
 // #todo
