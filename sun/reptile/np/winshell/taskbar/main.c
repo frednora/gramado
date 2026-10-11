@@ -1535,15 +1535,9 @@ int main(int argc, char *argv[])
 
 
 // =============================
-// #test
-// Set this thread and its wproxy as the system shell. 
-// The taskbar.
-    sc80(46, 0, 0, 0);
 
-// =============================
-
-// #test
 // Update the wproxy structure that belongs to this thread.
+
     unsigned long m[10];
     int mytid = gettid();
 
@@ -1555,13 +1549,26 @@ int main(int argc, char *argv[])
     m[3] = TaskbarInfo.width;
     m[4] = TaskbarInfo.height;
 
+    // #ps: 
+    // In the case of taskbar, frame and client are equal.
+    // It means the offset for the client area is 0.
+    // #todo: Maybe popup window still have some kind of border,
+    // that can be considered a frame. In this case, messages
+    // go to the server. Allowing it to move or change the dimensions.
+
     // Client area rectangle
-    m[5] = TaskbarInfo.left;
-    m[6] = TaskbarInfo.top;
+    m[5] = 0;  // TaskbarInfo.left;
+    m[6] = 0;  // TaskbarInfo.top;
     m[7] = TaskbarInfo.width;
     m[8] = TaskbarInfo.height;
 
     sc80( 48, &m[0], &m[0], &m[0] );
+
+// =============================
+// Set this thread and its window as the system shell. 
+// The taskbar.
+
+    sc80(46, 0, 0, 0);
 
 
 // ====================================

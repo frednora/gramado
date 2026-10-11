@@ -4132,7 +4132,7 @@ wmMouseEvent(
 
                     // Inside the client area, 
                     // send relative values to the application.
-                    } else if (window_hover->hit_area == HIT_CLIENT) {
+                    } else if (window_hover->hit_area == HIT_CLIENT){
 
                         // Good for regular apps
                         // For regular app windows, 
@@ -4141,11 +4141,12 @@ wmMouseEvent(
                         rel_long2 = long2 - (window_hover->t + window_hover->ca_t);
 
                         // #hack: Good for taskbar
-                        if (window_hover == window_shell)
-                        {
-                            rel_long1 = long1 - window_hover->ca_l;
-                            rel_long2 = long2 - window_hover->ca_t;
-                        }
+                        // #deprecated: We are following the same logic of normal windows.
+                        //if (window_hover == window_shell)
+                        //{
+                        //    rel_long1 = long1 - window_hover->ca_l;
+                        //    rel_long2 = long2 - window_hover->ca_t;
+                        //}
 
                         // Update also the relative values
                         bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);

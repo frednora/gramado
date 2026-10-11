@@ -261,7 +261,6 @@ const char *app2_name = "#editor.bin";
 // == Private functions: prototypes ====================
 //
 
-static void __test_gr(int fd);
 
 //static int __initialize_connection(void);
 static void doPrompt(int fd);
@@ -454,62 +453,7 @@ static void doPrompt(int fd)
     //if (main_window<0){
     //    return;
     //}
-    //gws_refresh_window(fd,main_window);
-}
 
-static void __test_gr(int fd)
-{
-    if (fd<0)
-        return;
-
-    gr_initialize();
-
-// Plot a 2d point using int.
-//see: gr.c
-    gws_plot0Int2D( 
-        fd,
-        10,         //x
-        10,         //y
-        COLOR_YELLOW,  //color
-        0 );        //rop
-
-// Plot a 3d point using int.
-    gws_plot0Int3D( 
-        fd,
-        0,         //x
-        0,         //y
-        0,
-        COLOR_YELLOW,  //color
-        0 );        //rop
-
-// Plot a 3d point using int.
-    gws_plot0Int3D( 
-        fd,
-        10,         //x
-        10,         //y
-        0,
-        COLOR_YELLOW,  //color
-        0 );        //rop
-
-//Bresenham
-    gr_plotLine3d( 
-        fd,
-        -10, 10, 0,
-        10, -10, 0,
-        COLOR_GREEN,
-        0 );
-
-    plotCircleZ ( 
-        fd,
-        -10,   //x 
-        20,    //y
-        10,   //r 
-        COLOR_WHITE,  //color 
-        0,   // z
-        0 ); // rop
-
-// refresh window.
-    gws_refresh_window(fd,main_window);
 }
 
 static void compareStrings(int fd)
@@ -575,11 +519,6 @@ static void compareStrings(int fd)
     if ( gramado_strncmp(prompt,"about",5) == 0 )
     {
         printf("taskbar.bin: Command line application\n");
-        goto exit_cmp;
-    }
-
-    if ( gramado_strncmp(prompt, "x", 1) == 0 ){
-        __test_gr(fd);
         goto exit_cmp;
     }
 

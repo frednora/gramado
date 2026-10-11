@@ -101,6 +101,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
     w = (struct WND_d *) window_shell;
     if (w != NULL)
     {
+        /*
         if (w->magic == 1234)
         {
             // Taskbar has no frame/chrome, only client area.
@@ -119,7 +120,42 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
                 return;
             }
         }
+        */
+
+        if (w->magic == 1234)
+        {
+            // Taskbar has no frame/chrome, only client area.
+
+            // These are the values for the frame.
+            Left   = w->l;
+            Top    = w->t;
+            Right  = (w->l + w->w);
+            Bottom = (w->t + w->h);
+
+            if ( x >= Left && x <= Right &&
+                 y >= Top  && y <= Bottom )
+            {
+                window_hover = w;
+                w->hit_area = HIT_FRAME;  // Inside frame/chrome
+
+                // Client area
+                Left   = w->l + w->ca_l;
+                Top    = w->t + w->ca_t;
+                Right  = w->l + (w->ca_l + w->ca_w);
+                Bottom = w->t + (w->ca_t + w->ca_h);
+
+                if ( x >= Left && x <= Right &&
+                     y >= Top  && y <= Bottom )
+                {
+                    //printk("hit: client area\n");
+                    w->hit_area = HIT_CLIENT;  // Inside client area
+                }
+
+                return;
+            }
+        }
     }
+
 
 // ----------------------------------------------
 // Walk the list of window proxy objects and check against the mouse cursor.
@@ -159,7 +195,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
                 //__wproxy_drawframe0(hover, 2);
             }
         }
-        w = w->next; // walk forward in the list
+        w = w->next;  // Walk forward in the list
     };
 
 // New hover
@@ -209,8 +245,7 @@ fail:
     return NULL;
 }
 
-// The current thread has a wproxy window that is 
-// the system shell. (The taskbar).
+// The current thread has a window that is the system shell. (The taskbar).
 // It has no frame/chrome, only client area.
 int wproxy_set_shell(tid_t tid)
 {
@@ -242,12 +277,15 @@ int wproxy_set_shell(tid_t tid)
         goto fail;
     }
 
-// Set the shell window proxy. The taskbar is the shell.
-    window_shell = w;
-    //->has_frame = FALSE;  // No frame/chrome, only client area.
-    return (int) 0;
+// Set the shell window proxy. 
+// The taskbar is the shell.
 
-    // ...
+    window_shell = w;
+
+    // No frame/chrome, only client area.
+    //->has_frame = FALSE;
+
+    return (int) 0;
 
 fail:
     return (int) -1;

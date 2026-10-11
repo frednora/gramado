@@ -851,6 +851,7 @@ int main(int argc, char *argv[])
     m[4] = wi.height;
 
     // Client area rectangle
+    // #ps: Relative values
     m[5] = wi.cr_left;
     m[6] = wi.cr_top;
     m[7] = wi.cr_width;

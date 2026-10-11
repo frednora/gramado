@@ -1288,7 +1288,7 @@ int serviceCreateWindow(int client_fd)
 // Called by dsProcedure in main.c
 
     // #test
-    // The server will be a compositor, responsable or compose the 
+    // The server is a compositor, responsable for compose the 
     // desktop scene, it still will be able to draw the frame/chrome 
     // but it will not accept requests to draw inside the client area.
     // The client will draw inside a surface and the server 
