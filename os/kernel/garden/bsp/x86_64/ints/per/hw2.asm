@@ -382,6 +382,12 @@ irq0_release:
     ; Avoiding extra timer interrupt.
     ;sti
 
+    ; At this point we need to update the gs segment 
+    ; for the one that belongs to the current thread in user mode.
+    ; #ps: How to handle this situation if we had a thread switching?
+
+    ; swapgs
+
     iretq
 
 ; --------------------------------------

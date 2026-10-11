@@ -13,7 +13,7 @@ __sw_local_fpu_buffer:
 align 16
 
 
-; systemcall64:
+; _systemcall64:
 ; Privilege transition: Moves execution from CPL=3 (user mode) to CPL=0 (kernel mode).
 ; Entry point: Loads RIP from the IA32_LSTAR MSR (Model Specific Register), 
 ; which must be set by the OS to point to the kernel’s syscall handler.
@@ -113,6 +113,13 @@ RequestHall_int128:
 ; It's executed with the interrupts disabled.
 
     cli 
+
+    ; #todo:
+    ; This is because we need to know the
+    ; information about the current core.
+    ; gs is the segment and the base address contain structured data.
+
+    ; swapgs
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -219,6 +226,13 @@ RequestHall_int128:
 ; Restore the stack frame and exit to user mode
     push qword [.int128_cs]      ; cs
     push qword [.int128_rip]     ; rip
+
+    ; At this point we need to update the gs segment 
+    ; for the one that belongs to the current thread in user mode.
+    ; #ps: In the case of syscalls we don't have thread switching.
+
+    ; swapgs
+
     iretq
 .int128Ret: dq 0
 .int128_cs: dq 0
@@ -261,6 +275,13 @@ RequestHall_int129:
 ; It's executed with the interrupts disabled.
 
     cli 
+
+    ; #todo:
+    ; This is because we need to know the
+    ; information about the current core.
+    ; gs is the segment and the base address contain structured data.
+
+    ; swapgs
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -362,6 +383,13 @@ RequestHall_int129:
 ; Restore the stack frame and exit to user mode
     push qword [.int129_cs]      ; cs
     push qword [.int129_rip]     ; rip
+
+    ; At this point we need to update the gs segment 
+    ; for the one that belongs to the current thread in user mode.
+    ; #ps: In the case of syscalls we don't have thread switching.
+
+    ; swapgs
+
     iretq
 .int129Ret: dq 0
 .int129_cs: dq 0
@@ -396,6 +424,13 @@ RequestHall_int130:
 ; It's executed with the interrupts disabled.
 
     cli 
+
+    ; #todo:
+    ; This is because we need to know the
+    ; information about the current core.
+    ; gs is the segment and the base address contain structured data.
+
+    ; swapgs
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -497,7 +532,15 @@ RequestHall_int130:
 ; Restore the stack frame and exit to user mode
     push qword [.int130_cs]      ; cs
     push qword [.int130_rip]     ; rip
+
+    ; At this point we need to update the gs segment 
+    ; for the one that belongs to the current thread in user mode.
+    ; #ps: In the case of syscalls we don't have thread switching.
+
+    ; swapgs
+
     iretq
+
 .int130Ret: dq 0
 .int130_cs: dq 0
 .int130_rip: dq 0
@@ -531,6 +574,13 @@ RequestHall_int131:
 ; It's executed with the interrupts disabled.
 
     cli 
+
+    ; #todo:
+    ; This is because we need to know the
+    ; information about the current core.
+    ; gs is the segment and the base address contain structured data.
+
+    ; swapgs
 
 ; #ps:
 ; For now We dont need disable interrupts in our syscalls,
@@ -633,7 +683,15 @@ RequestHall_int131:
 ; Restore the stack frame and exit to user mode
     push qword [.int131_cs]      ; cs
     push qword [.int131_rip]     ; rip
+
+    ; At this point we need to update the gs segment 
+    ; for the one that belongs to the current thread in user mode.
+    ; #ps: In the case of syscalls we don't have thread switching.
+
+    ; swapgs
+
     iretq
+
 .int131Ret: dq 0
 .int131_cs: dq 0
 .int131_rip: dq 0

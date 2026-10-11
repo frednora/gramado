@@ -175,6 +175,13 @@ PeripheralHall_irq0:
 
     cli
 
+    ; #todo:
+    ; This is because we need to know the
+    ; information about the current core.
+    ; gs is the segment and the base address contain structured data.
+
+    ; swapgs
+
 ; No caso do dispatcher lançar uma nova thread,
 ; então ele deve acionar enviar um EIO.
     ; mov dword [_irq0PendingEOI], 1
@@ -192,32 +199,39 @@ PeripheralHall_irq0:
     mov rax, qword [_contextCS]  ; Get CPL
     and rax, 3                   ; Select 2 bits
 
+    ; This is a ring 0 thread
     cmp rax, 0
     je .R0Thread
+
+    ; This is a ring 3 thread
     cmp rax, 3
     je .R3Thread 
+
+; Fail: Fatal error
+; .InvalidCPL:
     pop rax
     jmp .InvalidThread
 
 ; ------------------------------------------------
-; Stackframe for ring 0 has only 3 elements.
+; Stackframe for ring 0 has only 3 elements
 .R0Thread:
     pop rax
+    mov qword [_gszLastStackFrame], 3  ; 3 elements
     mov qword [_contextRSP], rsp   ; save current kernel stack pointer
     mov qword [_contextSS], ss     ; save kernel stack segment
-    mov qword [_gszLastStackFrame], 3  ; 3 elements
     jmp .AfterStackFrame
 
 ; ------------------------------------------------
-; Stack frame for ring 3 has 5 elements.
+; Stack frame for ring 3 has 5 elements
 .R3Thread:
     pop rax
+    mov qword [_gszLastStackFrame], 5  ; 5 elements
     pop qword [_contextRSP]     ; rsp
     pop qword [_contextSS]      ; ss
-    mov qword [_gszLastStackFrame], 5  ; 5 elements
     jmp .AfterStackFrame
 
 ; ------------------------------------------------
+; Capture the context
 .AfterStackFrame:
     mov qword [_contextRDX], rdx 
     mov qword [_contextRCX], rcx 
@@ -250,8 +264,8 @@ PeripheralHall_irq0:
     mov word [_contextGS], ax
     mov ax, fs
     mov word [_contextFS], ax
-; DS and ES are largely ignored for data addressing in long mode; 
-; loading them is typically redundant.
+; DS and ES are largely ignored for data addressing in long mode.
+; Loading them is typically redundant.
     mov ax, es
     mov word [_contextES], ax
     mov ax, ds
