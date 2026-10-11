@@ -1,4 +1,9 @@
 // x64cont.c
+// Context Swap operations. (saving/restoring)
+// A thread switch changes which thread is executing, while 
+// a context swap is the mechanism that saves the state 
+// of the current execution and restores the state of 
+// another execution so that the switch can occur.
 // Context support for x86_64 arch.
 // Created by Fred Nora.
 
@@ -72,6 +77,7 @@ unsigned char context_fpu_buffer[512];
 // Here this context is placed in the structure that organizes the threads.
 // Facility's unit 1: (Intake) 
 // + Capture the context
+
 void arch_save_context(int lapic_info_id)
 {
     struct thread_d  *t;
@@ -253,6 +259,7 @@ void arch_save_context(int lapic_info_id)
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE != 1){
             panic("arch_save_context: cpl 0\n");
         }
+        // #todo: Maybe here we need to introduce the idea of previous mode.
         t->transition_counter.to_supervisor++;
 
         // #ps: We are also doing this in hw1.asm
@@ -273,6 +280,7 @@ void arch_save_context(int lapic_info_id)
         // If a Ring 3 thread is interrupted by IRQ0, the CPU switches 
         // privilege levels (Ring 3 → Ring 0). That’s a transition into 
         // supervisor mode.
+        // #todo: Maybe here we need to introduce the idea of previous mode.
         t->transition_counter.to_supervisor++;  // (save path)  
 
         // #ps: We are also doing this in hw1.asm
@@ -435,6 +443,7 @@ void arch_restore_context(int lapic_info_id)
         if (CONFIG_ALLOW_RING0_CONTEXT_RESTORE != 1){
             panic ("arch_restore_context: t->cpl 0\n");
         }
+        // #todo: Maybe here we need to introduce the idea of previous mode.
         t->transition_counter.to_supervisor++;
     }
 // Transition counter
@@ -447,6 +456,7 @@ void arch_restore_context(int lapic_info_id)
     }
 // Transition counter
     if (t->cpl == 3){
+        // #todo: Maybe here we need to introduce the idea of previous mode.
         t->transition_counter.to_user++;  // (restore path)  
     }
 

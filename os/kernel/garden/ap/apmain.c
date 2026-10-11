@@ -11,11 +11,12 @@ static void __ap_DPC_loop(int lapic_id);
 static void __ap_kmain_imp(void);
 
 
-static void __ap_dummy_r0_thread(void);
+static void __ap_r0_idle_loop(void);
 
 // ========================================
 
-static void __ap_dummy_r0_thread(void)
+// #test: Dummy ring 0 thread for APs
+static void __ap_r0_idle_loop(void)
 {
     printk("AP: Dummy thread for AP core\n");
     while(1){
@@ -439,8 +440,8 @@ static void __ap_kmain_imp(void)
 
     unsigned long stack_base =
         (unsigned long) kmalloc(4096);
-    unsigned long entry_point =
-        (unsigned long) &__ap_dummy_r0_thread;
+    unsigned long entry_point = 
+        (unsigned long) &__ap_r0_idle_loop;
     ppid_t OwnerPID = GRAMADO_PID_KERNEL;
 
     struct thread_d *t =
@@ -516,7 +517,7 @@ AP
 // Go to the dummy thread
 //
 
-    __ap_dummy_r0_thread();
+    __ap_r0_idle_loop();
 
 
 // Something went wrong with this AP.

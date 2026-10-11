@@ -174,7 +174,7 @@ void pit_speaker_off (void)
  *
  *   Responsibilities:
  *   - Update timer logic and system counters (via DeviceInterface_PIT).
- *   - Drive periodic scheduling (tsTaskSwitch).
+ *   - Drive periodic scheduling (tsThreadSwitch).
  *   - Optionally poll PS/2 keyboard/mouse if configured.
  *   - Handle special EOI cases when spawning threads inside the PIT handler.
  *
@@ -189,6 +189,7 @@ void pit_speaker_off (void)
 // __VOID_IRQ
 unsigned long irq0_TIMER(void)
 {
+    unsigned long rv;
 
 // Set the current IRQL to timer interrupt level.
 
@@ -247,8 +248,8 @@ unsigned long irq0_TIMER(void)
 // For now the context is saved only on global variables. That is the moment 
 // when the context will be saved into the thread structure.
 // See: disp/ts.c
-    unsigned long rv = 0;
-    rv = (unsigned long) tsTaskSwitch();
+
+    rv = (unsigned long) tsThreadSwitch();
 
 // Reset the EOI state flag. 
 // After task switching, the spawn routine no longer needs to send EOI. 

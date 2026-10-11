@@ -203,7 +203,7 @@ irq0_release:
 ; Se a flag indicar que sim,
 ; então iremos efetuar um iretq para dentro
 ; do processo window server.
-; Quem aciona essa flag é tsTaskSwitch() em ts.c.
+; Quem aciona essa flag é tsThreadSwitch() em ts.c.
 ; Depois que o contexto esta salve e se certificou
 ; que estamos rodando a thread de controle do window server.
 ; #importante: Antes da troca de tarefa, 

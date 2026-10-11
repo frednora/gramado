@@ -1,5 +1,7 @@
 // ts.c
-// Task switching.
+// Thread Switching operation.
+// Changing the thread that will use the processor.
+// old term: Task switching.
 // Actually it's thread scwitching.
 // Created by Fred Nora.
 
@@ -18,8 +20,8 @@ unsigned long task_switch_status=0; // locked
 static void __tsOnFinishedExecuting(struct thread_d *t);
 static void __tsCry(unsigned long flags);
 
-// Task switching implementation
-static unsigned long __task_switch(int lapic_info_id);
+// The thread switching implementation
+static unsigned long __thread_switch(int lapic_info_id);
 
 //
 // =============================================
@@ -303,7 +305,7 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 //
 
 /*
- * __task_switch:
+ * __thread_switch:
  * + Switch the thread
  * + Save and restore context
  * + Preempt thread if the quantum is over
@@ -316,7 +318,7 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
  // Worker:
 // Called by psTaskSwitch()
 
-static unsigned long __task_switch(int lapic_info_id)
+static unsigned long __thread_switch(int lapic_info_id)
 {
     //unsigned long rv = 0;
 
@@ -324,7 +326,7 @@ static unsigned long __task_switch(int lapic_info_id)
 
     if (__lapic_info_id < 0 || __lapic_info_id >= NR_CPUS)
     {
-        panic("__task_switch: __lapic_info_id\n");
+        panic("__thread_switch: __lapic_info_id\n");
     }
 
     tid_t CurrentTID = lapic_info[__lapic_info_id].current_tid;
@@ -928,7 +930,7 @@ dispatch_current:
     {
         // The idle thread can't sleep
         if (TargetThread == InitThread)
-            panic("__task_switch: Init thread [idle] is sleeping #test\n");
+            panic("__thread_switch: Init thread [idle] is sleeping #test\n");
 
         TargetThread = InitThread;
         TargetThread->state = READY;
@@ -1044,7 +1046,7 @@ fail:
 }
 
 /*
- * tsTaskSwitch:
+ * tsThreadSwitch:
  * Interface para chamar a rotina de Task Switch.
  * Gerencia a rotina de troca de thread, realizando operações de salvamento e 
  * restauração de contexto utilizado variáveis globais e 
@@ -1070,7 +1072,7 @@ fail:
 */
 
 // Return value:
-// The task switching routine (__task_switch) is 
+// The task switching routine (__thread_switch) is 
 // returning values that the assembly caller 
 // interprets as optimization flags. 
 // #important: The bit 7 decides is the caller will
@@ -1088,7 +1090,7 @@ fail:
 // Called by irq0_TIMER() int pit.c.
 // See also: hw.asm
 
-unsigned long tsTaskSwitch(void)
+unsigned long tsThreadSwitch(void)
 {
     unsigned long rv = 0;
     pid_t current_process_pid = -1;
@@ -1107,15 +1109,16 @@ unsigned long tsTaskSwitch(void)
 
     // #debug
     // Only valid for BSP processor for now.
+
     if (__lapic_info_id != 0)
     {
-        x_panic("tsTaskSwitch: Not in BSP\n");
+        x_panic("tsThreadSwitch: Not in BSP\n");
     }
 
 
     if (__lapic_info_id < 0 || __lapic_info_id >= NR_CPUS)
     {
-        panic("tsTaskSwitch: __lapic_info_id\n");
+        panic("tsThreadSwitch: __lapic_info_id\n");
     }
 
     // The current thread for this core
@@ -1179,8 +1182,10 @@ unsigned long tsTaskSwitch(void)
     }
 */
 
-// The task switching routine
-    rv = (unsigned long) __task_switch( __lapic_info_id );
+// Call the thread switching worker
+// IN: core id
+
+    rv = (unsigned long) __thread_switch( __lapic_info_id );
 
 
 /*

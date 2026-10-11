@@ -27,8 +27,9 @@ void tsCallExtraRoutines(void);
 
 // Main task switching routine
 // Called by irq0_TIMER() int pit.c.
-// See also: hw.asm
-unsigned long tsTaskSwitch(void);
+// See also: hw2.asm
+
+unsigned long tsThreadSwitch(void);
 
 //
 // $
