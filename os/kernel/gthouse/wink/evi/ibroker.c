@@ -4162,6 +4162,7 @@ wmMouseEvent(
                         return 0;
 
                     // Send it only to the taskbar
+                    // #todo: This is still a work in progress
                     } else if (window_hover->hit_area == HIT_DESKTOP) {
 
                         rel_long1 = long1;

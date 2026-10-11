@@ -4999,7 +4999,7 @@ int gwssrv_initialize_default_color_scheme(void)
 // size: 32 elements.
 // see: globals.h themes/honey.h
 
-// 0
+// 0 #todo: Maybe we can use this for something
     cs->elements[csiNull] = 0;
 
 // 1 - Screen background. (Wallpaper)
@@ -5011,18 +5011,18 @@ int gwssrv_initialize_default_color_scheme(void)
 // 3 - Window background
     cs->elements[csiWindowBackground] = HONEY_COLOR_WINDOW_BACKGROUND;
 
-// 4 - Border for active window.
+// 4 - Border for active window
     cs->elements[csiActiveWindowBorder] = HONEY_COLOR_ACTIVE_WINDOW_BORDER;
 
-// 5 - Border for inactive window.
+// 5 - Border for inactive window
     cs->elements[csiInactiveWindowBorder] = 
         HONEY_COLOR_INACTIVE_WINDOW_BORDER;
 
-// 6 - Titlebar for active window.
+// 6 - Titlebar for active window
     cs->elements[csiActiveWindowTitleBar] = 
         HONEY_COLOR_ACTIVE_WINDOW_TITLEBAR;
 
-// 7 - Titlebar for inactive window.
+// 7 - Titlebar for inactive window
     cs->elements[csiInactiveWindowTitleBar] = 
         HONEY_COLOR_INACTIVE_WINDOW_TITLEBAR;
 
@@ -5044,19 +5044,19 @@ int gwssrv_initialize_default_color_scheme(void)
 // 13 - System font. (Not a good name!)
     cs->elements[csiSystemFontColor] = HONEY_COLOR_SYSTEMFONT;
 
-// 14 - Terminal font.
+// 14 - Terminal font
     cs->elements[csiTerminalFontColor] = HONEY_COLOR_TERMINALFONT;
 
 // 15 - Button. (Normal and when the mouse leave)
     cs->elements[csiButton] = HONEY_COLOR_BUTTON;
 
-// 16 - Window border.
+// 16 - Window border
     cs->elements[csiWindowBorder] = HONEY_COLOR_WINDOW_BORDER;
 
 // 17 - wwf border
     cs->elements[csiWWFBorder] = HONEY_COLOR_WWF_BORDER;
 
-// 18 - Titlebar text color.
+// 18 - Titlebar text color
     cs->elements[csiTitleBarTextColor] = HONEY_COLOR_TITLEBAR_TEXT;
 
 //
@@ -5085,13 +5085,11 @@ int gwssrv_initialize_default_color_scheme(void)
 
     // ...
 
-    cs->used  = TRUE;
+    cs->used = TRUE;
     cs->magic = 1234;
     cs->initialized=TRUE;
-
-// Salvando na estrutura padrão para o esquema humility.
+    // Update global pointer for default color scheme
     GWSCurrentColorScheme = (void*) cs;
-
     return 0;
 
 fail:

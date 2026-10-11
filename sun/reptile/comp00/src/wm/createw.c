@@ -3148,12 +3148,19 @@ void *CreateWindow (
 // If the window is overlapped or button
 // we use the color scheme. Otherwise
 // we use the colors given by the caller.
+
     unsigned int FrameColor;
     unsigned int ClientAreaColor;
+
+    // #todo:
+    // Lets apply consistency for some types of windows
 
     if (type == WT_OVERLAPPED){
         FrameColor = (unsigned int) get_color(csiWindowBackground);
         ClientAreaColor = (unsigned int) get_color(csiWindow);
+    } else if (type == WT_POPUP) {
+        FrameColor = (unsigned int) get_color(csiWindowBackground);
+        ClientAreaColor = (unsigned int) get_color(csiWindow);    
     } else if (type == WT_BUTTON) {
         FrameColor = (unsigned int) get_color(csiButton);
         ClientAreaColor = (unsigned int) get_color(csiWindow);
@@ -3182,12 +3189,12 @@ void *CreateWindow (
     if ((void*) _name == NULL){
         return NULL;
     }
-    memset(_name,0,256);
+    memset(_name, 0, 256);
     if ((void*) title != NULL){
-        strcpy(_name,title);
+        strcpy(_name, title);
     }
     if ((void*) title == NULL){
-        strcpy(_name,"No title");
+        strcpy(_name, "No title");
     }
 // =================
 
@@ -3214,6 +3221,7 @@ void *CreateWindow (
 // Colocar mascara nos valores passados via parâmetro.
 // #todo: ValidType=FALSE;
 // See: wt.h
+
     switch (type){
     case WT_SIMPLE:  // 1
     case WT_POPUP:
