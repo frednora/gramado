@@ -22,7 +22,7 @@ const char *mod0_image_name = "DUNGEON BIN";
 struct mod_fn_d  mod0_modfn;
 
 static int __mod_initialize_first_module(void);
-static int __load_mod0_image(const char *image_name);
+static int __load_mod0_image(const char *image_name, unsigned long image_va);
 
 // ==================================
 
@@ -257,7 +257,7 @@ fail:
 // Save some of this information in the process structure. 
 // see: exec_elf.h and process.h
 // OUT: 0 = ok | -1 = fail
-static int __load_mod0_image(const char *image_name)
+static int __load_mod0_image(const char *image_name, unsigned long image_va)
 {
     int fileret = -1;
 
@@ -265,7 +265,8 @@ static int __load_mod0_image(const char *image_name)
 // #warning
 // This is a static address. Why not?
 // Hack!
-    const unsigned long ImageAddress = (unsigned long) MOD0_BASE_ADDRESS;
+    unsigned long ImageAddress = 
+        (unsigned long) image_va;  //MOD0_BASE_ADDRESS;
 
 // #bugbug
 // We have a limit for the image size.
@@ -366,7 +367,7 @@ int mod_initialize(void)
 // Check the information in the elf header.
 // Save some of this information in the process structure. 
 // see: exec_elf.h and process.h
-    Status = (int) __load_mod0_image(mod0_image_name);
+    Status = (int) __load_mod0_image(mod0_image_name, MOD0_BASE_ADDRESS);
     if (Status<0){
         panic ("__load_mod0_image: Couldn't load\n");
     }

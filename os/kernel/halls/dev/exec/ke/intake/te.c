@@ -1327,8 +1327,7 @@ struct te_d *create_process (
     personality_t Personality = personality;
 
     // #debug
-    debug_print ("create_process:\n");
-    printk      ("create_process:\n");
+    printk ("create_process:\n");
 
 //=================================
 // check parameters
@@ -1441,17 +1440,17 @@ struct te_d *create_process (
 // Short name pointer
     Process->name = (char *) name;
 
-// ------------
-
     //Process->cmd = NULL;  //nome curto que serve de comando.
     //Process->pathname = NULL; 
 
+// ------------
+// #todo: We need to consider the parent's priority
     BasePriority = (unsigned long) priority; 
     Process->base_priority = BasePriority;
-
     Priority = (unsigned long) priority;
     Process->priority = Priority;
 
+// ------------
     Process->personality = (int) Personality;
 
 // ------------
@@ -1465,7 +1464,7 @@ struct te_d *create_process (
 // iopl
 // Qual é o privilágio padrão?
 // Weak protection!
-    Process->rflags_iopl = (unsigned int) 3;  //weak protection 
+    Process->rflags_iopl = (unsigned int) 3;  // weak protection 
 
     // Not a protected process!
     Process->_protected = 0;
@@ -1475,9 +1474,6 @@ struct te_d *create_process (
 
 // #todo: Via argument
      Process->plane = FOREGROUND_PROCESS;
-
-    //Error.
-    //Process->error = 0;
 
     Process->exit_in_progress = FALSE;
 
@@ -1528,32 +1524,36 @@ struct te_d *create_process (
 // #obs:
 // Vari�vel recebida via argumento.
 
-//
-// pml4_va
-//
+// #test
+// Validating the va for the arguments
 
-    if (pml4_va == 0)
-    {
-        debug_print("create_process: [FAIL] pml4_va\n");
-        printk     ("create_process: [FAIL] pml4_va\n");
+    if (pml4_va == 0){
+        printk("create_process: pml4_va\n");
+        goto fail;
+    }
+    if (pdpt0_va == 0){
+        printk("create_process: pdpt0_va\n");
+        goto fail;
+    }
+    if (pd0_va == 0){
+        printk("create_process: pd0_va\n");
         goto fail;
     }
 
 // pml4
     Process->pml4_VA = (unsigned long) pml4_va;
     Process->pml4_PA = (unsigned long) virtual_to_physical ( 
-                                               pml4_va, 
-                                               gKernelPML4Address );
+                                        pml4_va, gKernelPML4Address );
+
 // pdpt0
     Process->pdpt0_VA = (unsigned long) pdpt0_va;
     Process->pdpt0_PA = (unsigned long) virtual_to_physical ( 
-                                               pdpt0_va, 
-                                               gKernelPML4Address );
+                                        pdpt0_va, gKernelPML4Address );
+
 // pd0
     Process->pd0_VA = (unsigned long) pd0_va;
     Process->pd0_PA = (unsigned long) virtual_to_physical ( 
-                                               pd0_va, 
-                                               gKernelPML4Address );
+                                        pd0_va, gKernelPML4Address );
 
 // cancelados. 
     // Process->mmBlocks[32]
@@ -1664,17 +1664,15 @@ struct te_d *create_process (
 // poderia ficar no fim de seu heap ???
 
     if (g_heappool_va == 0){
-        debug_print ("clone_and_execute_process: g_heappool_va\n");
-        panic ("clone_and_execute_process: g_heappool_va\n");
+        panic ("create_process: g_heappool_va\n");
     }
 
 // Ignoraremos esse pois vai falhar na criacao do primeiro heap.
     //if (g_heap_count == 0)
-        //panic("clone_and_execute_process: g_heap_count");
+        //panic("create_process: g_heap_count");
 
     if (g_heap_size == 0){
-        debug_print ("clone_and_execute_process: g_heap_size\n");
-        panic ("clone_and_execute_process: g_heap_size\n");
+        panic ("create_process: g_heap_size\n");
     }
 
 // #bugbug
@@ -1763,6 +1761,8 @@ struct te_d *create_process (
 
 // Resource management
     Process->cg = (struct cgroup_d *) cg;  // Got via argument
+
+    //Process->error = 0;  // Error
 
 // #todo
     // last_created = PID;

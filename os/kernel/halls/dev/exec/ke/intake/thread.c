@@ -1494,8 +1494,7 @@ struct thread_d *create_thread (
     struct rect_d *r;
 
     // #debug
-    debug_print ("create_thread:\n");
-    //printk ("create_thread:\n");
+    printk ("create_thread:\n");
 
 //======================================
 // check parameters

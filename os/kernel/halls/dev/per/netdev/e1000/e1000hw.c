@@ -270,11 +270,11 @@ __E1000AllocCont (
         panic ("__E1000AllocCont: [FAIL] pa\n");
     }
     
-// #debug
 // #bugbug: 
-// It's producing an invalid address, above the 2MB mark.
-    printk("pa=%x\n",pa);
-    //while(1){}
+// Check if it's producing an invalid address, above the 2MB mark.
+
+    // printk("pa=%x\n",pa);
+    // while(1){}
 
     return (unsigned long) pa;
 }

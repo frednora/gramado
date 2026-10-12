@@ -1680,7 +1680,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         if (Status != TRUE)
             panic_at_init(Error60_lateinit,KERNEL_SUBSYSTEM_KMAIN);       
 
-        return TRUE; // The kernel was initialized successfully.
+        return TRUE;  // The kernel was initialized successfully.
 
     // AP initialization (lateinit)
     } else {

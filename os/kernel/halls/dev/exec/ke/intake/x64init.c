@@ -69,7 +69,7 @@ const char *init_image_name = "INIT    BIN";
 
 static int __setup_stdin_cmdline(void);
 static int I_initKernelComponents(void);
-static int __load_initbin_image(void);
+static int __load_initbin_image(unsigned long image_va);
 static int I_x64CreateTID0(void);
 
 // =========================================
@@ -211,7 +211,7 @@ fail:
 // Check the information in the elf header.
 // Save some of this information in the process structure. 
 // see: exec_elf.h and process.h
-static int __load_initbin_image(void)
+static int __load_initbin_image(unsigned long image_va)
 {
 
 // The virtual address for the init process image.
@@ -224,7 +224,7 @@ static int __load_initbin_image(void)
 // #bugbug
 // Explain it better.
     unsigned long ImageAddress = 
-        (unsigned long) FLOWERTHREAD_BASE;
+        (unsigned long) image_va;  //FLOWERTHREAD_BASE;
 
 // #bugbug
 // We have a limit for the image size.
@@ -269,7 +269,7 @@ static int __load_initbin_image(void)
         (int) fsLoadFile( 
                 VOLUME1_FAT_ADDRESS, 
                 VOLUME1_ROOTDIR_ADDRESS, 
-                FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
+                FAT16_ROOT_ENTRIES,    //#bugbug: number of entries
                 init_image_name, 
                 (unsigned long) ImageAddress,  // buffer
                 BUGBUG_IMAGE_SIZE_LIMIT );     // buffer limits
@@ -302,9 +302,7 @@ int I_x64CreateInitialProcess(void)
 {
     pid_t InitProcessPID = -1;
 
-    // #debug
-    //debug_print ("I_x64CreateInitialProcess: \n");
-    //printk      ("I_x64CreateInitialProcess:\n");
+    printk("I_x64CreateInitialProcess: <<<\n");
 
     InitialProcessInitialized = FALSE;
 
@@ -326,7 +324,7 @@ int I_x64CreateInitialProcess(void)
 // sao iguais para esse endereço.
 
     int ret0 = -1;
-    ret0 = (int) __load_initbin_image();
+    ret0 = (int) __load_initbin_image(FLOWERTHREAD_BASE);
     if (ret0 != 0){
         printk("I_x64CreateInitialProcess: Coldn't load INIT.BIN\n");
         return FALSE;
@@ -961,7 +959,7 @@ int I_x64CreateKernelProcess(void)
     unsigned long Priority     = PRIORITY_MAX;
     register int i=0;
 
-    //debug_print ("I_x64CreateKernelProcess:\n");
+    printk("I_x64CreateKernelProcess: <<<\n");
 
 //
 // Kernel process
@@ -1057,30 +1055,6 @@ int I_x64CreateKernelProcess(void)
 
 // cwd
     fs_initialize_process_cwd ( TEKernelProcess->pid, "/" ); 
-
-// ==================
-// The flower thread.
-// This is the flower thread for the 
-// window server image.
-
-    /*
-    Status = I_x64CreateTID0();
-    if ( Status != TRUE ){
-        printk("Couldn't Create the WS thread\n");
-        return FALSE;
-    }
-    */
-
-
-/*
-// # Moved to main().
-// Initialize support for loadable kernel modules.
-// See: mod.c 
-    int mod_status = -1;
-    mod_status = (int) mod_initialize();
-    if (mod_status < 0)
-        panic("I_x64CreateKernelProcess: mod\n");
-*/
 
 // ...
 
