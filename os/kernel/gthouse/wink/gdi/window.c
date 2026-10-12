@@ -160,6 +160,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
 // ----------------------------------------------
 // Walk the list of window proxy objects and check against the mouse cursor.
     w = (struct WND_d *) window_head;
+    w->hit_area = 0;  // Nothing for now
     while (w != NULL)
     {
         if (w->magic == 1234)
@@ -196,6 +197,7 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
             }
         }
         w = w->next;  // Walk forward in the list
+        w->hit_area = 0;  // Nothing for now
     };
 
 // New hover

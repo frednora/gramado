@@ -397,8 +397,15 @@ void on_mouse_released(void)
 // Get position.
 // If the mouse is hover an editbox or something
 // Is it relative to what?
-    saved_x = comp_get_mouse_x_position();
-    saved_y = comp_get_mouse_y_position();
+
+// #ps: Mouse position normally are absolute
+
+    //saved_x = comp_get_mouse_x_position();
+    //saved_y = comp_get_mouse_y_position();
+
+    // #ps: Using relative values
+    saved_x = __new_mouse_x_relative;
+    saved_y = __new_mouse_y_relative;
 
 // -------------------
 // Se clicamos em uma janela editbox.
@@ -406,6 +413,7 @@ void on_mouse_released(void)
     static int isInsideMouseHover=FALSE;
 
 // Check if we are inside the mouse hover
+
     if ( saved_x >= WindowManager.mouse_hover->left &&
          saved_x <= (WindowManager.mouse_hover->left + WindowManager.mouse_hover->width) &&
          saved_y >= WindowManager.mouse_hover->top &&
@@ -413,6 +421,7 @@ void on_mouse_released(void)
     {
 
         // printf("Inside mouse hover window :)\n");
+        yellow_status("released inside");
     
         isInsideMouseHover = TRUE;
 
@@ -651,6 +660,7 @@ void on_mouse_released(void)
     {
         if (WindowManager.mouse_hover->type == WT_BUTTON)
         {
+            yellow_status("released inside min");
             __button_released(obj_WID);
             //yellow_status("Release on min control\n");
             on_control_clicked(WindowManager.mouse_hover);
@@ -664,6 +674,7 @@ void on_mouse_released(void)
     {
         if (WindowManager.mouse_hover->type == WT_BUTTON)
         {
+            yellow_status("released inside max");
             __button_released(obj_WID);
             //yellow_status("Release on max control\n");
             on_control_clicked(WindowManager.mouse_hover);
@@ -677,6 +688,7 @@ void on_mouse_released(void)
     {
         if (WindowManager.mouse_hover->type == WT_BUTTON)
         {
+            yellow_status("released inside clo");
             __button_released(obj_WID);
             //yellow_status("Release on close control\n");
 
@@ -719,6 +731,8 @@ void on_mouse_released(void)
         }
     }
     */
+
+    yellow_status("released undefined");
 }
 
 static void on_mouse_hover(struct gws_window_d *window)
@@ -4327,10 +4341,10 @@ wm_hit_test_2(
     {
         if (w->magic == 1234 && w->type == WT_OVERLAPPED) 
         {
-            if (long1 >= w->left && 
-                long1 <= (w->left + w->width) &&
-                long2 >= w->top && 
-                long2 <= (w->top + w->height) )
+            if (long1 >= 0 && 
+                long1 <= w->width &&
+                long2 >= 0 && 
+                long2 <= w->height )
             {
 
                 yellow_status("Inside overlapped");

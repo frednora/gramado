@@ -56,6 +56,11 @@ static long __new_mouse_x=0;
 static long __new_mouse_y=0;
 static int __mouse_initialized = FALSE;
 
+
+long __new_mouse_x_relative=0;
+long __new_mouse_y_relative=0;
+
+
 // Apaga mouse pointer.
 // Let's clear the area where the mouse was painted.
 // Flushing the area from backbuffer to LFB.

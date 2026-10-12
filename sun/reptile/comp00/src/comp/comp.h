@@ -10,6 +10,9 @@
 
 extern int need_rootwindow_redraw;
 
+extern long __new_mouse_x_relative;
+extern long __new_mouse_y_relative;
+
 //
 // Compositor responsibilities:
 //

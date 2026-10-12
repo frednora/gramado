@@ -4271,10 +4271,29 @@ wmMouseEvent(
                         // Inside the frame, send message to the server.
                         if (window_hover->hit_area == HIT_FRAME)
                         {
-                            ibroker_post_message_to_ds( 
+
+                            rel_long1 = long3 - (window_hover->l + window_hover->ca_l);
+                            rel_long2 = long4 - (window_hover->t + window_hover->ca_t);
+
+                            if (DisplayServerInfo.initialized != TRUE){
+                                return 0;  //goto fail;
+                            }
+
+                            //ibroker_post_message_to_ds( 
+                                //event_id, 
+                                //button_number, 
+                                //button_number );
+
+                            ipc_post_message_to_tid2(
+                                (tid_t) __HARDWARE_TID, 
+                                (tid_t) DisplayServerInfo.tid,  //window_hover->owner.tid,
                                 event_id, 
-                                button_number, 
-                                button_number );
+                                (unsigned long) button_number, 
+                                (unsigned long) button_number,
+                                (unsigned long) rel_long1,  // long3
+                                (unsigned long) rel_long2   // long4 
+                                );
+
                             return 0;
                         }
 

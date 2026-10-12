@@ -2188,7 +2188,7 @@ void *doCreateAndDrawWindow (
         (unsigned long) (window->height / 8);  //>>3
 
 // =================================
-// Frame area. (wrong)
+// Frame area. (wrong) 
     window->rcWindow.left   = (unsigned long) 0;
     window->rcWindow.top    = (unsigned long) 0;
     window->rcWindow.width  = (unsigned long) WindowWidth;

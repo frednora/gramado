@@ -130,6 +130,8 @@ wmProcessMouseEvent(
             DragAndDropInfo.is_dragging = TRUE;
 
             // Update drop target position
+            // Save the starting coordinates for tolerance checks
+            // #bugbug: lon1 and long2 are relative values
             DragAndDropInfo.absolute_target_drop_left = long1;  //x;
             DragAndDropInfo.absolute_target_drop_top  = long2;  //y;
 
@@ -216,7 +218,11 @@ wmProcessMouseEvent(
 
     if (event_type == GWS_MousePressed)
     {
-        comp_set_mouse_position(long3, long4);
+        // For mouse pressed long3 and long4 are relative values.
+        // For setting mouse position it needs to be the absolute values.
+
+        //comp_set_mouse_position(long3, long4);
+        //wm_hit_test_2(long3, long4);  // #ps: Using relative values
 
         // -- Drag support ----
 
@@ -224,8 +230,11 @@ wmProcessMouseEvent(
         DragAndDropInfo.is_pressed = TRUE;
         DragAndDropInfo.is_dragging = FALSE;  // not dragging yet
         // Save the starting coordinates for tolerance checks
-        DragAndDropInfo.absolute_target_drop_left = long1;  //x;
-        DragAndDropInfo.absolute_target_drop_top  = long2;  //y;
+        // #todo: long3 and long4 are relatives.
+        // this event do not carry the absolute values.
+        // #todo: get it from another place
+        DragAndDropInfo.absolute_target_drop_left = long3;  //x;
+        DragAndDropInfo.absolute_target_drop_top  = long4;  //y;
 
         // -- Double click support ----
 
@@ -249,7 +258,11 @@ wmProcessMouseEvent(
 // Process and send message.
     if (event_type == GWS_MouseReleased)
     {
-        comp_set_mouse_position(long3, long4);
+        // For mouse released long3 and long4 are relative values.
+        // For setting mouse position it needs to be the absolute values.
+
+        //comp_set_mouse_position(long3, long4);
+        //wm_hit_test_2(long3, long4);  // #ps: Using relative values
 
         // The button is no longer pressed
         DragAndDropInfo.is_pressed  = FALSE;
@@ -276,11 +289,14 @@ wmProcessMouseEvent(
         // Optional: reset cursor size/appearance back to default
         // __cursor_size = 8;
 
+        __new_mouse_x_relative = long3;
+        __new_mouse_y_relative = long4;
 
         // Handle any other release logic (focus, click, etc.)
         on_mouse_released();
         return;
     }
+
 
 // --------------------------------
 // event type: Mouse double clicked
