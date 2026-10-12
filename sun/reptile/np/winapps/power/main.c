@@ -649,11 +649,7 @@ powerProcedure(
         //printf("GWS_MouseClicked: done\n");
         break;
 
-    // #test
     case MSG_MOUSEMOVE:
-        // #bugbug
-        // Kernel is sending us absolute values
-        // instead of relative values.
         //printf("%d %d\n", long1, long2);
         ButtonId = (int) __hit_test_button(long1, long2);
 

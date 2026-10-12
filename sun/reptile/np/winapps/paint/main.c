@@ -535,6 +535,8 @@ paintProcedure(
     case MSG_MOUSEPRESSED:
 
         // It started inside the valid area
+        // #bugbug: This is wrong. long2 is carries the button number (maybe)
+        // Maybe we need to use last_y here
         if (long2 < current_cr_height)
             is_drawing = TRUE;
 

@@ -655,8 +655,8 @@ void __display_mouse_cursor(void)
     if (gUseMouse != TRUE)
         return;
 
-    if (gDisplayMousePointer != TRUE)
-        return;
+    //if (gDisplayMousePointer != TRUE)
+        //return;
 
 // #todo Limits
 // Precisa inicializar os valores sobre o mouse.

@@ -643,8 +643,7 @@ ipc_post_message_to_ds (
 
 // Get the server's TID
     ReceiverTID = (tid_t) DisplayServerInfo.tid;
-    if ( ReceiverTID < 0 || 
-         ReceiverTID >= THREAD_COUNT_MAX )
+    if (ReceiverTID < 0 || ReceiverTID >= THREAD_COUNT_MAX)
     {
         goto fail;
     }

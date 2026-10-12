@@ -68,22 +68,25 @@ int is_combination(int msg_code)
 // Os aplicativos estao recebendo
 // os eventos enviados para as janelas.
 // Mas os aplicativos pegam eventos apenas da 'main window'.
+
 void 
 wmProcessMouseEvent(
     int event_type, 
-    unsigned long x, 
-    unsigned long y )
+    unsigned long long1, 
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4 )
 {
-// Process mouse events.
+// Process mouse events
 
 // Quando movemos o mouse, então atualizamos o ponteiro que indica
 // a janela mouse_hover. Esse ponteiro será usado pelos eventos
 // de botão de mouse.
 
-// Window with focus.
+// Window with focus
     //struct gws_window_d *w;
-    unsigned long saved_x = x;
-    unsigned long saved_y = y;
+    unsigned long saved_x = long1;  //x;
+    unsigned long saved_y = long2;  //y;
     unsigned long in_x=0;
     unsigned long in_y=0;
     register int Tail=0;
@@ -112,6 +115,7 @@ wmProcessMouseEvent(
 // #todo: Trazer as rotinas de exibiçao de cursor
 // para ca, depois deixar de usar
 // as rotinas de pintura de cursor que estao no kernel.
+
     if (event_type == GWS_MouseMove)
     {
         // #test
@@ -126,8 +130,8 @@ wmProcessMouseEvent(
             DragAndDropInfo.is_dragging = TRUE;
 
             // Update drop target position
-            DragAndDropInfo.absolute_target_drop_left = x;
-            DragAndDropInfo.absolute_target_drop_top  = y;
+            DragAndDropInfo.absolute_target_drop_left = long1;  //x;
+            DragAndDropInfo.absolute_target_drop_top  = long2;  //y;
 
             yellow_status("Dragging ...");
 
@@ -144,7 +148,6 @@ wmProcessMouseEvent(
         // The compositor is doing its job,
         // painting the pointer in the right position.
         // Lets update the position. See: comp.c
-        comp_set_mouse_position(saved_x, saved_y);
 
         // #test
         // #bugbug: Its not a good time to display
@@ -156,14 +159,19 @@ wmProcessMouseEvent(
         // Actually who needs to draw the pointer is the kernel
         // using the gpu for acceleration
 
+        comp_set_mouse_position( long3, long4 );     // #ok: Paint using absolute
         __display_mouse_cursor();
 
         // Check the window we are inside of and 
         // update the mouse_hover pointer.
 
+        // #test
+        // We are dealing with relative values now
+
         // see: wm.c
         //wm_hit_test_00(saved_x,saved_y);  // original
-        wm_hit_test_2(saved_x, saved_y);  // #test
+        //wm_hit_test_2(saved_x, saved_y);  // #test
+        wm_hit_test_2(long1, long2);  // #ps: Using relative values
 
         // #bugbug
         // The top values is out of limits for
@@ -208,14 +216,16 @@ wmProcessMouseEvent(
 
     if (event_type == GWS_MousePressed)
     {
+        comp_set_mouse_position(long3, long4);
+
         // -- Drag support ----
 
         // Mark that the button is pressed
         DragAndDropInfo.is_pressed = TRUE;
         DragAndDropInfo.is_dragging = FALSE;  // not dragging yet
         // Save the starting coordinates for tolerance checks
-        DragAndDropInfo.absolute_target_drop_left = x;
-        DragAndDropInfo.absolute_target_drop_top  = y;
+        DragAndDropInfo.absolute_target_drop_left = long1;  //x;
+        DragAndDropInfo.absolute_target_drop_top  = long2;  //y;
 
         // -- Double click support ----
 
@@ -239,6 +249,8 @@ wmProcessMouseEvent(
 // Process and send message.
     if (event_type == GWS_MouseReleased)
     {
+        comp_set_mouse_position(long3, long4);
+
         // The button is no longer pressed
         DragAndDropInfo.is_pressed  = FALSE;
 
@@ -741,9 +753,9 @@ fail:
 }
 
 // wmInputReader:
-// (Input port)
 // Get the messages in the queue,
 // respecting the circular queue.
+
 int wmInputReader(void)
 {
 // + Get input events from the thread's event queue.
@@ -774,34 +786,21 @@ int wmInputReader(void)
     int IsCombination=FALSE;
     int IsDeadKey=FALSE;
 
-// NextEvent:
+//
+// Get event
+//
 
-    //status = (int) rtl_get_event();
-    //if (status != TRUE)
-    //{
-        for (i=0; i<extra_attempts; i++)
-        {
-            status = (int) rtl_get_event();
-            if (status == TRUE)
-                goto ProcessEvent;
-        };
-
-// No more attempts.
-    goto fail;
-    //}
-
-// ---------------------
-// Only for mouse move events.
-GetNextEvent:
     status = (int) rtl_get_event();
     if (status != TRUE)
-        goto fail;
+        return 0;
 
 // ---------------------
-// All types if events.
+// All types if events
 ProcessEvent:
 
     msg   = (int) (RTLEventBuffer[1] & 0xFFFFFFFF);
+
+    // Relative values
     long1 = (unsigned long) RTLEventBuffer[2];
     long2 = (unsigned long) RTLEventBuffer[3];
 
@@ -815,7 +814,7 @@ ProcessEvent:
 
 // Is it time to use the yellow dialog?
     if (YellowDialogInfo.useYellowDialog == TRUE){
-        yellow_status_dialog(msg,long1,long2,long2);
+        yellow_status_dialog(msg, long1, long2, long2);
         return 0;
     }
 
@@ -825,30 +824,39 @@ ProcessEvent:
          msg == GWS_MousePressed ||
          msg == GWS_MouseReleased )
     {
-        // Get the current event jiffie.
-        if (msg == GWS_MousePressed){
-            DoubleClick.current = (unsigned long) long3;
+        // Get the current event jiffie
+        if (msg == GWS_MousePressed)
+        {
+            DoubleClick.current = (unsigned long) long1;
         }
 
         unsigned long l1 = long1;
         unsigned long l2 = long2;
+        unsigned long l3 = long3;
+        unsigned long l4 = long4;
 
         // In this case the relative values are in long1 and long2,
         // but for now we are using the absolute valuesm found in long3 and long4.
-        if (msg == GWS_MouseMove)
-        {
-            l1 = long3;
-            l2 = long4;
-        }
+        //if (msg == GWS_MouseMove)
+        //{
+            //l1 = long3;
+            //l2 = long4;
+        //}
 
+        // Relative values
         wmProcessMouseEvent(
-            (int) msg, (unsigned long) l1, (unsigned long) l2 ); 
+            (int) msg, 
+            (unsigned long) l1, 
+            (unsigned long) l2, 
+            (unsigned long) l3,
+            (unsigned long) l4 
+        ); 
 
         // LOOP: Processamos um evento de movimento,
         // provavelmente teremos outro subsequente.
-        if (msg == GWS_MouseMove){
-            goto GetNextEvent;
-        }
+        //if (msg == GWS_MouseMove){
+        //    goto GetNextEvent;
+        //}
         return 0;
     }
 
@@ -1063,7 +1071,10 @@ int wmInputReader2(void)
                 wmProcessMouseEvent(
                     (int) e.msg,
                     (unsigned long) e.long1,
-                    (unsigned long) e.long2 ); 
+                    (unsigned long) e.long2, 
+                    0,   //#todo
+                    0    //#todo 
+                ); 
             }
 
             // keyboard

@@ -215,8 +215,8 @@ ibroker_post_message_to_ds (
         return (int) -1;
     if (msg < 0)
         return (int) -1;
-// Send it to the thread queue of the display server.
-    return (int) ipc_post_message_to_ds(msg,long1,long2);
+// Send it to the thread queue of the display server
+    return (int) ipc_post_message_to_ds(msg, long1, long2);
 }
 
 // Post an event to the foreground thread
@@ -4119,14 +4119,20 @@ wmMouseEvent(
                     // send absolute values to the display server.
                     if (window_hover->hit_area == HIT_FRAME){
 
-                        // #todo: Update also the relative values
+                        rel_long1 = long1 - (window_hover->l + window_hover->ca_l);
+                        rel_long2 = long2 - (window_hover->t + window_hover->ca_t);
+
+                        // Update also the relative values
                         // bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
+                        bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
 
                         //printk("frame\n");
-                        ibroker_post_message_to_ds(
-                            event_id, 
-                            (unsigned long) long1, 
-                            (unsigned long) long2 );
+                        //ibroker_post_message_to_ds(
+                            //event_id, 
+                            //(unsigned long) rel_long1, 
+                            //(unsigned long) rel_long2 );
+
+                        ipc_post_message_to_ds(event_id, rel_long1, rel_long2);
 
                         return 0;
 
@@ -4139,14 +4145,6 @@ wmMouseEvent(
                         // the correct relative calculation is this.
                         rel_long1 = long1 - (window_hover->l + window_hover->ca_l);
                         rel_long2 = long2 - (window_hover->t + window_hover->ca_t);
-
-                        // #hack: Good for taskbar
-                        // #deprecated: We are following the same logic of normal windows.
-                        //if (window_hover == window_shell)
-                        //{
-                        //    rel_long1 = long1 - window_hover->ca_l;
-                        //    rel_long2 = long2 - window_hover->ca_t;
-                        //}
 
                         // Update also the relative values
                         bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);

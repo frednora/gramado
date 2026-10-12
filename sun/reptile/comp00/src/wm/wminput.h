@@ -22,12 +22,14 @@ int is_vowel(char ch);
 inline int is_combination(int msg_code);
 int wmProcessCombinationEvent(int msg_code);
 
-// Process mouse events.
+// Process mouse events
 void 
 wmProcessMouseEvent(
     int event_type, 
-    unsigned long x, 
-    unsigned long y );
+    unsigned long long1, 
+    unsigned long long2,
+    unsigned long long3,
+    unsigned long long4 );
 
 // Process keyboard events.
 unsigned long 
