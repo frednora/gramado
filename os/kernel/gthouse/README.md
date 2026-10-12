@@ -1,11 +1,10 @@
 # gthouse - Gate House
 
 ---------------------------------------
-gramnet/ - High level network infrastructure  
-        http. https, etc ...
+go/     - New experimental interface for Gramado OS kernel.
 
 ---------------------------------------
-kwrap/  - High level wrappers
+sys/    - Intarface for the libc functions and legacy system APIs.
         CS - Client/Server high level infrastructure.
 
 ---------------------------------------
