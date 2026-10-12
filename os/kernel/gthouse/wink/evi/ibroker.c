@@ -4089,7 +4089,6 @@ wmMouseEvent(
             // is the GPU.
     
             // Update mouse position
-            // bldisp_update_mouse_position(long1, long2, 0, 0);
             bldisp_update_mouse_position(long1, long2, 0, 0);
 
             // Display mouse cursor
@@ -4119,21 +4118,13 @@ wmMouseEvent(
                     // send absolute values to the display server.
                     if (window_hover->hit_area == HIT_FRAME){
 
-                        rel_long1 = long1 - (window_hover->l + window_hover->ca_l);
-                        rel_long2 = long2 - (window_hover->t + window_hover->ca_t);
+                        rel_long1 = long1 - window_hover->l;
+                        rel_long2 = long2 - window_hover->t;
 
                         // Update also the relative values
-                        // bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
                         bldisp_update_mouse_position(long1, long2, rel_long1, rel_long2);
 
-                        //printk("frame\n");
-                        //ibroker_post_message_to_ds(
-                            //event_id, 
-                            //(unsigned long) rel_long1, 
-                            //(unsigned long) rel_long2 );
-
                         ipc_post_message_to_ds(event_id, rel_long1, rel_long2);
-
                         return 0;
 
                     // Inside the client area, 

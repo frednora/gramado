@@ -100,6 +100,7 @@ struct dccanvas_d *dc00;  // shared dc
 
 //#define TASKBAR_HEIGHT  28
 #define TASKBAR_HEIGHT  48
+// #define TASKBAR_HEIGHT  80
 
 // Device Info.
 struct device_info_d 

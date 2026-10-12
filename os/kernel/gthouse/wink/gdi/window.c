@@ -165,6 +165,8 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
     {
         if (w->magic == 1234)
         {
+            //unsigned int Color = COLOR_RED;
+
             // Frame/chrome
             Left   = w->l;
             Top    = w->t;
@@ -175,6 +177,10 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
             if ( x >= Left && x <= Right &&
                  y >= Top  && y <= Bottom )
             {
+                //frontbuffer_draw_rectangle(
+                //    Left, Top, Right-Left, Bottom-Top, Color, 0 );                
+                //refresh_rectangle(Left, Top, Right-Left, Bottom-Top);
+
                 hover = w;
 
                 w->hit_area = HIT_FRAME;  // Inside frame/chrome
@@ -194,6 +200,15 @@ void wproxy_hit_test00(unsigned long x, unsigned long y)
 
                 // #debug: visual effect
                 //__wproxy_drawframe0(hover, 2);
+
+                //++ -------------
+                //if (w->hit_area == HIT_CLIENT)
+                //    Color = COLOR_BLUE;
+                //frontbuffer_draw_rectangle(
+                //    Left, Top, Right-Left, Bottom-Top, Color, 0 );                
+                //refresh_rectangle(Left, Top, Right-Left, Bottom-Top);
+                //-- -------------
+
             }
         }
         w = w->next;  // Walk forward in the list
