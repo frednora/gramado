@@ -65,13 +65,19 @@ struct init_d
 // + 1004 - launch display server
     int __selected_option;
 
-// Winu Core: ds00
-// Winu Heavy: demo00 and demo01
+// Winu Core:  ds00
+// Winu Heavy: demo00 and demo01.
+
     int environment;
 
     int argc;         // Save argc from main
 
     int is_headless;  // Headless mode
+
+// The display server is running or not.
+// It will send us a message to update this flag.
+    int is_ds_running;
+
 
 // It's necessary to nnlock some kernel features like 
 // taskswitching and scheduling

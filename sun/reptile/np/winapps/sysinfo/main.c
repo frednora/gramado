@@ -22,7 +22,6 @@ struct dccanvas_d *dc00;
 struct ui_component_d *uic_button_refresh;
 struct ui_component_d *uic_button_close;
 
-
 static int main_window    = -1;
 static int refresh_button = -1;
 static int close_button   = -1;
@@ -33,6 +32,8 @@ static unsigned long cr_left   = 0;
 static unsigned long cr_top    = 0;
 static unsigned long cr_width  = 0;
 static unsigned long cr_height = 0;
+
+static unsigned long __sh_flags = 0;
 
 // ----------------------------------------------------
 // Helpers
@@ -227,12 +228,26 @@ int main(int argc, char *argv[])
     }
     gws_refresh_window(fd, main_window);
 
+
+
+//
+//
+//
+
     // Query client area
     query_client_area(fd);
 
     // Create DC for client area
     struct gws_window_info_d wi;
     gws_get_window_info(fd, main_window, &wi);
+
+
+// ============================================================
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) wi.sh_flags;
+
+
     dc00 = libgui_create_dc(wi.ca_canvas_base_address,
                             wi.ca_canvas_width,
                             wi.ca_canvas_height,
@@ -269,11 +284,38 @@ int main(int argc, char *argv[])
     // Event loop
     int nSysMsg = 0;
     while (1) {
+
+        if (isTimeToQuit == TRUE)
+            break;
+
+        // #test It's working
+        // But its dangeours.
+        // Get value inside the shared area
+
+        //char *p;
+        if (__sh_flags != 0)
+        {
+            char *flags_ptr = (char *) __sh_flags;
+            if (*flags_ptr & 0x0008)
+            {
+                // Clear BLIT bit
+                *flags_ptr &= ~0x0008;
+                // Redraw
+                update_children(fd);
+            }
+            //if (*p == 1)
+            //{
+            //    printf("power: FLAGS\n");
+            //    exit(0);
+            //}
+        }
+
         // Pump events from Display Server
-        pump(fd);
+        // pump(fd);
 
         // Pump events from Input Broker (system events)
-        for (nSysMsg = 0; nSysMsg < 32; nSysMsg++) {
+        //for (nSysMsg = 0; nSysMsg < 32; nSysMsg++) {
+            
             if (rtl_get_event() == TRUE) {
                 systemProcedure(fd,
                     (int) RTLEventBuffer[0],
@@ -282,8 +324,9 @@ int main(int argc, char *argv[])
                     (unsigned long) RTLEventBuffer[3]);
                 RTLEventBuffer[1] = 0; // clear after dispatch
             }
-        }
-    }
+
+        //}
+    };
 
     if (isTimeToQuit == TRUE){
         printf("sysinfo: Close window\n");

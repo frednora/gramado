@@ -1691,11 +1691,12 @@ static int __editor_initialize(void)
 // Get info about the main window.
 // IN: fd, wid, window info structure.
 
-    struct gws_window_info_d  lWi;  // Local
+    struct gws_window_info_d  lWi;
     gws_get_window_info(
         client_fd, 
         main_window,
-        (struct gws_window_info_d *) &lWi );
+        (struct gws_window_info_d *) &lWi 
+    );
 
 
     // Frame/chrome
@@ -1718,9 +1719,8 @@ static int __editor_initialize(void)
     text1_t = 4 + (24/3);
     text1_color = COLOR_BLACK;
 
-// ============================================================
-// #test
-// Update the wproxy structure that belongs to this thread.
+// =======================================================
+// Update the wproxy structure that belongs to this thread
 
     unsigned long m[10];
     int mytid = gettid();
@@ -1743,8 +1743,7 @@ static int __editor_initialize(void)
 // ----------------------------------------
 
 // ============================================================
-// #test
-// Getting the flag earlier. This way we can use it in the loop.
+// Getting the flag earlier. This way we can use it in the loop
 
     __sh_flags = (unsigned long) lWi.sh_flags;
 
@@ -1791,7 +1790,6 @@ static int __editor_initialize(void)
     unsigned long ab_w = (( lWi.cr_width/8 )*3);
     unsigned long ab_h = 24;
 
-
 //
 // Draw address bar rectangle
 //
@@ -1822,7 +1820,7 @@ static int __editor_initialize(void)
     // MyButton_Save.wid     = main_window; // parent window ID
 
     // Relative values
-    MyButton_Save.left = (( lWi.cr_width/8 )*6); //4;
+    MyButton_Save.left = (( lWi.cr_width/8 )*6);  //4
     MyButton_Save.top  = 4;
 
     // Absolute coordinates (relative to screen)
@@ -1874,11 +1872,10 @@ static int __editor_initialize(void)
     unsigned long cw_left = cwViewport.l;
 // top: pad | address bar | pad
     unsigned long cw_top = cwViewport.t;
-// width: Width - borders.
+// width: Width - borders
     unsigned long cw_width = cwViewport.w;
 // height:
-// #bugbug:
-// We gotta get the client window values.
+// #bugbug: We gotta get the client window values
     unsigned long cw_height = cwViewport.h;
 
 /*
@@ -1908,7 +1905,7 @@ static int __editor_initialize(void)
 // ============================================
 // Register canvases in the list
     struct canvas_information_d *ci_client =
-    editorCreateCanvasInfo(dc00, main_window, TRUE);
+        editorCreateCanvasInfo(dc00, main_window, TRUE);
 
     libgui_canvasList[CANVAS_CLIENTAREA] = (unsigned long) ci_client;  // client area canvas
 
@@ -1928,13 +1925,11 @@ static int __editor_initialize(void)
     gws_set_focus( client_fd, main_window );
 // ============================================
 
-
 //
 // Event loop
 //
 
 // ===========================================
-// #test
 // Get input from stdin
 
     int C=0;
@@ -1942,7 +1937,7 @@ static int __editor_initialize(void)
     rtl_focus_on_this_thread();
     // GRAMADO_SEEK_CLEAR
     lseek( fileno(stdin), 0, 1000);
-    // Atualiza as coisas em ring3 e ring0.
+    // Atualiza as coisas em ring3 e ring0
     rewind(stdin);
 
 // #test
@@ -2000,10 +1995,10 @@ static int __editor_initialize(void)
         browserRenderViewport(dc00);
 
         // 1. Pump events from Display Server
-        pump(client_fd, main_window);
+        // pump(client_fd, main_window);
 
         // 2. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
+        // for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             browserProcedure(
@@ -2015,9 +2010,8 @@ static int __editor_initialize(void)
             );
             RTLEventBuffer[1] = 0;
         }
-        };
+        // };
     };
-
 
     if (isTimeToQuit == TRUE)
     {
@@ -2044,7 +2038,6 @@ int browser_initialize(int argc, char *argv[])
     //if (argc < 0)
         // return EXIT_FAILURE;
 
-// #test
 // Initializing the text buffer
 
     text_buffer = (struct text_buffer_d *) editorInitBuffer();
@@ -2052,7 +2045,6 @@ int browser_initialize(int argc, char *argv[])
         printf("editor: on editorInitBuffer()\n");
         goto fail;
     }
-
 
 //
 // document

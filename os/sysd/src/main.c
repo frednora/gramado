@@ -1233,6 +1233,8 @@ int main( int argc, char **argv)
 // It changes if the user launch demo00 or demo01 instead of comp00.
     Init.environment = EnvironmentWinuCore;
 
+    Init.is_ds_running = FALSE;  // ds is not up yet
+
 //
 // Runlevel
 //

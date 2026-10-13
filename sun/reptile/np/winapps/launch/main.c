@@ -245,7 +245,7 @@ static void update_children(int fd)
         8,
         8,
         COLOR_BLACK,
-        "P=Power  M=Memory  I=Sysinfo  Q=Quit",
+        "p=Power m=Memory i=Sysinfo q=Quit",
         2
     );
 
@@ -328,10 +328,11 @@ static void update_children(int fd)
 //
 // bmp
 //
+// zoom=2
 
     if (icon00_cache && icon00_cache->loaded) 
     {
-        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
+        bmp_decode_bmp_image(icon00_cache, dc00, 40, 40, 2);
     }
 
 //
@@ -655,7 +656,7 @@ int main(int argc, char *argv[])
         8,
         8,
         COLOR_BLACK,
-        "P=Power  M=Memory  I=Sysinfo  Q=Quit",
+        "p=Power m=Memory i=Sysinfo q=Quit",
         2
     );
 
@@ -756,11 +757,12 @@ int main(int argc, char *argv[])
 
 // -----------------------------------------------------
 // #test: BMP image
+// zoom=2
 
     icon00_cache = (struct bmp_cache_d*) bmp_load_bmp_image("#folder.bmp");
     if (icon00_cache && icon00_cache->loaded) 
     {
-        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
+        bmp_decode_bmp_image(icon00_cache, dc00, 40, 40, 2);
     }
 
 // ================================================================================
@@ -812,10 +814,10 @@ int main(int argc, char *argv[])
         // #bugbug:
         // This pump is very slow, affecting the responsivity
         // for the other pump that gets events from the system.
-        pump(client_fd);
+        // pump(client_fd);
 
         // 2. Pump events from Input Broker (system events)
-        for (nSysMsg=0; nSysMsg<32; nSysMsg++){
+        //for (nSysMsg=0; nSysMsg<32; nSysMsg++){
         if (rtl_get_event() == TRUE)
         {
             // IN: wid, event type, VK, scancode.
@@ -827,7 +829,7 @@ int main(int argc, char *argv[])
                 (unsigned long) RTLEventBuffer[3] );
             RTLEventBuffer[1] = 0;  // Clear after dispatch
         }
-        };
+        //};
     };
 
     if (isTimeToQuit == TRUE){

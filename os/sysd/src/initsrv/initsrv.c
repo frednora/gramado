@@ -14,9 +14,6 @@ int isTimeToQuitServer = FALSE;
 char __filename_local_buffer[__MSG_BUFFER_SIZE];
 int NoReply = TRUE;
 
-// The display server is running or not.
-// It will send us a message to update this flag.
-static int is_ds_running = FALSE;
 
 // The tid of the caller.
 // Sent us a system message.
@@ -231,10 +228,13 @@ xxxProcessEvent (
                 // Valid only for Winu Core environment
                 if (Init.environment == EnvironmentWinuCore)
                 {
+                    if (Init.is_ds_running != TRUE)
+                        return -1;
+
                     //#debug
                     //printf("init.bin: 4001, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer,0,64);
-                    sprintf(__filename_local_buffer,"#terminal.bin");
+                    sprintf(__filename_local_buffer, "#terminal.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }
@@ -250,14 +250,16 @@ xxxProcessEvent (
                 // Valid only for Winu Core environment
                 if (Init.environment == EnvironmentWinuCore)
                 {
-                    //#debug
+                    if (Init.is_ds_running != TRUE)
+                        return -1;
+
                     //printf("init.bin: 4002, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer,0,64);
                     //sprintf(__filename_local_buffer,"#calc00.bin");
                     //sprintf(__filename_local_buffer,"#bmenu.bin");
                     //sprintf(__filename_local_buffer,"#dbox.bin");
-                    //sprintf(__filename_local_buffer,"#launch.bin");
-                    sprintf(__filename_local_buffer,"#power.bin");
+                    //sprintf(__filename_local_buffer, "#launch.bin");
+                    sprintf(__filename_local_buffer, "#power.bin");
                     //sprintf(__filename_local_buffer,"#draw.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
@@ -274,13 +276,15 @@ xxxProcessEvent (
                 // Valid only for Winu Core environment
                 if (Init.environment == EnvironmentWinuCore)
                 {
-                    //#debug
+                    if (Init.is_ds_running != TRUE)
+                        return -1;
+
                     //printf("init.bin: 4003, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer,0,64);
                     //sprintf(__filename_local_buffer,"#sysinfo.bin");
                     //sprintf(__filename_local_buffer,"#mbox.bin");
                     //sprintf(__filename_local_buffer,"#menuapp.bin");
-                    sprintf(__filename_local_buffer,"#memory.bin");
+                    sprintf(__filename_local_buffer, "#memory.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }
@@ -296,15 +300,17 @@ xxxProcessEvent (
                 // Valid only for Winu Core environment
                 if (Init.environment == EnvironmentWinuCore)
                 {
-                    //#debug
+                    if (Init.is_ds_running != TRUE)
+                        return -1;
+
                     //printf("init.bin: 4004, from {%d}\n",caller_tid);
                     memset(__filename_local_buffer, 0, 64);
-                    sprintf(__filename_local_buffer,"#editor.bin");
-                    //sprintf(__filename_local_buffer,"#browser.bin");
+                    sprintf(__filename_local_buffer, "#editor.bin");
+                    //sprintf(__filename_local_buffer, "#browser.bin");
                     rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }
-                // #test
+
                 // Launching a special app that demo00 or demo01 can handle with
                 if (Init.environment == EnvironmentWinuHeavy)
                 {
@@ -337,8 +343,8 @@ xxxProcessEvent (
 // it was initialized and running.
 // The signature is 1234 5678
     case 44900:
-        is_ds_running = TRUE;
-        printf("Init: DS is up!\n");
+        Init.is_ds_running = TRUE;
+        // printf("Init: DS is up!\n");
         break;
 
 // Out of range for system messages
@@ -346,8 +352,8 @@ xxxProcessEvent (
 // it is shutting down.
 // The signature is 1234 5678
     case 44901:
-        is_ds_running = FALSE;
-        printf("Init: DS is down!\n");
+        Init.is_ds_running = FALSE;
+        // printf("Init: DS is down!\n");
         break;
 
 // Out of range for system messages
