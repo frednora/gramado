@@ -247,9 +247,12 @@ extern struct gws_windowmanager_d  WindowManager;
 
 int control_action(int msg, unsigned long long1);
 void on_enter(void);
-void on_mouse_pressed(void);
-void on_mouse_released(void);
+void on_mouse_pressed(struct gws_window_d* window);
+void on_mouse_released(struct gws_window_d* window);
 void on_doubleclick(void);
+
+void on_control_clicked(struct gws_window_d *window);
+void on_control_clicked_by_wid(int wid);
 
 void wm_hit_test_00(unsigned long long1, unsigned long long2);
 

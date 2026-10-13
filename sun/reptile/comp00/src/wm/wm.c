@@ -86,11 +86,9 @@ static void wm_tile(void);
 
 static void launch_app_by_id(int id);
 
-static void on_control_clicked_by_wid(int wid);
-static void on_control_clicked(struct gws_window_d *window);
 
-static void on_mouse_hover(struct gws_window_d *window);
-static void on_mouse_leave(struct gws_window_d *window);
+static void __on_mouse_hover(struct gws_window_d *window);
+static void __on_mouse_leave(struct gws_window_d *window);
 
 static void on_drop(void);
 
@@ -117,8 +115,8 @@ void __button_pressed(int wid)
     // and activate the window if it is inactive.
 
 // Redraw and sleep x ms to affirm the visual effect
-    redraw_window_by_id(wid,TRUE);
-    rtl_sleep(minimum_press_duration_in_ms);
+    redraw_window_by_id(wid, TRUE);
+    // rtl_sleep(minimum_press_duration_in_ms);
 }
 
 void __button_released(int wid)
@@ -129,7 +127,7 @@ void __button_released(int wid)
     }
     set_status_by_id(wid, BS_RELEASED);
 // Redraw
-    redraw_window_by_id(wid,TRUE);
+    redraw_window_by_id(wid, TRUE);
 }
 
 // IN: Application ID
@@ -232,50 +230,51 @@ position:
 // #todo
 // When the mouse was pressed over en editbox window.
 // So, set the focus?
-void on_mouse_pressed(void)
+
+void on_mouse_pressed(struct gws_window_d* window)
 {
     int obj_WID = -1;
 
-    //yellow_status("on press");
+    //yellow_status("on_mouse_pressed");
 
 // Validating the window mouse_over
-    if ((void*) WindowManager.mouse_hover == NULL){
+    if ((void*) window == NULL){
+        //yellow_status("on pressed: No hover");
         return;
     }
-    if (WindowManager.mouse_hover->magic != 1234){
+    if (window->magic != 1234){
+        //yellow_status("on pressed: Invalid hover");
         return;
     }
     //if (WindowManager.mouse_hover == WindowManager.__root_window)
         //return;
 
-// Set the mouse_owner
-// #todo
-// Maybe we can send a message to this window,
-// and the client can make all the changes it wants.
-
-    WindowManager.mouse_owner = WindowManager.mouse_hover;
+    WindowManager.mouse_owner = window;  // Set mouse owner
 
 // Get the wid
 // Is it a button or something?
-    obj_WID = (int) WindowManager.mouse_hover->id;
+    obj_WID = (int) window->id;
+
 
     //#debug: Show the name for the window we a
-    yellow_status(
-        WindowManager.mouse_hover->name
-    );
+    // yellow_status( WindowManager.mouse_hover->name );
 
 // -------------------------
 // Button pressed
 // #test
 // Regular button and quick launch button.
 // Not a control, not the start menu, not the menuitem.
-    if (WindowManager.mouse_hover->type == WT_BUTTON)
+    if (window->type == WT_BUTTON)
     {
-        // yellow_status("is a button");
-        if (WindowManager.mouse_hover->isControl != TRUE){
-            __button_pressed(obj_WID);
-            return;
-        }
+        // yellow_status("on pressed: is a button");
+
+        //if (window->isControl != TRUE){
+        //    __button_pressed(obj_WID);
+        //    return;
+        //}
+
+    } else {
+        // yellow_status("on pressed: is NOT a button");
     }
 
 // -------------------------
@@ -293,7 +292,7 @@ void on_mouse_pressed(void)
 
     // The moment where the window becomes the target window for the drag
     // based on its child that is a titlebar.
-    if (WindowManager.mouse_hover->isTitleBar == TRUE)
+    if (window->isTitleBar == TRUE)
     {
         /*
         struct gws_window_d *tb_p = (struct gws_window_d *) WindowManager.mouse_hover->parent;
@@ -318,10 +317,9 @@ void on_mouse_pressed(void)
 // ===================================
 // >> Minimize control
 // Redraw the button
-    if (WindowManager.mouse_hover->isMinimizeControl == TRUE)
+    if (window->isMinimizeControl == TRUE)
     {
-        if (WindowManager.mouse_hover->type == WT_BUTTON)
-        {
+        if (window->type == WT_BUTTON){
             __button_pressed(obj_WID);
             return;
         }
@@ -329,9 +327,9 @@ void on_mouse_pressed(void)
 // ===================================
 // >> Maximize control
 // Redraw the button
-    if (WindowManager.mouse_hover->isMaximizeControl == TRUE)
+    if (window->isMaximizeControl == TRUE)
     {
-        if (WindowManager.mouse_hover->type == WT_BUTTON){
+        if (window->type == WT_BUTTON){
             __button_pressed(obj_WID);
             return;
         }
@@ -339,16 +337,16 @@ void on_mouse_pressed(void)
 // ===================================
 // >> Close control
 // Redraw the button
-    if (WindowManager.mouse_hover->isCloseControl == TRUE)
+    if (window->isCloseControl == TRUE)
     {
-        if (WindowManager.mouse_hover->type == WT_BUTTON){
+        if (window->type == WT_BUTTON){
             __button_pressed(obj_WID);
             return;
         }
     }
 }
 
-void on_mouse_released(void)
+void on_mouse_released(struct gws_window_d* window)
 {
     // Get these from event
     unsigned long saved_x=0;
@@ -373,7 +371,7 @@ void on_mouse_released(void)
     //struct gws_window_d *tmp;
     //struct gws_window_d *old_focus;
 
-    //yellow_status("rel <<<<");
+    //yellow_status("on_mouse_released");
 
     // button number
     //if(long1==1){ yellow_status("R1"); }
@@ -396,14 +394,18 @@ void on_mouse_released(void)
 // When the mouse is hover a tb button.
 
 // Validate mouse_hover
-    if ((void*) WindowManager.mouse_hover == NULL)
+    if ((void*) window == NULL)
         return;
-    if (WindowManager.mouse_hover->magic != 1234)
+    if (window->magic != 1234)
         return;
 
 // Get the wid
 // Is it an button or something?
-    obj_WID = (int) WindowManager.mouse_hover->id;
+
+    obj_WID = (int) window->id;
+
+    if (obj_WID < 0)
+        yellow_status("one released: Invalid obj_WID");
 
 // Get position.
 // If the mouse is hover an editbox or something
@@ -421,10 +423,11 @@ void on_mouse_released(void)
 // -------------------
 // Se clicamos em uma janela editbox.
 
-    static int isInsideMouseHover=FALSE;
+    //static int isInsideMouseHover=FALSE;
 
 // Check if we are inside the mouse hover
 
+    /*
     if ( saved_x >= WindowManager.mouse_hover->left &&
          saved_x <= (WindowManager.mouse_hover->left + WindowManager.mouse_hover->width) &&
          saved_y >= WindowManager.mouse_hover->top &&
@@ -442,6 +445,7 @@ void on_mouse_released(void)
 
         WindowManager.mouse_hover->single_event.has_event = FALSE;
     }
+    */
 
     // printf("Outside mouse hover window\n");
 
@@ -454,15 +458,16 @@ void on_mouse_released(void)
 // We don't want to affect the mousehover window
 // when releasing the mouse button if we're outside the
 // mousehover window.
-    if (isInsideMouseHover != TRUE)
-        return;
 
+    //if (isInsideMouseHover != TRUE)
+        //return;
 
 // -------------------------
 // We are inside the mousehover window and
 // the mousehover window is an editbox.
 // Let's change the input pointer inside the window editbox.
 
+    /*
     if ( WindowManager.mouse_hover->type == WT_EDITBOX || 
          WindowManager.mouse_hover->type == WT_EDITBOX_MULTIPLE_LINES)
     {
@@ -509,6 +514,7 @@ void on_mouse_released(void)
         // We're done for editbox.
         return;
     }
+    */
 
 // -------------------------
 // Regular button or quick launch button.
@@ -516,12 +522,18 @@ void on_mouse_released(void)
     struct gws_window_d *p1;  // Parent
     struct gws_window_d *gp;  // Grand-parent
 
-    if (WindowManager.mouse_hover->type == WT_BUTTON)
+    if (window->type == WT_BUTTON)
     {
+        //if (window->isControl == TRUE)
+            //return;
+
+        /*
         // We're NOT a control.
         // We're a regular button.
-        if (WindowManager.mouse_hover->isControl != TRUE)
+        if (window->isControl != TRUE)
         {
+            yellow_status("on released: its not a control");
+
             __button_released(obj_WID);
             
             // Sending a message
@@ -532,7 +544,7 @@ void on_mouse_released(void)
             // Its not valid on all cases,
             // because sometimes the button is a child of a child.
             // Get the parent
-            p1 = WindowManager.mouse_hover->parent;
+            p1 = window->parent;
             if ((void*)p1 == NULL)
                 return;
             if (p1->magic != 1234)
@@ -548,8 +560,8 @@ void on_mouse_released(void)
                 window_post_message( 
                     p1->id, 
                     GWS_MouseClicked, 
-                    WindowManager.mouse_hover->id, 
-                    WindowManager.mouse_hover->id );
+                    window->id, 
+                    window->id );
 
                 // Sending a notification to the kernel, saying the thread has
                 // an event from the server. Good opportonity to wakeup the thread if necessary.
@@ -568,8 +580,8 @@ void on_mouse_released(void)
                         window_post_message(
                             gp->id,                // send to grandparent
                             GWS_MouseClicked,
-                            WindowManager.mouse_hover->id,       // child button ID
-                            WindowManager.mouse_hover->id );
+                            window->id,       // child button ID
+                            window->id );
 
                         // Sending a notification to the kernel, saying the thread has
                         // an event from the server. Good opportonity to wakeup the thread if necessary.
@@ -581,6 +593,7 @@ void on_mouse_released(void)
 
             return;
         }
+        */
     }
 
 //------------------------------------------------------
@@ -616,8 +629,9 @@ void on_mouse_released(void)
 
 // ===================================
 // Title bar
-// Release the titlebar.
-    if (WindowManager.mouse_hover->isTitleBar == TRUE)
+// Release the titlebar
+
+    if (window->isTitleBar == TRUE)
     {
         //#suspended
         /*
@@ -667,45 +681,33 @@ void on_mouse_released(void)
 // ===================================
 // >> Minimize control
 // Redraw the button
-    if (WindowManager.mouse_hover->isMinimizeControl == TRUE)
+    if (window->isMinimizeControl == TRUE)
     {
-        if (WindowManager.mouse_hover->type == WT_BUTTON)
+        if (window->type == WT_BUTTON)
         {
-            yellow_status("released inside min");
             __button_released(obj_WID);
-            //yellow_status("Release on min control\n");
-            on_control_clicked(WindowManager.mouse_hover);
             return;
         }
     }
 // ===================================
 // >> Maximize control
 // Redraw the button
-    if (WindowManager.mouse_hover->isMaximizeControl == TRUE)
+    if (window->isMaximizeControl == TRUE)
     {
-        if (WindowManager.mouse_hover->type == WT_BUTTON)
+        if (window->type == WT_BUTTON)
         {
-            yellow_status("released inside max");
             __button_released(obj_WID);
-            //yellow_status("Release on max control\n");
-            on_control_clicked(WindowManager.mouse_hover);
             return;
         }
     }
 // ===================================
 // >> Close control
 // Redraw the button
-    if (WindowManager.mouse_hover->isCloseControl == TRUE)
+    if (window->isCloseControl == TRUE)
     {
-        if (WindowManager.mouse_hover->type == WT_BUTTON)
+        if (window->type == WT_BUTTON)
         {
-            yellow_status("released inside clo");
             __button_released(obj_WID);
-            //yellow_status("Release on close control\n");
-
-            // On control clicked
-            // close control: post close message.
-            on_control_clicked(WindowManager.mouse_hover);
             return;
         }
     }
@@ -746,7 +748,7 @@ void on_mouse_released(void)
     yellow_status("released undefined");
 }
 
-static void on_mouse_hover(struct gws_window_d *window)
+static void __on_mouse_hover(struct gws_window_d *window)
 {
 
 // Parameter:
@@ -796,7 +798,7 @@ static void on_mouse_hover(struct gws_window_d *window)
     }
 }
 
-static void on_mouse_leave(struct gws_window_d *window)
+static void __on_mouse_leave(struct gws_window_d *window)
 {
 // When the mouse pointer leaves a window.
 
@@ -831,7 +833,7 @@ static void on_mouse_leave(struct gws_window_d *window)
 // The control is a window that belongs to the titlebar
 // of an overlapped window.
 // When clicked or 'pressed' via keyboard.
-static void on_control_clicked(struct gws_window_d *window)
+void on_control_clicked(struct gws_window_d *window)
 {
 // Called when a control button was release.
 // (Clicked by the mouse or some other input event)
@@ -854,7 +856,7 @@ static void on_control_clicked(struct gws_window_d *window)
     if (window->magic != 1234)
         return;
 
-// Nothing to do.
+// Nothing to do
     if (window->isControl != TRUE)
         return;
 
@@ -939,7 +941,7 @@ static void on_control_clicked(struct gws_window_d *window)
                         // of the client app.
                         if (w2->type == WT_OVERLAPPED)
                         {
-                            //yellow_status("Maximize");
+                            yellow_status("Maximize");
 
                             // It is minimized.
                             // We can't press a button for an minimized window.
@@ -993,7 +995,7 @@ static void on_control_clicked(struct gws_window_d *window)
                         // of the client app.
                         if (w2->type == WT_OVERLAPPED)
                         {
-                            yellow_status("Close window");
+                            yellow_status("Close");
                             //printf("Close wid={%d}\n",w2->id);
 
                             // It is minimized
@@ -1020,7 +1022,7 @@ static void on_control_clicked(struct gws_window_d *window)
 }
 
 // When clicked or 'pressed' via keyboard.
-static void on_control_clicked_by_wid(int wid)
+void on_control_clicked_by_wid(int wid)
 {
     struct gws_window_d *window;
 
@@ -1040,6 +1042,8 @@ void on_doubleclick(void)
 {
     struct gws_window_d *w;
     struct gws_window_d *p;
+
+    yellow_status("on_doubleclick");
 
 // Window
     w = WindowManager.mouse_hover;
@@ -4256,16 +4260,11 @@ struct gws_window_d *wm_hit_test_2(
     struct gws_window_d *hover = NULL;
     int insideTaskbar = FALSE;
 
-    //printf("hover\n");
-
-    if (WindowManager.initialized != TRUE)
-    {
-        //printf("wm_hit_test_2: not initialized\n");
+    if (WindowManager.initialized != TRUE){
         return NULL;
     }
 
-// #test
-// Restriction when in fullscreen mode
+// #test: Restriction when in fullscreen mode
     if (WindowManager.is_fullscreen == TRUE){
         //return;
     }
@@ -4284,7 +4283,7 @@ struct gws_window_d *wm_hit_test_2(
             long2 >= WindowManager.taskbar_window->top &&
             long2 <= ( WindowManager.taskbar_window->top + WindowManager.taskbar_window->height) )
         {
-            yellow_status("Inside taskbar");
+            //yellow_status("Inside taskbar");
 
             hover = WindowManager.taskbar_window;
             insideTaskbar = TRUE;
@@ -4321,9 +4320,9 @@ struct gws_window_d *wm_hit_test_2(
 
         if (hover != WindowManager.mouse_hover)
         {
-            on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
+            __on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
             WindowManager.mouse_hover = hover;
-            on_mouse_hover(hover);        // repinte a nova
+            __on_mouse_hover(hover);        // repinte a nova
         }
 
         // Update relative mouse pointer
@@ -4453,9 +4452,9 @@ struct gws_window_d *wm_hit_test_2(
 
                 if (hover != WindowManager.mouse_hover)
                 {
-                    on_mouse_leave(WindowManager.mouse_hover);
+                    __on_mouse_leave(WindowManager.mouse_hover);
                     WindowManager.mouse_hover = hover;
-                    on_mouse_hover(hover);
+                    __on_mouse_hover(hover);
                 }
 
                 // Update relative mouse pointer
@@ -4478,7 +4477,7 @@ struct gws_window_d *wm_hit_test_2(
                         long2 >= tb->top && 
                         long2 <= (tb->top + tb->height) )
                     {
-                        yellow_status("Inside title ?");
+                        //yellow_status("Inside title ?");
 
                         // overwrite hover with child
                         // Now we are inside the titlebar, but not in a control.
@@ -4486,9 +4485,9 @@ struct gws_window_d *wm_hit_test_2(
                     
                         if (hover != WindowManager.mouse_hover)
                         {
-                            on_mouse_leave(WindowManager.mouse_hover);
+                            __on_mouse_leave(WindowManager.mouse_hover);
                             WindowManager.mouse_hover = hover;
-                            on_mouse_hover(hover);
+                            __on_mouse_hover(hover);
                         }
 
                         // Update relative mouse pointer
@@ -4538,9 +4537,9 @@ struct gws_window_d *wm_hit_test_2(
         if (hover != WindowManager.mouse_hover)
         {
             //printf("hover :)\n");
-            on_mouse_leave(WindowManager.mouse_hover);
+            __on_mouse_leave(WindowManager.mouse_hover);
             WindowManager.mouse_hover = hover;
-            on_mouse_hover(hover);
+            __on_mouse_hover(hover);
         }
         //printf("hover ?\n");
 
@@ -4558,7 +4557,7 @@ struct gws_window_d *wm_hit_test_2(
 // ---------------------------------------------
 // fail?
 
-    on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
+    __on_mouse_leave(WindowManager.mouse_hover);  // repinte a antiga
 
     // Later: add overlapped windows and children checks here.
     // For now, fallback to root if nothing matched.

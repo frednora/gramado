@@ -174,6 +174,13 @@ wmProcessMouseEvent(
         WindowManager.mouse_hover = 
             wm_hit_test_2(long1, long2);  // #ps: Using relative values
 
+        // #debug
+        //if (WindowManager.mouse_hover->type == WT_BUTTON){
+        //    yellow_status("hover on button");
+        //} else {
+        //    yellow_status("hover on not button");
+        //}
+
         // #bugbug
         // The top values is out of limits for
         // the taskbar window.
@@ -242,15 +249,20 @@ wmProcessMouseEvent(
         DoubleClick.is_doubleclick = FALSE;
         DoubleClick.delta = (DoubleClick.current - DoubleClick.last);
         DoubleClick.last = DoubleClick.current; 
+
+        // #bugbug: 
+        // #suspended: something is wrong with the calculation
         // Yes, it's a double click
-        if (DoubleClick.delta < DoubleClick.speed)
-        {
-            DoubleClick.is_doubleclick = TRUE;
-            on_doubleclick();            
-            return;
-        }
+        //if (DoubleClick.delta < DoubleClick.speed)
+        //{
+        //    DoubleClick.is_doubleclick = TRUE;
+        //    on_doubleclick();            
+        //    return;
+        //}
+
+        // Effects
         // No, it's a single click.
-        on_mouse_pressed();
+        on_mouse_pressed(WindowManager.mouse_hover);
         return;
     }
 
@@ -295,8 +307,20 @@ wmProcessMouseEvent(
         __new_mouse_x_relative = long3;
         __new_mouse_y_relative = long4;
 
+        // Effects
         // Handle any other release logic (focus, click, etc.)
-        on_mouse_released();
+        on_mouse_released(WindowManager.mouse_hover);
+
+        //
+
+        if (WindowManager.mouse_hover->isMinimizeControl == TRUE ||
+            WindowManager.mouse_hover->isMaximizeControl == TRUE ||
+            WindowManager.mouse_hover->isCloseControl == TRUE)
+        {
+            // Action
+            on_control_clicked(WindowManager.mouse_hover);
+        }
+
         return;
     }
 
