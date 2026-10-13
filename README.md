@@ -1,4 +1,4 @@
-# gramado
+# gramado - Gramado OS
 
 Fred Nora: gramado
 
@@ -6,9 +6,8 @@ Fred Nora: gramado
 
 ```
 docs/  - Documentation for Gramado 
-ead/   - Posix-like commands,
-         Compositor and client-side GUI applications.
 os/    - Gramado OS
+sun/   - Posix-like commands, Compositor and client-side GUI applications.
 tools/ - Gramado Tools 
 ```
 

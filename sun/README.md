@@ -1,4 +1,4 @@
-# sun
+# sun - Applications
 
 Ring 3 programs for Gramado OS
 

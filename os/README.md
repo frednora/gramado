@@ -1,4 +1,4 @@
-# Gramado OS
+# os - Core system components
 
 **A lightweight 64-bit graphical hobby operating system built from scratch.**
 
