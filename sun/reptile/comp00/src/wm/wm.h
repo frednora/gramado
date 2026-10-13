@@ -252,9 +252,9 @@ void on_mouse_released(void);
 void on_doubleclick(void);
 
 void wm_hit_test_00(unsigned long long1, unsigned long long2);
-// #test
-void 
-wm_hit_test_2(
+
+
+struct gws_window_d *wm_hit_test_2(
     unsigned long long1, 
     unsigned long long2 );
 

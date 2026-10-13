@@ -236,6 +236,8 @@ void on_mouse_pressed(void)
 {
     int obj_WID = -1;
 
+    //yellow_status("on press");
+
 // Validating the window mouse_over
     if ((void*) WindowManager.mouse_hover == NULL){
         return;
@@ -257,6 +259,11 @@ void on_mouse_pressed(void)
 // Is it a button or something?
     obj_WID = (int) WindowManager.mouse_hover->id;
 
+    //#debug: Show the name for the window we a
+    yellow_status(
+        WindowManager.mouse_hover->name
+    );
+
 // -------------------------
 // Button pressed
 // #test
@@ -264,6 +271,7 @@ void on_mouse_pressed(void)
 // Not a control, not the start menu, not the menuitem.
     if (WindowManager.mouse_hover->type == WT_BUTTON)
     {
+        // yellow_status("is a button");
         if (WindowManager.mouse_hover->isControl != TRUE){
             __button_pressed(obj_WID);
             return;
@@ -312,7 +320,8 @@ void on_mouse_pressed(void)
 // Redraw the button
     if (WindowManager.mouse_hover->isMinimizeControl == TRUE)
     {
-        if (WindowManager.mouse_hover->type == WT_BUTTON){
+        if (WindowManager.mouse_hover->type == WT_BUTTON)
+        {
             __button_pressed(obj_WID);
             return;
         }
@@ -363,6 +372,8 @@ void on_mouse_released(void)
     //struct gws_window_d *p;
     //struct gws_window_d *tmp;
     //struct gws_window_d *old_focus;
+
+    //yellow_status("rel <<<<");
 
     // button number
     //if(long1==1){ yellow_status("R1"); }
@@ -4238,8 +4249,7 @@ static void on_drop(void)
 */
 
 // #test: We are dealing with relative values now
-void 
-wm_hit_test_2(
+struct gws_window_d *wm_hit_test_2(
     unsigned long long1, 
     unsigned long long2 )
 {
@@ -4251,7 +4261,7 @@ wm_hit_test_2(
     if (WindowManager.initialized != TRUE)
     {
         //printf("wm_hit_test_2: not initialized\n");
-        return;
+        return NULL;
     }
 
 // #test
@@ -4283,7 +4293,6 @@ wm_hit_test_2(
 
     int insideTaskbarChild = FALSE;
 
-/*
     // Save result
     if (hover != NULL) 
     {
@@ -4303,6 +4312,7 @@ wm_hit_test_2(
                     hover = c00;
                     insideTaskbarChild = TRUE;
                     insideTaskbar = FALSE; // child of taskbar, not taskbar itself
+
                     break;
                 }
             }
@@ -4325,9 +4335,8 @@ wm_hit_test_2(
         hover->x_mouse_relative = (unsigned long) long1;
         hover->y_mouse_relative = (unsigned long) long2;
 
-        return;
+        return hover;
     }
-*/
 
 // ---------------------------------------------
 // 2. Overlapped windows via list
@@ -4347,7 +4356,7 @@ wm_hit_test_2(
                 long2 <= w->height )
             {
 
-                yellow_status("Inside overlapped");
+                //yellow_status("Inside overlapped");
 
                 // Save this match, but keep going
                 hover = w;
@@ -4387,10 +4396,11 @@ wm_hit_test_2(
                         long2 >= min->top && 
                         long2 <= (min->top + min->height) )
                     {
-                        yellow_status("Inside min");
+                        //yellow_status("Inside min");
                         // overwrite hover with child
                         hover = min;
                         insideTitleBarControl = TRUE;
+
                     }
                 }
 
@@ -4403,10 +4413,11 @@ wm_hit_test_2(
                         long2 >= max->top && 
                         long2 <= (max->top + max->height) )
                     {
-                        yellow_status("Inside max");
+                        //yellow_status("Inside max");
                         // overwrite hover with child
                         hover = max;
                         insideTitleBarControl = TRUE;
+
                     }
                 }
 
@@ -4419,10 +4430,11 @@ wm_hit_test_2(
                         long2 >= clo->top && 
                         long2 <= (clo->top + clo->height) )
                     {
-                        yellow_status("Inside clo");
+                        //yellow_status("Inside clo");
                         // overwrite hover with child
                         hover = clo;
                         insideTitleBarControl = TRUE;
+
                     }
                 }
             }
@@ -4437,7 +4449,7 @@ wm_hit_test_2(
             // inside titlebar control?
             if (insideTitleBarControl == TRUE)
             {
-                yellow_status("Inside title bar control");
+                //yellow_status("Inside title bar control");  //ok <<<<
 
                 if (hover != WindowManager.mouse_hover)
                 {
@@ -4447,14 +4459,10 @@ wm_hit_test_2(
                 }
 
                 // Update relative mouse pointer
-                //hover->x_mouse_relative = (unsigned long)(long1 - hover->absolute_x);
-                //hover->y_mouse_relative = (unsigned long)(long2 - hover->absolute_y);       
-
-                // Update relative mouse pointer
                 hover->x_mouse_relative = (unsigned long) long1;
                 hover->y_mouse_relative = (unsigned long) long2;       
 
-                return;
+                return hover;
             }
 
             // inside titlebar but not in a control?
@@ -4491,7 +4499,7 @@ wm_hit_test_2(
                         hover->x_mouse_relative = (unsigned long) long1;
                         hover->y_mouse_relative = (unsigned long) long2;       
 
-                        return;
+                        return hover;
                     }
                 }
             }
@@ -4503,7 +4511,7 @@ wm_hit_test_2(
 // of use the one we found in the previous step as hover.
     //int insideChild = FALSE;
 
-/*
+
     // list of children of the hovered window
     if (hover != NULL) 
     {
@@ -4520,6 +4528,7 @@ wm_hit_test_2(
                     // overwrite hover with child
                     hover = c;
                     //insideChild = TRUE;
+
                     break;
                 }
             }
@@ -4543,9 +4552,8 @@ wm_hit_test_2(
         hover->x_mouse_relative = (unsigned long) long1;
         hover->y_mouse_relative = (unsigned long) long2;
 
-        return;
+        return hover;
     }
-*/
 
 // ---------------------------------------------
 // fail?
@@ -4556,6 +4564,8 @@ wm_hit_test_2(
     // For now, fallback to root if nothing matched.
 
     WindowManager.mouse_hover = WindowManager.__root_window;
+
+    return WindowManager.mouse_hover;
 }
 
 void 

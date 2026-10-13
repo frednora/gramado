@@ -171,9 +171,8 @@ wmProcessMouseEvent(
         // We are dealing with relative values now
 
         // see: wm.c
-        //wm_hit_test_00(saved_x,saved_y);  // original
-        //wm_hit_test_2(saved_x, saved_y);  // #test
-        wm_hit_test_2(long1, long2);  // #ps: Using relative values
+        WindowManager.mouse_hover = 
+            wm_hit_test_2(long1, long2);  // #ps: Using relative values
 
         // #bugbug
         // The top values is out of limits for
@@ -218,11 +217,13 @@ wmProcessMouseEvent(
 
     if (event_type == GWS_MousePressed)
     {
+        //yellow_status("press <<<");
+
         // For mouse pressed long3 and long4 are relative values.
         // For setting mouse position it needs to be the absolute values.
 
         //comp_set_mouse_position(long3, long4);
-        //wm_hit_test_2(long3, long4);  // #ps: Using relative values
+        // wm_hit_test_2(long3, long4);  // #ps: Using relative values
 
         // -- Drag support ----
 
@@ -258,6 +259,8 @@ wmProcessMouseEvent(
 // Process and send message.
     if (event_type == GWS_MouseReleased)
     {
+        //yellow_status("rel <<<");
+
         // For mouse released long3 and long4 are relative values.
         // For setting mouse position it needs to be the absolute values.
 
