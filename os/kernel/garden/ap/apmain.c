@@ -379,8 +379,13 @@ static void __ap_kmain_imp(void)
     printk("AP_kmain: VERSION %x\n", localversion);
 
     apic_mark_cpu_as_running(lapic_id);  // The Core 1 is running now.
-    printk("AP_kmain: Core %d is RUNNING ... :) \n", lapic_id);
+    printk("AP_kmain: Core %d is RUNNING ... :)    <<<< \n", lapic_id);
 
+    // #test: 
+    // Increment the counter of AP arunning
+    // This job was dome by main.c
+
+    smp_info.nr_ap_running++;
 
 // ===============================
 

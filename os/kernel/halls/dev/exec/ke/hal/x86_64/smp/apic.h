@@ -265,6 +265,9 @@ struct lapic_info_d
     int local_id;  // CPU id? Provided by hardware.
     int local_version;
 
+    // #test: From apic timer configuration
+    unsigned int ticks_per_ms;
+
 //
 // Threads
 //

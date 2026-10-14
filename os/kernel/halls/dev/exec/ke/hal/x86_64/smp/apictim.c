@@ -32,22 +32,25 @@ static void __pit_perform_sleep(void);
 //---------------------------------
 
 
-
 // apictim.c
 
 // Configure LAPIC timer in periodic mode.
 // Pass `masked = 1` to start masked, `masked = 0` to start unmasked.
-void apic_timer_setup_periodic(unsigned int vector, int masked, int lapic_info_id)
+void 
+apic_timer_setup_periodic(
+    unsigned int vector, 
+    int masked, 
+    int lapic_info_id )
 {
     unsigned int val =
         APIC_TIMER_CONFIG_DATA_LVT(
-            1,          // TimerMode: periodic
-            masked ? 1 : 0, // Mask bit
+            1,               // TimerMode: periodic
+            masked ? 1 : 0,  // Mask bit
             APIC_TIMER_NULL,
             APIC_TIMER_NULL,
-            0,          // TriggerMode: edge
+            0,               // TriggerMode: edge
             APIC_TIMER_NULL,
-            vector & 0xFF  // Vector (e.g. 220)
+            vector & 0xFF    // Vector (e.g. 220)
         );
 
     __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
@@ -86,9 +89,9 @@ static void __pit_prepare_sleep(int hz)
     out8(0x61, val);
     out8(0x43, 0xB2);
 
-    out8(0x42,(unsigned char)(divisor & 0xFF));		// LSB
+    out8(0x42,(unsigned char)(divisor & 0xFF));		  // LSB
     io_delay();
-    out8(0x42,(unsigned char)(divisor >> 8) & 0xFF); // MSB
+    out8(0x42,(unsigned char)(divisor >> 8) & 0xFF);  // MSB
 }
 
 static void __pit_perform_sleep(void)
@@ -97,9 +100,9 @@ static void __pit_perform_sleep(void)
 
 // Reset PIT one-short counter (start counting)
     val = (in8(0x61) & 0xFE);
-    out8(0x61, val); // gate low
+    out8(0x61, val);  // gate low
     val = val | 1;
-    out8(0x61, val); // gate high
+    out8(0x61, val);  // gate high
 
 // Now wait until PIT counter reaches zero
     while ((in8(0x61) & 0x20) == 0)
@@ -170,11 +173,12 @@ void apic_timer_masked(int lapic_info_id)
 //
 
 // Initialize apic timer
-int apictim_initialize(int lapic_info_id)
-{
 // Called by apic_initialize() in apic.c.
 // + make a test using one shot mode
 // + setup for periodic mode
+
+int apictim_initialize(int lapic_info_id)
+{
 
 // #todo #bugbug
 // e o timer precisa mudar o vetor 
@@ -188,12 +192,12 @@ int apictim_initialize(int lapic_info_id)
     unsigned int val = 
         APIC_TIMER_CONFIG_DATA_LVT(
             0,  // one-shot mode
-            0,  // Umasked
+            0,  // Unmasked = 0
             APIC_TIMER_NULL,
             APIC_TIMER_NULL,
             0,
             APIC_TIMER_NULL,
-            LVT_TIMER_VECTOR   //220  //  (Vector) 
+            LVT_TIMER_VECTOR  //  (Vector) ex: 220
             );
     __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
 
@@ -225,7 +229,7 @@ int apictim_initialize(int lapic_info_id)
     apic_timer_ticks = 
         __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER, lapic_info_id);
 // It is counted down from -1, make it positive
-    apic_timer_ticks = 0xFFFFFFFF - apic_timer_ticks;
+    apic_timer_ticks = (0xFFFFFFFF - apic_timer_ticks);
     apic_timer_ticks++;
     printk("Current count: {%d}\n", apic_timer_ticks);
 
@@ -249,7 +253,7 @@ int apictim_initialize(int lapic_info_id)
     apic_timer_ticks = 
         __apictim_read_command(LAPIC_CURRENT_COUNT_TIMER, lapic_info_id);
 // It is counted down from -1, make it positive
-    apic_timer_ticks = 0xFFFFFFFF - apic_timer_ticks;
+    apic_timer_ticks = (0xFFFFFFFF - apic_timer_ticks);
     apic_timer_ticks++;
     printk("Current count: {%d}\n", apic_timer_ticks);
 
@@ -258,7 +262,7 @@ int apictim_initialize(int lapic_info_id)
 // --------------------------------------------------
 // 9 - Reprogram LVT Timer for periodic mode, masked:
 // Finally re-enable timer in periodic mode. But MASKED.
-// Sets up periodic ticks, but masked until you unmask later.
+// Sets up periodic ticks, but masked until we unmask later.
 	val = 
 	    APIC_TIMER_CONFIG_DATA_LVT(
 	        1,  // Periodic mode
@@ -267,7 +271,7 @@ int apictim_initialize(int lapic_info_id)
 	        APIC_TIMER_NULL,
 	        0,
 	        APIC_TIMER_NULL,
-	        LVT_TIMER_VECTOR  //220  //  (Vector)
+	        LVT_TIMER_VECTOR  //  (Vector) ex: 220
             );
     __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
 
@@ -275,8 +279,10 @@ int apictim_initialize(int lapic_info_id)
 // 10 - Set divide register again (optional, hardware quirk):
 // Setting divide value register again not needed by the manuals
 // Although I have found buggy hardware that required it
-//  // divide by 128
-    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0xa, lapic_info_id);  // Option: 0x3
+// divide by 128
+// Option: 0x3
+    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0xa, lapic_info_id);
+
 
 // --------------------------------------------------
 // 11 - Load Initial Count for periodic ticks:
@@ -285,11 +291,17 @@ int apictim_initialize(int lapic_info_id)
 // use it as APIC timer counter initializer.
 
     unsigned int ticks_per_ms = apic_timer_ticks / 10;
-    __apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, ticks_per_ms, lapic_info_id);
+    __apictim_write_command(
+        LAPIC_INITIAL_COUNT_TIMER, 
+        ticks_per_ms,    // #important
+        lapic_info_id 
+    );
 
     //apic_timer_ticks = 1000;
     //__apictim_write_command(LAPIC_INITIAL_COUNT_TIMER, apic_timer_ticks, lapic_info_id);
 
+    // #test: Save it
+    lapic_info[lapic_info_id].ticks_per_ms = ticks_per_ms;
 
 
 // #test

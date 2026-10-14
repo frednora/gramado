@@ -99,7 +99,7 @@
 // See __e1000_enable_interrupt() — IMS mask is too broad (0x1F6DC | 0xFB),
 // likely unmasking LSC/RXO/RXDMT0 before boot's interrupt sequencing is ready.
 
-#define USE_E1000    1   
+#define USE_E1000    1
 
 
 // #test: Pooling PS2 Keyboard and Mouse.

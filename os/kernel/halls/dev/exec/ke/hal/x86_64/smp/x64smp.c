@@ -108,6 +108,13 @@ void x64smp_show_info(void)
     printk("BSP is using LAPIC: %d\n", smp_info.bsp_is_using_lapic);
 
 //
+// lapic timer info
+//
+
+    printk("LAPIC TIMER [core 0]: Ticks per ms = %d\n", 
+        lapic_info[0].ticks_per_ms );
+
+//
 // GDT (BSP only)
 //
 
