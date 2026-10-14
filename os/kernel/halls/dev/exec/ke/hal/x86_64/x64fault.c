@@ -174,7 +174,7 @@ fail:
     return (int) -1;
 }
 
-// Called by 'all_faults:' in hw1.asm.
+// Called by 'all_faults:' in exec.asm.
 void x64_all_faults(unsigned long number)
 {
 // Quote: 'You've never failed and You won't start now'.
@@ -190,6 +190,22 @@ void x64_all_faults(unsigned long number)
 // For the case the trap happned during some special irqls.
     int last_irql = lapic_info[0].irql;
     int was_running_in_r0 = -1;
+
+
+//
+// Save context
+//
+
+    // IN: core id
+    arch_save_context(0);
+
+//
+// #test:    IRQL
+//
+
+// #todo:
+// The context is saved? In this case we need to check the ring we are into 
+// and if check if the exception can happen in that ring or not.
 
     // Set current irql
     lapic_info[0].irql = IRQL_UNDEFINED;
@@ -294,7 +310,7 @@ void x64_all_faults(unsigned long number)
     //printk("\n");
     //printk("\n");
     printk("\n");
-    printk ("number: %d\n",number);
+    printk ("number: %d\n", number);
 
 // see: clone.c    
     if (copy_process_in_progress == TRUE){
@@ -414,7 +430,10 @@ void x64_all_faults(unsigned long number)
          number == 13 || 
          number == 14 )
     {
-        printk("x64_all_faults: {%d}\n",number);
+        // #todo:
+        // Treating this case is good only if the thread was running in ring 3
+
+        printk("x64_all_faults: {%d}\n", number);
 
         // Kill process
         // #bugbug: Precisamos checar o ring que o processo
@@ -464,7 +483,11 @@ void x64_all_faults(unsigned long number)
             // Final message.
             printk("Resuming the init thread\n");
             refresh_screen();
-            
+
+            // #test
+            // IN core id
+            arch_restore_context(0);
+
             // Retorna pra assembly para efetuar iretq.
             return;
         }
