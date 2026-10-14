@@ -221,7 +221,8 @@ extern int system_state;
 #include "../halls/dev/exec/ke/hal/x86_64/rtc.h"
 #include "../halls/dev/exec/ke/hal/x86_64/breaker.h"
 #include "../halls/dev/exec/ke/hal/x86_64/archhal.h"
-// The wrapper for hal
+
+// Top level header for hal/
 #include "../halls/dev/exec/ke/hal/hal.h"
 
 // ==================================
@@ -288,6 +289,7 @@ extern int system_state;
 #include "../gthouse/wink/gdi/dispsrv.h"
 #include "../gthouse/wink/gdi/osshell.h"
 #include "../gthouse/wink/gdi/window.h"
+// Top level header for gdi/
 #include "../gthouse/wink/gdi/gdi.h"
 
 // evi - Event Interface
@@ -381,17 +383,15 @@ extern int system_state;
 // ipv6/
 
 // Network
-
 #include "../garden/net/nports.h"     //(network) Network Ports  (sw)
 #include "../garden/net/inet.h"
-
 #include "../garden/net/sockint.h"  //
 #include "../garden/net/socket.h"   // last always
-
 #include "../garden/net/domain.h"
-
 #include "../garden/net/ifconfig/netif.h"  // Network interface
+// Top level header for net/
 #include "../garden/net/net.h"     //(network) Gerenciamento de rede.  
+
 
 // ----------------------
 // Last:
@@ -410,6 +410,7 @@ extern int system_state;
 #include "../halls/fs/exec_elf.h"
 #include "../halls/fs/pipe.h"
 #include "../halls/fs/files.h"
+// Top level header for fs/
 #include "../halls/fs/fs.h"
 
 
@@ -434,16 +435,23 @@ extern int system_state;
 #include "../halls/dev/exec/ke/intake/clone.h"
 #include "../halls/dev/exec/ke/intake/broker/ipc.h"
 
-#include "../halls/dev/exec/ke/intake/sched/sched.h"
-#include "../halls/dev/exec/ke/intake/sched/schedq.h"
+//
+// sched/
+//
 
-// Precisa de todos os componentes de ke/
+#include "../halls/dev/exec/ke/intake/sched/schedq.h"
+#include "../halls/dev/exec/ke/intake/sched/idle.h"
+// Top level header for sched/
+#include "../halls/dev/exec/ke/intake/sched/sched.h"
+
+// Top level header for ke/
 #include "../halls/dev/exec/ke/ke.h"
 
 // ==================================
 // The user interactions
 #include "../gthouse/wink/user/user.h"
 
+// Top level header for wink/
 // Exporting some wink functions to the other modules
 // inside the base kernel.
 #include "../gthouse/wink/wink.h"
@@ -457,15 +465,16 @@ extern int system_state;
 // mod/
 // Ring 0 kernel modules.
 
-#include "../gthouse/sys/mod/mod.h"
 #include "../gthouse/sys/mod/public.h"
-
+// Top level header for mod/
+#include "../gthouse/sys/mod/mod.h"
 
 // The handlers for the services.
 // Main service inteface.
 // It is a mirror for the libc functions in ring 3 and 
 // some other Gramado specific APIs.
 
+// Top level header for sys/
 #include "../gthouse/sys/sys.h"
 
 
@@ -477,8 +486,7 @@ extern int system_state;
 #include "../gthouse/sys/sci/sci1.h"
 #include "../gthouse/sys/sci/sci2.h"
 #include "../gthouse/sys/sci/sci3.h"
-
-// The handlers for the four syscalls
+// Top level header for sci/
 #include "../gthouse/sys/sci/sci.h" 
 
 // ==================================
@@ -498,6 +506,8 @@ extern int system_state;
 
 #include "../gthouse/sys/cont/cg.h"
 #include "../gthouse/sys/cont/ns.h"
+// Top level header for cont/
+#include "../gthouse/sys/cont/cont.h"
 
 // ==================================
 // gramnet/

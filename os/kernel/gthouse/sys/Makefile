@@ -86,6 +86,7 @@ sci.o \
 mod.o \
 cg.o \
 ns.o \
+cont.o \
 hv.o \
 public.o    
 
@@ -111,8 +112,9 @@ all:
 	$(CC) -c mod/public.c  $(KERNEL_INCLUDE) $(CFLAGS) -o public.o
 
 # container: ns and cg
-	$(CC) -c cont/ns.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ns.o
-	$(CC) -c cont/cg.c  $(KERNEL_INCLUDE) $(CFLAGS) -o cg.o
+	$(CC) -c cont/ns.c    $(KERNEL_INCLUDE) $(CFLAGS) -o ns.o
+	$(CC) -c cont/cg.c    $(KERNEL_INCLUDE) $(CFLAGS) -o cg.o
+	$(CC) -c cont/cont.c  $(KERNEL_INCLUDE) $(CFLAGS) -o cont.o
 
 # Virtualization routines
 	$(CC) -c virt/hv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o

@@ -6,7 +6,7 @@
 # It handles the thread stuff, just like,
 # dispaching, scheduling, tasswitching.
 # It handles the process stuff.
-# It also handles the system initialization,
+# It also handles the system initialization
 
 #bugbug: Ugly 
 INCLUDE = ../../../../include
@@ -78,7 +78,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 # Decides who gets the CPU. It’s the policy, the arbiter of time.
 # Dispacher: (disp/) 
 # Actually hands over the CPU. It’s the mechanism, the gear teeth grinding.
-OBJS = sched.o schedi.o schedq.o \
+OBJS = sched.o schedi.o schedq.o idle.o \
 ts.o dispatch.o spawn.o x64cont.o callback.o \
 thread.o tlib.o te.o telib.o ithread.o clone.o \
 ipc.o \
@@ -104,7 +104,8 @@ all:
 # intake/  (The MICROKERNEL)
 # process, thread, dispatcher and scheduler.
 
-# Thread
+# Thread and Process
+
 	$(CC) -c intake/thread.c   $(KERNEL_INCLUDE) $(CFLAGS) -o thread.o
 	$(CC) -c intake/tlib.c     $(KERNEL_INCLUDE) $(CFLAGS) -o tlib.o
 	$(CC) -c intake/te.c       $(KERNEL_INCLUDE) $(CFLAGS) -o te.o
@@ -124,10 +125,8 @@ all:
 	$(CC) -c intake/sched/sched.c   $(KERNEL_INCLUDE)  $(CFLAGS) -o sched.o  
 	$(CC) -c intake/sched/schedi.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o schedi.o  
 	$(CC) -c intake/sched/schedq.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o schedq.o  
+	$(CC) -c intake/sched/idle.c    $(KERNEL_INCLUDE)  $(CFLAGS) -o idle.o  
 
-#--------
-# intake
-# Microkernel. 'Cause it's all about process and thread.
 	$(CC) -c intake/queue.c    $(KERNEL_INCLUDE) $(CFLAGS) -o queue.o
 	$(CC) -c intake/x64init.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64init.o
 
