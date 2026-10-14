@@ -1,10 +1,10 @@
-# shell01
 # Client-side GUI applications.
 # Desktop environment.
 
 all:
 
 	make -C  browser/
+	make -C  desktop/
 	make -C  taskbar/
 	make -C  terminal/
 

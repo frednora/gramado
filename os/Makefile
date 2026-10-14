@@ -235,6 +235,7 @@ build-extras:
 
 # winshell
 	@-cp $(L2_WINSHELL)/bin/BROWSER.BIN   $(BUILD)/DE/
+	@-cp $(L2_WINSHELL)/bin/DESKTOP.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/TASKBAR.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINSHELL)/bin/TERMINAL.BIN  $(BUILD)/DE/
 

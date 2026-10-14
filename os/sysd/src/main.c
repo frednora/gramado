@@ -49,10 +49,12 @@ static const char *app5_name = "shell.bin";
 // --tb - Launches the default taskbar application.
 // -?   - ...
 
-static const char *cmdline1 = "comp00 -1 -2 -3 --tb";
+//static const char *cmdline1 = "comp00 -1 -2 -3 --tb";
 //static const char *cmdline1 = "comp00 -1 -2 -3 --dm";
+static const char *cmdline1 = "comp00 -1 -2 -3 --desktop";
 static const char *cmdline2 = "comp00 -1 -2 -3 --tb";
 // ...
+
 
 struct init_d  Init;
 
@@ -280,14 +282,14 @@ static inline void do_int3(void)
     asm ("int $3");
 }
 
-// Main worker to launch the display server.
+// Main worker to launch the display server
 static void do_launch_de(void)
 {
     int ret_val=-1;
     char filename[32];
     size_t string_size=0;
 
-    static int cmdlineNumber = 1;
+    const int cmdlineNumber = 1;
 
     memset(filename,0,32);
 
@@ -306,7 +308,7 @@ static void do_launch_de(void)
     };
 
 // Launch new process.
-    sprintf(filename,app1_name);
+    sprintf(filename, app1_name);
     string_size = strlen(app1_name);
     filename[string_size] = 0;
 

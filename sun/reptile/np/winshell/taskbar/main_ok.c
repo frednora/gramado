@@ -100,6 +100,7 @@ struct dccanvas_d *dc00;  // shared dc
 
 //#define TASKBAR_HEIGHT  28
 #define TASKBAR_HEIGHT  48
+// #define TASKBAR_HEIGHT  80
 
 // Device Info.
 struct device_info_d 
@@ -1491,13 +1492,45 @@ int main(int argc, char *argv[])
     //gws_async_command(client_fd,5,0,0);  // Draw black rectangle.
     //}
 
-    // #debug
-    //while(1){}
-    //asm ("int $3");
 
 //
-// Window
+// Desktop window
 //
+
+/*
+
+// #test: 
+// This is a test yet.
+// The server needs a lot of resources for that
+
+// It creates the window that is gonna be used 
+// as desktop window.
+// The desktop icons goes into it.
+
+    int dw = gws_create_window(
+        client_fd,
+        WT_POPUP,
+        0,  // status
+        WINDOW_STATE_NULL,
+        "dw",
+        0, 0, DeviceInfo.width, DeviceInfo.height,
+        0, 
+        WS_APP,  // style
+        COLOR_BLUE, 
+        COLOR_BLUE
+    );
+    if (dw < 0){
+        printf ("taskbar: dw\n");
+        exit(1);
+    }
+
+    gws_refresh_window(client_fd, dw);
+*/
+
+//
+// Taskbar window
+//
+
 
 // Create the main window. 
 // The frame for the taskbar application.
@@ -1535,15 +1568,9 @@ int main(int argc, char *argv[])
 
 
 // =============================
-// #test
-// Set this thread and its wproxy as the system shell. 
-// The taskbar.
-    sc80(46, 0, 0, 0);
 
-// =============================
-
-// #test
 // Update the wproxy structure that belongs to this thread.
+
     unsigned long m[10];
     int mytid = gettid();
 
@@ -1555,13 +1582,26 @@ int main(int argc, char *argv[])
     m[3] = TaskbarInfo.width;
     m[4] = TaskbarInfo.height;
 
+    // #ps: 
+    // In the case of taskbar, frame and client are equal.
+    // It means the offset for the client area is 0.
+    // #todo: Maybe popup window still have some kind of border,
+    // that can be considered a frame. In this case, messages
+    // go to the server. Allowing it to move or change the dimensions.
+
     // Client area rectangle
-    m[5] = TaskbarInfo.left;
-    m[6] = TaskbarInfo.top;
+    m[5] = 0;  // TaskbarInfo.left;
+    m[6] = 0;  // TaskbarInfo.top;
     m[7] = TaskbarInfo.width;
     m[8] = TaskbarInfo.height;
 
     sc80( 48, &m[0], &m[0], &m[0] );
+
+// =============================
+// Set this thread and its window as the system shell. 
+// The taskbar.
+
+    sc80(46, 0, 0, 0);
 
 
 // ====================================

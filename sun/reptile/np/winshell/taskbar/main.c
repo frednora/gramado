@@ -1492,13 +1492,45 @@ int main(int argc, char *argv[])
     //gws_async_command(client_fd,5,0,0);  // Draw black rectangle.
     //}
 
-    // #debug
-    //while(1){}
-    //asm ("int $3");
 
 //
-// Window
+// Desktop window
 //
+
+/*
+
+// #test: 
+// This is a test yet.
+// The server needs a lot of resources for that
+
+// It creates the window that is gonna be used 
+// as desktop window.
+// The desktop icons goes into it.
+
+    int dw = gws_create_window(
+        client_fd,
+        WT_POPUP,
+        0,  // status
+        WINDOW_STATE_NULL,
+        "dw",
+        0, 0, DeviceInfo.width, DeviceInfo.height,
+        0, 
+        WS_APP,  // style
+        COLOR_BLUE, 
+        COLOR_BLUE
+    );
+    if (dw < 0){
+        printf ("taskbar: dw\n");
+        exit(1);
+    }
+
+    gws_refresh_window(client_fd, dw);
+*/
+
+//
+// Taskbar window
+//
+
 
 // Create the main window. 
 // The frame for the taskbar application.

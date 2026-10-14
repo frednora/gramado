@@ -69,15 +69,17 @@ static int f1=FALSE;
 static int f2=FALSE;
 static int f3=FALSE;
 static int f4=FALSE;
-static int fLaunchTerminal=FALSE;  // Launch the default terminal.
-static int fLaunchDM=FALSE;        // Launch the default display manager.
-static int fLaunchTB=FALSE;        // Launch the default taskbar application.
+static int fLaunchTerminal=FALSE;  // Launch the default terminal
+static int fLaunchDM=FALSE;        // Launch the default display manager
+static int fLaunchTB=FALSE;        // Launch the default taskbar application
+static int fLaunchDesktop=FALSE;   // Launch the default desktop application
 //...
 
 #define FIRST_CLIENT_NULL               0     // No client
 #define FIRST_CLIENT_TERMINAL           1000  // Launch terminal
 #define FIRST_CLIENT_DISPLAY_MANAGER    1001  // Launch Gramado Display Manager
-#define FIRST_CLIENT_TASKBAR            1002  // Launch Taskbar
+#define FIRST_CLIENT_DESKTOP            1002  // Launch Desktop app
+#define FIRST_CLIENT_TASKBAR            1003  // Launch Taskbar
 static int first_client_id = FIRST_CLIENT_NULL;
 
 // -------------------------------------
@@ -170,9 +172,12 @@ static unsigned long last_dy = 0;
 // Commands.
 const char *cmd_shutdown = "shutdown.bin";  // Shutdown command.
 
-// Client-side GUI applications.
-const char *app_gdm = "#gdm.bin";          // Display manager GUI app.
-const char *app_taskbar = "#taskbar.bin";  // Taskbar GUI app.
+// Client-side GUI applications
+const char *app_terminal = "#terminal.bin";  // Desktop GUI app
+const char *app_gdm      = "#gdm.bin";       // Display manager GUI app
+const char *app_desktop  = "#desktop.bin";   // Desktop GUI app
+const char *app_taskbar  = "#taskbar.bin";   // Taskbar GUI ap.
+// ...
 
 //
 // == Private functions: Prototypes ========
@@ -4481,18 +4486,22 @@ static int ServerLoop(int client_index)
         switch (client_index){
         
         case FIRST_CLIENT_TERMINAL:
-            //LaunchStatus = (int) rtl_clone_and_execute(app_terminal);
+            LaunchStatus = (int) rtl_clone_and_execute(app_terminal);
             break;
 
         case FIRST_CLIENT_DISPLAY_MANAGER:
-            //LaunchStatus = (int) rtl_clone_and_execute(app_taskbar);
+            LaunchStatus = (int) rtl_clone_and_execute(app_gdm);
+            break;
+
+        case FIRST_CLIENT_DESKTOP:
+            LaunchStatus = (int) rtl_clone_and_execute(app_desktop);
             break;
 
         case FIRST_CLIENT_TASKBAR:
             LaunchStatus = (int) rtl_clone_and_execute(app_taskbar);
             break;
 
-        case FIRST_CLIENT_NULL:
+        // case FIRST_CLIENT_NULL:
         default:
             LaunchStatus = (int) rtl_clone_and_execute(app_taskbar);
             break;
@@ -4799,6 +4808,11 @@ int comploop_main (int argc, char **argv)
                 fLaunchTB=TRUE;
             }
 
+            // Launches the desktop application
+            if ( gramado_strncmp( argv[i], "--desktop", 9 ) == 0 ){
+                fLaunchDesktop = TRUE;
+            }
+
             // ...
         };
     }
@@ -4826,17 +4840,22 @@ int comploop_main (int argc, char **argv)
 // Selecting the last active option.
 // it follows the order of priority.
     first_client_id = FIRST_CLIENT_NULL;  // default
-    // Taskbar
-    if (fLaunchTB == TRUE){
-        first_client_id = FIRST_CLIENT_TASKBAR;
+
+    // Terminal
+    if (fLaunchTerminal == TRUE){
+        first_client_id = FIRST_CLIENT_TERMINAL;
     }
     // Display manager
     if (fLaunchDM == TRUE){
         first_client_id = FIRST_CLIENT_DISPLAY_MANAGER;
     }
-    // Terminal
-    if (fLaunchTerminal == TRUE){
-        first_client_id = FIRST_CLIENT_TERMINAL;
+    // Taskbar
+    if (fLaunchTB == TRUE){
+        first_client_id = FIRST_CLIENT_TASKBAR;
+    }
+    // Desktop
+    if (fLaunchDesktop == TRUE){
+        first_client_id = FIRST_CLIENT_DESKTOP;
     }
 
 

@@ -3278,6 +3278,7 @@ fail:
 // It is not working.
 // The window server can not get the window number.
 // no reply
+
 void 
 gws_refresh_window(int fd, wid_t wid)
 {
