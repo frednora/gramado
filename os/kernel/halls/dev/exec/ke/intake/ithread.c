@@ -179,8 +179,10 @@ struct thread_d *create_init_thread(void)
     t->total_time_ms   = 0;
 
     // Signal
-    t->signal = 0;
-    t->umask  = 0;
+    t->signal_in_progress = FALSE;
+    // #todo: the strutures for signal support
+    // t->signal = 0;
+    // t->umask  = 0;
 
     // Sleep
     t->Deferred.sleep_in_progress = FALSE;

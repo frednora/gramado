@@ -60,6 +60,7 @@ const char *sys_siglist[NSIG] = {
  *     This can be NULL if you don't need the old action.
  */
 
+// It is only used to set up (install) a signal handler.
  int 
  sigaction ( 
      int signum, 
@@ -73,10 +74,9 @@ const char *sys_siglist[NSIG] = {
     if (signum < 0)
         goto fail;
  
-    // #todo: Service 121
     r = 
     (int) sc80 ( 
-        (unsigned long) 122, 
+        (unsigned long) 121, 
         (unsigned long) signum,
         (unsigned long) act, 
         (unsigned long) oldact ); 
@@ -97,49 +97,27 @@ const char *sys_siglist[NSIG] = {
  *     POSIX.1-2001, POSIX.1-2008, C89, C99.
  */
 
-// #todo
-// Lightweight wrapper around sigaction().
-sighandler_t signal (int signum, sighandler_t handler)
+// It is only used to set up (install) a signal handler.
+sighandler_t signal(int signum, sighandler_t handler)
 {
-    struct sigaction new_act;
-    struct sigaction old_act;
+    sighandler_t old_handler=0;
+    unsigned long restorer = 0;   // #todo: We need to set a valid address here
 
-    // #todo: Service 122, or call sigaction() beeing a wrapper.
+    old_handler = 
+        (sighandler_t) sc80 ( 
+            (unsigned long) 122, 
+            (unsigned long) signum,
+            (unsigned long) handler, 
+            (unsigned long) restorer ); 
 
-    debug_print ("signal: [TODO] \n");
-
-    new_act.sa_handler = handler;
-    new_act.sa_flags = 0;
-    new_act.sa_mask = 0;
-
-    int rc = sigaction(signum, &new_act, &old_act);
-    if (rc < 0){
-        debug_print("signal: rc\n");
-        return SIG_ERR;
-    }
-
-    return (sighandler_t) old_act.sa_handler;
+    return (sighandler_t) old_handler;
 }
 
 // #test
 // Ring 3 implementation of signal()
 sighandler_t signal00(int signum, sighandler_t handler)
 {
-    sighandler_t r=0;
-
-    //if (signum < 0)
-        //return 0;
-
-        r = 
-        (sighandler_t) sc82 ( 
-            (unsigned long) sc80, 
-            (unsigned long) signum,
-            (unsigned long) handler, 
-            (unsigned long) handler ); 
-
-// #todo
-// Fix this.
-    return (sighandler_t) r;
+    return (sighandler_t) 0;
 }
 
 

@@ -241,7 +241,8 @@ struct sigaction_d
 {
     //void (*sa_handler)(int);    // #suspended
 
-    unsigned long sa_handler;  // ring3 address.
+    unsigned long sa_handler;   // ring3 handler address
+    unsigned long sa_restorer;  // ting 3 restorer adress
     unsigned long sa_msgcode;  // msg code
     unsigned long sa_long1;    // data1
     unsigned long sa_long2;    // data2
@@ -282,26 +283,25 @@ typedef sigval_t  __sigval_t;
 //==============================
 //
 
-
-#ifndef _POSIX_SOURCE
-#define SA_ONSTACK  0x0001  /* take signal on signal stack */
-#define SA_RESTART  0x0002  /* do not restart system on signal return */
-#endif
-
-#define SA_NOCLDSTOP  0x0004	/* do not generate SIGCHLD on child stop */
-
-//se precisar!
 /*
-#define SA_NOCLDSTOP 1
-#define SA_NOCLDWAIT 2
-#define SA_SIGINFO 4
-#define SA_ONSTACK 0x08000000
-#define SA_RESTART 0x10000000
-#define SA_NODEFER 0x40000000
-#define SA_RESETHAND 0x80000000
-#define SA_NOMASK SA_NODEFER
-#define SA_ONESHOT SA_RESETHAND
+#ifndef _POSIX_SOURCE
+#define SA_ONSTACK  0x0001  //take signal on signal stack 
+#define SA_RESTART  0x0002  //do not restart system on signal return 
+#endif
 */
+
+// #todo: Review these values
+//#define SA_NOCLDSTOP  1
+//#define SA_NOCLDWAIT  2
+//#define SA_SIGINFO    4
+#define SA_ONSTACK    0x0001  //0x08000000
+#define SA_RESTART    0x0002  //0x10000000
+#define SA_NOCLDSTOP  0x0004	/* do not generate SIGCHLD on child stop */
+#define SA_NODEFER    0x40000000
+#define SA_RESETHAND  0x80000000
+#define SA_NOMASK  SA_NODEFER
+#define SA_ONESHOT SA_RESETHAND
+
 
 /*
  * Flags for sigprocmask:
@@ -403,9 +403,12 @@ sys_sigaction (
     void *act,
     void *oldact );
 
-// #todo
-// Fix the parameters follogin the posix standard.
-int sys_signal(int signum, void *handler);
+
+unsigned long 
+sys_signal(
+    int signum, 
+    unsigned long handler, 
+    unsigned long restorer );
 
 #endif    
 

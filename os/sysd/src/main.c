@@ -12,6 +12,9 @@
 #include "include/init.h"
 #include "initsrv/initsrv.h"
 
+// #test
+#include <signal.h>
+
 
 // Run the event loop. 
 // Getting input from the message queue in the control thread.
@@ -100,9 +103,19 @@ callback_handler(
 
 static void worker_nb_test(void);
 
+static void dummy_signal_handler(void);
+
+
 //
 // ==============================================================
 //
+
+static void dummy_signal_handler(void)
+{
+    asm ("int $3");
+    while(1){
+    }
+}
 
 // IN: (ABI) RDI, RSI, RDX, RCX
 static void 
@@ -1473,6 +1486,12 @@ Standard Linux Runlevels (0-6)
     Init.initialized = TRUE;
 // ----------------------------
 
+
+// #test
+// Setup (install the handler)
+// "When SIGINT arrives, call my_handler"
+
+    signal(SIGINT, dummy_signal_handler );
 
 //
 // #test

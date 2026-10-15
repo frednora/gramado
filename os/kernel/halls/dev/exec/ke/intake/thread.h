@@ -451,10 +451,14 @@ struct thread_d
 // Signal::
     int signal_in_progress;
 
+// #test:
+    struct sigaction_d sigaction[32];
+
+// #suspended (Maybe we dont need this anymore)
 // #todo: We need the sinal handler. (r3 address)
-    unsigned long sig_handlers[32];  // installed via posix standard syscall.
-    unsigned long signal;
-    unsigned long umask;
+    //unsigned long sig_handlers[32];  // installed via posix standard syscall.
+    //unsigned long signal;
+    //unsigned long umask;
 
 // -------------
 

@@ -33,7 +33,7 @@ LIBCOBJ = ../garden/rtl/obj
 # Objects
 myObjects = initcrt0.o rtl.o \
 ctype.o stdio.o fcntl.o stdlib.o string.o unistd.o termios.o ioctl.o \
-socket.o \
+socket.o signal.o \
 initsrv.o main.o    
 
 .PHONY: all all-c link_app finalize clean
@@ -63,6 +63,9 @@ all-c:
 	@cp $(LIBCOBJ)/termios.o  .
 	@cp $(LIBCOBJ)/ioctl.o  .
 	@cp $(LIBCOBJ)/socket.o  .
+
+#test
+	@cp $(LIBCOBJ)/signal.o  .
 
 link_app:
 	@echo "Linking INIT.BIN ..."

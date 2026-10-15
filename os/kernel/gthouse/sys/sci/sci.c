@@ -939,21 +939,19 @@ void *sci0 (
                 (unsigned long) &message_address[0], arg3, arg4 );
     }
 
-// 121 - Signal stuff?
-// sys_signal() support.
-// #todo
-// We need to implement the parameters for this function.
-// see: ksignal.c in clib/
+// 121 - sys_sigaction
+// see: ksignal.c
     if (number == 121){
         debug_print("sci0: [121] sys_sigaction not implemented\n");
         //return (void*) sys_sigaction();
         return NULL;
     }
-// 122 - Signal stuff?
+
+// 122 - sys_signal
+// see: ksignal.c
+// IN: signal number, handler, restorer
     if (number == 122){
-        debug_print("sci0: [122] sys_signal not implemented\n");
-        //return (void*) sys_signal();
-        return NULL;
+        return (void*) sys_signal(arg2, arg3, arg4);
     }
 
 // 123 - free

@@ -154,6 +154,7 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 // Peding signals for this thread.
 // #todo: Put signals this way = t->signal |= 1<<(signal-1);
 
+    /*
     // Se existe algum sinal para essa thread
     if (t->signal != 0)
     {
@@ -166,6 +167,7 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
         //refresh_screen();    
         //panic("__tsOnFinishedExecuting: t->signal\n");
     }
+    */
 
 // ---------------------------------------------------------
 

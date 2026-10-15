@@ -141,12 +141,15 @@ static void __ps_initialize_thread_common_elements(struct thread_d *t)
 // ----------------------------------------
 // Signal support
     t->signal_in_progress = FALSE;
-    int si=0;
-    for (si=0; si<32; si++)
-        t->sig_handlers[32] = (unsigned long) 0;
+    
+    //#todo: Initialize the structures for sigaction[]
+
+    //int si=0;
+    //for (si=0; si<32; si++)
+    //    t->sig_handlers[32] = (unsigned long) 0;
 // #remember: t->signal |= 1<<(signal-1);
-    t->signal = 0;
-    t->umask = 0;
+    //t->signal = 0;
+    //t->umask = 0;
 
 // ------------------
     // More ?
@@ -440,8 +443,12 @@ unsigned long GetThreadStats(tid_t tid, int index)
             //return (unsigned long) t->current_iopl;
             break;
         
-        case 42:  return (unsigned long) t->signal;  break;
-        case 43:  return (unsigned long) t->umask;  break;
+        case 42:
+            return 0;  // #todo: signal?
+            break;
+        case 43:
+            return 0;  // #todo: umask?
+            break;
         
         //#todo
         //default:
@@ -1269,8 +1276,9 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // Signal
 // Sinais para threads.
     clone->signal_in_progress = FALSE;
-    clone->signal = 0;
-    clone->umask = 0;
+
+    //clone->signal = 0;
+    //clone->umask = 0;
 
 
 // #todo: 
