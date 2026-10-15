@@ -1,6 +1,5 @@
-
 // signal.c
-// 
+// libc signal support 
 
 #include <types.h>
 #include <sys/types.h>
@@ -48,37 +47,6 @@ const char *sys_siglist[NSIG] = {
     "Bad system call",
 };
 
-
-/*
- * signal:
- *     POSIX.1-2001, POSIX.1-2008, C89, C99.
- */
-
-//#todo
-    
-sighandler_t signal (int signum, sighandler_t handler)
-{
-    struct sigaction new_act;
-    struct sigaction old_act;
-
-    debug_print ("signal: [TODO] \n");
-
-    new_act.sa_handler = handler;
-    new_act.sa_flags = 0;
-    new_act.sa_mask = 0;
-
-    int rc = sigaction(signum, &new_act, &old_act);
-    if (rc < 0){
-        debug_print("signal: rc\n");
-        return SIG_ERR;
-    }
-
-    // ?? #bugbug: Qual é esse valor ??
-
-    return old_act.sa_handler;
-}
-
-
 /*
  * sigaction:
  *
@@ -94,6 +62,26 @@ sigaction (
     return -1; //#todo
 }
 
+/*
+ * signal:
+ *     POSIX.1-2001, POSIX.1-2008, C89, C99.
+ */
+   
+// It is only used to set up (install) a signal handler.
+sighandler_t signal(int signum, sighandler_t handler)
+{
+    sighandler_t old_handler=0;
+    unsigned long restorer = 0;   // #todo: We need to set a valid address here
+
+    old_handler = 
+        (sighandler_t) sc80 ( 
+            (unsigned long) 122, 
+            (unsigned long) signum,
+            (unsigned long) handler, 
+            (unsigned long) restorer ); 
+
+    return (sighandler_t) old_handler;
+}
 
 // #todo
 // Sends a signal to a process or a process group.
