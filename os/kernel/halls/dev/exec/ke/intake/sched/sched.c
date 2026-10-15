@@ -1456,6 +1456,7 @@ void sched_lower_current_thread(int lapic_info_id)
 
 // #test: Be nice. (Decrement priority)
 // 777 - Implementation of rtl_nice() from ring 3 library 
+
 void sys_nice(unsigned long decrement, int lapic_info_id)
 {
     struct thread_d  *t;
@@ -1498,6 +1499,7 @@ void sys_nice(unsigned long decrement, int lapic_info_id)
 // tid, ticks to wait.
 // It only sets the intention. 
 // Do not change the state of the thread.
+
 void sys_sleep(tid_t tid, unsigned long ms)
 {
     // #debug

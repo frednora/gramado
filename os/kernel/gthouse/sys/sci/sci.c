@@ -2,10 +2,13 @@
 // (System Call Interface).
 // System Service Dispatcher.
 // Handlers for the system interrupts.
-// #todo: 
-// There is another point:
-// The 'event delivery' and 'return' support.
+// Goal: (security)
+// We have four levels of interface.
+// It means that a top level interface can operate as a wrapper
+// for the low level interface adding some extra checks fpr security reason.
+// It means teorically the top level interface and safer and slower at the same time.
 // Created by Fred Nora.
+
 
 // #ps
 // Gramado has four (4) syscall interrupts. 0x80, 0x81, 0x82, 0x83.
@@ -230,6 +233,10 @@ static void __invalidate_surface_rectangle(void)
 // This routine was called by the interrupt handler in x64sc.c.
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in kernel.
+
+
+// Level 0 interface
+// sys_xxxx()
 void *sci0 ( 
     unsigned long number, 
     unsigned long arg2, 
@@ -2137,6 +2144,8 @@ void *sci0 (
 // This routine was called by the interrupt handler in x64sc.c.
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in mod0.
+
+// Level 1 interface
 void *sci1 ( 
     unsigned long number, 
     unsigned long arg2, 
@@ -2213,6 +2222,9 @@ fail:
 // This routine was called by the interrupt handler in x64sc.c.
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in kernel.
+
+// Level 2 interface
+// go_xxxx()
 void *sci2 ( 
     unsigned long number, 
     unsigned long arg2, 
@@ -2306,8 +2318,10 @@ void *sci2 (
     }
 
 // 3 - Get system metrics
-    if (number == 3){
-        return (void*) sys_get_system_metrics(arg2);
+    if (number == 3)
+    {
+        //return (void*) sys_get_system_metrics(arg2);
+        return (void*) go_get_system_metrics(arg2);
     }
 
 // 4 - ioctl() handler.
@@ -2322,15 +2336,23 @@ void *sci2 (
 
 // 5 - fcntl() implementation.
 // See: ?
-    if (number == 5){
+    if (number == 5)
+    {
         debug_print("sci2: [5] fcntl\n");
-        return (void*) sys_fcntl( (int) arg2, (int) arg3, (unsigned long) arg4 );
+        //return (void*) sys_fcntl( (int) arg2, (int) arg3, (unsigned long) arg4 );
+        return (void*) go_fcntl( (int) arg2, (int) arg3, (unsigned long) arg4 );
     }
 
 // 18 - read() implementation.
 // See: fs.c
-    if (number == SCI2_SYS_READ){
-        return (void *) sys_read( 
+    if (number == SCI2_SYS_READ)
+    {
+        //return (void *) sys_read( 
+        //                    (unsigned int) arg2, 
+        //                    (char *)       arg3, 
+        //                    (int)          arg4 );
+
+        return (void *) go_read( 
                             (unsigned int) arg2, 
                             (char *)       arg3, 
                             (int)          arg4 );
@@ -2338,20 +2360,29 @@ void *sci2 (
 
 // 19 - write() implementation.
 // See: fs.c
-    if (number == SCI2_SYS_WRITE){
-        return (void *) sys_write ( 
+    if (number == SCI2_SYS_WRITE)
+    {
+        //return (void *) sys_write ( 
+        //                    (unsigned int) arg2, 
+        //                    (char *)       arg3, 
+        //                    (int)          arg4 );
+
+        return (void *) go_write ( 
                             (unsigned int) arg2, 
                             (char *)       arg3, 
                             (int)          arg4 );
+
     }
 
     // ...
 
 // 265 - yield
 //  + Set a flag that this thread will be preempted.
-// See: schedi.c
-    if (number == 265){
-        sys_yield(CurrentTID); 
+// See: sched.c
+    if (number == 265)
+    {
+        //sys_yield(CurrentTID);
+        go_yield(CurrentTID);
         return NULL; 
     }
 
@@ -2367,8 +2398,10 @@ void *sci2 (
 // O ts vai fazer isso quando for seguro.
 // IN: tid, ms
 // see: sched.c
-    if (number == 266){
-        sys_sleep( (tid_t) CurrentTID, (unsigned long) arg2 );
+    if (number == 266)
+    {
+        //sys_sleep( (tid_t) CurrentTID, (unsigned long) arg2 );
+        go_sleep( (tid_t) CurrentTID, (unsigned long) arg2 );
         return NULL;
     }
 
@@ -2380,7 +2413,8 @@ void *sci2 (
     if (number == 777)
     {
         // IN: decrement, current core
-        sys_nice(1,0);
+        //sys_nice(1,0);
+        go_nice(1, 0);
         return NULL;   
     }
 
@@ -2605,7 +2639,13 @@ void *sci2 (
     {
         debug_print("sci2: [SCI2_SYS_IOCTL] ioctl\n");
         //printk("sci2: [SCI2_SYS_IOCTL] ioctl\n");
-        return (void *) sys_ioctl ( 
+
+        //return (void *) sys_ioctl ( 
+        //                    (int) arg2, 
+        //                    (unsigned long) arg3, 
+        //                    (unsigned long) arg4 );
+
+        return (void *) go_ioctl ( 
                             (int) arg2, 
                             (unsigned long) arg3, 
                             (unsigned long) arg4 );
@@ -2614,9 +2654,16 @@ void *sci2 (
 // 8001 - sys_fcntl()
 // (second time) see: number 5.
 // See: sys.c
-    if (number == SCI2_SYS_FCNTL){
+    if (number == SCI2_SYS_FCNTL)
+    {
         debug_print("sci2: [SCI2_SYS_FCNTL] fcntl\n");
-        return (void *) sys_fcntl (
+
+        //return (void *) sys_fcntl (
+        //                    (int) arg2, 
+        //                    (int) arg3, 
+        //                    (unsigned long) arg4 );
+
+        return (void *) go_fcntl (
                             (int) arg2, 
                             (int) arg3, 
                             (unsigned long) arg4 );
@@ -2666,11 +2713,13 @@ void *sci2 (
 // A estrutura de arquivo contém uma estrutura de sincronização de leitura e escrita.
 // #ok: podemos usar ioctl
 // See: fs.c
+
     if (number == 10000)
     {
         //debug_print("sci2: [10000] sys_set_file_sync\n");
         // IN: fd, request, data
-        sys_set_file_sync((int) arg2, (int) arg3, (int) arg4);
+        //sys_set_file_sync((int) arg2, (int) arg3, (int) arg4);
+        go_set_file_sync((int) arg2, (int) arg3, (int) arg4);
         return NULL;
     }
 
@@ -2682,9 +2731,11 @@ void *sci2 (
 // #ok: podemos usar ioctl
 // See: fs.c
 // IN: fd, request
-    if (number == 10001){
+    if (number == 10001)
+    {
         //debug_print("sci2: [10000] sys_get_file_sync\n");
-        return (void*) sys_get_file_sync((int) arg2, (int) arg3);
+        //return (void*) sys_get_file_sync((int) arg2, (int) arg3);
+        return (void*) go_get_file_sync((int) arg2, (int) arg3);
     }
 
 //
@@ -2696,18 +2747,24 @@ void *sci2 (
 // ============
 // See: sys.c
 // Set action.
-    if (number == 10002){
-        sys_set_global_sync( (int) arg2, (int) arg3, (int) arg4 );
+    if (number == 10002)
+    {
+        //sys_set_global_sync( (int) arg2, (int) arg3, (int) arg4 );
+        go_set_global_sync( (int) arg2, (int) arg3, (int) arg4 );
         return NULL;
     }
 // Get action.
-    if (number == 10003){
-        return (void*) sys_get_global_sync( (int) arg2, (int) arg3 );
+    if (number == 10003)
+    {
+        //return (void*) sys_get_global_sync( (int) arg2, (int) arg3 );
+        return (void*) go_get_global_sync( (int) arg2, (int) arg3 );
     }
 // Create sync.
 // OUT: sync id.
-    if (number == 10004){
-        return (void*) sys_create_new_sync();
+    if (number == 10004)
+    {
+        //return (void*) sys_create_new_sync();
+        return (void*) go_create_new_sync();
     }
 // Get sync id.
 // Provisorio para teste
@@ -2724,15 +2781,19 @@ void *sci2 (
 // Set file sync action
 // IN: fd, request, data
 // see: fs.c
-    if (number == 10006){
-        sys_set_file_sync( (int) arg2, (int) arg3, (int) arg4 );
+    if (number == 10006)
+    {
+        //sys_set_file_sync( (int) arg2, (int) arg3, (int) arg4 );
+        go_set_file_sync( (int) arg2, (int) arg3, (int) arg4 );
         return NULL;
     }
 // Get file sync action
 // IN: fd, request
 // see: fs.c
-    if (number == 10007){
-        return (void*) sys_get_file_sync( (int) arg2, (int) arg3 );
+    if (number == 10007)
+    {
+        //return (void*) sys_get_file_sync( (int) arg2, (int) arg3 );
+        return (void*) go_get_file_sync( (int) arg2, (int) arg3 );
     }
 // ===============
 
@@ -3255,6 +3316,8 @@ void *sci2 (
 // This routine was called by the interrupt handler in x64sc.c.
 // Getting requests from ring3 applications via systemcalls.
 // :: Services in mod0.
+
+// Level 3 interface
 void *sci3 ( 
     unsigned long number, 
     unsigned long arg2, 

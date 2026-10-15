@@ -82,6 +82,7 @@ request.o \
 system.o \
 wrappers.o \
 sys.o \
+go.o \
 sci.o \
 mod.o \
 cg.o \
@@ -131,7 +132,16 @@ all:
 # It is a mirror for the libc functions in ring 3 and 
 # some other Gramado specific APIs.
 
+# We have four layers of syscalls for security resons
+
+# sci level 0
 	$(CC) -c sys.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sys.o
+# sci level 1
+#	$(CC) -c 111.c  $(KERNEL_INCLUDE) $(CFLAGS) -o 111.o
+# sci level 2
+	$(CC) -c go.c  $(KERNEL_INCLUDE) $(CFLAGS) -o go.o
+# sci level 3
+#	$(CC) -c 333.c  $(KERNEL_INCLUDE) $(CFLAGS) -o 333.o
 
 
 # ----------------------------------------------

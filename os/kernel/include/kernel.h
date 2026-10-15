@@ -476,7 +476,7 @@ extern int system_state;
 
 // Top level header for sys/
 #include "../gthouse/sys/sys.h"
-
+#include "../gthouse/sys/go.h"
 
 // -------------------------------
 // sci/

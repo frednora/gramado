@@ -177,6 +177,7 @@ int sys_fcntl(int fd, int cmd, unsigned long arg)
 // Called by sc82 in sci.c
 // sys_ioctl is called by the ring 3 programs.
 // See: io.c
+
 int sys_ioctl(int fd, unsigned long request, unsigned long arg)
 {
     int status = -1;
@@ -202,6 +203,7 @@ int sys_ioctl(int fd, unsigned long request, unsigned long arg)
 // 10003
 // Get action.
 // See: kstdio.h
+
 int sys_get_global_sync (int sync_id, int request)
 { 
     struct kstdio_sync_d *s;
@@ -302,6 +304,7 @@ fail:
 // #todo
 // Comment the purpose of this routine.
 // It is used on socket communication.
+
 void sys_set_file_sync(int fd, int request, int data)
 {
     file *object;
@@ -420,6 +423,7 @@ void sys_set_file_sync(int fd, int request, int data)
 // Comment the purpose of this routine.
 // It is used on socket communication.
 // #todo: Explain the output values.
+
 int sys_get_file_sync(int fd, int request)
 {
     file *object;
