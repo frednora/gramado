@@ -1,11 +1,14 @@
 # gthouse - Gate House
 
----------------------------------------
-go/     - New experimental interface for Gramado OS kernel.
 
 ---------------------------------------
-sys/    - Intarface for the libc functions and legacy system APIs.
-        CS - Client/Server high level infrastructure.
+sys/    - boot block support
+        - klog
+        - modules
+        - Systemcall Interface (SCI)
+        - virtualization
+        - Interface for the libc functions and legacy system APIs.
+        - CS - Client/Server high level infrastructure.
 
 ---------------------------------------
 libk/   - Libc implementation and rtl
