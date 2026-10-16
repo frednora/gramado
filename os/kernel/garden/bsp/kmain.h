@@ -178,16 +178,6 @@ void welcome_ap_hlt(void);
 void welcome_ap_pause(void);
 
 
-//
-// Used during the kernel initialization.
-//
-
-// See: kmain.c
-void init_globals(void);
-
-// See: kmain.c
-void init_globals(void);
-
 // ::(1)
 // The kernel starts at ...
 // see: '_kernel_entry_point' in head_64.asm.

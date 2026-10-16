@@ -1184,26 +1184,54 @@ static int I_initKernelComponents(void)
         return FALSE;
     }
 
-// Initialize globals.
-// See: kmain.c
-    init_globals();
+// Initialize with zero the values of 
+// current process and current thread for the BSP core.
 
-// Initialize system HAL.
+    const int lapic_info_id = 0;  // BSP
+    const int CurrentPID = 0;
+    const int CurrentTID = 0;
+    set_current_process(CurrentPID, lapic_info_id);
+    SetCurrentTID(CurrentTID, lapic_info_id);
+
+// Create the device list for all the devices
+// in our system, including the hal stuff i guess.
+    devInitialize();
+
+// libk/ module.
+// + Initialize srtuctures for the stadard streams.
+// + It uses the global file table.
+// + It also makes the early initialization of the consoles.
+    Status = (int) libk_initialize();
+    if (Status != TRUE){
+        x_panic("on libk_initialize()\n");
+    }
+
+// The kernel request
+// See: request.c
+    clearDeferredKernelRequest();
+
+// Screen
+// Now we can print strings in the screen.
+// Reinitializing ... 
+// see: bldisp.c
+    bldispScreenInit();
+
+// Initialize system HAL
     Status = halInitialize();
     if (Status != TRUE){
         printk("I_initKernelComponents: on halInitialize()\n");
         return FALSE;
     }
 
-// Initializat PCI interface.
+// Initializat PCI interface
     init_pci();
 
-// Initialize storage support.
+// Initialize storage support
 // Disk, volume, MBR ...
 // see: storage.c
-    int st_status=FALSE;
-    st_status = storageInitialize();
-    if (st_status != TRUE){
+
+    Status = storageInitialize();
+    if (Status != TRUE){
        printk("I_initKernelComponents: on storageInitialize()\n");
        return FALSE;
     }
@@ -1212,7 +1240,7 @@ static int I_initKernelComponents(void)
 // see: fs.c
     fsInitialize();
 
-    printk("I_initKernelComponents: done\n");
+    // printk("I_initKernelComponents: done\n");
 
 // OK. Return to the main initialization routine in x64init.c.
     return TRUE;

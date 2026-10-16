@@ -1,12 +1,15 @@
 ; head_64.asm
-; Entry point for a 64bit kernel image.
+; + Entrypoint for the BSP core.
+; + Entrypoint for the APs core.
 ; Created by Fred Nora.
 
 ; Order:
-; + Entrypoint (Jump to main routine)
+; + Entrypoint for the BSP core
+;   (It jumps to the main routine)
 ; + Data 
 ; + Workers 
 ; + Main routine 
+; + Entrypoint for the APs core.
 
 
 %include "header.asm"
@@ -2605,7 +2608,7 @@ DEBUG_START: db "START"
 ; =================================================
 ; Real start 
 ; IN:
-;   ebx = Bootblock base address
+;   ebx = Bootblock base address (32bit address)
 ;   edx = Signature value
 
 align 4
@@ -2614,16 +2617,24 @@ START:
 ; Save information that came from the bootloader.
 ; We're in 64bit. But it is a 32bit address.
 
+;
+; Bootblock address
+;
+
     xor r8, r8
     mov r8d, ebx  ; upper 32 bits of r8 are zeroed automatically
-    mov qword [_saved_bootblock_base], r8  ; Bootblock address
+    mov qword [_saved_bootblock_base], r8
+
+;
+; Signature value
+;
 
     xor r8, r8
     mov r8d, edx  ; upper 32 bits of r8 are zeroed automatically
-    mov qword [_magic], r8  ; Signature value
+    mov qword [_magic], r8
 
 ; Clear some registers.
-; Load our own 64-bit gdt.
+; Load our own 64-bit GDT.
 ; Setup data registers and base kernel stack.
 ; Load a NULL ldt.
 
@@ -2810,7 +2821,7 @@ START:
     ; xor rbp, rbp
 
     xor rax, rax
-    mov rdi, rax    ; First argument.
+    mov rdi, rax    ; First argument
     ; ...
 
 

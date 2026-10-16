@@ -135,23 +135,27 @@ static void __enter_debug_mode(void);
 static void __print_final_messages(void);
 static void __setup_utsname(void);
 
-// Early init routines
-static int earlyinit_SetupBootblock(void);
-static void earlyinit_Globals(int arch_type);
-static void earlyinit_Serial(void);
-static void earlyinit_OutputSupport(void);
+static int __test_initialize_ap_processor(int target_hw_apic_id);
+static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 
-static int earlyinit(void);
+
+// [1]: Early init routines
+static int earlyinit_SetupBootblock(void);     // [1.1]
+static void earlyinit_Globals(int arch_type);  // [1.2]
+static void earlyinit_Serial(void);            // [1.3]
+static void earlyinit_OutputSupport(void);     // [1.4]
+static int earlyinit(void);                    // [1.0]
+
+// [4]: Arch init
 static int archinit(void);
+
+// [5]: Decive init
 static int deviceinit(void);
+
+// [6]: late init
 static int lateinit(void);
 
-static int __test_initialize_ap_processor(int target_hw_apic_id);
-
 static int I_initialize_kernel(int arch_type, int processor_number);
-
-
-static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 
 
 //
@@ -432,7 +436,7 @@ static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id)
         break;
     }
 
-    memset(msg,0,64);
+    memset(msg, 0, 64);
 
     // Build final message: "PANIC: <func> Error: 0xXX"
     ksprintf(msg, "%s Error: 0x%x", funcname, (error_code & 0xFF));
@@ -465,34 +469,25 @@ static void __enter_debug_mode(void)
         }
     }
 
+    // Fatal
     if (Initialization.is_console_log_initialized == TRUE)
     {
-        //printk("kmain.c: The kernel is in debug mode.\n");
-        // kgwm_early_kernel_console();  //#deprecated
-        //printk("kmain.c: End of debug mode.\n");
-        
-        // #panic
         printk("__enter_debug_mode: [PANIC] console log ok\n");
-        refresh_screen();
         die();
     }
 
-// Die. 
-// No refresh and no message.
-    die();
+    die();  // Die with no final message
 }
 
 // ===================
-// ::(2)(3)
+// Final messages
 static void __print_final_messages(void)
 {
-// Final messages
     if (Initialization.is_serial_log_initialized == TRUE){
-        debug_print("::(2)(3): [final message] FAILURE\n");
+        debug_print("[final message] FAILURE\n");
     }
     if (Initialization.is_console_log_initialized == TRUE){
         printk("init: [final message] FAILURE\n");
-        refresh_screen();
     }
 }
 
@@ -519,114 +514,6 @@ static void __setup_utsname(void)
     ksprintf(kernel_utsname.nodename,   NODE_NAME);     // e.g. "gramado-host"
     // Domain name
     ksprintf(kernel_utsname.domainname, DOMAIN_NAME);   // "DOMAIN-NAME"
-}
-
-
-void init_globals(void)
-{
-// Called by I_initKernelComponents() in x64init.c
-// Architecture independent?
-// Not everything here.
-// Order: cpu, ram, devices, etc.
-// #todo: maybe we can move this routine to x64init.c
-
-    int Status = FALSE;
-
-    const int lapic_info_id = 0;  // BSP
-
-
-// smp
-    g_smp_initialized = FALSE;
-    g_processor_count = 0;
-
-// Profiler
-// See: pints.h
-// Intel/AMD
-// Legacy hardware interrupts (irqs) (legacy pic)
-    g_profiler_ints_irq0  = 0;
-    g_profiler_ints_irq1  = 0;
-    g_profiler_ints_irq2  = 0;
-    g_profiler_ints_irq3  = 0;
-    g_profiler_ints_irq4  = 0;
-    g_profiler_ints_irq5  = 0;
-    g_profiler_ints_irq6  = 0;
-    g_profiler_ints_irq7  = 0;
-    g_profiler_ints_irq8  = 0;
-    g_profiler_ints_irq9  = 0;
-    g_profiler_ints_irq10 = 0;
-    g_profiler_ints_irq11 = 0;
-    g_profiler_ints_irq12 = 0;
-    g_profiler_ints_irq13 = 0;
-    g_profiler_ints_irq14 = 0;
-    g_profiler_ints_irq15 = 0;
-    // ...
-
-// Global counter for syscalls
-    g_profiler_ints_syscall_counter = 0;
-
-// User and group.
-    current_user  = 0;
-    current_group = 0;
-
-// Security layers.
-    current_usersession = (int) 0;
-
-// Process
-
-    foreground_process = (pid_t) 0;
-
-    // IN: pid, core id
-    set_current_process(0,0);
-
-// Global foreground thread
-    foreground_thread = (tid_t) 0;
-
-    
-// Per-cpu current thread.
-// Initialize the index of the current thread for the first core.
-    lapic_info[lapic_info_id].current_tid = (tid_t) 0;
-
-// File system support
-// Type=1 | FAT16.
-    g_currentvolume_filesystem_type = FS_TYPE_FAT16;
-    g_currentvolume_fatbits = (int) 16;
-
-
-// Create the device list for all the devices
-// in our system, including the hal stuff i guess.
-    devInitialize();
-
-// libk/ module.
-// + Initialize srtuctures for the stadard streams.
-// + It uses the global file table.
-// + It also makes the early initialization of the consoles.
-    Status = (int) libk_initialize();
-    if (Status != TRUE){
-        x_panic("init_globals: on libk_initialize()\n");
-    }
-
-// ===================
-
-// The kernel request
-// See: request.c
-    clearDeferredKernelRequest();
-
-// Screen
-// Now we can print strings in the screen.
-// Reinitializing ... 
-// see: bldisp.c
-    bldispScreenInit();
-
-    //debug_print("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
-    //printk     ("keInitGlobals: [printk] WE HAVE MESSAGES NOW!\n");
-
-// Redirect printk to serial port during syscalls.
-// See: config.h and fslib.c
-    if ( CONFIG_PRINTK_TO_SERIAL_DURING_SYSCALLS == 1 ){
-        g_redirect_printk_to_serial_during_syscalls = TRUE;
-    } else {
-        g_redirect_printk_to_serial_during_syscalls = FALSE;
-    };
 }
 
 //
@@ -840,6 +727,68 @@ static void earlyinit_Globals(int arch_type)
     //set_update_screen_frequency(30);
     set_update_screen_frequency(60);
     //set_update_screen_frequency(120);
+
+
+//
+// #test: 
+// Moving some initialization to here in the early stages
+//
+
+// smp
+    g_smp_initialized = FALSE;
+    g_processor_count = 0;
+
+// Profiler
+// See: pints.h
+// Intel/AMD
+// Legacy hardware interrupts (irqs) (legacy pic)
+    g_profiler_ints_irq0  = 0;
+    g_profiler_ints_irq1  = 0;
+    g_profiler_ints_irq2  = 0;
+    g_profiler_ints_irq3  = 0;
+    g_profiler_ints_irq4  = 0;
+    g_profiler_ints_irq5  = 0;
+    g_profiler_ints_irq6  = 0;
+    g_profiler_ints_irq7  = 0;
+    g_profiler_ints_irq8  = 0;
+    g_profiler_ints_irq9  = 0;
+    g_profiler_ints_irq10 = 0;
+    g_profiler_ints_irq11 = 0;
+    g_profiler_ints_irq12 = 0;
+    g_profiler_ints_irq13 = 0;
+    g_profiler_ints_irq14 = 0;
+    g_profiler_ints_irq15 = 0;
+    // ...
+
+// Global counter for syscalls
+    g_profiler_ints_syscall_counter = 0;
+
+// User and group.
+    current_user  = 0;
+    current_group = 0;
+
+// Security layers.
+    current_usersession = (int) 0;
+
+// Process
+    foreground_process = (pid_t) 0;
+// Global foreground thread
+    foreground_thread = (tid_t) 0;
+
+// File system support
+// Type=1 | FAT16.
+    g_currentvolume_filesystem_type = FS_TYPE_FAT16;
+    g_currentvolume_fatbits = (int) 16;
+
+// Redirect printk to serial port during syscalls.
+// See: config.h and fslib.c
+    if ( CONFIG_PRINTK_TO_SERIAL_DURING_SYSCALLS == 1 ){
+        g_redirect_printk_to_serial_during_syscalls = TRUE;
+    } else {
+        g_redirect_printk_to_serial_during_syscalls = FALSE;
+    };
+
+    // ...
 }
 
 // =========================
@@ -891,6 +840,7 @@ static void earlyinit_OutputSupport(void)
 // We don't have any print support for now.
 // But here is the moment when we initialize the
 // serial debug support.
+// [1.0]
 static int earlyinit(void)
 {
 // Starting the counter.
@@ -1128,6 +1078,7 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
 }
 
 // :: Level ?
+// [4.0]
 static int archinit(void)
 {
     int ProcessorType = -1;
@@ -1135,7 +1086,6 @@ static int archinit(void)
     int smp_status = FALSE;
 
     const int lapic_info_id = 0;  // BSP
-
 
 /*
 //++
@@ -1152,7 +1102,6 @@ static int archinit(void)
 //----------
 //--
 */
-
 
     // 1) - Probe processor type
     ProcessorType = (int) hal_probe_processor_type();
@@ -1680,7 +1629,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         if (Status != TRUE)
             panic_at_init(Error60_lateinit,KERNEL_SUBSYSTEM_KMAIN);       
 
-        return TRUE; // The kernel was initialized successfully.
+        return TRUE;  // The kernel was initialized successfully.
 
     // AP initialization (lateinit)
     } else {
@@ -1763,19 +1712,13 @@ void I_kmain(int arch_type)
 // Config headless mode.
 // In headless mode stdout sends data to the serial port.
     Initialization.headless_mode = FALSE;
-    Initialization.printk_to_serial = FALSE;
     // ...
 
-// Redirect printk to serial port?
-// It affects printk during all the time.
-    if (CONFIG_PRINTK_TO_SERIAL == 1){
-        Initialization.printk_to_serial = TRUE;
-    }
+
 // Headless mode?
     if (CONFIG_HEADLESS_MODE == 1)
     {
         Initialization.headless_mode = TRUE;
-        Initialization.printk_to_serial = TRUE;
         // ...
     }
 
@@ -1821,7 +1764,6 @@ void I_kmain(int arch_type)
 // needs the structures for the processes.
 // Probably the creattion of the processes is considering the
 // structures for the core/lapic witch gives us a double problem.
-
 
 // Let's create the kernel process, the init process and 
 // execute the init process.
@@ -1893,6 +1835,7 @@ void I_kmain(int arch_type)
 // ======================================================================
 
     // Spawn the main thread for the init process
+    // see: ke.c
     PROGRESS("\n");
     PROGRESS("I_kmain: Spawn init thread\n");
     if (Status == TRUE){

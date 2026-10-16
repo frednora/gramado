@@ -1,11 +1,13 @@
 ; fn_table.asm
-
+; The address for some functions that kernel 
+; exports to the first ring 0 module. (Dungeon)
 
 ; ----------------------
 ; Exporting ...
 ; see: mod.c
 ; see: newm0/ in the module.
 ; #todo: maybe we can have this table in another place.
+; #ps: Do we need to use the 'extern'?
 
 
     nop ; Nop
@@ -16,4 +18,5 @@
     DQ _xp_refresh_screen        ; symbol 3: (no arg)
     DQ _xp_putchar_in_fgconsole  ; symbol 4: (1 arg)
     ; ...
+
 ; ----------------------
