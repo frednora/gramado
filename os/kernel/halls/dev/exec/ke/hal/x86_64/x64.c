@@ -143,6 +143,9 @@ static inline void x64_write_gsbase(uint64_t value)
 
 // Setup the GS base for a given core
 // Call this once for every core (BSP + APs)
+// When this is called:
+// + in x64smp.c for BSP
+// + in apmain.c for AP
 void x64_setup_cpu_local(int cpu_id)
 {
     if (cpu_id < 0 || cpu_id >= NR_CPUS)
@@ -164,6 +167,18 @@ void x64_setup_cpu_local(int cpu_id)
     x64_write_gsbase(
         (uint64_t) &cpu_locals[cpu_id]
     );
+}
+
+// #ps: used for debug
+void x64_show_cpu_locals_table(void)
+{
+    int i;
+
+    //for (i=0; i<NR_CPUS; i++)
+    for (i=0; i<5; i++)
+    {
+        printk("cpu id: %d\n", cpu_locals[i].cpu_id);
+    }
 }
 
 

@@ -128,6 +128,8 @@ void x64smp_show_info(void)
     printk("BSP tss: %x\n", lapic_info[0].tss );
 
 
+    x64_show_cpu_locals_table();
+
     // ...
 }
 
@@ -245,6 +247,9 @@ int x64smp_initialization(void)
     if (lapic_info[0].initialized == TRUE){
 
         // Setup the GS base for the BSP core
+        // #ps:
+        // We already have an early initialization done in assembly.
+        // Maybe we can check the values to compare them.
         x64_setup_cpu_local(0);
 
         return TRUE;

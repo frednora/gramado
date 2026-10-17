@@ -98,6 +98,30 @@ align 4
 FunctionTable:
     %include "fn_table.asm"
 
+
+
+;; =======================
+align 4
+global _early_bsp_cpu_data
+_early_bsp_cpu_data:
+    dq _early_bsp_cpu_data   ; self pointer
+    dq 0                     ; cpu id
+    dq 0                     ; current thread
+    dq 0                     ; flags
+
+;; =======================
+align 4
+global _early_ap_cpu_data
+_early_ap_cpu_data:
+    dq _early_ap_cpu_data   ; self pointer
+    dq 0                     ; cpu id
+    dq 0                     ; current thread
+    dq 0                     ; flags
+
+; The number for the AP core
+ap_nr:
+    dq 0 ; It starts with 0
+
 ;; ============================================================
 ;; GDT
 ;; Global Descriptor Table (GDT) for 64-bit long mode.
@@ -2696,7 +2720,40 @@ START:
 
     ; Usable base addres
     mov fs, ax
-    mov gs, ax
+    mov gs, ax  ; #ps: In long mode it only loads the selector
+
+; -------------------------
+
+;
+; Early per-CPU data for BSP.
+; IA32_GS_BASE = &_early_bsp_cpu_data
+;
+
+; EDX:EAX = 64-bit base address
+; ECX      = MSR number
+; WRMSR    = program the MSR
+
+; rax = &_early_bsp_cpu_data
+; GS Base --> _early_bsp_cpu_data
+
+    mov rax, _early_bsp_cpu_data
+    mov ecx, 0xC0000101      ; IA32_GS_BASE
+    mov rdx, rax
+    shr rdx, 32
+    wrmsr
+
+; Initializing some values
+; +00 self
+; +08 cpu_id
+; +10 current_thread
+; +18 flags
+
+    mov qword [gs:0x08], 0    ; cpu_id = 0 (BSP)
+    mov qword [gs:0x10], 0    ; current_thread = NULL
+    mov qword [gs:0x18], 0    ; flags = 0
+
+; -------------------------
+
 
 ; Initialize LDT with a NULL selector for the BSP core
     xor rax, rax
@@ -2894,6 +2951,43 @@ _asm_AP_entry_point:
 	; fs and gd are not used
     ;mov fs, ax
     ;mov gs, ax
+
+; -------------------------
+
+;
+; Early per-CPU data for AP.
+; IA32_GS_BASE = &_early_ap_cpu_data
+;
+
+; EDX:EAX = 64-bit base address
+; ECX      = MSR number
+; WRMSR    = program the MSR
+
+; rax = &_early_ap_cpu_data
+; GS Base --> _early_ap_cpu_data
+
+    mov rax, _early_ap_cpu_data
+    mov ecx, 0xC0000101      ; IA32_GS_BASE
+    mov rdx, rax
+    shr rdx, 32
+    wrmsr
+
+
+    mov rax, qword [ap_nr]  ; It starts with 0
+	inc rax 
+	mov qword [ap_nr], rax  ; Save it for the next
+
+; Initializing some values
+; +00 self
+; +08 cpu_id
+; +10 current_thread
+; +18 flags
+
+    mov qword [gs:0x08], rax  ; cpu_id = ? (AP)
+    mov qword [gs:0x10], 0    ; current_thread = NULL
+    mov qword [gs:0x18], 0    ; flags = 0
+
+; -------------------------
 
 ; Load a clean stack
     ;mov rsp, [_EarlySharedAPStack]   ; pointer provided by BSP

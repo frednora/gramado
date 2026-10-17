@@ -393,7 +393,10 @@ static void __ap_kmain_imp(void)
 // We're gonna use it to point to the cpu_locals structure for this core.
 // This way we can retrieve the current core's id.
 // see:
-// x64.h and x64.c
+// x64.h, x64.c and x64smp.c
+// #ps:
+// We already have an early initialization done in assembly.
+// Maybe we can check the values to compare them.
 
     x64_setup_cpu_local(lapic_id);
 

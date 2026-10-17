@@ -26,6 +26,7 @@
 struct cpu_local_d 
 {
     uint32_t cpu_id;                 // index into lapic_info[]
+
     // You can add more fields later if you want
     // lapic_info_t *lapic;
     // void *current_thread;
@@ -120,6 +121,8 @@ void x64_setup_syscall64(unsigned long handler_address);
 // Setup the GS base for a given core
 // Call this once for every core (BSP + APs)
 void x64_setup_cpu_local(int cpu_id);
+
+void x64_show_cpu_locals_table(void);
 
 
 void x64_load_cr8(unsigned long value);
