@@ -403,7 +403,8 @@ fail:
 // Get system messages from Init Thread (idle).
 // Getting requests or events.
 // Process the events.
-// Respond the request of other processes using system messages.
+// Respond the request of other processes using system messages
+
 static int xxxEventLoopSystemEvents(void)
 {
 
@@ -428,6 +429,8 @@ static int xxxEventLoopSystemEvents(void)
 // Nessa hora ja não nos preocupamos mais com essa thread.
 // Ele receberá algumas mensagens eventualmente.
 
+    int has_msg = FALSE;
+
     while (TRUE){
 
         //start_jiffie = rtl_jiffies();
@@ -439,8 +442,11 @@ static int xxxEventLoopSystemEvents(void)
         // #todo
         // We gotta put this thread into a wait state if there's no 
         // more events into the queue.
-        if ( rtl_get_event() == TRUE )
-        {
+
+        has_msg = rtl_get_event();  // Get system events
+    
+        if (has_msg == TRUE){
+
             // #todo: I guess the purpose here
             // is limiting who is able to communicate with us.
             // ex: all the callers bellow the 100 mark (system threds).
@@ -461,11 +467,16 @@ static int xxxEventLoopSystemEvents(void)
                     //rtl_yield();
                     //Caller.tid = -1;
             //}
+
+            // We only send a response if we previously got a request
+            if (NoReply == FALSE){
+                xxxSendResponse();
+            }
+
+        } else {
+            rtl_yield();
         }
 
-        if (NoReply == FALSE){
-            xxxSendResponse();
-        }
 
         /*
         end_jiffie = rtl_jiffies();
