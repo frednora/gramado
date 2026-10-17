@@ -26,6 +26,7 @@ struct gws_display_d *Display;
 struct dccanvas_d *dc00;  // shared dc
 static unsigned long __sh_flags = 0;
 
+struct bmp_cache_d *icon00_cache;
 
 struct ui_component_d *uic_button_refresh;
 struct ui_component_d *uic_button_close;
@@ -356,10 +357,27 @@ static void update_children(int fd)
     lingui_draw_rectangle0_dc(
         dc00, 0, cr_height - (button_h + 20), cr_width, button_h + 20, BGCOLOR_FOOTER, 0);
 
+
 // --------------------
-    // Header label
-    const char *label_chose = "System Memory Status: ";
-    libgui_drawstringblock_dc(dc00, 8, 8, COLOR_BLACK, label_chose, 2);
+// BMP
+    if (icon00_cache && icon00_cache->loaded) 
+    {
+        bmp_decode_bmp_image(icon00_cache, dc00, 8, 8, 1); // zoom=1
+    }
+
+// --------------------
+// Header label
+    const char *label_chose = "Memory Status:";
+    // libgui_drawstringblock_dc(dc00, 8, 8, COLOR_BLACK, label_chose, 2);
+    libgui_drawstringblock_dc(
+        dc00,
+        8 +16 +8,
+        8,
+        COLOR_BLACK,
+        label_chose,
+        2
+    );
+
 
     // Metrics block
     draw_memory_metrics(fd, metrics_x, metrics_y, line_h);
@@ -944,22 +962,25 @@ int main(int argc, char *argv[])
         0
     );
 
+// ----------------------------
+
+// -----------------------------------------------------
+// #test: BMP image
+
+    icon00_cache = (struct bmp_cache_d*) bmp_load_bmp_image("#terminal.bmp");
+    if (icon00_cache && icon00_cache->loaded) 
+    {
+        bmp_decode_bmp_image(icon00_cache, dc00, 8, 8, 1); // zoom=1
+    }
+// -----------------------------------------------------
+
+
 // String for the client area
-    const char *label_chose = "System Memory Status: ";
-    /*
-    libgui_drawstring_dc(
-        dc00,
-        8,
-        8,
-        COLOR_BLACK,
-        COLOR_WHITE,
-        0,  // ROP 
-        label_chose
-    );
-    */
+    const char *label_chose = "Memory Status:";
+
     libgui_drawstringblock_dc(
         dc00,
-        8,
+        8 +16 +8,
         8,
         COLOR_BLACK,
         label_chose,
