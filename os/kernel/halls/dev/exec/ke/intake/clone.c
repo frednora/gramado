@@ -633,10 +633,7 @@ copy_process00(
     // Get PID for the current process for a given core.
     // IN: core id
 
-    pid_t current_process = (pid_t) get_current_process(0);
-
-    //printk (":)\n");
-    //return -1;
+    pid_t CurrentPID = (pid_t) get_current_process(0);
 
     //usado para salvamento.
     //unsigned long old_image_pa; 
@@ -710,7 +707,7 @@ copy_process00(
     // old_image_pa = (unsigned long) virtual_to_physical ( parent_process->Image, gKernelPageDirectoryAddress ); 
 
     //#debug
-    //printk(">>> check current process: %d %d \n", current_process, parent_process->pid );
+    //printk(">>> check current process: %d %d \n", CurrentPID, parent_process->pid );
 
     // ...
 
@@ -790,18 +787,17 @@ copy_process00(
 
 //====
 
-// Limits for the callers pid.
-    if ( parent_process->pid < 0 || 
-         parent_process->pid >= PROCESS_COUNT_MAX )
+// Limits for the caller's PID
+    if (parent_process->pid < 0 || parent_process->pid >= PROCESS_COUNT_MAX)
     {
         panic("copy_process00: parent_process->pid limits\n");
     }
 
 // pid again.
-// Tem que ser igual ao current_process que pegamos logo acima
+// Tem que ser igual ao CurrentPID que pegamos logo acima
 // pois o pai tem que ser quem esta chamando.
-    if (current_process != parent_process->pid){
-        panic("copy_process00: current_process != parent_process->pid\n");
+    if (CurrentPID != parent_process->pid){
+        panic("copy_process00: CurrentPID != parent_process->pid\n");
     }
 
 //
@@ -813,23 +809,17 @@ do_clone:
     // Switch
     //x64mm_load_pml4_table( kernel_mm_data.pml4_pa );
 
-    //printk (":)\n");
-    //return -1;
-
 // Worker
 // See: process.c
 
-    child_process = 
-        (struct te_d *) create_and_initialize_process_object();
+    child_process = (struct te_d *) create_and_initialize_process_object();
 
     if ((void *) child_process == NULL){
-        //debug_print("copy_process00: child_process\n");
-        printk     ("copy_process00: child_process\n");
+        printk("copy_process00: child_process\n");
         goto fail;
     }
     if (child_process->magic != 1234){
-        //debug_print("copy_process00: child_process validation\n");
-        printk     ("copy_process00: child_process validation\n");
+        printk("copy_process00: child_process validation\n");
         goto fail;
     }
 
@@ -853,12 +843,6 @@ do_clone:
     if (child_pid == GRAMADO_PID_KERNEL){
         panic("copy_process00: child_pid == GRAMADO_PID_KERNEL\n");
     }
-
-// Breakpoint
-
-    //#debug
-    //printk (" :) \n");
-    //return 0;
 
 //
 // Heap
@@ -959,14 +943,8 @@ do_clone:
 // Allocating memory for the image and for the stack.
     Status = (int) alloc_memory_for_image_and_stack(parent_process);
     if (Status != 0){
-        panic("copy_process00: __alloc_memory_for_image_and_stack\n");
+        panic("copy_process00: on alloc_memory_for_image_and_stack()\n");
     }
-
-// Breakpoint
-
-    //#debug
-    //printk (" :) \n");
-    //return 0;
 
 // Copy process structure.
 // [2]
@@ -983,27 +961,17 @@ do_clone:
 // #todo: It depends on the childs personality.
     Status = (int) copy_process_struct( parent_process, child_process );
     if (Status != 0){
-        panic("copy_process00: [FAIL] copy_process_struct\n");
+        panic("copy_process00: on copy_process_struct()\n");
     }
 
-// Breakpoint
-
-    //#debug
-    //printk (" :) \n");
-    //return 0;
-
     // #debug
-    // ok
     //printk ("child_process->pml4_VA: %x\n",child_process->pml4_VA);
     //printk ("child_process->pml4_PA: %x\n",child_process->pml4_PA);
-    //while(1){}
-
-    // #debug
     //printk ("Stack : %x \n",__rsp);
     //while(1){}
 
 //
-// child thread.
+// child thread
 //
 
 // Copy parent thread structure.
@@ -1011,7 +979,7 @@ do_clone:
     //debug_print("copy_process: [3] Copying thread structure\n");
     child_thread = (struct thread_d *) copy_thread_struct(parent_thread);
     if ((void *) child_thread == NULL){
-        panic("copy_process00: [FAIL] copy_thread_struct\n");
+        panic("copy_process00: on copy_thread_struct()\n");
     }
 
 // #bugbug: 
@@ -1028,12 +996,6 @@ do_clone:
 // Thread environment id (fka PID)
     child_thread->tgid = (tgid_t) child_pid;
 
-// Breakpoint
-
-    // #debug
-    //printk (" :) \n");
-    //return 0;
-
 // Standard va entry point. (RIP = 0x201000)
     child_thread->context.rip = (unsigned long) FLOWERTHREAD_ENTRYPOINT;
 
@@ -1046,15 +1008,16 @@ do_clone:
 // que foi alocada anteriormente. Precisamos de uma variavel
 // na estrutura que registre seu tamanho.
 // ok This is the va allocated to the stack. Not the canonical address.
-    child_thread->context.rsp = 
-        (unsigned long) (parent_process->childStack + (CONFIG_RING3_STACK_SIZE_IN_KB*1024) -1);
 
+    child_thread->context.rsp = 
+        (unsigned long) ( 
+            parent_process->childStack + 
+            (CONFIG_RING3_STACK_SIZE_IN_KB*1024) -1 );
 
     // #todo: Preparing for fork() suppprt
     //child_thread->context.rax = 0; // fork: child return
 
     // #debug
-    // ok
     //printk ("child_process->pml4_VA: %x\n",child_process->pml4_VA);
     //printk ("child_process->pml4_PA: %x\n",child_process->pml4_PA);
     //while(1){}
@@ -1113,14 +1076,10 @@ do_clone:
 // see: fsload.c
 
     Status = 
-        (int) fs_load_image( 
-            filename, (unsigned long) child_process->Image );
+        (int) fs_load_image(filename, (unsigned long) child_process->Image);
 
-    if (Status != 0)
-    {
-        //debug_print("copy_process: [FAIL] Couldn't load the file\n");
-        printk     ("copy_process00: [FAIL] Couldn't load the file %s\n", 
-            filename );
+    if (Status != 0){
+        printk("copy_process00: Couldn't load %s\n", filename);
         goto fail;
     }
 
@@ -1132,19 +1091,16 @@ do_clone:
 // Vamos matar a thread e o processo.
 // See: fs.c
 
-// #debug
-    //debug_print("copy_process: [5] Check signature\n");
-    printk ("copy_process00: [5] Check signature\n");
+    // #debug
+    printk ("copy_process00: [5] Check ELF signature\n");
 
 // #bugbug
 // O processo init deve ter suas proprias tabelas de paginas.
-// checar um endereço usando a tabela de paginas do kernel
-// esta errado.
+// checar um endereço usando a tabela de paginas do kernel esta errado.
     unsigned long image_va = (unsigned long) child_process->Image;
     Status = (int) fsCheckELFFile(image_va);
     if (Status < 0){
-        //debug_print("copy_process: ELF header\n");
-        printk     ("copy_process00: ELF header\n");
+        printk ("copy_process00: on fsCheckELFFile()\n");
         goto fail;
     }
 
@@ -1182,7 +1138,7 @@ do_clone:
 
     //debug_print ("copy_process:  This is a work in progress\n");
     //     printk ("copy_process:  This is a work in progress\n");
-    debug_print("copy_process00: Calling CreateAndIntallPageTable\n");
+    // debug_print("copy_process00: Calling CreateAndIntallPageTable\n");
     //printk   ("copy_process: Calling CreateAndIntallPageTable :)\n");
     //panic    ("copy_process: [Breakpoint] CreateAndIntallPageTable\n");
 
@@ -1285,17 +1241,16 @@ do_clone:
     int __pdindex = 
         (int) X64_GET_PDE_INDEX(FLOWERTHREAD_BASE);
     unsigned long __flags = 
-        (unsigned long) (PAGE_USER | PAGE_WRITE | PAGE_PRESENT); // 7
+        (unsigned long) (PAGE_USER | PAGE_WRITE | PAGE_PRESENT);  // 7
 
-// #todo
-// We need to remake this thing.
-// See: 
+
+// #todo: Explain it better
     mm_fill_page_table( 
-        (unsigned long) child_process->pd0_VA,   // directory va. 
-        (int) __pdindex,                         // directory entry for image base.
-        (unsigned long) ptVA,                    // page table va.
-        (unsigned long) child_process->ImagePA,  // Region 2mb pa.
-        (unsigned long) __flags );               // flags.
+        (unsigned long) child_process->pd0_VA,   // directory va
+        (int) __pdindex,                         // directory entry for image base
+        (unsigned long) ptVA,                    // page table va
+        (unsigned long) child_process->ImagePA,  // Region 2mb pa
+        (unsigned long) __flags );               // flags
 
 // Image base va.
 // The desired canonical virtual address. FLOWERTHREAD_BASE
@@ -1310,12 +1265,9 @@ do_clone:
                             gKernelPML4Address ); 
 
     if (child_process->pdpt0_VA == 0)
-        panic("copy_process00: child_process->pdpt0_VA==0\n");
+        panic("copy_process00: child_process->pdpt0_VA == 0\n");
     if (child_process->pdpt0_PA == 0)
-        panic("copy_process00: child_process->pdpt0_PA==0\n");
-
-    //#debug
-    //printk (" :) \n");
+        panic("copy_process00: child_process->pdpt0_PA == 0\n");
 
 //
 // Installing (danger)
@@ -1349,10 +1301,6 @@ do_clone:
     PML4[0] = (unsigned long) PML4[0] | 7; 
 
 // ======================================
-
-    //#debug
-    // ok
-    //printk (" :) \n");
 
     // #debug
     //printk ("New page table : %x \n", _pt);
@@ -1399,10 +1347,6 @@ do_clone:
 // The kernel can always read from the caller’s pointer, so “bad pointer from userspace” is NOT the problem.
 // The corruption occurs after, or during the logic that copies/assigns the filename to the child’s process struct.
 
-    //#debug
-    //ok
-    //printk (" :) \n");
-
 //
 // Clone thread
 //
@@ -1419,9 +1363,8 @@ do_clone:
 // sobre esse processo e essa thread.
 // Isso ajudará a reorganizarmos essa rotina.
 
-// #debug
-    //debug_print("copy_process: [5] Done\n");
-    printk     ("copy_process00: [5] Done\n");
+    // #debug
+    printk("copy_process00: [5] Done\n");
 
 // #todo
 // We don't need this anymore
@@ -1458,14 +1401,7 @@ do_clone:
     //show_slot (child_thread->tid);
     //show_reg  (child_thread->tid);
 
-    //printk ("\n");
-    //current_process = (pid_t) child_pid;
     //show_currentprocess_info();
-
-    // #debug
-    //printk ("--------------------------\n");
-    //printk ("\n");
-    //while(1){}
 
     // #test
     // Switch back
@@ -1497,7 +1433,7 @@ do_clone:
             parent_thread->cmdline, 
             sizeof(parent_thread->cmdline)-1 
         );
-        child_thread->cmdline[511] = 0; // ensure termination
+        child_thread->cmdline[511] = 0;  // ensure termination
         child_thread->has_cmdline = TRUE;
 
     } else { 
@@ -1508,7 +1444,7 @@ do_clone:
 // Balance 
 //
 
-// priority and quantum.
+// Priority and quantum
 
 // Threshold
     parent_thread->priority = PRIORITY_NORMAL_THRESHOLD;
@@ -1549,9 +1485,7 @@ do_clone:
     // ok. Set next thread
     lapic_info[0].current_tid = (tid_t) NextCurrentThread;
 
-    
-// Counter
-    __copy_process_counter++;
+    __copy_process_counter++;  // Counter
 
 // Done
 // Return to the father the child's PID.
@@ -1567,9 +1501,8 @@ do_clone:
 
 fail:
 
-    // #debug
-    debug_print ("copy_process00: [X] Fail\n");
-    printk      ("copy_process00: [X] Fail\n");
+    debug_print("copy_process00: Fail\n");
+    printk     ("copy_process00: Fail\n");
 
     // Nem chegamos a pegar o valor.
     // Nem mudar o pml4.
@@ -1583,7 +1516,7 @@ fail:
     //    x64mm_load_pml4_table( old_pml4 );
     //}
 
-    copy_process_in_progress=FALSE;
+    copy_process_in_progress = FALSE;
 
     return (pid_t) (-1);
 }
@@ -1599,11 +1532,15 @@ copy_process(
 
     // printf("copy_process:\n");
 
-    if (pid < 0 || pid >= PROCESS_COUNT_MAX){
-        return (pid_t) -1;
+    if (pid < 0 || pid >= PROCESS_COUNT_MAX)
+    {
+        goto fail;
     }
+
     rPID = (pid_t) copy_process00( filename, pid, clone_flags, 0 );
 
     return (pid_t) rPID;
+fail:
+    return (pid_t) -1;
 }
 

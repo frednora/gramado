@@ -141,8 +141,11 @@ struct thread_d *create_init_thread(void)
     };
 // ============================================
 
-// Pode sofrer preempção por tempo.
+// It can be preempted 
     t->is_preemptable = PREEMPTABLE;
+
+// #remember: We compare this with the core's irql.
+    t->irql = IRQL_NULL;
 
 //
 // Temporizadores.

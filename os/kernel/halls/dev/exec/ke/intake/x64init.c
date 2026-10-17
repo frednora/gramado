@@ -869,6 +869,13 @@ void I_x64ExecuteInitialProcess(int cpu_id)
     t->affinity_processor[2] = LAPIC_INFO_BSP_INDEX;
     t->affinity_processor[3] = LAPIC_INFO_BSP_INDEX;
 
+
+//
+// #test: Big quantum for the first ring 3 thread
+//
+
+    t->quantum = 1000;  // #ps: Beyond the max value
+
     printk ("GO!\n");
     PROGRESS(":: Go to ring3!\n");
     PROGRESS("\n");

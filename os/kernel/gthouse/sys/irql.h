@@ -83,6 +83,12 @@ IRQL_SCHEDULER
  Heavy but deterministic work, still in Ring 0, but not as restrictive as pure IRQ context.
 */
 
+
+// #ps
+// #important
+// The thread can be in a level where it can't be preempted.
+// That is good in some cases.
+
 // #ps
 // It grows depending on the level of complexity/gravity.
 
@@ -96,7 +102,7 @@ IRQL_SCHEDULER
 #define IRQL_R0_THREAD_IS_RUNNING  2
 
 // System Call Request Level (int 0x80, syscall ...)
-#define IRQL_SYSCALL_USER      10   // We will not allow this case.
+#define IRQL_SYSCALL_USER      10
 #define IRQL_SYSCALL_KERNEL    11
 
 //++
@@ -106,9 +112,9 @@ IRQL_SCHEDULER
 
 // Dispacher Request Level
 // (save context, Task switching, restore context, spawn)
-#define IRQL_DISPATCHER       22   // Only allowed when r3 thread was preempted.     
+#define IRQL_DISPATCHER       22   // Only allowed when r3 thread was preempted
 // Scheduler Request Level
-#define IRQL_SCHEDULER        23   // Only allowed when r3 thread was preempted.
+#define IRQL_SCHEDULER        23   // Only allowed when r3 thread was preempted
 //--
 
 // Hardware Interrupt Request Level (keyboard, mouse, nic ...)
@@ -122,8 +128,7 @@ IRQL_SCHEDULER
 
 // ...
 
-#define IRQL_UNDEFINED  999
-
+#define IRQL_UNDEFINED  99
 
 // #todo
 // There is a way of handling irql using the cr8 register

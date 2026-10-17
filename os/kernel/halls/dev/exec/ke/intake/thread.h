@@ -401,7 +401,7 @@ struct thread_d
     struct rect_d *surface_rect;
 
 // #test
-// see: wproxy.c
+// see: window.c
     struct WND_d *wproxy;
 
 // #todo
@@ -580,6 +580,10 @@ struct thread_d
 // The thread is running in the ring0 phase
 // after the isr request.
 //    int in_syscall;
+
+
+// #remember: We compare this with the core's irql.
+    int irql;
 
 // Is preemptable or not.
     int is_preemptable;

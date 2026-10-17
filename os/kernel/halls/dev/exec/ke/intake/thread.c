@@ -1778,6 +1778,10 @@ try_next_slot:
 // This thread can be preempted
     Thread->is_preemptable = PREEMPTABLE;
 
+// Initialize the IRQL for this thread.
+// #remember: We compare this with the core's irql.
+    Thread->irql = IRQL_NULL;
+
     Thread->link = NULL;
     Thread->is_linked = FALSE;
 

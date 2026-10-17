@@ -488,6 +488,12 @@ static void __ap_kmain_imp(void)
 
     t->is_preemptable = UNPREEMPTABLE;
 
+// Setup the IRQL for this core
+// see: irql.h
+
+    lapic_info[lapic_id].irql = IRQL_NULL;
+
+
 
 /*
 This is the current situation
