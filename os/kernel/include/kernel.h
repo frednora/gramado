@@ -78,8 +78,8 @@ extern int system_state;
 
 // -------
 
-//#include "../garden/bsp/arm/arch.h"
-#include "../garden/bsp/x86_64/arch.h"
+//#include "../garden/entry/arm/arch.h"
+#include "../garden/entry/x86_64/arch.h"
 
 
 //
@@ -108,11 +108,11 @@ extern int system_state;
 #include "../halls/dev/exec/ke/intake/x64init.h"  // x64 kernel initialization.
 
 
-// AP processor initialization
-#include "../garden/ap/apmain.h"
 
 // BSP processor initialization
-#include "../garden/bsp/kmain.h"
+#include "../garden/entry/kmain.h"
+// AP processor initialization
+#include "../garden/entry/apmain.h"
 
 
 // ===============================

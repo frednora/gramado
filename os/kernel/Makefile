@@ -12,7 +12,7 @@
 # White        | garden/    (Communicatior: Link with the external world) 
 
 # Tools
-include garden/bsp/x86_64/makeinc
+include garden/entry/x86_64/makeinc
 
 INCLUDE = include
 
@@ -34,7 +34,7 @@ linkFlags := -m elf_x86_64 \
 -x \
 -static \
 -Map=kernel.map \
--T garden/bsp/x86_64/link.ld   
+-T garden/entry/x86_64/link.ld   
 
 
 #
@@ -169,7 +169,7 @@ WhiteZone:
 	@echo "Compiling: Compiling WhiteZone"
 
 # (arch)
-# All the files in garden/bsp/ and garden/ap.
+# All the files in garden/entry/
 	$(Q)$(MAKE) -C garden/
 
 # ----------------
@@ -191,8 +191,7 @@ clean-all:
 	rm -rf gthouse/*.o   
 	rm -rf halls/*.o   
 
-	rm -rf garden/ap/*.o   
-	rm -rf garden/bsp/*.o   
+	rm -rf garden/entry/*.o   
 
 	rm -rf gthouse/sys/*.o   
 	rm -rf gthouse/libk/*.o   

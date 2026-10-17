@@ -1,4 +1,3 @@
-
 # Garden
 all:
 
@@ -6,15 +5,15 @@ all:
 #  + Boot time entry
 #  + AP initialization entry
 #  + Interrupt time entry
-
-	make -C ap/
-	make -C bsp/
+	make -C entry/
 
 	make -C gramnet/
 	make -C net/
 
 clean:
-	-rm ap/*.o
-	-rm bsp/*.o
-
+	-rm entry/*.o
+clean-all:
+	-rm entry/*.o
+	-rm gramnet/*.o
+	-rm net/*.o
 
