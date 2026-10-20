@@ -2600,6 +2600,15 @@ void *doCreateAndDrawWindow (
 
     // Popup
     case WT_POPUP:
+
+        // #test
+        // Set the desktop window.
+        if (window->style & WS_DESKTOP)
+        {
+            WindowManager.desktop_window = window;
+            // ...
+        }
+
         // #important: Set the taskbar created by the user.
         if (window->style & WS_TASKBAR)
         {

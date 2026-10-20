@@ -179,6 +179,7 @@ struct gws_windowmanager_d
 
     struct gws_window_d *__root_window;
     struct gws_window_d *active_window;
+    struct gws_window_d  *desktop_window;
     struct gws_window_d  *taskbar_window;
 
 // z-order ?
