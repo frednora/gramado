@@ -737,7 +737,8 @@ int main(int argc, char *argv[])
     MyBtn_Clear.height = btn_h;
 
     uic_btn_clear = libgui_create_ui_component(
-            dc00, 1,
+            dc00, 
+            UI_COMPONENT_BUTTON,
             MyBtn_Clear.left, MyBtn_Clear.top,
             MyBtn_Clear.width, MyBtn_Clear.height,
             "Clear", (0x0001 | 0x0002));
@@ -750,7 +751,8 @@ int main(int argc, char *argv[])
     MyBtn_Black.left = gap + (btn_w+gap)*1; MyBtn_Black.top = btn_y;
     MyBtn_Black.width = btn_w; MyBtn_Black.height = btn_h;
     uic_btn_black = libgui_create_ui_component(
-            dc00, 1,
+            dc00, 
+            UI_COMPONENT_BUTTON,
             MyBtn_Black.left, MyBtn_Black.top,
             MyBtn_Black.width, MyBtn_Black.height,
             "Black", (0x0001 | 0x0002));
@@ -763,7 +765,8 @@ int main(int argc, char *argv[])
     MyBtn_Red.left = gap + (btn_w+gap)*2; MyBtn_Red.top = btn_y;
     MyBtn_Red.width = btn_w; MyBtn_Red.height = btn_h;
     uic_btn_red = libgui_create_ui_component(
-            dc00, 1,
+            dc00, 
+            UI_COMPONENT_BUTTON,
             MyBtn_Red.left, MyBtn_Red.top,
             MyBtn_Red.width, MyBtn_Red.height,
             "Red", (0x0001 | 0x0002));
@@ -776,7 +779,8 @@ int main(int argc, char *argv[])
     MyBtn_Green.left = gap + (btn_w+gap)*3; MyBtn_Green.top = btn_y;
     MyBtn_Green.width = btn_w; MyBtn_Green.height = btn_h;
     uic_btn_green = libgui_create_ui_component(
-            dc00, 1,
+            dc00, 
+            UI_COMPONENT_BUTTON,
             MyBtn_Green.left, MyBtn_Green.top,
             MyBtn_Green.width, MyBtn_Green.height,
             "Green", (0x0001 | 0x0002));
@@ -789,7 +793,8 @@ int main(int argc, char *argv[])
     MyBtn_Blue.left = gap + (btn_w+gap)*4; MyBtn_Blue.top = btn_y;
     MyBtn_Blue.width = btn_w; MyBtn_Blue.height = btn_h;
     uic_btn_blue = libgui_create_ui_component(
-            dc00, 1,
+            dc00, 
+            UI_COMPONENT_BUTTON,
             MyBtn_Blue.left, MyBtn_Blue.top,
             MyBtn_Blue.width, MyBtn_Blue.height,
             "Blue", (0x0001 | 0x0002));

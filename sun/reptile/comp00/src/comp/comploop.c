@@ -4749,7 +4749,8 @@ static int ServerLoop(int client_index)
 // IPC:
 // Telling the Init thread that the display server is shutting down.
 // IN: tid, msgcode, signature, signature.
-    rtl_post_to_tid( 0, 44901, 1234, 5678 );
+// #ps: Moved to main.c
+    // rtl_post_to_tid( 0, 44901, 1234, 5678 );
 
     return 0;  // Done. Return to main().
 
@@ -4803,14 +4804,16 @@ int comploop_main (int argc, char **argv)
                 fLaunchDM=TRUE;
             }
 
-            // Launches the default taskbar
+            // Launches the taskbar application
             if ( gramado_strncmp( argv[i], "--tb", 4 ) == 0 ){
                 fLaunchTB=TRUE;
             }
 
             // Launches the desktop application
-            if ( gramado_strncmp( argv[i], "--desktop", 9 ) == 0 ){
+            if ( gramado_strncmp( argv[i], "--desktop", 9 ) == 0 )
+            {
                 fLaunchDesktop = TRUE;
+                // printf("Desktop :)\n");
             }
 
             // ...

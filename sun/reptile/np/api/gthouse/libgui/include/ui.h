@@ -126,9 +126,12 @@ struct libgui_node_d
 
 // UI component types
 #define UI_COMPONENT_BUTTON   1
-#define UI_COMPONENT_LABEL    2
-#define UI_COMPONENT_HEADER   3
-#define UI_COMPONENT_FOOTER   4
+#define UI_COMPONENT_ICON     2
+#define UI_COMPONENT_LABEL    3
+#define UI_COMPONENT_HEADER   4
+#define UI_COMPONENT_FOOTER   5
+
+// ...
 
 
 // Generic ui component for the apps.

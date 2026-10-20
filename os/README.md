@@ -402,5 +402,5 @@ The source code uses the MIT License.
 ## Quotes:
 
 ```
-    "Trust"
+    "Polar"
 ```

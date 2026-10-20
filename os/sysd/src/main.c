@@ -301,10 +301,9 @@ static void do_launch_de(void)
     int ret_val=-1;
     char filename[32];
     size_t string_size=0;
-
     const int cmdlineNumber = 1;
 
-    memset(filename,0,32);
+    memset(filename, 0, 32);
 
     do_clear_console();
     printf ("Launching Display Server\n");
@@ -312,6 +311,7 @@ static void do_launch_de(void)
 // Sending cmdline via stdin
     rewind(stdin);
 
+// inject command line into the stdin file
     if (cmdlineNumber == 1){
         write( fileno(stdin), cmdline1, strlen(cmdline1) );
     } else if (cmdlineNumber == 2){
@@ -320,7 +320,7 @@ static void do_launch_de(void)
         write( fileno(stdin), cmdline1, strlen(cmdline1) );
     };
 
-// Launch new process.
+// Launch new process
     sprintf(filename, app1_name);
     string_size = strlen(app1_name);
     filename[string_size] = 0;

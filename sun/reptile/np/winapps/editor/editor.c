@@ -1800,7 +1800,7 @@ static int __editor_initialize(void)
     uic_button_save = 
         libgui_create_ui_component (
             dc00, 
-            1,   // type = button 
+            UI_COMPONENT_BUTTON,   // type 1 = button 
             MyButton_Save.left, 
             MyButton_Save.top, 
             MyButton_Save.width, 

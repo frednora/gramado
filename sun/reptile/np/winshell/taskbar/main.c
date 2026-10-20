@@ -1313,7 +1313,7 @@ static void create_start_button(int fd)
     // Create UI component (client-side only)
     uic_button_start = libgui_create_ui_component(
         dc00,
-        1, // type = button
+        UI_COMPONENT_BUTTON, // type 1 = button
         StartButton.left,
         StartButton.top,
         StartButton.width,

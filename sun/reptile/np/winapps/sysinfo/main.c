@@ -267,11 +267,15 @@ int main(int argc, char *argv[])
     unsigned long buttons_y = cr_height - (button_h*2);
 
     // Create Refresh button
-    uic_button_refresh = libgui_create_ui_component(dc00, 1,  // type = button
+    uic_button_refresh = libgui_create_ui_component(
+        dc00, 
+        UI_COMPONENT_BUTTON,  // type 1 = button
         refresh_x, buttons_y, button_w, button_h, "Refresh", (0x0001|0x0002));
 
     // Create Close button
-    uic_button_close = libgui_create_ui_component(dc00, 1,    // type = button
+    uic_button_close = libgui_create_ui_component(
+        dc00, 
+        UI_COMPONENT_BUTTON,    // type 1 = button
         close_x, buttons_y, button_w, button_h, "Close", (0x0001|0x0002));
 
     // Default responder

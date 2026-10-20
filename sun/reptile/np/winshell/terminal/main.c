@@ -3894,7 +3894,7 @@ int terminal_init(unsigned short flags)
     // IN: fd, wid, window info structure
     gws_get_window_info(
         client_fd, 
-        main_window,   // The app window
+        main_window,
         (struct gws_window_info_d *) &lWi );
 
     if (lWi.used != TRUE){
@@ -4024,9 +4024,7 @@ int terminal_init(unsigned short flags)
     wWidth  = lWi.cr_width;
     wHeight = lWi.cr_height;
 
-
     Terminal._mode = 0;
-
 
 // #bugbug
 // Something is wrong here.

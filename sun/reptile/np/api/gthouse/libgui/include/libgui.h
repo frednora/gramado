@@ -14,14 +14,13 @@
 #include "rop.h"
 #include "dccanvas.h"
 
-#include "bmp.h"  //#test
+#include "bmp.h"
 
 //
 // UI
 //
 
 #include "ui.h"
-
 
 // Header for functions that belongs to the old
 // implementation of the library, before the usage of

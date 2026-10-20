@@ -1060,7 +1060,7 @@ int main(int argc, char *argv[])
 // Create a button
     uic_button_refresh = libgui_create_ui_component (
         dc00, 
-        1,   // type = button 
+        UI_COMPONENT_BUTTON,   // type 1 = button 
         MyButton_Refresh.left, 
         MyButton_Refresh.top, 
         MyButton_Refresh.width, 
@@ -1131,7 +1131,7 @@ int main(int argc, char *argv[])
 // Create a button
     uic_button_close = libgui_create_ui_component (
         dc00, 
-        1,   // type = button 
+        UI_COMPONENT_BUTTON,   // type 1 = button 
         MyButton_Close.left, 
         MyButton_Close.top, 
         MyButton_Close.width, 

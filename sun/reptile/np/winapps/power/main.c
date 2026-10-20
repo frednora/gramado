@@ -964,7 +964,7 @@ int main(int argc, char *argv[])
     uic_button_restart = 
         libgui_create_ui_component (
         dc00, 
-        1,   // type = button 
+        UI_COMPONENT_BUTTON,   // type 1 = button 
         MyButton_Restart.left, 
         MyButton_Restart.top, 
         MyButton_Restart.width, 
@@ -997,7 +997,7 @@ int main(int argc, char *argv[])
 // Create a button
     uic_button_shutdown = libgui_create_ui_component (
         dc00, 
-        1,   // type = button 
+        UI_COMPONENT_BUTTON,   // type 1 = button 
         MyButton_Shutdown.left, 
         MyButton_Shutdown.top, 
         MyButton_Shutdown.width, 

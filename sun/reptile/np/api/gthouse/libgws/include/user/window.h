@@ -85,14 +85,16 @@
 //#define WS_  0x80000000  // res
 
 // Bars (structural components)
-#define WS_TITLEBAR       0x10000000   // Top bar with title + controls
-#define WS_MENUBAR        0x20000000   // Horizontal bar with menus
-#define WS_TOOLBAR        0x40000000   // Quick-access buttons/icons
-#define WS_BArRes00_NEW   0x80000000 
-#define WS_STATUSBAR    0x100000000  // Bottom info bar
-#define WS_TASKBAR      0x200000000  // System-level bar at screen bottom
-#define WS_HSCROLLBAR   0x400000000  // 
-#define WS_VSCROLLBAR   0x800000000  // 
+#define WS_TITLEBAR      0x10000000   // Top bar with title + controls
+#define WS_MENUBAR       0x20000000   // Horizontal bar with menus
+#define WS_TOOLBAR       0x40000000   // Quick-access buttons/icons
+#define WS_STATUSBAR     0x80000000   // Bottom info bar
+
+#define WS_HSCROLLBAR   0x100000000  // 
+#define WS_VSCROLLBAR   0x200000000  // 
+#define WS_TASKBAR      0x400000000  // System-level bar docked at screen bottom/or other side
+#define WS_DESKTOP      0x800000000  // The desktop window (same size as root)
+
 
 // Icons (contexts)
 // Flags for icon placement contexts.

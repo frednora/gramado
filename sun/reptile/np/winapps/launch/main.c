@@ -692,7 +692,7 @@ int main(int argc, char *argv[])
 // Create a button
     uic_button_power = libgui_create_ui_component (
         dc00, 
-        1,   // type = button 
+        UI_COMPONENT_BUTTON,   // type 1 = button 
         MyButton_Power.left, 
         MyButton_Power.top, 
         MyButton_Power.width, 
@@ -719,7 +719,7 @@ int main(int argc, char *argv[])
 // Create a button
     uic_button_memory = libgui_create_ui_component (
         dc00, 
-        1,   // type = button 
+        UI_COMPONENT_BUTTON,   // type 1 = button 
         MyButton_Memory.left, 
         MyButton_Memory.top, 
         MyButton_Memory.width, 
@@ -746,7 +746,7 @@ int main(int argc, char *argv[])
 // Create a button
     uic_button_sysinfo = libgui_create_ui_component (
         dc00, 
-        1,   // type = button 
+        UI_COMPONENT_BUTTON,   // type 1 = button 
         MyButton_Sysinfo.left, 
         MyButton_Sysinfo.top, 
         MyButton_Sysinfo.width, 
