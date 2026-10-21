@@ -872,19 +872,26 @@ tbProcedure(
 
         case MSG_MOUSEPRESSED:
             //printf("taskbar: MSG_MOUSEPRESSED:\n");
+            //on_button_pressed(__hover_icon_id);  // Visual effect
+            
             if (__hover_icon_id == StartButton.button_id)
             {
                 printf("taskbar: Button pressed\n");
-                // #todo: on button pressed
-                // on_button_clicked(__hover_icon_id);
+
+                on_button_pressed(__hover_icon_id);  // Visual effect
             }
+
             break;
 
         case MSG_MOUSERELEASED:
             //printf("taskbar: MSG_MOUSERELEASED:\n");
+
             if (__hover_icon_id == StartButton.button_id)
             {
                 printf("taskbar: Button released\n");
+
+                on_button_released(__hover_icon_id);  // Visual effect
+
                 // #todo: on button released
                 on_button_clicked(__hover_icon_id);
             }
