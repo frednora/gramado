@@ -320,6 +320,15 @@ static void update_clients(int fd);
 
 static void create_start_button(int fd);
 
+// Creates a squared icon inside the icon area (middle section of the taskbar).
+// Automatically finds the next free horizontal slot.
+// Returns the new ui_component pointer, or NULL on failure.
+static struct ui_component_d *create_icon_area_icon(
+    int fd,
+    int icon_id,                 // your icon resource / index
+    const char *label,           // optional (usually NULL on taskbar)
+    unsigned long flags);
+
 //==================================
 
 static void 
@@ -1073,18 +1082,36 @@ static void __initialize_client_list(void)
 static void create_start_button(int fd)
 {
     struct gws_window_info_d wi;
+
+
+    if (fd<0)
+        return;
+    if (TaskbarInfo.launch_area.initialized != TRUE)
+        return;
+
+// Get info with the server
     gws_get_window_info(fd, taskbar_window, &wi);
 
-    // Setup metadata
+// Setup metadata
+
     StartButton.button_id = 1;
+
+/*
     StartButton.left  = 2;
     StartButton.top   = 2;
     StartButton.width = 80;
     StartButton.height= wi.cr_height - 4;  // use client rectangle height
     // StartButton.height= TASKBAR_HEIGHT - 8;
-
     StartButton.absolute_left = wi.left + wi.cr_left + StartButton.left;
     StartButton.absolute_top  = wi.top  + wi.cr_top  + StartButton.top;
+*/
+
+    StartButton.left   = TaskbarInfo.launch_area.left +2;
+    StartButton.top    = TaskbarInfo.launch_area.top  +2;
+    //StartButton.width  = TaskbarInfo.launch_area.width  -4;
+    StartButton.width  = (TaskbarInfo.launch_area.width  -4) >> 1;
+    StartButton.height = TaskbarInfo.launch_area.height -4;
+
     StartButton.state = 0;
 
     // Create UI component (client-side only)
@@ -1102,6 +1129,82 @@ static void create_start_button(int fd)
     // Register:
     // Manually register the first component
     uicList[0] = uic_button_start;
+}
+
+// Creates a squared icon inside the icon area (middle section of the taskbar).
+// Automatically finds the next free horizontal slot.
+// Returns the new ui_component pointer, or NULL on failure.
+static struct ui_component_d *create_icon_area_icon(
+    int fd,
+    int icon_id,                 // your icon resource / index
+    const char *label,           // optional (usually NULL on taskbar)
+    unsigned long flags)
+{
+    if (fd < 0)
+        return NULL;
+    if ((void*)dc_taskbar == NULL)
+        return NULL;
+
+    // Preferred size for taskbar icons (squared)
+    const unsigned long ICON_SIZE   = 24;
+    const unsigned long ICON_GAP    = 2;    // space between icons
+    const unsigned long LEFT_MARGIN = 2;    // small margin from the left of the area
+
+    // Current number of icons already in the area
+    int count = TaskbarInfo.icon_area.component_count;
+
+    // Calculate next free X position
+    unsigned long icon_left = TaskbarInfo.icon_area.left 
+                            + LEFT_MARGIN 
+                            + count * (ICON_SIZE + ICON_GAP);
+
+    // Vertical centering inside the icon area
+    unsigned long icon_top = TaskbarInfo.icon_area.top 
+                           + (TaskbarInfo.icon_area.height - ICON_SIZE) / 2;
+
+    // Safety: do not overflow the icon area
+    if (icon_left + ICON_SIZE > 
+        TaskbarInfo.icon_area.left + TaskbarInfo.icon_area.width)
+    {
+        // printf("icon area: no more space\n");
+        return NULL;
+    }
+
+    // Create the UI component
+    struct ui_component_d *icon = libgui_create_ui_component(
+        dc_taskbar,
+        UI_COMPONENT_ICON,
+        icon_left,
+        icon_top,
+        ICON_SIZE,
+        ICON_SIZE,                  // squared
+        label ? label : "",
+        flags
+    );
+
+    if ((void*)icon == NULL)
+        return NULL;
+
+    // Optional: store extra data if your component structure supports it
+    // icon->icon_id = icon_id;
+    // icon->state   = 0;
+
+    // Register in the global component list
+    int i;
+    for (i=0; i < 32; i++) {
+        if (uicList[i] == 0) {
+            uicList[i] = (unsigned long)icon;
+            break;
+        }
+    }
+
+    // Update counter
+    TaskbarInfo.icon_area.component_count++;
+
+    // Draw it immediately
+    libgui_redraw_ui_component(icon, dc_taskbar);
+
+    return icon;
 }
 
 // ==========================================
@@ -1521,11 +1624,6 @@ int main(int argc, char *argv[])
         0  // ROP
     );
 
-// -----------------------
-// Create the start button
-// Using a worker to create an UI component (button)
-
-    create_start_button(client_fd);
 
 // Hover what icon?
     __hover_icon_id = -1;  // Invalidates
@@ -1548,31 +1646,47 @@ int main(int argc, char *argv[])
 
 
 // ===============================
-// Icon area
 
-    TaskbarInfo.icon_area.left   = 86;
-    TaskbarInfo.icon_area.top    = 2;
-    TaskbarInfo.icon_area.width  = wi.cr_width -86 -100;  //400;
-    TaskbarInfo.icon_area.height = wi.cr_height - 4;
-    TaskbarInfo.icon_area.component_count = 0;
+//
+// Launch area (Menu and fixed apps)
+//
 
+    TaskbarInfo.launch_area.initialized = FALSE;
+
+    TaskbarInfo.launch_area.left   = 0;
+    TaskbarInfo.launch_area.top    = 2;
+    TaskbarInfo.launch_area.width  = wi.cr_width/4;
+    TaskbarInfo.launch_area.height = wi.cr_height - 4;
+    TaskbarInfo.launch_area.component_count = 0;
 
     lingui_draw_rectangle0_dc(
         dc_taskbar,
-        TaskbarInfo.icon_area.left,
-        TaskbarInfo.icon_area.top,
-        TaskbarInfo.icon_area.width,
-        TaskbarInfo.icon_area.height,
-        COLOR_BLUE,  //COLOR_GRAY,
+        TaskbarInfo.launch_area.left,
+        TaskbarInfo.launch_area.top,
+        TaskbarInfo.launch_area.width,
+        TaskbarInfo.launch_area.height,
+        COLOR_GREEN,  //COLOR_GRAY,
         0 
     );
 
-// ===============================
-// Notification area
+    TaskbarInfo.launch_area.initialized = TRUE;
 
-    TaskbarInfo.notification_area.left   = wi.cr_width -100;
+// -----------------------
+// Create the start button
+// Using a worker to create an UI component (button)
+    create_start_button(client_fd);
+
+
+// ===============================
+
+//
+// Notification area
+//
+
+    unsigned long na_left = (wi.cr_width - (wi.cr_width/4));
+    TaskbarInfo.notification_area.left   = na_left;
     TaskbarInfo.notification_area.top    = 2;
-    TaskbarInfo.notification_area.width  = 98;
+    TaskbarInfo.notification_area.width  = (wi.cr_width/4);
     TaskbarInfo.notification_area.height = wi.cr_height - 4;
     TaskbarInfo.notification_area.component_count = 0;
 
@@ -1589,6 +1703,44 @@ int main(int argc, char *argv[])
 // #test: String
     draw_clock_string_line(client_fd, 2, 2, 11, 56, "PM");
 
+// ===============================
+
+//
+// Icon area
+//
+
+    unsigned long ia_left = (wi.cr_width/4);
+    unsigned long ia_w = (
+        wi.cr_width - 
+        TaskbarInfo.launch_area.width - 
+        TaskbarInfo.notification_area.width
+    );
+    TaskbarInfo.icon_area.left   = ia_left;
+    TaskbarInfo.icon_area.top    = 2;
+    TaskbarInfo.icon_area.width  = ia_w;
+    TaskbarInfo.icon_area.height = wi.cr_height - 4;
+    TaskbarInfo.icon_area.component_count = 0;
+
+    lingui_draw_rectangle0_dc(
+        dc_taskbar,
+        TaskbarInfo.icon_area.left,
+        TaskbarInfo.icon_area.top,
+        TaskbarInfo.icon_area.width,
+        TaskbarInfo.icon_area.height,
+        COLOR_BLUE,  //COLOR_GRAY,
+        0 
+    );
+
+
+// =========================================================
+// Test:
+// Populating the icon area with test icons
+
+// Example: add a couple of icons to the middle area
+    create_icon_area_icon(client_fd, 1, "1", (0x0001 | 0x0002));  // first icon
+    create_icon_area_icon(client_fd, 2, "2", (0x0001 | 0x0002));  // second icon
+    create_icon_area_icon(client_fd, 3, "3", (0x0001 | 0x0002));  // third icon
+    create_icon_area_icon(client_fd, 4, "4", (0x0001 | 0x0002));  //
 
 // =======================
 // Event loop

@@ -19,6 +19,9 @@ extern struct gws_display_d *Display;
 // Think it as a container
 struct ui_area_d
 {
+    int initialized;
+    //int pinned;
+
     unsigned long left;
     unsigned long top;
     unsigned long width;
@@ -86,8 +89,12 @@ struct taskbar_info_d
     unsigned long width;
     unsigned long height;
 
-    struct ui_area_d icon_area;
-    struct ui_area_d notification_area;
+    // The launchers for the fixed components
+    struct ui_area_d launch_area;        // w/4
+    // The icons for components created on the fly
+    struct ui_area_d icon_area;          // (w/4) * 2
+    // Notification components
+    struct ui_area_d notification_area;  // w/4
 };
 extern struct taskbar_info_d  TaskbarInfo;
 
