@@ -1,0 +1,158 @@
+# Compiling sys/ folder
+# Created by Fred Nora
+
+INCLUDE = ../../include
+
+# Internal files
+# Used to build the kernel.
+KERNEL_INCLUDE := -I $(INCLUDE)   
+
+AS	= as
+LD	= ld
+CC	= gcc
+AR	= ar
+MAKE	= make
+NASM	= nasm
+OBJCOPY	= objcopy
+OBJDUMP	= objdump
+#LEX	= flex
+#YACC	= bison
+#PERL	= perl
+PYTHON	= python
+PYTHON2	= python2
+PYTHON3	= python3
+#RUBY	= ruby
+
+# See: 
+# https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
+
+CFLAGS := \
+	-Wall \
+	-Wundef \
+	-Wmissing-prototypes \
+	-Wno-uninitialized \
+	-Wno-format-security \
+	-Wno-trigraphs \
+	-Werror=strict-prototypes \
+	-Werror=implicit-function-declaration \
+	-Werror=implicit-int \
+	-Werror=return-type \
+	-std=gnu89 \
+	-m64 \
+	-s \
+	-static \
+	-fcommon \
+	-fgnu89-inline \
+	-finline-functions \
+	-fshort-wchar \
+	-ffreestanding \
+	-fleading-underscore \
+	-fstrict-overflow \
+	-nostdlib \
+	-nodefaultlibs \
+	-nostdinc \
+	-fno-builtin \
+	-fno-stack-protector \
+	-fno-strict-aliasing \
+	-fno-PIE \
+	-fno-pie \
+	-fno-omit-frame-pointer \
+	-fno-optimize-sibling-calls    
+
+
+# Internal files
+# Used to build the kernel.
+KERNEL_INCLUDE := -I $(INCLUDE)
+
+# See: https://linux.die.net/man/1/ld
+# -s --strip-all:   Omit all symbol information from the output file.
+# -x --discard-all: Delete all local symbols.
+# -M --print-map:   Print a link map to the standard output.
+
+LDFLAGS := -m elf_x86_64 -s -x -static  
+
+OBJS = globals.o bootblk.o \
+klog.o \
+kobject.o \
+info.o \
+irql.o \
+panic.o \
+reboot.o \
+request.o \
+system.o \
+wrappers.o \
+sys.o \
+go.o \
+sci.o \
+mod.o \
+cg.o \
+ns.o \
+cont.o \
+hv.o \
+public.o    
+
+
+all:
+
+# globals
+	$(CC) -c globals.c $(KERNEL_INCLUDE) $(CFLAGS) -o globals.o
+	$(CC) -c bootblk/bootblk.c $(KERNEL_INCLUDE) $(CFLAGS) -o bootblk.o
+
+# Overall routines
+	$(CC) -c klog/klog.c  $(KERNEL_INCLUDE) $(CFLAGS) -o klog.o
+	$(CC) -c kobject.c    $(KERNEL_INCLUDE) $(CFLAGS) -o kobject.o
+	$(CC) -c info.c       $(KERNEL_INCLUDE) $(CFLAGS) -o info.o
+	$(CC) -c irql.c       $(KERNEL_INCLUDE) $(CFLAGS) -o irql.o
+	$(CC) -c panic.c      $(KERNEL_INCLUDE) $(CFLAGS) -o panic.o  
+	$(CC) -c reboot.c     $(KERNEL_INCLUDE) $(CFLAGS) -o reboot.o
+	$(CC) -c request.c    $(KERNEL_INCLUDE) $(CFLAGS) -o request.o
+	$(CC) -c system.c     $(KERNEL_INCLUDE) $(CFLAGS) -o system.o
+
+# Module manager
+	$(CC) -c mod/mod.c     $(KERNEL_INCLUDE) $(CFLAGS) -o mod.o
+	$(CC) -c mod/public.c  $(KERNEL_INCLUDE) $(CFLAGS) -o public.o
+
+# container: ns and cg
+	$(CC) -c cont/ns.c    $(KERNEL_INCLUDE) $(CFLAGS) -o ns.o
+	$(CC) -c cont/cg.c    $(KERNEL_INCLUDE) $(CFLAGS) -o cg.o
+	$(CC) -c cont/cont.c  $(KERNEL_INCLUDE) $(CFLAGS) -o cont.o
+
+# Virtualization routines
+	$(CC) -c virt/hv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o
+
+# System calls suppor
+
+	$(CC) -c sci/sci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sci.o    
+
+# Wrapper functions
+
+	$(CC) -c wrappers.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wrappers.o
+
+# Main service inteface
+# It is a mirror for the libc functions in ring 3 and 
+# some other Gramado specific APIs.
+
+# We have four layers of syscalls for security resons
+
+# sci level 0
+	$(CC) -c sys.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sys.o
+# sci level 1
+#	$(CC) -c 111.c  $(KERNEL_INCLUDE) $(CFLAGS) -o 111.o
+# sci level 2
+	$(CC) -c go.c  $(KERNEL_INCLUDE) $(CFLAGS) -o go.o
+# sci level 3
+#	$(CC) -c 333.c  $(KERNEL_INCLUDE) $(CFLAGS) -o 333.o
+
+
+# ----------------------------------------------
+# link
+	$(LD) -r -o ex_sys.o  $(OBJS)
+	cp ex_sys.o ../../
+
+# ----------------------------------------------
+	rm *.o
+	
+clean:
+	rm *.o     
+	
+	

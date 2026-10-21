@@ -220,7 +220,7 @@ static struct button_info_d  StartButton;
 // UI components
 //
 
-unsigned long uicList[32];   // List of pointers
+static unsigned long uicList[32];   // List of pointers
 struct ui_component_d *uic_button_start;
 
 
@@ -269,7 +269,6 @@ const char *app2_name = "#editor.bin";
 
 static void 
 draw_clock_string_line(
-    int fd, 
     unsigned long left, 
     unsigned long top, 
     unsigned long value1,
@@ -289,6 +288,8 @@ static void on_button_released(int button_id);
 static void on_button_clicked(int button_id);
 
 static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my);
+
+static void draw_taskbar_areas(void);
 
 static int 
 tbProcedure(
@@ -333,18 +334,21 @@ static struct ui_component_d *create_icon_area_icon(
 
 static void 
 draw_clock_string_line(
-    int fd, 
     unsigned long left, 
     unsigned long top, 
     unsigned long value1,
     unsigned long value2,
     const char *label )
 {
-    char line[128];
+    char line[64];
     unsigned int Color1 = COLOR_BLACK;
     unsigned int Color2 = COLOR_WHITE;
+
     memset(line, 0, sizeof(line));
     sprintf(line, "%lu:%lu %s", value1, value2, label);
+
+    if ((void*) dc_taskbar == NULL)
+        return;
 
     libgui_drawstring_dc(
         dc_taskbar,
@@ -761,6 +765,29 @@ static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my)
     return (int) -1;
 }
 
+static void draw_taskbar_areas(void)
+{
+    if ((void*) dc_taskbar == NULL)
+        return;
+
+    lingui_draw_rectangle0_dc(dc_taskbar,
+        TaskbarInfo.launch_area.left, TaskbarInfo.launch_area.top,
+        TaskbarInfo.launch_area.width, TaskbarInfo.launch_area.height,
+        COLOR_GREEN, 0);
+
+    lingui_draw_rectangle0_dc(dc_taskbar,
+        TaskbarInfo.icon_area.left, TaskbarInfo.icon_area.top,
+        TaskbarInfo.icon_area.width, TaskbarInfo.icon_area.height,
+        COLOR_BLUE, 0);
+
+    lingui_draw_rectangle0_dc(dc_taskbar,
+        TaskbarInfo.notification_area.left, TaskbarInfo.notification_area.top,
+        TaskbarInfo.notification_area.width, TaskbarInfo.notification_area.height,
+        COLOR_YELLOW, 0);
+
+    draw_clock_string_line(2, 2, 11, 56, "PM");
+}
+
 static void update_clients(int fd)
 {
     if (fd<0){
@@ -786,19 +813,20 @@ static void update_clients(int fd)
         0  // ROP
     );
 
-// -----------------------
-// Update start button
+    draw_taskbar_areas();
 
-    libgui_set_ui_component_position(
-        uic_button_start, 
-        StartButton.left, 
-        StartButton.top );
-    libgui_set_ui_component_dimension(
-        uic_button_start, 
-        StartButton.width, 
-        StartButton.height );
-    libgui_set_ui_component_flags(uic_button_start, (0x0001 | 0x0002));
-    libgui_redraw_ui_component(uic_button_start, dc_taskbar);
+    int i;
+    for (i=0; i<32; i++)
+    {
+        struct ui_component_d *uic = (struct ui_component_d *) uicList[i];
+        
+        if ((void*)uic != NULL)
+        {
+            if (uic->magic == 1234)
+                libgui_redraw_ui_component(uic, dc_taskbar);
+        }
+    }
+
 
     // #todo: Redraw icon area and notification area.
 }
@@ -1174,10 +1202,7 @@ static struct ui_component_d *create_icon_area_icon(
     struct ui_component_d *icon = libgui_create_ui_component(
         dc_taskbar,
         UI_COMPONENT_ICON,
-        icon_left,
-        icon_top,
-        ICON_SIZE,
-        ICON_SIZE,                  // squared
+        icon_left, icon_top, ICON_SIZE, ICON_SIZE,
         label ? label : "",
         flags
     );
@@ -1193,7 +1218,7 @@ static struct ui_component_d *create_icon_area_icon(
     int i;
     for (i=0; i < 32; i++) {
         if (uicList[i] == 0) {
-            uicList[i] = (unsigned long)icon;
+            uicList[i] = (unsigned long) icon;
             break;
         }
     }
@@ -1245,6 +1270,11 @@ int main(int argc, char *argv[])
         printf("taskbar: libgui_initialize fail\n");
         exit(1);
     }
+
+
+    int k;
+    for (k = 0; k < 32; k++)
+        uicList[k] = 0;
 
 // --------------------------------
 
@@ -1701,7 +1731,7 @@ int main(int argc, char *argv[])
     );
 
 // #test: String
-    draw_clock_string_line(client_fd, 2, 2, 11, 56, "PM");
+    draw_clock_string_line(2, 2, 11, 56, "PM");
 
 // ===============================
 

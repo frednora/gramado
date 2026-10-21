@@ -1,0 +1,31 @@
+
+
+#
+# -- Kernel layer --
+#
+
+# Kernel Execution Environment
+objects-y := head_64.o - garden/entry/x86_64/ 
+objects-y += kee.o     - halls/dev/exec/ke/
+objects-y += kmain.o   - garden/entry/   
+objects-y += apmain.o  - garden/entry/    
+
+#
+# -- Executive layer --
+#
+
+# Abstractions
+objects-y += ex_gnet.o  - garden/gramnet/
+objects-y += ex_net.o   - garden/net/
+objects-y += ex_libk.o  - gthouse/libk/
+objects-y += ex_sys.o   - gthouse/sys/ 
+objects-y += ex_wink.o  - gthouse/wink/
+objects-y += ex_bdev.o  - halls/dev/per/blkdev/
+objects-y += ex_ndev.o  - halls/dev/per/netdev/
+objects-y += ex_mm.o    - halls/dev/req/mm/
+objects-y += ex_fs.o    - halls/fs/
+objects-y += ex_cdev.o  - halls/hcidev/chardev/
+objects-y += ex_dev.o   - halls/per/
+objects-y += ex_acpi.o  - halls/platform/acpi/
+objects-y += ex_bus.o   - halls/platform/bus/
+objects-y += ex_mps.o   - halls/platform/mps/

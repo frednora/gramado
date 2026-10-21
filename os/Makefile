@@ -127,18 +127,18 @@ build-gramado-os:
 # Copy the bootloader into the DE/ directory.
 #	@cp boot/arch/x86/bin/APX86.BIN   $(BUILD)/DE   
 
-# (2) kernel/
+# (2) castleos/
 
 # ::Build kernel image.
-	@echo "Compiling kernel/"
-	@$(MAKE) -C kernel/
+	@echo "Compiling castleos/"
+	@$(MAKE) -C castleos/
 
-	@echo "Installing kernel/"
+	@echo "Installing castleos/"
 
 # Copy the kernel to the standard system folder.
-	@cp kernel/KERNEL.BIN  $(BUILD)/GRAMADO
+	@cp castleos/KERNEL.BIN  $(BUILD)/GRAMADO
 # Create a backup; The bootloder expects this.
-	@cp kernel/KERNEL.BIN  $(BUILD)/DE
+	@cp castleos/KERNEL.BIN  $(BUILD)/DE
 
 # The init process
 	@$(MAKE) -C $(INIT_PROCESS)/
@@ -347,12 +347,12 @@ vhd-copy-files     \
 vhd-unmount        \
 
 # --------------------------------------
-# Basic clean.
+# Basic clean
 clean:
 	-rm *.o
 	-rm *.BIN
-	-rm kernel/*.o
-	-rm kernel/*.BIN
+	-rm castleos/*.o
+	-rm castleos/*.BIN
 	@echo "~clean"
 
 # #todo: Delete some files in the BASE/ folder.
@@ -377,12 +377,12 @@ clean-all: clean
 	-rm -rf boot/arch/x86/bin/*.BIN
 
 # ==================
-# (2) kernel/
+# (2) castleos/
 # Clear kernel image
-	-rm kernel/*.o
-	-rm kernel/*.BIN
-	-rm -rf kernel/KERNEL.BIN
-	-rm -rf kernel/kernel.map 
+	-rm castleos/*.o
+	-rm castleos/*.BIN
+	-rm -rf castleos/KERNEL.BIN
+	-rm -rf castleos/castleos.map 
 
 # ==================
 # Clear INIT.BIN
