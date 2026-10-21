@@ -623,7 +623,7 @@ static void print_ascii_table(int fd)
             (8*line),  //y
             COLOR_YELLOW, i );
         
-        if (i%10)
+        if ((i % 10) == 0)  //if (i%10)
             line++;
     };
 }
@@ -1376,7 +1376,7 @@ int main(int argc, char *argv[])
     icon_counter = 0;
     int ic=0;
     for (ic=0; ic<32; ic++)
-        iconList[0] = 0;
+        iconList[ic] = 0;
 
 // hello
     //gws_debug_print ("taskbar.bin: Hello world \n");

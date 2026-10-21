@@ -1,7 +1,7 @@
 // main.c
-// Taskbar as a “User Shell”
-// Main file for taskbar.bin application. (Overview/Explorer)
-// Created by Fred Nora.
+// Main file for desktop.bin application. (Explorer-like)
+// Program image: desktop.bin 
+// Created by Fred Nora
 
 /*
  *    Client side application for Gramado Window Server.
@@ -58,7 +58,7 @@
 // The client-side library
 #include <libgui.h>
 
-#include "taskbar.h"
+#include "desktop.h"
 
 
 static unsigned long __sh_flags = 0;
@@ -220,6 +220,7 @@ static struct button_info_d  StartButton;
 // UI components
 //
 
+unsigned long uicList[32];   // List of pointers
 struct ui_component_d *uic_button_start;
 
 
@@ -266,6 +267,14 @@ const char *app2_name = "#editor.bin";
 // == Private functions: prototypes ====================
 //
 
+static void 
+draw_clock_string_line(
+    int fd, 
+    unsigned long left, 
+    unsigned long top, 
+    unsigned long value1,
+    unsigned long value2,
+    const char *label );
 
 //static int __initialize_connection(void);
 static void doPrompt(int fd);
@@ -301,32 +310,6 @@ updateStatusBar(
 static void __initialize_client_list(void);
 void pump(int fd, int wid);
 
-/*
-// #deprecated: Because it creates an icon using the server.
-static int 
-create_bar_icon(
-    int fd,
-    int parent,
-    int icon_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned long width,
-    unsigned long height,
-    char *label );
-*/
-
-static int 
-draw_bar_button(
-    unsigned long left,
-    unsigned long top,
-    unsigned long width,
-    unsigned long height,
-    const char *label,
-    unsigned int fg_color,
-    unsigned int bg_color,
-    int show );
-
-
 
 static void set_default_responder(int wid);
 static void trigger_default_responder(int fd);
@@ -338,6 +321,33 @@ static void update_clients(int fd);
 static void create_start_button(int fd);
 
 //==================================
+
+static void 
+draw_clock_string_line(
+    int fd, 
+    unsigned long left, 
+    unsigned long top, 
+    unsigned long value1,
+    unsigned long value2,
+    const char *label )
+{
+    char line[128];
+    unsigned int Color1 = COLOR_BLACK;
+    unsigned int Color2 = COLOR_WHITE;
+    memset(line, 0, sizeof(line));
+    sprintf(line, "%lu:%lu %s", value1, value2, label);
+
+    libgui_drawstring_dc(
+        dc_taskbar,
+        TaskbarInfo.notification_area.left + left,
+        TaskbarInfo.notification_area.top + top,
+        Color1,
+        Color2,
+        0,  // ROP 
+        line
+    );
+}
+
 
 static void set_default_responder(int wid)
 {
@@ -628,7 +638,7 @@ static void print_ascii_table(int fd)
             (8*line),  //y
             COLOR_YELLOW, i );
         
-        if (i%10)
+        if ((i % 10) == 0)  //if (i%10)
             line++;
     };
 }
@@ -780,6 +790,8 @@ static void update_clients(int fd)
         StartButton.height );
     libgui_set_ui_component_flags(uic_button_start, (0x0001 | 0x0002));
     libgui_redraw_ui_component(uic_button_start, dc_taskbar);
+
+    // #todo: Redraw icon area and notification area.
 }
 
 static int 
@@ -936,19 +948,6 @@ tbProcedure(
         // #test:
         // ds sent us a message to create an iconic window for an app.
         case 99500:
-
-            /*
-            // #deprecated: Because it creates an icon using the server.
-            tmpNewWID = (int) create_bar_icon(
-                fd, 
-                taskbar_window,
-                2,  // Icon ID
-                8,8,28,28,
-                "NEW" );
-            if (tmpNewWID < 0)
-                goto fail;
-            gws_refresh_window(fd,tmpNewWID);
-            */
             break;
 
         // #bugbug
@@ -1071,113 +1070,6 @@ static void __initialize_client_list(void)
     };
 }
 
-/*
-// #deprecated: Because it creates an icon using the server.
-static int 
-create_bar_icon(
-    int fd,
-    int parent,
-    int icon_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned long width,
-    unsigned long height,
-    char *label )
-{
-    int tmp1 = -1;
-    unsigned long style = 0;
-
-    if (fd<0)
-        goto fail;
-    if (parent<0)
-        goto fail;
-    if ((void*) label == NULL)
-        goto fail;
-    if (*label == 0)
-        goto fail;
-
-    tmp1 = 
-        (int) gws_create_window (
-                     fd,
-                     WT_BUTTON, 
-                     BS_DEFAULT, 
-                     1,
-                     label,
-                     left, top, width, height,
-                     parent, 
-                     style, 
-                     COLOR_GRAY, 
-                     COLOR_GRAY );
-    if (tmp1<0){
-        printf("taskbar.bin: tmp1\n");
-        exit(1);
-    }
-
-    //gws_refresh_window(fd, tmp1);
-    //NavigationInfo.button00_window = tmp1;
-    //return 0;
-    return (int) tmp1;
-
-fail:
-    return (int) -1;
-}
-*/
-
-static int 
-draw_bar_button(
-    unsigned long left,
-    unsigned long top,
-    unsigned long width,
-    unsigned long height,
-    const char *label,
-    unsigned int fg_color,
-    unsigned int bg_color,
-    int show )
-{
-/*
-    // Draw the button background
-    libgui_backbuffer_draw_rectangle0(
-        left, top, width, height,
-        bg_color,
-        1, 0, FALSE
-    );
-*/
-
-// bg for the client area
-    lingui_draw_rectangle0_dc (
-        dc_taskbar,
-        left, top, width, height,
-        bg_color,
-        0  // ROP
-    );
-
-// string
-    libgui_drawstring_dc(
-            dc_taskbar,
-            2,
-            2,
-            COLOR_YELLOW,
-            COLOR_BLUE,
-            0, // ROP 
-            "Taskbar" 
-        );
-
-
-/*
-    // Draw the label string inside
-    libgui_drawstring(
-        left + 4, top + 4, label,
-        fg_color, bg_color, 0
-    );
-*/
-
-// Refresh to show it
-    //if (show == TRUE)
-        //libgui_refresh_rectangle_via_kernel(left, top, width, height);
-
-    return 0;
-}
-
 static void create_start_button(int fd)
 {
     struct gws_window_info_d wi;
@@ -1198,7 +1090,7 @@ static void create_start_button(int fd)
     // Create UI component (client-side only)
     uic_button_start = libgui_create_ui_component(
         dc_taskbar,
-        UI_COMPONENT_BUTTON, // type 1 = button
+        UI_COMPONENT_BUTTON,  // type 1 = button
         StartButton.left,
         StartButton.top,
         StartButton.width,
@@ -1206,10 +1098,15 @@ static void create_start_button(int fd)
         "Start", 
         (0x0001 | 0x0002)
     );
+
+    // Register:
+    // Manually register the first component
+    uicList[0] = uic_button_start;
 }
 
 // ==========================================
 // Main
+
 int main(int argc, char *argv[])
 {
     const char *display_name_string = "display:name.0";
@@ -1238,7 +1135,6 @@ int main(int argc, char *argv[])
         // #test
     }
 
-
 // --------------------------------
 // Initialize the library
     status = (int) libgui_initialize();
@@ -1261,7 +1157,7 @@ int main(int argc, char *argv[])
     icon_counter = 0;
     int ic=0;
     for (ic=0; ic<32; ic++)
-        iconList[0] = 0;
+        iconList[ic] = 0;
 
 // hello
     //gws_debug_print ("taskbar.bin: Hello world \n");
@@ -1649,6 +1545,50 @@ int main(int argc, char *argv[])
 // ===============================
 
     __initialize_client_list();
+
+
+// ===============================
+// Icon area
+
+    TaskbarInfo.icon_area.left   = 86;
+    TaskbarInfo.icon_area.top    = 2;
+    TaskbarInfo.icon_area.width  = wi.cr_width -86 -100;  //400;
+    TaskbarInfo.icon_area.height = wi.cr_height - 4;
+    TaskbarInfo.icon_area.component_count = 0;
+
+
+    lingui_draw_rectangle0_dc(
+        dc_taskbar,
+        TaskbarInfo.icon_area.left,
+        TaskbarInfo.icon_area.top,
+        TaskbarInfo.icon_area.width,
+        TaskbarInfo.icon_area.height,
+        COLOR_BLUE,  //COLOR_GRAY,
+        0 
+    );
+
+// ===============================
+// Notification area
+
+    TaskbarInfo.notification_area.left   = wi.cr_width -100;
+    TaskbarInfo.notification_area.top    = 2;
+    TaskbarInfo.notification_area.width  = 98;
+    TaskbarInfo.notification_area.height = wi.cr_height - 4;
+    TaskbarInfo.notification_area.component_count = 0;
+
+    lingui_draw_rectangle0_dc(
+        dc_taskbar,
+        TaskbarInfo.notification_area.left,
+        TaskbarInfo.notification_area.top,
+        TaskbarInfo.notification_area.width,
+        TaskbarInfo.notification_area.height,
+        COLOR_YELLOW,  //COLOR_GRAY,
+        0 
+    );
+
+// #test: String
+    draw_clock_string_line(client_fd, 2, 2, 11, 56, "PM");
+
 
 // =======================
 // Event loop
