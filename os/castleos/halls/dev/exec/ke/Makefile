@@ -78,7 +78,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 # Decides who gets the CPU. It’s the policy, the arbiter of time.
 # Dispacher: (disp/) 
 # Actually hands over the CPU. It’s the mechanism, the gear teeth grinding.
-OBJS = sched.o schedi.o schedq.o idle.o \
+OBJS = sched.o schedi.o schedq.o idle.o queue.o \
 ts.o dispatch.o spawn.o x64cont.o callback.o \
 thread.o tlib.o te.o telib.o ithread.o clone.o \
 ipc.o \
@@ -95,7 +95,6 @@ sync.o \
 archhal.o \
 hal.o \
 x64.o x64info.o x64init.o \
-queue.o \
 ke.o    
 
 all:
@@ -104,17 +103,24 @@ all:
 # intake/  (The MICROKERNEL)
 # process, thread, dispatcher and scheduler.
 
-# Thread and Process
+# Process
+
+	$(CC) -c process/te.c     $(KERNEL_INCLUDE) $(CFLAGS) -o te.o
+	$(CC) -c process/telib.c  $(KERNEL_INCLUDE) $(CFLAGS) -o telib.o
+	$(CC) -c process/clone.c  $(KERNEL_INCLUDE) $(CFLAGS) -o clone.o
+
+
+# Thread
 
 	$(CC) -c intake/thread.c   $(KERNEL_INCLUDE) $(CFLAGS) -o thread.o
 	$(CC) -c intake/tlib.c     $(KERNEL_INCLUDE) $(CFLAGS) -o tlib.o
-	$(CC) -c intake/te.c       $(KERNEL_INCLUDE) $(CFLAGS) -o te.o
-	$(CC) -c intake/telib.c    $(KERNEL_INCLUDE) $(CFLAGS) -o telib.o
 	$(CC) -c intake/ithread.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ithread.o
-	$(CC) -c intake/clone.c    $(KERNEL_INCLUDE) $(CFLAGS) -o clone.o
 
-	$(CC) -c intake/broker/ipc.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipc.o
+# Sync 
+
 	$(CC) -c intake/sync.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sync.o
+
+# Dispatcher
 
 	$(CC) -c intake/disp/ts.c              $(KERNEL_INCLUDE)  $(CFLAGS) -o ts.o  
 	$(CC) -c intake/disp/dispatch.c        $(KERNEL_INCLUDE)  $(CFLAGS) -o dispatch.o  
@@ -122,13 +128,22 @@ all:
 	$(CC) -c intake/disp/callback.c        $(KERNEL_INCLUDE)  $(CFLAGS) -o callback.o  
 	$(CC) -c intake/disp/x86_64/x64cont.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o x64cont.o  
 
+# IPC
+
+	$(CC) -c intake/ipc/ipc.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipc.o
+
+# Scheduler
+
 	$(CC) -c intake/sched/sched.c   $(KERNEL_INCLUDE)  $(CFLAGS) -o sched.o  
 	$(CC) -c intake/sched/schedi.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o schedi.o  
 	$(CC) -c intake/sched/schedq.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o schedq.o  
 	$(CC) -c intake/sched/idle.c    $(KERNEL_INCLUDE)  $(CFLAGS) -o idle.o  
+	$(CC) -c intake/sched/queue.c   $(KERNEL_INCLUDE)  $(CFLAGS) -o queue.o
 
-	$(CC) -c intake/queue.c    $(KERNEL_INCLUDE) $(CFLAGS) -o queue.o
-	$(CC) -c intake/x64init.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64init.o
+# Initialization
+
+	$(CC) -c x64init.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64init.o
+
 
 # ---------------------
 # hal/arm/ (HAL)

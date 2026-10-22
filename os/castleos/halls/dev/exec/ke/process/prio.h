@@ -1,6 +1,6 @@
 // prio.h
-// Priorities
-// Created by Fred Nora.
+// Priorities for the processes
+// Created by Fred Nora
 
 #ifndef __INTAKE_PRIO_H
 #define __INTAKE_PRIO_H    1
@@ -8,6 +8,10 @@
 //
 // == Priorities ==================================================
 //
+
+// #ps:
+// Thiority for the processes.
+// The threads use the same priority.
 
 // 2 classes of priority.
 

@@ -105,8 +105,7 @@ extern int system_state;
 #include "../halls/dev/exec/ke/hal/pints.h"       // profiler
 
 // ===============================
-#include "../halls/dev/exec/ke/intake/x64init.h"  // x64 kernel initialization.
-
+#include "../halls/dev/exec/ke/x64init.h"  // x64 kernel initialization
 
 
 // BSP processor initialization
@@ -164,7 +163,9 @@ extern int system_state;
 // ==================================
 // halls/dev/exec/ke/
 // Globals. PIDs support.
-#include "../halls/dev/exec/ke/intake/kpid.h"
+
+#include "../halls/dev/exec/ke/process/kpid.h"
+
 
 // ==================================
 // dev/req/mm/
@@ -269,7 +270,7 @@ extern int system_state;
 
 // ==================================
 // halls/dev/exec/ke/
-#include "../halls/dev/exec/ke/intake/msgcode.h"
+#include "../halls/dev/exec/ke/intake/ipc/msgcode.h"
 
 // ==================================
 // gthouse/wink/ 
@@ -417,23 +418,31 @@ extern int system_state;
 // ==================================
 #include "../halls/res.h"
 
+
+#include "../halls/dev/exec/ke/process/prio.h"     // Process priority
+
 // ==================================
 // intake/
-#include "../halls/dev/exec/ke/intake/prio.h"     // Priority
 #include "../halls/dev/exec/ke/intake/quantum.h"  // Quantum
 #include "../halls/dev/exec/ke/intake/image.h"
 #include "../halls/dev/exec/ke/intake/disp/x86_64/x64cont.h"
 #include "../halls/dev/exec/ke/intake/disp/ts.h"
-#include "../halls/dev/exec/ke/intake/queue.h"
+#include "../halls/dev/exec/ke/intake/sched/queue.h"
 #include "../halls/dev/exec/ke/intake/intake.h"
 #include "../halls/dev/exec/ke/intake/disp/spawn.h"
 #include "../halls/dev/exec/ke/intake/disp/dispatch.h"
 
+// Thread
 #include "../halls/dev/exec/ke/intake/thread.h"
-#include "../halls/dev/exec/ke/intake/te.h"
 #include "../halls/dev/exec/ke/intake/ithread.h"
-#include "../halls/dev/exec/ke/intake/clone.h"
-#include "../halls/dev/exec/ke/intake/broker/ipc.h"
+
+// Process
+#include "../halls/dev/exec/ke/process/te.h"
+#include "../halls/dev/exec/ke/process/clone.h"
+
+// Thread
+#include "../halls/dev/exec/ke/intake/ipc/ipc.h"
+
 
 //
 // sched/
