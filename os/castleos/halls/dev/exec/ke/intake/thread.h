@@ -397,10 +397,9 @@ struct thread_d
 // PE_MODE_EFFICIENCY
     unsigned int pe_mode;
 
+
 // Surface
     struct rect_d *surface_rect;
-
-// #test
 // see: window.c
     struct WND_d *wproxy;
 
@@ -655,7 +654,7 @@ struct thread_d
     unsigned long blocked_jiffy;
     unsigned long zombie_jiffy;
 
-// Time when the thread needs to wakeup.
+// Time when the thread needs to wakeup
     unsigned long wake_jiffy;
 
 // How much jiffies until now
