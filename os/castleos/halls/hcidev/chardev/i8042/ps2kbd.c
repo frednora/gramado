@@ -681,8 +681,7 @@ done:
 }
 
 // #todo ioctl
-int 
-ps2kbd_ioctl ( 
+unsigned long ps2kbd_ioctl ( 
     int fd, 
     unsigned long request, 
     unsigned long arg )
@@ -691,19 +690,22 @@ ps2kbd_ioctl (
 
 // Parameters:
     if ( fd < 0 || fd >= OPEN_MAX ){
-        return (int) (-EBADF);
+        return (unsigned long) -1;  //(-EBADF);
     }
 
     switch (request){
+
+    // #todo: Get status? alt, control, shift?
+
     //case ?:
         //break;
     default:
-        return (int) (-EINVAL);
+        //return (unsigned long) (-EINVAL);
         break;
     };
 
 fail:
-    return (int) -1;
+    return (unsigned long) -1;
 }
 
 

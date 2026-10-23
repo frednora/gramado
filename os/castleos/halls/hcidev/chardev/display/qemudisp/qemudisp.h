@@ -117,8 +117,7 @@ void qemudisp_show_info(void);
 void qemudisp_vsync(void);
 
 
-int 
-qemudisp_ioctl ( 
+unsigned long qemudisp_ioctl ( 
     int fd, 
     unsigned long request, 
     unsigned long arg );

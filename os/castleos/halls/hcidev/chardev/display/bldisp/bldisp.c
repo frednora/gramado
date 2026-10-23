@@ -1147,8 +1147,7 @@ void videoSetupCGAStartAddress (unsigned long address)
 
 
 // #todo ioctl
-int 
-bldisp_ioctl ( 
+unsigned long bldisp_ioctl ( 
     int fd, 
     unsigned long request, 
     unsigned long arg )
@@ -1156,23 +1155,35 @@ bldisp_ioctl (
     debug_print("bldisp_ioctl: #todo\n");
 
 // Parameters:
-    if ( fd < 0 || fd >= OPEN_MAX ){
-        return (int) (-EBADF);
+    if ( fd < 0 || fd >= OPEN_MAX )
+    {
+        return (unsigned long) -1;   //(-EBADF);
     }
 
     switch (request){
 
-    //
-    //case ?:
-        //break;
+
+    case 1000:
+        return (unsigned long) screenGetWidth();
+        break;
+
+    case 1001:
+        return (unsigned long) screenGetHeight();
+        break;
+
+    case 1002:
+        return (unsigned long) screenGetBPP();   // Bits per pixel
+        break;
+
+    // ...
 
     default:
-        return (int) (-EINVAL);
+        //return (int) (-EINVAL);
         break;
     };
 
 fail:
-    return (int) -1;
+    return (unsigned long) -1; //-1;
 }
 
 

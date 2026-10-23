@@ -1,0 +1,16 @@
+
+ Device Drivers:
+
+ Basically we can have three layers for device drivers in ring 0. (Windows-like style)
+ + Filter device driver   (Antivirus, ...)
+ + Function device driver (NIC, ...)
+ + BUS device driver      (PCI, USB, ...)
+
+ Analogy: It's like a train. The lower level, close to the hardware is the locomotive 
+ and the other upper layers are like the cars. The application is the passenger.
+
+ We can also have some other classes like Network protocols etc.
+
+ A device driver can be implemented in ring 0, ring 3, or both, splitting the code.
+ It can be built-in or dynlinked loadable device drivers.
+ 

@@ -284,16 +284,26 @@ void qemudisp_vsync(void)
 
 
 // #todo ioctl
-int 
-qemudisp_ioctl ( 
+unsigned long qemudisp_ioctl ( 
     int fd, 
     unsigned long request, 
     unsigned long arg )
 {
     debug_print("qemudisp_ioctl: #todo\n");
+
     if(fd<0){
         return -1;
     }
+
+    switch (request)
+    {
+        case 1000:
+            break;
+
+        case 1001:
+            break;
+    };
+
     return -1;
 }
 

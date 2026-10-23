@@ -679,8 +679,7 @@ done:
 }
 
 // #todo ioctl
-int 
-ps2mouse_ioctl ( 
+unsigned long ps2mouse_ioctl ( 
     int fd, 
     unsigned long request, 
     unsigned long arg )
@@ -689,10 +688,13 @@ ps2mouse_ioctl (
 
 // Parameters:
     if ( fd < 0 || fd >= OPEN_MAX ){
-        return (int) (-EBADF);
+        return (unsigned long) -1;  // (-EBADF);
     }
 
     switch (request){
+
+    // #todo:
+    // Maybe we can change some configuration
 
     //case ?:
         //break;
@@ -702,12 +704,12 @@ ps2mouse_ioctl (
 
 
     default:
-        return (int) (-EINVAL);
+        //return (unsigned long) (-EINVAL);
         break;
     };
 
 fail:
-    return (int) -1;
+    return (unsigned long) -1;
 }
 
 

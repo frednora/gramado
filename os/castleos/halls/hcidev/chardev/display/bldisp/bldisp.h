@@ -156,8 +156,7 @@ void videoSetMode (unsigned long mode);
 void videoSetupCGAStartAddress (unsigned long address);
 
 // #todo ioctl
-int 
-bldisp_ioctl ( 
+unsigned long bldisp_ioctl ( 
     int fd, 
     unsigned long request, 
     unsigned long arg );

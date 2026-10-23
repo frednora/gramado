@@ -81,7 +81,7 @@ int ps2kbd_initialize_driver(const char *dev_name)
         DEVICE_TYPE_LEGACY );  // type (pci, legacy)
 
     if (rv < 0){
-        panic("kbd: devmgr_register_legacy_device fail\n");
+        panic("kbd: on devmgr_register_legacy_device()\n");
     }
 
     return 0;
@@ -97,7 +97,7 @@ int i8042_IsPS2KeyboardPooling(void)
 // HANDLER
 //
 
-// ps/2 keyboard irq handler.
+// ps/2 keyboard irq handler
 __VOID_IRQ 
 irq1_KEYBOARD (void)
 {
