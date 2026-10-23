@@ -401,7 +401,7 @@ struct thread_d
 // Surface
     struct rect_d *surface_rect;
 // see: window.c
-    struct WND_d *wproxy;
+    struct WND_d *window;
 
 // #todo
 // Other process can't take some actions on this thread

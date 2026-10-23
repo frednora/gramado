@@ -282,8 +282,8 @@ int wproxy_set_shell(tid_t tid)
         goto fail;
     }
 
-// window
-    w = (struct WND_d *) t->wproxy;
+// The window for this thread
+    w = (struct WND_d *) t->window;
     if ((void *) w == NULL){
         goto fail;
     }
@@ -566,7 +566,7 @@ window_set_parameters_given_tid(
 
 // Get the window that belongs to the cureground thread
     struct WND_d *wnd;
-    wnd = (struct WND_d *) target_thread->wproxy;
+    wnd = (struct WND_d *) target_thread->window;
     if ((void *) wnd == NULL)
         return;
     if (wnd->used != TRUE || wnd->magic != 1234)
@@ -576,6 +576,7 @@ window_set_parameters_given_tid(
     // wnd->color = COLOR_WHITE;
 
 // Change values
+
     wnd->l = l;
     wnd->t = t;
     wnd->w = w;

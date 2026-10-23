@@ -1567,7 +1567,7 @@ struct thread_d *create_thread (
 
     // PID
     ProcessID = (pid_t) pid;
-    if ( ProcessID < 0 || ProcessID >= PROCESS_COUNT_MAX )
+    if (ProcessID < 0 || ProcessID >= PROCESS_COUNT_MAX)
     {
         printk("create_thread: ProcessID");
         return NULL;
@@ -1670,15 +1670,21 @@ try_next_slot:
     Thread->tgid = (tgid_t) ProcessID;  // PID
 
 // =====================================
-// wproxy support
+// Window
 // #bugbug: 
-// Maybe its not necessary for all the threads,
+// Its not necessary for all the threads,
 // or maybe we can pass the parameters type and state.
+// For example: The init process do not need one.
+// #ps: Maybe it can be a kind of 'communitacion window',
+// just like in DDE.
 
-    // Thread->wproxy = (struct WND_d *) windowCreateObject();
-    Thread->wproxy = 
+    // Thread->window = (struct WND_d *) windowCreateObject();
+    Thread->window = 
         (struct WND_d *) window_create0( 
-            Thread->tid, 0, 0, 100, 100, COLOR_BLUE );
+            Thread->tid, 
+            0, 0, 100, 100, 
+            COLOR_BLUE 
+    );
 
 // =====================================
 
