@@ -35,6 +35,16 @@ __ps_setup_x64_context (
     unsigned long init_stack,
     unsigned long init_rip );
 
+
+static struct thread_d *create_thread_imp ( 
+    thread_type_t thread_type,
+    struct cgroup_d  *cg,
+    unsigned long init_rip, 
+    unsigned long init_stack, 
+    ppid_t pid, 
+    const char *name,
+    unsigned int cpl );
+
 //
 // =========================================================
 //
@@ -1120,8 +1130,9 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // Saving ...
 //
 
-// Type, base priority and priority.
-    clone->type = father->type; 
+// Type, class, base priority and priority.
+    clone->type = father->type;
+    clone->_class = father->_class;
     clone->base_priority = father->base_priority; 
     clone->priority = father->priority;
 
@@ -1478,7 +1489,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // Main worker for thread creation
 // #ps: The init_rip depends on the thread's type.
 
-struct thread_d *create_thread ( 
+// Create thread (implementation)
+static struct thread_d *create_thread_imp ( 
     thread_type_t thread_type,
     struct cgroup_d  *cg,
     unsigned long init_rip, 
@@ -1609,12 +1621,25 @@ struct thread_d *create_thread (
     Thread->affinity_processor[2] = -1;  // Not initialized
     Thread->affinity_processor[3] = -1;  // Not initialized
 
-// Validate type
+//
+// type
+//
+
     if (thread_type == THREAD_TYPE_SYSTEM){
         Thread->type = THREAD_TYPE_SYSTEM;
     } else {
         Thread->type = THREAD_TYPE_NORMAL;
     };
+
+//
+// class
+//
+
+    // #todo:
+    // CONSOLE or GUI thread.
+    // This is a work in progress
+    Thread->_class = THREAD_CLASS_NULL;
+
 
 // The thread is been created, but the structure is not 
 // fully initialized yet.
@@ -1951,6 +1976,33 @@ try_next_slot:
 fail:
     return NULL;
 }
+
+
+
+struct thread_d *create_thread ( 
+    thread_type_t thread_type,
+    struct cgroup_d  *cg,
+    unsigned long init_rip, 
+    unsigned long init_stack, 
+    ppid_t pid, 
+    const char *name,
+    unsigned int cpl )
+{
+    struct thread_d *thread;
+
+    thread = (struct thread_d *) create_thread_imp(
+        thread_type,
+        cg,
+        init_rip,
+        init_stack,
+        pid,
+        name,
+        cpl
+    );
+
+    return (struct thread_d *) thread;
+}
+
 
 //
 // $

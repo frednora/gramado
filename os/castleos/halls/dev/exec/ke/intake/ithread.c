@@ -45,7 +45,11 @@ struct thread_d *create_init_thread(void)
     t->kobj._class = ObjectClassKernelObject;
     t->kobj.flags = 0;
 
+// The init thread is a system thread
     t->type = THREAD_TYPE_SYSTEM;
+
+// The init thread is a console thread, not a GUI thread.
+    t->_class = THREAD_CLASS_CONSOLE;
 
 // THREAD IDENTIFIERS
     t->tid = (tid_t) (TID & 0xFFFF);

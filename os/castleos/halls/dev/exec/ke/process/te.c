@@ -71,6 +71,18 @@ static pid_t __get_new_pid(void);
 // Worker for create_process
 static void __initialize_process_common_elements(struct te_d *p);
 
+static struct te_d *create_process_imp ( 
+    struct cgroup_d *cg,
+    unsigned long base_address, 
+    unsigned long priority, 
+    ppid_t ppid, 
+    const char *name, 
+    unsigned int cpl,
+    unsigned long pml4_va,
+    unsigned long pdpt0_va,
+    unsigned long pd0_va,
+    personality_t personality );
+
 // ==============================================
 
 
@@ -1307,8 +1319,8 @@ fail:
 //
 
 // Worker:
-// Create process
-struct te_d *create_process ( 
+// Create process (implementation)
+static struct te_d *create_process_imp ( 
     struct cgroup_d *cg,
     unsigned long base_address, 
     unsigned long priority, 
@@ -1780,6 +1792,37 @@ struct te_d *create_process (
 
 fail:
     return NULL;
+}
+
+
+struct te_d *create_process ( 
+    struct cgroup_d *cg,
+    unsigned long base_address, 
+    unsigned long priority, 
+    ppid_t ppid, 
+    const char *name, 
+    unsigned int cpl,
+    unsigned long pml4_va,
+    unsigned long pdpt0_va,
+    unsigned long pd0_va,
+    personality_t personality )
+{
+    struct te_d *te;
+
+    te = (struct te_d *) create_process_imp(
+        cg,
+        base_address,
+        priority,
+        ppid,
+        name,
+        cpl,
+        pml4_va,
+        pdpt0_va,
+        pd0_va,
+        personality
+    );
+
+    return (struct te_d *) te;
 }
 
 //

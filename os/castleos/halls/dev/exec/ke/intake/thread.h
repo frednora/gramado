@@ -53,6 +53,12 @@ typedef enum {
     THREAD_TYPE_NORMAL   // Low priority
 }thread_type_t;
 
+typedef enum {
+    THREAD_CLASS_NULL,
+    THREAD_CLASS_CONSOLE,
+    THREAD_CLASS_GUI
+} thread_class_t;
+
 
 typedef enum {
 
@@ -330,6 +336,10 @@ struct thread_d
 // #todo: If the thread is not interactive,
 // so it will not receive keyboard input.
     thread_type_t type;
+
+// _class:
+// CONSOLE or GUI
+    thread_class_t _class;
 
 // The thread environment structure. (fka Process)
 // The thread->te->pid ID is returned by getpid().
