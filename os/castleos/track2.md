@@ -12,16 +12,30 @@ their responsibilities.
 ## Main Map
 
 ```text
-Levels:
-+ [1]   earlyinit()
-+ [2:0] mmInitialize(0)
-+ [2:1] mmInitialize(1)
-+ [3:0] keInitialize(0)
-+ [3:1] keInitialize(1)
-+ [3:2] keInitialize(2)
-+ [4]   archinit()
-+ [5]   deviceinit()
-+ [6]   lateinit()
+// ==================================
+// Main functions during the initialization:
+// + ... startup_64() in x86_64/head_64.asm
+// + ... start_kernel() in kmain.c       (wrapper)
+// + ... x86_64_start_kernel in kmain.c  (wrapper)
+// + [x] I_kmain() in kmain.c            (real initialization)
+//
+// Main function called by I_kmain(): in kmain.c
+// + [1] I_initialize_kernel()
+// + [2] I_x64CreateKernelProcess()
+// + [3] I_x64CreateInitialProcess()
+// + [4] ke_x64ExecuteInitialProcess()
+//
+// Main functions called by I_initialize_kernel(): in kmain.c
+// + [1:1]   earlyinit()
+// + [1:2:0] mmInitialize(0)
+// + [1:2:1] mmInitialize(1)
+// + [1:3:0] keInitialize(0)
+// + [1:3:1] keInitialize(1)
+// + [1:3:2] keInitialize(2)
+// + [1:4]   archinit()
+// + [1:5]   deviceinit()
+// + [1:6]   lateinit()
+// ==================================
 ```
 
 ---
@@ -33,15 +47,15 @@ Levels:
    - Sets up paging and stack.  
    - Passes control to `I_kmain()`.
 
-2. **`I_kmain()` (kmain.c)**  
+2. **`[x] I_kmain()` (kmain.c)**  
    - First C entry point.  
    - Calls `I_initialize_kernel()` to perform staged initialization.
 
-3. **`I_initialize_kernel()` sequence**
+3. **`[1] I_initialize_kernel()` sequence**
 
 ---
 
-### [1] `earlyinit()` (kmain.c)
+### [1:1] `earlyinit()` (kmain.c)
 - **Functions called:**
   - `earlyinit_SetupBootblock()` → Reads boot block info (framebuffer, resolution, memory size, Gramado mode).  
   - `earlyinit_Globals()` → Resets scheduler, process, and thread globals.  
@@ -51,7 +65,7 @@ Levels:
 
 ---
 
-### [2:0] `mmInitialize(0)` – Memory Manager Phase 0 (mm.c)
+### [1:2:0] `mmInitialize(0)` – Memory Manager Phase 0 (mm.c)
 - **Functions called:**
   - `wink_initialize_video()`  
   - `__init_kernel_heap()` → Defines kernel heap start/end, sets heap pointer.  
@@ -62,7 +76,7 @@ Levels:
 
 ---
 
-### [2:1] `mmInitialize(1)` – Memory Manager Phase 1 (mm.c)
+### [1:2:1] `mmInitialize(1)` – Memory Manager Phase 1 (mm.c)
 - **Functions called:**
   - `initializeFramesAlloc()` (mmpool.c) → Sets up frame allocator.  
   - `pagesInitializePaging()` (pages.c) → Builds page tables, maps static areas, enables paging.  
@@ -70,7 +84,7 @@ Levels:
 
 ---
 
-### [3:0] `keInitialize(0)` – Debug and Display Support (ke.c)
+### [1:3:0] `keInitialize(0)` – Debug and Display Support (ke.c)
 - **Functions called:**
   - `wink_initialize_default_kernel_font()`  
   - `wink_initialize_background()`  
@@ -84,7 +98,7 @@ Levels:
 
 ---
 
-### [3:1] `keInitialize(1)` – Process and Thread Support (ke.c)
+### [1:3:1] `keInitialize(1)` – Process and Thread Support (ke.c)
 - **Functions called:**
   - `init_dispatch()`  
   - `init_scheduler(0)`  
@@ -96,7 +110,7 @@ Levels:
 
 ---
 
-### [3:2] `keInitialize(2)` – Graphics and GUI Support (ke.c)
+### [1:3:2] `keInitialize(2)` – Graphics and GUI Support (ke.c)
 - **Functions called:**
   - `gre_initialize()` (graphics engine)  
   - Allocate `gui_d` structure  
@@ -108,7 +122,7 @@ Levels:
 
 ---
 
-### [4] `archinit()` (kmain.c)
+### [1:4] `archinit()` (kmain.c)
 - **Functions called:**
   - `hal_probe_processor_type()`  
   - `x64smp_initialization()` (x64smp.c)  
@@ -118,7 +132,7 @@ Levels:
 
 ---
 
-### [5] `deviceinit()` (kmain.c)
+### [1:5] `deviceinit()` (kmain.c)
 - **Functions called:**
   - `DDINIT_ps2_early_initialization()` (i8042.c)  
   - `input_enable_this_input_target()` (input.c)  
@@ -128,7 +142,7 @@ Levels:
 
 ---
 
-### [6] `lateinit()` (kmain.c)
+### [1:6] `lateinit()` (kmain.c)
 - **Functions called:**
   - `tty_initialize_legacy_pty()` (pty.c)  
   - `userInitializeStuff()` (user.c)  

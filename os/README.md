@@ -152,18 +152,31 @@ Gramado OS Kernel is 64bit image running in ring 0.
 
 ```
 // ==================================
-// Levels:
-// + [1]   earlyinit()
-// + [2:0] mmInitialize(0)
-// + [2:1] mmInitialize(1)
-// + [3:0] keInitialize(0)
-// + [3:1] keInitialize(1)
-// + [3:2] keInitialize(2)
-// + [4]   archinit()
-// + [5]   deviceinit()
-// + [6]   lateinit()
+// Main functions during the initialization:
+// + ... startup_64() in x86_64/head_64.asm
+// + ... start_kernel() in kmain.c       (wrapper)
+// + ... x86_64_start_kernel in kmain.c  (wrapper)
+// + [x] I_kmain() in kmain.c            (real initialization)
+//
+// Main function called by I_kmain(): in kmain.c
+// + [1] I_initialize_kernel()
+// + [2] I_x64CreateKernelProcess()
+// + [3] I_x64CreateInitialProcess()
+// + [4] ke_x64ExecuteInitialProcess()
+//
+// Main functions called by I_initialize_kernel(): in kmain.c
+// + [1:1]   earlyinit()
+// + [1:2:0] mmInitialize(0)
+// + [1:2:1] mmInitialize(1)
+// + [1:3:0] keInitialize(0)
+// + [1:3:1] keInitialize(1)
+// + [1:3:2] keInitialize(2)
+// + [1:4]   archinit()
+// + [1:5]   deviceinit()
+// + [1:6]   lateinit()
 // ==================================
 ```
+
 
 ## What is Gramado Operating System?
 
