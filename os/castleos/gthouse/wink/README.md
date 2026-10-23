@@ -4,11 +4,6 @@ Ring 0 support for the windowing system.
 
 ```
 Main components:
-#todo: Maybe we can provide two 'devices' that can be open
-in order to the ring 3 applications make configurations 
-on these two subsystems.
-ex: /dev/ev/
-ex: /dev/gd/
 
 evi  - [Input support]  Event Interface.
 gdi  - [Output support] Graphics device interface.

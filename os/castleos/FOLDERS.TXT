@@ -5,7 +5,12 @@ The kernel source tree is organized into three main areas: the Gatehouse, the Ha
 This structure is designed to make the entry points, management responsibilities, and shared definitions 
 clear and easy to navigate.
 
-1. gthouse/ (Gatehouse)
+1. garden/
+  >> Basically entries
+
+2. gthouse/ (Gatehouse)
+  >> Basically wrappers
+
    - Contains all code related to entering the kernel.
    - Responsibilities:
      * Entry point and initialization routines
@@ -19,14 +24,16 @@ clear and easy to navigate.
      * libk/   : Shared kernel utilities
      * wink/   : User interface handling (input + graphics)
 
-2. halls/ (Castle Halls)
+3. halls/ (Castle Halls)
+  >> Basically device drivers 
+
    - Contains the main management units of the kernel.
    - Responsibilities are divided into three halls:
      * exec/ (CPU Hall)    : Thread management, dispatcher, scheduler, exceptions
      * req/  (Memory Hall) : Syscalls and memory management (mm/)
      * per/  (IRQ Hall)    : Peripheral devices and interrupt handling
 
-3. include/ (Castle Library)
+4. include/ (Castle Library)
    - Contains headers and shared definitions used across the kernel.
    - Provides the common interfaces and constants that bind the system together.
 
