@@ -897,7 +897,7 @@ do_spawn:
 // IN: tid, core id
     set_current_thread(target_tid, 0);
 
-    psSpawnThreadByTID(target_tid);
+    spawn_thread_by_tid(target_tid);
 
 // Not reached
 fail:

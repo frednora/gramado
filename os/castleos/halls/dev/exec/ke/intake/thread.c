@@ -458,16 +458,16 @@ unsigned long GetThreadStats(tid_t tid, int index)
     return 0;
 }
 
-// Get thread name.
+// Get thread name
 // + Copy the name into the given address.
 // + Return the name size in bytes.
-int getthreadname(tid_t tid, char *buffer)
+int get_thread_name(tid_t tid, char *buffer)
 {
     struct thread_d  *t;
     char *name_buffer = (char *) buffer;
 
 // Parameters
-    if ( tid < 0 || tid >= THREAD_COUNT_MAX )
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
     {
         goto fail;
     }
@@ -494,17 +494,13 @@ fail:
     return (int) (-1);
 }
 
-/*
- * FindReadyThread:
- *     Pega a primeira thread READY que encontrar.
- *     E se não encontrar nenhuma, retorna NULL.
- */
-// #todo: This is a job for the scheduler.
-// Change the name to schedFindFirstReadyThread().
-// OUT:
-// Return a pointer to the found thread.
 
-void *FindReadyThread(void)
+// find_ready_thread:
+// Probe for the first ready thread into the global list.
+// OUT:
+// Return a pointer to the found thread
+
+struct thread_d *find_ready_thread(void)
 {
     struct thread_d  *t;
     register int i=0;
@@ -518,7 +514,7 @@ void *FindReadyThread(void)
                  t->magic == 1234 && 
                  t->state == READY )
             {
-                return (void *) t;
+                return (struct thread_d *) t;
             }
         }
     };
@@ -583,7 +579,7 @@ tid_t GetCurrentTID(int lapic_info_id)
     return (tid_t) lapic_info[lapic_info_id].current_tid;
 }
 
-void *GetThreadByTID(tid_t tid)
+struct thread_d *get_thread_by_tid(tid_t tid)
 {
     struct thread_d *t;
 
@@ -611,7 +607,7 @@ void *GetCurrentThreadForThisCore(int lapic_id)
     if (tid < 0)
         return NULL;
     // ...
-    return (void*) GetThreadByTID(tid);
+    return (void*) get_thread_by_tid(tid);
 }
 
 // Get the structure pointer
@@ -630,7 +626,7 @@ void *GetIdleThreadForThisCore(int lapic_id)
     if (tid < 0)
         return NULL;
     // ...
-    return (void*) GetThreadByTID(tid);
+    return (void*) get_thread_by_tid(tid);
 }
 
 
@@ -640,7 +636,7 @@ void *GetForegroundThread(void)
     if (foreground_thread < 0)
         return NULL;
     // ...
-    return (void*) GetThreadByTID(foreground_thread);
+    return (void*) get_thread_by_tid(foreground_thread);
 }
 
 // Get the pointer for the flower thread 
@@ -654,10 +650,10 @@ void *GetDSThread(void)
     }
     ws_tid = (tid_t) DisplayServerInfo.tid;
 
-    return (void*) GetThreadByTID(ws_tid);
+    return (void*) get_thread_by_tid(ws_tid);
 }
 
-// SelectForExecution:
+// thread_select_for_execution:
 // Change the state to 'Standby'.
 // MOVIMENT 1, (Initialized --> Standby).
 // It means that the thread is waiting to enter in the READY state.
@@ -665,10 +661,11 @@ void *GetDSThread(void)
 // Taskswitch routine will probe for threads in Standby and will spawn them.
 // Change the state to 'Standby'.
 // MOVIMENT 1, (Initialized --> Standby).
-void SelectForExecution(struct thread_d *Thread)
+
+void thread_select_for_execution(struct thread_d *Thread)
 {
     if ((void *) Thread == NULL){
-        debug_print ("SelectForExecution: Thread fail\n");
+        debug_print ("thread_select_for_execution: Thread fail\n");
         return;
     }
     schediSelectForExecution(Thread);

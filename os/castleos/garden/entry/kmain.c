@@ -226,7 +226,7 @@ static void __kmain_setup_ring0_thread(void)
     }
 
     // Mark it ready to run
-    SelectForExecution(t);
+    thread_select_for_execution(t);
 
     // #debug
     //printk("entry_point:  %x \n",entry_point);

@@ -336,8 +336,8 @@ void *sys_create_thread (
 // #suspended:
 // We have another syscall to put the thread in the standby state.
 
-// Put the state in STANDBY.
-    //SelectForExecution ( (struct thread_d *) Thread );
+// Put the state in STANDBY
+    //thread_select_for_execution ( (struct thread_d *) Thread );
 
 // #todo:
 // Why is it returning a ring0 pointer to user space?

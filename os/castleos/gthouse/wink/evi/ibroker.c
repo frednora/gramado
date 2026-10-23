@@ -460,12 +460,11 @@ static void setup_minimal_ring0_thread(void)
     }
 
     // Mark it ready to run
-    SelectForExecution(t);
+    thread_select_for_execution(t);
 
     // #debug
     //printk("entry_point:  %x \n",entry_point);
     //printk("RING0_RSP: %x \n",(stack_base + 4096));
-    //refresh_screen();
     //while(1){}
 }
 
@@ -2348,7 +2347,6 @@ __consoleProcessKeyboardInput (
                     show_slots();   //See: tlib.c
                     //pages_calc_mem();
                     //ibroker_post_message_to_ds( (int) 88110, 0, 0 );
-                    //refresh_screen();
                 }
                 return 0;
                 break;
@@ -2953,7 +2951,6 @@ __ProcessKeyboardInput (
                     show_slots();   //See: tlib.c
                     //pages_calc_mem();
                     //ibroker_post_message_to_ds( (int) 88110, 0, 0 );
-                    //refresh_screen();
                 }
                 return 0;
                 break;

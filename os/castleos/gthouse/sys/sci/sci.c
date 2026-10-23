@@ -1838,13 +1838,13 @@ void *sci0 (
 
 // 882 - Get process name
 // IN: PID, ubuffer.
-    if ( number == 882 ){
-        return (void *) getprocessname( (pid_t) arg2, (char *) arg3 );
+    if (number == 882){
+        return (void *) get_process_name((pid_t) arg2, (char *) arg3);
     }
 
 // 883 - Get thread name
-    if ( number == 883 ){
-        return (void *) getthreadname ( (int) arg2, (char *) arg3 );
+    if (number == 883){
+        return (void *) get_thread_name((tid_t) arg2, (char *) arg3);
     }
 
 // 884 - sys_alarm()

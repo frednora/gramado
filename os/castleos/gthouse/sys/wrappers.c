@@ -49,7 +49,8 @@ void core_spawn_thread_by_tid(tid_t tid)
 {
     if (tid<0 || tid>=THREAD_COUNT_MAX)
         return;
-    psSpawnThreadByTID(tid);
+
+    spawn_thread_by_tid(tid);
 }
 
 // Usado pelo malloc em ring3.
@@ -119,7 +120,7 @@ int core_start_thread(struct thread_d *thread)
     if (thread->magic != 1234)
         goto fail;
 
-    SelectForExecution((struct thread_d *) thread);
+    thread_select_for_execution((struct thread_d *) thread);
     return 0;
 fail:
     return (int) (-1);

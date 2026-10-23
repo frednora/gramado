@@ -602,21 +602,21 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     panic("__spawn_thread_by_tid_imp: iretq fail\n");
 }
 
-// psSpawnThread:
-// Interface to spawn a thread.
-void psSpawnThreadByTID(tid_t tid)
+// spawn_thread_by_tid:
+// Wrapper: Interface to spawn a thread
+void spawn_thread_by_tid(tid_t tid)
 {
-    PROGRESS("psSpawnThreadByTID:\n");
+    PROGRESS("spawn_thread_by_tid:\n");
 
-    if ( tid < 0 || tid >= THREAD_COUNT_MAX )
+    if (tid < 0 || tid >= THREAD_COUNT_MAX)
     {
-        printk("psSpawnThreadByTID: TID=%d\n", tid );
+        printk("spawn_thread_by_tid: TID=%d\n", tid);
         keDie();
     }
     __spawn_thread_by_tid_imp(tid);
 
 // Not reached
-    panic("psSpawnThreadByTID:\n");
+    panic("spawn_thread_by_tid:\n");
 }
 
 /*

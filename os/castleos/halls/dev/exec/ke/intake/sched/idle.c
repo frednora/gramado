@@ -19,7 +19,7 @@ struct thread_d *get_idle_thread(int lapic_info_id)
 
     IdleTID = (tid_t) lapic_info[lapic_info_id].idle_tid;
 
-    t = (struct thread_d *) GetThreadByTID(IdleTID);
+    t = (struct thread_d *) get_thread_by_tid(IdleTID);
 
     return (struct thread_d *) t;
 

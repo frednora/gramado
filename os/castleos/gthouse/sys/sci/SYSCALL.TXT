@@ -161,8 +161,8 @@ see: sci0() in sci.c
 ...
 880 - get_process_stats
 881 - GetThreadStats
-882 - getprocessname
-883 - getthreadname
+882 - get_process_name
+883 - get_thread_name
 884 - sys_alarm
 ...
 891 - core_alloc_shared_ring3_pages

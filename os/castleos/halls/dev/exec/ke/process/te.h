@@ -966,9 +966,8 @@ void show_process_information (void);
 
 unsigned long get_process_stats ( pid_t pid, int index );
 
-int getprocessname(pid_t pid, char *ubuf);
+int get_process_name(pid_t pid, char *ubuf);
 
-pid_t getNewPID (void);
 int processTesting (pid_t pid);
 int processSendSignal (struct te_d *p, unsigned long signal);
 

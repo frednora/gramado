@@ -66,7 +66,9 @@ static pid_t caller_process_id = 0;
 
 // ==============================================
 
-// Worker for create_process.
+static pid_t __get_new_pid(void);
+
+// Worker for create_process
 static void __initialize_process_common_elements(struct te_d *p);
 
 // ==============================================
@@ -359,12 +361,12 @@ unsigned long get_process_stats(pid_t pid, int index)
     return 0;
 }
 
-// getprocessname:
+// get_process_name:
 // Systemcall 882.
 // OUT: string len.
 // type: ssize_t ?
 
-int getprocessname(pid_t pid, char *ubuf)
+int get_process_name(pid_t pid, char *ubuf)
 {
     struct te_d  *p;
 
@@ -407,13 +409,14 @@ fail:
     return (int) (-1);
 }
 
-// getNewPID:
-// Get an empty slot in a list of processes.
+// __get_new_pid:
+// Get an empty slot in a list of processes
 // We start probing and return the index when we find an empty slot.
 // GRAMADO_PID_BASE = GRAMADO_PID_KERNEL = 0.
 // We can use this in the routine of clonning processes.
 // See: gpid.h
-pid_t getNewPID (void)
+
+static pid_t __get_new_pid(void)
 {
     register int i = GRAMADO_PID_BASE;
     struct te_d *p;
@@ -423,14 +426,13 @@ pid_t getNewPID (void)
         p = (struct te_d *) teList[i];
         if ((void *) p == NULL)
         { 
-            // Return the new PID.
-            return (pid_t) i; 
+            return (pid_t) i;  // Return the new PID
         }
         i++;
     };
 
 // Fail
-    debug_print ("getNewPID: fail\n");
+    debug_print ("__get_new_pid: fail\n");
     return (pid_t) (-1);
 }
 
@@ -1177,11 +1179,11 @@ struct te_d *create_and_initialize_process_object(void)
     new_process->TerminalConnection.Connectors[0] = 0;
     new_process->TerminalConnection.Connectors[1] = 0;
 
-// Get new pid.
+// Get new pid
 // #:: We have a valid range here!
 // #todo: Change to generate_new_pid();
 
-    NewPID = (pid_t) getNewPID();
+    NewPID = (pid_t) __get_new_pid();
     if ( NewPID < GRAMADO_PID_BASE || NewPID >= PROCESS_COUNT_MAX )
     {
         debug_print("create_and_initialize_process_object: NewPID\n");
@@ -1401,11 +1403,11 @@ struct te_d *create_process (
 // Na verdade podemos usar aquela funçao que procura por um vazio. 
 
     while (1){
-        PID = (pid_t) getNewPID();
+        PID = (pid_t) __get_new_pid();
         if ( PID < GRAMADO_PID_BASE || PID >= PROCESS_COUNT_MAX )
         {
-            debug_print ("create_process: getNewPID\n");
-            printk      ("create_process: getNewPID %d\n", PID);
+            //debug_print ("create_process: __get_new_pid\n");
+            printk ("create_process: __get_new_pid %d\n", PID);
             goto fail;
         }
         EmptyEntry = (void *) teList[PID];

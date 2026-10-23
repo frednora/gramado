@@ -39,7 +39,7 @@ sys_signal(
 {
     struct sigaction_d *sa;
     int Slot;
-    struct thread_d *current_thread;
+    struct thread_d *cur_thread;
     tid_t CurrentTID;
     int core_id = 0;  // #provisory: Core ID
 
@@ -55,28 +55,28 @@ sys_signal(
 // Get current thread
 // #ps: core 0
     CurrentTID = (tid_t) GetCurrentTID(core_id);
-    current_thread = (struct thread_d *) GetThreadByTID(CurrentTID);
-    if ((void*)current_thread == NULL)
+    cur_thread = (struct thread_d *) get_thread_by_tid(CurrentTID);
+    if ((void*)cur_thread == NULL)
         goto fail;
-    if (current_thread->magic != 1234)
+    if (cur_thread->magic != 1234)
         goto fail;
 
 // #ps: Signal numbers start at 1, while C arrays start at 0.
 
     unsigned long old_handler = 
-        current_thread->sigaction[Slot].sa_handler;
+        cur_thread->sigaction[Slot].sa_handler;
 
-    current_thread->sigaction[Slot].sa_handler = handler;
-    current_thread->sigaction[Slot].sa_restorer = restorer;
+    cur_thread->sigaction[Slot].sa_handler = handler;
+    cur_thread->sigaction[Slot].sa_restorer = restorer;
 
 // Classic signal() behaviour
-    current_thread->sigaction[Slot].sa_flags = SA_ONESHOT | SA_NOMASK;
-    current_thread->sigaction[Slot].sa_mask  = 0;
+    cur_thread->sigaction[Slot].sa_flags = SA_ONESHOT | SA_NOMASK;
+    cur_thread->sigaction[Slot].sa_mask  = 0;
 
 // Clear the extra fields you have
-    current_thread->sigaction[Slot].sa_msgcode = 0;
-    current_thread->sigaction[Slot].sa_long1   = 0;
-    current_thread->sigaction[Slot].sa_long2   = 0;
+    cur_thread->sigaction[Slot].sa_msgcode = 0;
+    cur_thread->sigaction[Slot].sa_long1   = 0;
+    cur_thread->sigaction[Slot].sa_long2   = 0;
 
     // #debug
     printk("sys_signal: done\n");

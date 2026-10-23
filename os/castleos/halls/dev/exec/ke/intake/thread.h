@@ -963,8 +963,9 @@ int gc_thread_structure(struct thread_d *thread);
 
 unsigned long GetThreadStats( tid_t tid, int index );
 
-int getthreadname(tid_t tid, char *buffer);
-void *FindReadyThread (void);
+int get_thread_name(tid_t tid, char *buffer);
+struct thread_d *find_ready_thread(void);
+
 thread_state_t GetThreadState(struct thread_d *thread);
 thread_type_t GetThreadType(struct thread_d *thread);
 
@@ -974,7 +975,7 @@ void SetCurrentTID(tid_t tid, int lapic_info_id);
 tid_t GetCurrentTID(int lapic_info_id);
 
 
-void *GetThreadByTID(tid_t tid);
+struct thread_d *get_thread_by_tid(tid_t tid);
 
 void *GetCurrentThreadForThisCore(int lapic_id);
 void *GetIdleThreadForThisCore(int lapic_id);
@@ -993,7 +994,7 @@ void threadi_power(
 
 void release(tid_t tid);
 
-void SelectForExecution(struct thread_d *Thread);
+void thread_select_for_execution(struct thread_d *Thread);
 
 unsigned long 
 thread_get_profiler_percentage (struct thread_d *thread);
