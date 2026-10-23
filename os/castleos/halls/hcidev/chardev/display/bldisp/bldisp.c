@@ -316,9 +316,15 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 // We can't refresh.
 // The buffer wasn't validated yet.
 // #todo: Check this into the display device structure.
-// see: init.c
+// #bugbug:
+// #important:
+// Actually this flag is enabled only during the KE PHASE 0,
+// Because of that we are reaching this condition multiple times
+// before this phase.
+// see: __check_refresh_support() in ke.c
+
     if (refresh_screen_enabled != TRUE){
-        debug_print_string("fb_refresh_screen: [FAIL-FIXME] refresh_screen_flag\n");
+        debug_print_string("__bldisp_flush_into_lfb: refresh_screen_enabled\n");
         return;
     }
 
@@ -326,7 +332,7 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 // #todo: Check these into the display device structure.
     if ( gSavedX == 0 || gSavedY == 0 || gSavedBPP == 0 )
     {
-        panic("fb_refresh_screen: display info\n");
+        panic("__bldisp_flush_into_lfb: x, y, bpp\n");
     }
 
 // #
@@ -346,7 +352,7 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 // nao pode ser mais que 2mb
     //if ( Total >= (2*1024*1024) )
     if (Total >= 2097152 ){
-        debug_print_string("fb_refresh_screen: [FAIL-FIXME] Total\n");
+        debug_print_string("__bldisp_flush_into_lfb: [FAIL-FIXME] Total\n");
         return;
     }
 */
@@ -375,7 +381,7 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
     //if (TotalInBytes >= 2097152) // 2mb
     if (TotalInBytes >= 4194304)  //4mb
     {
-        debug_print_string("fb_refresh_screen: [FAIL-FIXME] Total\n");
+        debug_print_string("__bldisp_flush_into_lfb: TotalInBytes\n");
         return;
     }
 

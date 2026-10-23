@@ -819,6 +819,9 @@ fail:
 // + Initializing the paging infra-structure.
 //   Mapping all the static system areas.
 
+// Levels:
+// [1:2:0]
+// [1:2:1]
 int mmInitialize(int phase)
 {
 // Called by I_kmain() in kmain.c.

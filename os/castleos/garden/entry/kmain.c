@@ -15,21 +15,6 @@
 // The boot loader will load the fake kernel image before
 // setting up the long mode and the paging.
 
-// The main subsystem is the window system GWSSRV.BIN.
-// The first usermode application is GWS.BIN.
-// See:
-// GWSSRV.BIN: prestier/gws/server
-// GWS.BIN:    prestier/gws/client
-
-// #bsod
-// List of errors:
-// Error: 0x00 - Unexpected error.
-// Error: 0x01 - CURRENT_ARCH_X86_64 initialization fail.
-// Error: 0x02 - generic.
-// Error: 0x03 - Undefined 'current arch'.
-// Error: 0x04 - The kernel image is too long.
-// Error: 0x05 - Memory allocation for Display device structure.
-// ...
 
 #include <kernel.h>
 
@@ -139,20 +124,20 @@ static int __test_initialize_ap_processor(int target_hw_apic_id);
 static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id);
 
 
-// [1]: Early init routines
-static int earlyinit_SetupBootblock(void);     // [1.1]
-static void earlyinit_Globals(int arch_type);  // [1.2]
-static void earlyinit_Serial(void);            // [1.3]
-static void earlyinit_OutputSupport(void);     // [1.4]
-static int earlyinit(void);                    // [1.0]
+// Early init routines
+static int earlyinit_SetupBootblock(void);     // [~1]
+static void earlyinit_Globals(int arch_type);  // [~2]
+static void earlyinit_Serial(void);            // [~3]
+static void earlyinit_OutputSupport(void);     // [~4]
+static int earlyinit(void);                    // [1.4]
 
-// [4]: Arch init
+// [1:4]: Arch init
 static int archinit(void);
 
-// [5]: Decive init
+// [1:5]: Decive init
 static int deviceinit(void);
 
-// [6]: late init
+// [1:6]: Late init
 static int lateinit(void);
 
 static int I_initialize_kernel(int arch_type, int processor_number);
@@ -394,36 +379,49 @@ static void panic_at_init(int error_code, kernel_subsystem_t subsystem_id)
 
     // Map error codes directly here
     switch (error_code) {
-    case Error10_earlyinit:
+
+    // ---- Main errors ----
+
+    case Error1_I_initialize_kernel:
+        funcname = "I_initialize_kernel";
+        break;
+    case Error2_I_x64CreateKernelProcess:
+        funcname = "I_x64CreateKernelProcess";
+        break;
+    case Error3_I_x64CreateInitialProcess:
+        funcname = "I_x64CreateInitialProcess";
+        break;
+    case Error4_ke_x64ExecuteInitialProcess:
+        funcname = "ke_x64ExecuteInitialProcess";
+        break;
+
+    // ---- sub-errors for (1) ----
+
+    case Error11_earlyinit:
         funcname = "earlyinit";
         break;
-
-    case Error20_mmPhase0:
+    case Error120_mmPhase0:
         funcname = "mmInitialize0";
         break;
-    case Error21_mmPhase1:
+    case Error121_mmPhase1:
         funcname = "mmInitialize1";
         break;
-
-    case Error30_kePhase0:
+    case Error130_kePhase0:
         funcname = "keInitialize0";
         break;
-    case Error31_kePhase1:
+    case Error131_kePhase1:
         funcname = "keInitialize1";
         break;
-    case Error32_kePhase2:
+    case Error132_kePhase2:
         funcname = "keInitialize2";
         break;
-
-    case Error40_archinit:
+    case Error14_archinit:
         funcname = "archinit";
         break;
-
-    case Error50_deviceinit:
+    case Error15_deviceinit:
         funcname = "deviceinit";
         break;
-
-    case Error60_lateinit:
+    case Error16_lateinit:
         funcname = "lateinit";
         break;
 
@@ -840,7 +838,7 @@ static void earlyinit_OutputSupport(void)
 // We don't have any print support for now.
 // But here is the moment when we initialize the
 // serial debug support.
-// [1.0]
+// [1:1]
 static int earlyinit(void)
 {
 // Starting the counter.
@@ -1077,8 +1075,7 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
     return 0;
 }
 
-// :: Level ?
-// [4.0]
+// [1:4]: Arch init
 static int archinit(void)
 {
     int ProcessorType = -1;
@@ -1206,9 +1203,9 @@ fail:
     return FALSE;
 }
 
+// [1:5]: Decive init
 static int deviceinit(void)
 {
-
 
 // Finalize the initialization creating a device structure
     DDINIT_bldisp();
@@ -1272,10 +1269,10 @@ static int deviceinit(void)
 
 // ...
 
-    return 0;
+    return TRUE;  // OK
 }
 
-// :: Level ?
+// [1:6]: Late init
 static int lateinit(void)
 {
     int ok = 0;
@@ -1444,15 +1441,15 @@ static int I_initialize_kernel(int arch_type, int processor_number)
 
         system_state = SYSTEM_PREINIT;
 
-        // [1]
         // Early init
         // We don't have any print support yet.
         // We initialized the serial debug support, and console structures, 
         // but we still can't use the printk functions.
+        // [1:1]
         earlyinit();
         //debug_print("Break point\n");
         //while(1){}
-        wink_update_progress_bar(5);
+        //wink_update_progress_bar(5);
 
         // BSP is Booting
         PROGRESS("\n");
@@ -1484,9 +1481,8 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // + Inittialize heap support.
         // + Inittialize stack support. 
         // + Initialize memory sizes.
-        PROGRESS("\n");
-        PROGRESS(":: MM PHASE 0 (BSP)\n");
-        // [2:0]
+        PROGRESS("[1:2:0] MM PHASE 0 (BSP)\n");
+        // [1:2:0]
         Status = (int) mmInitialize(0);
         if (Status != TRUE){
             __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
@@ -1496,16 +1492,15 @@ static int I_initialize_kernel(int arch_type, int processor_number)
             goto fail;
         }
         Initialization.mm_phase0 = TRUE;
-        wink_update_progress_bar(20);
+        // wink_update_progress_bar(20);
 
         // -------------------------------
         // Initialize mm phase 1.
         // + Initialize framepoll support.
         // + Initializing the paging infrastructure.
         //   Mapping all the static system areas.
-        PROGRESS("\n");
-        PROGRESS(":: MM PHASE 1 (BSP)\n");
-        // [2:1]
+        PROGRESS("[1:2:1] MM PHASE 1 (BSP)\n");
+        // [1:2:1]
         Status = (int) mmInitialize(1);
         if (Status != TRUE){
             __failing_kernel_subsystem = KERNEL_SUBSYSTEM_MM;
@@ -1515,7 +1510,7 @@ static int I_initialize_kernel(int arch_type, int processor_number)
             goto fail;
         }
         Initialization.mm_phase1 = TRUE;
-        wink_update_progress_bar(40);
+        // wink_update_progress_bar(40);
 
         // Why?
         g_module_runtime_initialized = TRUE;
@@ -1541,12 +1536,12 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // + show banner and resolution info.
         // + Check gramado mode and grab data from linker.
         // + Initialize bootloader display device.
-        PROGRESS("\n");
-        PROGRESS(":: KE PHASE 0 (BSP)\n");
-        // [3:0]
+
+        PROGRESS("[1:3:0] KE PHASE 0 (BSP)\n");
+        // [1:3:0]
         Status = (int) keInitialize(0);
         if (Status != TRUE)
-            panic_at_init(Error30_kePhase0,KERNEL_SUBSYSTEM_KE);
+            panic_at_init(Error130_kePhase0, KERNEL_SUBSYSTEM_KE);
         Initialization.ke_phase0 = TRUE;
         wink_update_progress_bar(50);
 
@@ -1556,12 +1551,12 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         //   initialize a lot of stuff from the 
         //   current architecture.
         // + PS2 early initialization.
-        PROGRESS("\n");
-        PROGRESS(":: KE PHASE 1 (BSP)\n");
-        // [3:1]
+
+        PROGRESS("[1:3:1] KE PHASE 1 (BSP)\n");
+        // [1:3:1]
         Status = (int) keInitialize(1);
         if (Status != TRUE)
-            panic_at_init(Error31_kePhase1,KERNEL_SUBSYSTEM_KE);
+            panic_at_init(Error131_kePhase1, KERNEL_SUBSYSTEM_KE);
         Initialization.ke_phase1 = TRUE;
         wink_update_progress_bar(60);
 
@@ -1569,12 +1564,11 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         // Initialize ke phase 2
         // + Initialize background
 
-        PROGRESS("\n");
-        PROGRESS(":: KE PHASE 2 (BSP)\n");
-        // [3:2]
+        PROGRESS("[1:3:2] KE PHASE 2 (BSP)\n");
+        // [1:3:2]
         Status = (int) keInitialize(2);
         if (Status != TRUE)
-            panic_at_init(Error32_kePhase2,KERNEL_SUBSYSTEM_KE);
+            panic_at_init(Error132_kePhase2, KERNEL_SUBSYSTEM_KE);
         Initialization.ke_phase2 = TRUE;
         wink_update_progress_bar(70);
 
@@ -1587,13 +1581,12 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     // BSP initialization (archinit)
     if (processor_number == 0){
 
-        PROGRESS("\n");
-        PROGRESS(":: archinit\n");
-        // [4]
+        PROGRESS("[1:4] archinit\n");
+        // [1:4]
         Status = archinit();
         if (Status != TRUE)
-            panic_at_init(Error40_archinit,KERNEL_SUBSYSTEM_KE);
-        wink_update_progress_bar(80);
+            panic_at_init(Error14_archinit, KERNEL_SUBSYSTEM_KE);
+        wink_update_progress_bar(75);
 
     // AP initialization (archinit)
     } else {
@@ -1604,11 +1597,13 @@ static int I_initialize_kernel(int arch_type, int processor_number)
     // BSP initialization (deviceinit)
     if (processor_number == 0){
 
-        PROGRESS("\n");
-        PROGRESS(":: deviceinit\n");
-        // [5]
-        deviceinit();
-        wink_update_progress_bar(100);
+        PROGRESS("[1:5] deviceinit\n");
+        // [1:5]
+        Status = deviceinit();
+        if (Status != TRUE)
+            panic_at_init(Error15_deviceinit, KERNEL_SUBSYSTEM_KMAIN);
+
+        wink_update_progress_bar(80);
 
     // AP initialization (deviceinit)
     } else {
@@ -1621,13 +1616,14 @@ static int I_initialize_kernel(int arch_type, int processor_number)
         if (Status != TRUE)
             goto fail;
         
-        PROGRESS("\n");
-        PROGRESS(":: lateinit\n");
-        // [6]
+        PROGRESS("[1:6] lateinit\n");
         // It doesn't return?
+        // [1:6]
         Status = (int) lateinit();
         if (Status != TRUE)
-            panic_at_init(Error60_lateinit,KERNEL_SUBSYSTEM_KMAIN);       
+            panic_at_init(Error16_lateinit, KERNEL_SUBSYSTEM_KMAIN);
+            
+        wink_update_progress_bar(85);
 
         return TRUE;  // The kernel was initialized successfully.
 
@@ -1653,6 +1649,7 @@ fail:
 // We don't have any print support yet.
 // See: kernel.h, kmain.h
 // #todo: Maybe we can change this name to BSP_kmain()
+// [x]
 void I_kmain(int arch_type)
 {
     int Status = -1;
@@ -1744,6 +1741,7 @@ void I_kmain(int arch_type)
     //current_arch = (int) arch_type;
 
 // Initialize the kernel
+// [1]
     Status = (int) I_initialize_kernel(arch_type, ProcessorNumber);
 
 
@@ -1770,22 +1768,24 @@ void I_kmain(int arch_type)
 // See: intake/x64init.c
 
     // Create the kernel process and load the main ring 0 module
-    PROGRESS("\n");
-    PROGRESS("I_kmain: Create kernel process\n");
+    PROGRESS("[2] Create kernel process\n");
+    // [2]
     Status = I_x64CreateKernelProcess();
     if (Status != TRUE){
         PROGRESS ("Couldn't create the Kernel process\n");
         goto L_die;
     }
+    wink_update_progress_bar(90);
 
     // Create the init process and its main thread
-    PROGRESS("\n");
-    PROGRESS("I_kmain: Create init process\n");
+    PROGRESS("[3] Create init process\n");
+    // [3]
     Status = I_x64CreateInitialProcess();
     if (Status != TRUE){
         debug_print ("Couldn't create the Initial process\n");
         goto L_die;
     }
+    wink_update_progress_bar(95);
 
 // ======================================================================
 
@@ -1836,9 +1836,12 @@ void I_kmain(int arch_type)
 
     // Spawn the main thread for the init process
     // see: ke.c
-    PROGRESS("\n");
-    PROGRESS("I_kmain: Spawn init thread\n");
+
     if (Status == TRUE){
+
+        PROGRESS("[4] Spawn init thread\n");
+        wink_update_progress_bar(100);
+        // [4]
         int ok = (int) ke_x64ExecuteInitialProcess(ProcessorNumber);
         if (ok < 0){
             debug_print ("on ke_x64ExecuteInitialProcess()\n");

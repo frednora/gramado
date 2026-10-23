@@ -13,37 +13,51 @@ extern struct admin_utsname_d  kernel_utsname;
 // Saving the bootblock address passed by the blgram.
 extern unsigned long saved_bootblock_base;
 
+//
+// 1
+//
 
+#define Error1_I_initialize_kernel  0x1
 // Kernel initialization error codes
 // Each code corresponds to a main worker (initialization level).
 // Main workers called by I_initialize_kernel().
+// [1:1] earlyinit()
+#define Error11_earlyinit     0x11  // Early environment setup failure
+// [1:2:0] mmInitialize(0)
+#define Error120_mmPhase0     0x120  // Memory manager phase 0 failure (heap/stack/memory sizing)
+// [1:2:1] mmInitialize(1)
+#define Error121_mmPhase1     0x121  // Memory manager phase 1 failure (frame pools/paging)
+// [1:3:0] keInitialize(0)
+#define Error130_kePhase0     0x130  // Executive phase 0 failure (font/background/display/linker data)
+// [1:3:1] keInitialize(1)
+#define Error131_kePhase1     0x131  // Executive phase 1 failure (scheduler/dispatcher/process/thread setup)
+// [1:3:2] keInitialize(2)
+#define Error132_kePhase2     0x132  // Executive phase 2 failure (graphics engine/GUI structures/callbacks)
+// [1:4] archinit()
+#define Error14_archinit      0x14  // Architecture initialization failure (processor probe/SMP/APIC)
+// [1:5] deviceinit()
+#define Error15_deviceinit    0x15  // Device initialization failure (PS/2/input targets/consoles)
+// [1:6] lateinit()
+#define Error16_lateinit      0x16  // Late initialization failure (PTYs/user subsystem/network/modules/init process)
 
-// [1] earlyinit()
-#define Error10_earlyinit     0x10  // Early environment setup failure
+//
+// 2
+//
 
-// [2:0] mmInitialize(0)
-#define Error20_mmPhase0      0x20  // Memory manager phase 0 failure (heap/stack/memory sizing)
+#define Error2_I_x64CreateKernelProcess     0x2
 
-// [2:1] mmInitialize(1)
-#define Error21_mmPhase1      0x21  // Memory manager phase 1 failure (frame pools/paging)
+//
+// 3
+//
 
-// [3:0] keInitialize(0)
-#define Error30_kePhase0      0x30  // Executive phase 0 failure (font/background/display/linker data)
+#define Error3_I_x64CreateInitialProcess    0x3
 
-// [3:1] keInitialize(1)
-#define Error31_kePhase1      0x31  // Executive phase 1 failure (scheduler/dispatcher/process/thread setup)
 
-// [3:2] keInitialize(2)
-#define Error32_kePhase2      0x32  // Executive phase 2 failure (graphics engine/GUI structures/callbacks)
+//
+// 4
+//
 
-// [4] archinit()
-#define Error40_archinit      0x40  // Architecture initialization failure (processor probe/SMP/APIC)
-
-// [5] deviceinit()
-#define Error50_deviceinit    0x50  // Device initialization failure (PS/2/input targets/consoles)
-
-// [6] lateinit()
-#define Error60_lateinit      0x60  // Late initialization failure (PTYs/user subsystem/network/modules/init process)
+#define Error4_ke_x64ExecuteInitialProcess  0x4
 
 // Extras
 #define Error90_breakpoint    0x90  // Debug-only breakpoint

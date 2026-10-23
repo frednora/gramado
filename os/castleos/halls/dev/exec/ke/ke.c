@@ -111,6 +111,8 @@ static void __check_refresh_support(void)
 {
 // Check if we can use refresh_screen or not.
 
+    PROGRESS("__check_refresh_support\n");
+
 // -------------------------------------------
 
 // No refresh screen yet!
@@ -518,6 +520,10 @@ int ke_x64ExecuteInitialProcess(int cpu_id)
 }
 
 // Called by I_initKernelComponents().
+// Levels:
+// [1:3:0]
+// [1:3:1]
+// [1:3:2]
 int keInitializeIntake(void)
 {
     //int Status = FALSE;
