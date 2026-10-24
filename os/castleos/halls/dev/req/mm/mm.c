@@ -114,6 +114,8 @@ static int __init_kernel_stack(void);
 // Local worker
 static struct mmblock_d *__find_reusable_block(unsigned long size);
 
+static void *__mm_kmalloc_impl(size_t size, int clean);
+
 // ----------------------------
 
 /*
@@ -338,7 +340,7 @@ void memory_destroy_heap (struct heap_d *heap)
  */
 unsigned long heapAllocateMemory(unsigned long size)
 {
-// This is a worker for kmalloc() and __kmalloc_impl() in kstdlib.c
+// This is a worker for kmalloc() and __mm_kmalloc_impl().
 // Allocate memory inside the kernel heap.
 
     struct mmblock_d *Current;
@@ -796,6 +798,136 @@ unsigned long get_process_heap_pointer (pid_t pid)
 fail:
     return (unsigned long) 0; 
 }
+
+
+// mm_kmalloc implementation.
+// IN: Clear or not the allocated memory.
+// See: mm.c
+static void *__mm_kmalloc_impl(size_t size, int clean)
+{
+    void *ptr;
+    unsigned long ul_size = (unsigned long) (size & 0xFFFFFFFF);
+
+// #todo
+    //if (ul_size == 0)
+        //ul_size = 1;
+
+// IN: (unsigned long) size.
+    ptr = (void *) heapAllocateMemory(ul_size);
+    if (clean == TRUE){
+        if ((void*) ptr != NULL){
+            memset(ptr, 0, size);
+        }
+    }
+    return (void*) ptr;
+}
+
+// mm_kmalloc:
+// Standard kmalloc function.
+// Allocate memory into the kernel heap.
+// Virtually and physically contiguous.
+void *mm_kmalloc(size_t size)
+{
+    void *ptr;
+    size_t _lsize = size;
+    struct te_d *process;
+// Se devemos ou não incremetar o contador de uso.
+    int IncrementUsageCounter=TRUE;  //P->allocated_memory
+
+// Process structure
+    process = (void*) get_current_process_pointer();
+    if ((void*) process == NULL){
+        IncrementUsageCounter=FALSE;
+    }
+    if (process->magic != 1234){
+        IncrementUsageCounter=FALSE;
+    }
+// size
+    if (_lsize < 0){
+        debug_print("mm_kmalloc: _lsize\n");
+        return NULL;
+    }
+    if (_lsize == 0){
+        debug_print("mm_kmalloc: _lsize ajust\n");
+        _lsize=1;
+    }
+// Allocate
+    ptr = (void *) __mm_kmalloc_impl(_lsize, FALSE);
+    if ((void *) ptr == NULL){
+        debug_print("mm_kmalloc: ptr\n");
+        return NULL;
+    }
+// Increment the usage conter for each process.
+    if (IncrementUsageCounter == TRUE)
+    {
+        if ((void*) process != NULL)
+        {
+            if (process->magic == 1234)
+            {
+                // #todo:
+                // A estrutura de processo pode ter
+                // mais de um contador como esse,
+                // registrando os diferentes tipos de memória
+                // alocada pelo processo.
+                process->allocated_memory += _lsize;
+            }
+        }
+    }
+
+    return (void *) ptr;
+}
+
+void *mm_kcalloc(size_t count, size_t size)
+{
+    size_t new_size = (size_t) (count * size);
+    //void *ptr;
+
+// #todo
+    //if (size <= 0)
+        //size = 1;
+
+    if (count <= 0){
+        new_size = (1*size);
+    }
+
+    //ptr = (void*) kmalloc(new_size);
+    //if ( (void*) ptr != NULL ){
+    //    memset(ptr, 0, new_size);
+    //}
+    //return (void*) ptr;
+
+    return (void*) __mm_kmalloc_impl(new_size, TRUE);
+}
+
+/*
+ * mm_kfree:
+ * >> #importante:
+ * >> Tradicionalmente essa função só libera o que foi alocado 
+ * pela última chamada de malloc. Mas estamos tentando algo diferente.
+ * The free() function frees the memory space pointed to by ptr, 
+ * which must have been returned by a previous call 
+ * to malloc(), calloc() or realloc(). 
+ * Otherwise, or if free(ptr) has already been called before, 
+ * undefined behavior occurs. 
+ * >> If ptr is NULL, no operation is performed.
+ * Importante:
+ *     uma estratégia seria apenas sinalizarmos na estrutura que 
+ * desejamos que o GC libere os recurso. Em seguida devemos sinalizar 
+ * no mmblock que libere o bloco para outras alocações.
+ */
+// Virtually and physically contiguous.
+
+void mm_kfree(void *ptr)
+{
+    if ((void *) ptr == NULL){
+        debug_print("mm_kfree: ptr\n");
+        return;
+    }
+    heapFreeMemory(ptr);
+}
+
+
+
 
 //
 // #

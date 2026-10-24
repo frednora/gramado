@@ -59,6 +59,12 @@ extern unsigned long vaList[32];
 // =========================
 
 int mm_gc(void);
+
+
+void *mm_kmalloc(size_t size);
+void *mm_kcalloc(size_t count, size_t size);
+void mm_kfree(void *ptr);
+
 int mmInitialize(int phase);
 
 #endif    
