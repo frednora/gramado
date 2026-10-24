@@ -3,8 +3,8 @@
 
 all:
 
-	make -C garden/
-	make -C gthouse/
+	make -C api/garden/
+	make -C api/gthouse/
 	make -C src/
 
 clean:

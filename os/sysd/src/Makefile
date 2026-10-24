@@ -26,8 +26,8 @@ CFLAGS = -m64 \
 	-Werror=strict-prototypes    
 	
 # Libraries
-LIBC    = ../garden/rtl/include/
-LIBCOBJ = ../garden/rtl/obj
+LIBC    = ../api/garden/rtl/include/
+LIBCOBJ = ../api/garden/rtl/obj
 
 
 # Objects
@@ -69,7 +69,8 @@ all-c:
 
 link_app:
 	@echo "Linking INIT.BIN ..."
-	@ld -m elf_x86_64 -T ../link.ld -o INIT.BIN $(myObjects)    
+	@ld -m elf_x86_64 -T ../api/link.ld -o INIT.BIN $(myObjects)    
+
 finalize:
 	@cp INIT.BIN  bin/
 
