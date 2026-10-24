@@ -161,8 +161,8 @@ build-gramado-os:
 	@cp modules/bin/DUNGEON.BIN  $(BUILD)/GRAMADO
 
 # servers
-	@-cp modules/servers/core/bin/NET.BIN   $(BUILD)/GRAMADO/
-	@-cp modules/servers/core/bin/NETD.BIN  $(BUILD)/GRAMADO/
+	@-cp modules/servers/network/bin/NET.BIN   $(BUILD)/GRAMADO/
+	@-cp modules/servers/network/bin/NETD.BIN  $(BUILD)/GRAMADO/
 #	@-cp modules/servers/vgad/bin/VGAD.BIN  $(BUILD)/GRAMADO
 
 

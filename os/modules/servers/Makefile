@@ -1,7 +1,7 @@
 # Created by Fred Nora
 
 all:
-	make -C core/
+	make -C network/
 #	make -C vgad/
 
 clean:
