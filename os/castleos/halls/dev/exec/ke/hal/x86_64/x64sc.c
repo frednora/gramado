@@ -5,6 +5,14 @@
 // The handlers here call the real implementation in sci.c
 //
 
+
+// #important:
+// We dont need to call only one handler for interupt.
+// We can create a pluggable handler, where each thread
+// can decide what handler it wants to call.
+// Probably we can register it into the thread structure.
+
+
 #include <kernel.h>
 
 // Globals
@@ -27,6 +35,18 @@ void *sc80h (
 {
 
 // System call entry (int 0x8X, syscall).
+
+// #important:
+// We dont need to call only one handler for interupt.
+// We can create a pluggable handler, where each thread
+// can decide what handler it wants to call.
+// Probably we can register it into the thread structure.
+
+// ex: 
+// Here we get the address for the handler 
+// selected by this thread and call it.
+    // t->sc80_handler ?
+
 
     if (sci0_cpl == 0){
         lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.
@@ -104,6 +124,18 @@ void *sc81h (
 
 // System call entry (int 0x8X, syscall).
 
+// #important:
+// We dont need to call only one handler for interupt.
+// We can create a pluggable handler, where each thread
+// can decide what handler it wants to call.
+// Probably we can register it into the thread structure.
+
+// ex: 
+// Here we get the address for the handler 
+// selected by this thread and call it.
+    // t->sc81_handler ?
+
+
     if (sci1_cpl == 0){
         lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.
 
@@ -176,6 +208,19 @@ void *sc82h (
 
 // System call entry (int 0x8X, syscall).
 
+
+// #important:
+// We dont need to call only one handler for interupt.
+// We can create a pluggable handler, where each thread
+// can decide what handler it wants to call.
+// Probably we can register it into the thread structure.
+
+// ex: 
+// Here we get the address for the handler 
+// selected by this thread and call it.
+    // t->sc82_handler ?
+
+
     if (sci2_cpl == 0){
         lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.
 
@@ -247,6 +292,18 @@ void *sc83h (
 {
 
 // System call entry (int 0x8X, syscall).
+
+// #important:
+// We dont need to call only one handler for interupt.
+// We can create a pluggable handler, where each thread
+// can decide what handler it wants to call.
+// Probably we can register it into the thread structure.
+
+// ex: 
+// Here we get the address for the handler 
+// selected by this thread and call it.
+    // t->sc83_handler ?
+
 
     if (sci3_cpl == 0){
         lapic_info[0].irql = IRQL_SYSCALL_KERNEL; //#bugbug: We need the cpu id.

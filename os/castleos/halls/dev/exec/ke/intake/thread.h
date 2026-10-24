@@ -413,6 +413,27 @@ struct thread_d
 // see: window.c
     struct WND_d *window;
 
+
+// #important:
+// We dont need to call only one handler for interupt.
+// We can create a pluggable handler, where each thread
+// can decide what handler it wants to call.
+// Probably we can register it into the thread structure.
+
+// ex: 
+// Here we get the address for the handler 
+// selected by this thread and call it.
+    // t->sc80_handler ?
+
+// See: x64sc.c
+
+    // #todo: This is a work in progress
+    //unsigned long sc80_handler;
+    //unsigned long sc81_handler;
+    //unsigned long sc82_handler;
+    //unsigned long sc83_handler;
+
+
 // #todo
 // Other process can't take some actions on this thread
 // if it is protected. 
