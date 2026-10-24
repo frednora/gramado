@@ -1,4 +1,0 @@
-// criado aqui por compatibilidade 
-
-
-

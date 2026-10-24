@@ -1,1 +1,0 @@
-vamos criar pequenos aplicativos de test de funções.

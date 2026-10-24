@@ -1,7 +1,9 @@
-# Created by Fred Nora.
+# Created by Fred Nora
 
 all:
 	make -C core/
+#	make -C vgad/
+
 clean:
 	-rm -f *.o
 	-rm -f bin/*.BIN

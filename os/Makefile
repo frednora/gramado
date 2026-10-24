@@ -160,12 +160,11 @@ build-gramado-os:
 	@cp modules/bin/DUNGEON.BIN  $(BUILD)/
 	@cp modules/bin/DUNGEON.BIN  $(BUILD)/GRAMADO
 
-# netu
-	@-cp modules/netu/core/bin/NET.BIN   $(BUILD)/GRAMADO/
-	@-cp modules/netu/core/bin/NETD.BIN  $(BUILD)/GRAMADO/
+# servers
+	@-cp modules/servers/core/bin/NET.BIN   $(BUILD)/GRAMADO/
+	@-cp modules/servers/core/bin/NETD.BIN  $(BUILD)/GRAMADO/
+#	@-cp modules/servers/vgad/bin/VGAD.BIN  $(BUILD)/GRAMADO
 
-# Ring 3 VGA device driver
-	@cp modules/udrivers/bin/VGAD.BIN  $(BUILD)/GRAMADO
 
 	@echo "~build-gramado-os end?"
 
