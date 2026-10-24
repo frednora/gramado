@@ -862,6 +862,8 @@ void *sci0 (
 // REAL (coloca a thread em standby para executar pela primeira vez.)
     if (number == SCI0_STARTTHREAD)
     {
+        if ((void*) arg2 == NULL)
+            return NULL;
         debug_print("sci0: SCI0_STARTTHREAD\n");
         return (void *) core_start_thread((struct thread_d *) arg2);
     }

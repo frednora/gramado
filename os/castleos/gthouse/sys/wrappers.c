@@ -122,6 +122,7 @@ int core_start_thread(struct thread_d *thread)
 
     thread_select_for_execution((struct thread_d *) thread);
     return 0;
+
 fail:
     return (int) (-1);
 }

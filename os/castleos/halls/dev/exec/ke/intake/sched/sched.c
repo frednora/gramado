@@ -937,6 +937,31 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 TmpThread->used = TRUE;
                 TmpThread->magic = 4321;  // Reuse state
 
+                /*
+                // VERY GOOD: Its working!
+                // #bugbug
+                // #test:
+                // We also got to kill the other threads that belongs to this process
+                // the the thread that is closing is the main thread.
+                struct thread_d *other_thread;
+                int ti;
+                for (ti=0; ti<THREAD_COUNT_MAX; ti++)
+                {
+                    other_thread = (struct thread_d *) threadList[ti];
+                    if ((void*) other_thread != NULL && (void*) TmpThread->te != NULL)
+                    {
+                        // same process
+                        if (other_thread->te == TmpThread->te)
+                        {
+                            other_thread->kobj.is_available_for_reuse = TRUE;
+                            other_thread->state = THREAD_STATE_WAITING_FOR_REUSE;
+                            other_thread->used = TRUE;
+                            other_thread->magic = 4321;  // Reuse state
+                        }
+                    }
+                }
+                */
+
                 // #todo: We can do the same for the process.
                 // #test: Reusing it
                 // #todo: Create a method for this.

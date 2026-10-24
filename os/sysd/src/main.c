@@ -225,14 +225,16 @@ static void do_help(void)
     printf ("[control + f9] to open the kernel console\n");
 }
 
-void fn_thread00(void);
-void fn_thread00(void)
+static void fn_thread00(void);
+static void fn_thread00(void)
 {
     printf ("fn_thread00: Running ...\n");
     while (1){
     };
 }
 
+// #test
+// It creates and starts a ring 3 thread
 static void do_test_thread(void)
 {
     void *r0_pointer;
@@ -249,7 +251,7 @@ static void do_test_thread(void)
         return;
     }
 
-// Create the thread.
+// Create the thread
     r0_pointer = 
         (void *) rtl_create_thread(
                     (unsigned long) &fn_thread00,   // initial rip
@@ -687,13 +689,16 @@ static int input_compare_string(void)
         goto exit_cmp; 
     }
 
-// #test
-// Test the creation and initialization of a ring 3 thread.
-    if ( gramado_strncmp(prompt,"thread",6) == 0 )
+// #test:
+// Test the creation and initialization of a ring 3 thread
+// ok, it's working.
+
+    if ( gramado_strncmp(prompt, "thread", 6) == 0 )
     {
         do_test_thread();
         goto exit_cmp;
     }
+
 
     int myPID = -1;
     if ( gramado_strncmp(prompt,"getpid",6) == 0 )

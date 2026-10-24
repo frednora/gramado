@@ -777,44 +777,78 @@ int rtl_start_process_pid( pid_t pid )
 */
 
 
-/*
- * rtl_create_thread:
- *     Create a thread.
- *     #todo: 
- *     Precisamos uma função que envie mais argumentos.
- *     Essa será uma rotina de baixo nível para pthreads.
- */
+
+// Create a thread
+// #todo: 
+// This is gonna be a worker for pthreads.
+// We need a function with more arguments.
+// #define	SYSTEMCALL_CREATETHREAD     72
+// IN:
+// inti_rip: initial instruction pointer
+// init_stack: initial stack pointer
+// name: thread name
 
 void *rtl_create_thread ( 
     unsigned long init_rip, 
     unsigned long init_stack, 
-    char *name )
+    const char *name )
 {
-    //#define	SYSTEMCALL_CREATETHREAD     72
-    debug_print ("rtl_create_thread:\n");
+    char *thread_name;
+    const char *default_name = "noname";
+
+    // #debug
+    //debug_print ("rtl_create_thread:\n");
+    //     printf ("rtl_create_thread:\n");
+
+    if (init_rip == 0)
+        return NULL;
+    if (init_stack == 0)
+        return NULL;
+
+    thread_name = name;
+    if ((void*) name == NULL){
+        thread_name = default_name;
+    }
+
     return (void *) sc80 ( 
-                        72,    //SYSTEMCALL_CREATETHREAD, 
+                        72, 
                         init_rip, 
                         init_stack, 
-                        (unsigned long) name );
+                        (unsigned long) thread_name );
 }
 
-
-/*
- * rtl_start_thread:
- *     Coloca no estado standby para executar pela primeira vez
- */
-
-// #todo: Change return to 'int'
-void rtl_start_thread (void *thread)
+// Start a thread
+// Put it into the standby state to run for the first time.
+// IN: 
+// thread_r0_pointer: Ring 0 pointer for a thread. (unsafe)
+int rtl_start_thread(void *thread_r0_pointer)
 {
+    int rv = -1;
+
     debug_print ("rtl_create_thread:\n");
-    sc80 ( 
+
+    if ((void*) thread_r0_pointer == NULL)
+        goto fail;
+
+// Call the service in ring 0
+// #test: Getting the return value
+
+    rv = 
+    (int) sc80 ( 
         SYSTEMCALL_STARTTHREAD, 
-        (unsigned long) thread, 
-        (unsigned long) thread, 
-        (unsigned long) thread );
+        (unsigned long) thread_r0_pointer, 
+        (unsigned long) thread_r0_pointer, 
+        (unsigned long) thread_r0_pointer 
+    );
+
+    return (int) rv;
+
+fail:
+    return (int) -1;
 }
+
+
+
 
 
 /*
