@@ -148,6 +148,8 @@ callback_handler(
 // Callback restorer.
     //printf("Calling the restorer\n");
     //asm ("int $198");
+    // If it returns
+    //asm ("int $3");
 }
 
 
