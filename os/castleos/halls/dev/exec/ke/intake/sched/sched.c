@@ -54,6 +54,7 @@ static tid_t __scheduler_rr(unsigned long sched_flags);
 static tid_t __scheduler_priorityinterleaving(unsigned long sched_flags);
 //...
 
+static void __on_zombie(struct thread_d *thread);
 static struct thread_d *__build_stage_queue(int stage, unsigned long priority);
 
 static void sched_quick_and_dirty_load_balancer(void);
@@ -362,6 +363,142 @@ sched_cut_round(
     last_thread->next = NULL; 
 }
 
+
+// When the scheduler finds a thread in zombie state it calls this function.
+// We out the thread structure into the 'reusable' state and 
+// also put the thread structure into the reusable state all the other threads 
+// that belongs to the same process. Finally we also put the the 
+// process structure into the reusable state.
+
+static void __on_zombie(struct thread_d *thread)
+{
+    // #debug
+    printk("__on_zombie:\n");
+
+// Parameter:
+    if ((void*) thread == NULL)
+        return;
+    if (thread->magic != 1234)
+        return;
+    if (thread->state != ZOMBIE)
+        return;
+        
+// #bugbug
+// If we are destroying the init process or the display server
+
+// Init process?
+// Can't kill the init process
+
+    if ((void*) thread == InitThread){
+        panic("__on_zombie: Can't kill InitThread\n");
+    }
+
+
+// Display server?
+// Unregister the server
+
+    if (DisplayServerInfo.initialized == TRUE)
+    {
+        if (thread->tid == DisplayServerInfo.tid)
+        {
+            DisplayServerInfo.initialized = FALSE;
+        }
+    }
+                  
+// #test
+// (This is a work in progress)
+// Notify parent process.
+// IN: thread struct, event number.
+
+    // __sched_notify_parent(thread, 0);
+
+// #todo
+// Find some thread that is waiting for the dead of this thread.
+
+    // t->wait_reason = WAIT_REASON_WAIT4TID
+    // if (t->wait4tid == thread->tid)
+    //     waike up (t) 
+
+// #test: 
+// Delete structure? or not?
+// We already have a worker for that
+
+    //thread->used = FALSE;
+    //thread->magic = 0;
+    //thread = NULL;
+
+// Foreground thread?
+
+    //if (thread->tid == foreground_thread)
+        //foreground_thread = INIT_TID;
+
+// #test: 
+// Reusing it
+// #todo: Create a method for this
+
+    // #debug
+    printk("__on_zombie: REUSE STATE\n");
+
+    thread->kobj.is_available_for_reuse = TRUE;
+    thread->state = THREAD_STATE_WAITING_FOR_REUSE;
+    thread->used = TRUE;
+    thread->magic = 4321;  // Reuse state
+
+
+// VERY GOOD: Its working!
+// #bugbug
+// #test:
+// We also got to kill the other threads that belongs to this process
+// the the thread that is closing is the main thread.
+
+    struct thread_d *tmp;
+    int ti;
+    for (ti=0; ti<THREAD_COUNT_MAX; ti++)
+    {
+        tmp = (struct thread_d *) threadList[ti];
+
+        // Is it a valid thread?
+        if ((void*) tmp != NULL)
+        {
+            if (tmp->magic == 1234 && (void*) tmp->te != NULL)
+            {
+                if ( (void*) thread->te != NULL)
+                {
+                    // Same process?
+                    // In this case this thread also change its state
+                    if (tmp->te == thread->te)
+                    {
+                        // #debug
+                        printk("__on_zombie: REUSE STATE :)\n");
+
+                        tmp->kobj.is_available_for_reuse = TRUE;
+                        tmp->state = THREAD_STATE_WAITING_FOR_REUSE;
+                        tmp->used = TRUE;
+                        tmp->magic = 4321;  // Reuse state
+                    }
+                }
+
+            }
+        }
+    }
+
+// Reuse the process?
+// #todo: 
+// We can do the same for the process.
+// #test: Reusing it
+// #todo: Create a method for this.
+// #ps: It needs to be a valid pointer for te.
+
+    if ((void*) thread->te != NULL)
+    {
+        thread->te->kobj.is_available_for_reuse = TRUE;
+        thread->te->state = PROCESS_STATE_WAITING_FOR_REUSE;
+        thread->te->used = TRUE;
+        thread->te->magic = 4321;  // Reuse state
+    }
+}
+
+
 // Build the queue for a given stage.
 // Now: include only READY threads that match the given priority.
 static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
@@ -424,10 +561,14 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
     for (i=1; i < THREAD_COUNT_MAX; i++) 
     {
         TmpThread = (struct thread_d *) threadList[i];
-        if ( TmpThread && TmpThread->used == TRUE && 
-             TmpThread->magic == 1234) 
+
+        // Basic thread validation
+        if ( TmpThread && 
+             TmpThread->used == TRUE && 
+             TmpThread->magic == 1234 ) 
         {
 
+            // ALARM
             if (TmpThread->state == WAITING)
             {
                 // Alarm check 
@@ -442,6 +583,7 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
 
             // --- NEW: Wake-up check for WAITING threads --- 
 
+            // WAITING
             if (TmpThread->Deferred.sleep_in_progress == TRUE)
             {
                 //printk ("sched [INTERLIAVING]: jiffies=%d | j1=%d | j2=%d \n", 
@@ -473,7 +615,40 @@ static struct thread_d *__build_stage_queue(int stage, unsigned long priority)
                 }
             }
 
-            // Filter by priority
+            // ===================================
+            // EXIT in progress
+
+            if (TmpThread->Deferred.exit_in_progress == TRUE)
+            {
+                if (TmpThread != Idle)
+                {
+
+                    // Turn it zombie
+                    TmpThread->state = ZOMBIE;
+                    TmpThread->Deferred.exit_in_progress = FALSE;
+
+                    // Invalidate the foreground thread variable
+                    if (TmpThread->tid == foreground_thread)
+                        foreground_thread = -1;
+
+                    continue;
+                }
+            }
+
+
+            // =============================
+            // :: ZOMBIE
+
+            if ( TmpThread->used == TRUE && 
+                 TmpThread->magic == 1234 && 
+                 TmpThread->state == ZOMBIE )
+            {
+                __on_zombie(TmpThread);
+                continue;
+            }
+
+
+            // ---- Filter by priority ----
             if (TmpThread->priority == priority)
             {
                 // For all the READY threads
@@ -884,11 +1059,13 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 }
             }
 
+            /*
             // =============================
             // :: ZOMBIE
             // ZOMBIE threads are cleaned up.
             // #todo: That’s fine, but you might want a dedicated reaper/collector 
             // to free resources instead of doing it inline.
+
             if ( TmpThread->used == TRUE && 
                  TmpThread->magic == 1234 && 
                  TmpThread->state == ZOMBIE )
@@ -937,30 +1114,6 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                 TmpThread->used = TRUE;
                 TmpThread->magic = 4321;  // Reuse state
 
-                /*
-                // VERY GOOD: Its working!
-                // #bugbug
-                // #test:
-                // We also got to kill the other threads that belongs to this process
-                // the the thread that is closing is the main thread.
-                struct thread_d *other_thread;
-                int ti;
-                for (ti=0; ti<THREAD_COUNT_MAX; ti++)
-                {
-                    other_thread = (struct thread_d *) threadList[ti];
-                    if ((void*) other_thread != NULL && (void*) TmpThread->te != NULL)
-                    {
-                        // same process
-                        if (other_thread->te == TmpThread->te)
-                        {
-                            other_thread->kobj.is_available_for_reuse = TRUE;
-                            other_thread->state = THREAD_STATE_WAITING_FOR_REUSE;
-                            other_thread->used = TRUE;
-                            other_thread->magic = 4321;  // Reuse state
-                        }
-                    }
-                }
-                */
 
                 // #todo: We can do the same for the process.
                 // #test: Reusing it
@@ -974,6 +1127,18 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     TmpThread->te->magic = 4321;  // Reuse state
                 }
 
+                continue;
+            }
+            */
+
+            // =============================
+            // :: ZOMBIE
+
+            if ( TmpThread->used == TRUE && 
+                 TmpThread->magic == 1234 && 
+                 TmpThread->state == ZOMBIE )
+            {
+                __on_zombie(TmpThread);
                 continue;
             }
 
