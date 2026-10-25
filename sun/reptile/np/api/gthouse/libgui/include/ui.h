@@ -124,6 +124,13 @@ struct libgui_node_d
 };
 
 
+#define UIC_FLAG_CENTER_H  0x0001
+#define UIC_FLAG_CENTER_V  0x0002
+
+#define UIC_LABEL_PADDING  8
+#define UIC_LABEL_COLOR    0x00101010
+
+
 // UI component types
 #define UI_COMPONENT_BUTTON   1
 #define UI_COMPONENT_ICON     2

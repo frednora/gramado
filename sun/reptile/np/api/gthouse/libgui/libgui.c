@@ -2873,6 +2873,7 @@ __draw_button_borders_dc(
 // #todo:
 // We need to handle the ID of the component.
 // Maybe listing them in a linked list or array.
+
 struct ui_component_d *libgui_create_ui_component(
     struct dccanvas_d *dc,
     int type,
@@ -2889,14 +2890,22 @@ struct ui_component_d *libgui_create_ui_component(
     unsigned long LongSize=0;
     unsigned long scale = 1;
 
+    unsigned int  bg_color = 0x00E0E0E0;
+    int has_borders = FALSE;   // button-like components
+
     if ((void*) dc == NULL)
 	    return NULL;
 	if (dc->magic != 1234)
 	    return NULL;
+	if (type < 0){
+	    return NULL;
+    }
 
     uic = (struct ui_component_d *) malloc(sizeof(struct ui_component_d));
     if ((void*) uic == NULL)
 	    return NULL;
+    memset(uic, 0, sizeof(struct ui_component_d));
+
     uic->used = TRUE;
 	uic->magic = 1234;
     uic->id = -1;  // #todo: We need to handle the ID of the component
@@ -2921,217 +2930,106 @@ struct ui_component_d *libgui_create_ui_component(
 
 // ================================
 
-	if (type < 0){
-	    return NULL;
-    }
     uic->type = type;
     uic->flags = (unsigned long) flags;
 
-    // ---- Button ----
-	if (type == UI_COMPONENT_BUTTON)
-	{
-        text_x = left+8;
-        text_y = top+8;
+// ================================
+// Per-type settings (the only things that differ)
+
+    switch (type){
+    case UI_COMPONENT_BUTTON:
         scale = 1;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale);  // rough width in pixels (8px per char)
-            if (width > LongSize)
-                text_x = left + ((width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (height > LongSize)
-                text_y = top + ((height - LongSize) / 2);
-        }
-
-		// Draw button's background
-        lingui_draw_rectangle0_dc(
-            dc,
-            left, top, width, height,
-            0x00C0C0C0,  //color
-            0   //rop 
-        );
-
-        // Button status:
-		// Draw button's borders depending on the button's status
-        // #todo: Hardcoded for now. Maybe the function can receive a parameter for the status.
-        uic->status = BS_DEFAULT;  // default status for buttons
-        __draw_button_borders_dc(
-                dc,
-                uic,
-                0x00E0E0E0,  // tl 2 inner (light)
-                0x00FAFAFA,  // tl 1 most inner (lighter)
-                0x00505050,  // br 2 inner (dark)
-                0x00989898,  // br 1 most inner (light) 
-                0x00101010   // outer 
-		    );
-
-        /*
-		// Draw button's label
-        libgui_drawstring_dc(
-            dc,
-            left +8,
-            top  +8,
-            0x00101010,
-            0x00C0C0C0,   // gray
-            0,    // ROP 
-            uic->label  //label 
-        );
-        */
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-		// ...
-	}
-
-    // ---- Icon  ----
-	if (type == UI_COMPONENT_ICON)
-	{
-        text_x = left+8;
-        text_y = top+8;
+        bg_color = LIBGUI_COLOR_BUTTON_FACE;  //0x00C0C0C0;
+        has_borders = TRUE;
+        text_x = left + 8;
+        text_y = top  + 8;
+        break;
+    case UI_COMPONENT_ICON:
         scale = 1;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (width > LongSize)
-                text_x = left + ((width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (height > LongSize)
-                text_y = top + ((height - LongSize) / 2);
-        }
-
-		// Draw button's background
-        lingui_draw_rectangle0_dc(
-            dc,
-            left, top, width, height,
-            0x00C0C0C0,  //color
-            0   //rop 
-        );
-
-        // Button status:
-		// Draw button's borders depending on the button's status
-        // #todo: Hardcoded for now. Maybe the function can receive a parameter for the status.
-        uic->status = BS_DEFAULT;  // default status for buttons
-        __draw_button_borders_dc(
-                dc,
-                uic,
-                0x00E0E0E0,  // tl 2 inner (light)
-                0x00FAFAFA,  // tl 1 most inner (lighter)
-                0x00505050,  // br 2 inner (dark)
-                0x00989898,  // br 1 most inner (light) 
-                0x00101010   // outer 
-		    );
-
-        /*
-		// Draw button's label
-        libgui_drawstring_dc(
-            dc,
-            left +8,
-            top  +8,
-            0x00101010,
-            0x00C0C0C0,   // gray
-            0,    // ROP 
-            uic->label  //label 
-        );
-        */
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-		// ...
-	}
-
-    // ---- Label ----
-    // It’s just static text drawn inside a rectangle or at a position. 
-    if (type == UI_COMPONENT_LABEL)
-    { 
-        text_x = left+8;
-        text_y = top+8;
+        bg_color = LIBGUI_COLOR_BUTTON_FACE;  //0x00C0C0C0;
+        has_borders = TRUE;
+        text_x = left + 8;
+        text_y = top  + 8;
+        break;
+    case UI_COMPONENT_LABEL:
         scale = 1;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (width > LongSize)
-                text_x = left + ((width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (height > LongSize)
-                text_y = top + ((height - LongSize) / 2);
-        }
-
-        lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-    }
-
-    // ---- Header ----
-    if (type == UI_COMPONENT_HEADER)
-    { 
-        text_x = left+8;
-        text_y = top+8;
+        bg_color = LIBGUI_COLOR_PANEL_FACE;  //0x00E0E0E0;
+        text_x = left + 8;
+        text_y = top  + 8;
+        break;
+    case UI_COMPONENT_HEADER:
         scale = 2;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (width > LongSize)
-                text_x = left + ((width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (height > LongSize)
-                text_y = top + ((height - LongSize) / 2);
-        }
-
-        lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-    }
-
-    // ---- Footer ----
-    if (type == UI_COMPONENT_FOOTER) 
-    {
-        text_x = left+8;
-        text_y = top+8;
+        bg_color = LIBGUI_COLOR_PANEL_FACE;  //0x00E0E0E0;
+        text_x = left + 8;
+        text_y = top  + 8;
+        break;
+    case UI_COMPONENT_FOOTER:
         scale = 1;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (width > LongSize)
-                text_x = left + ((width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (height > LongSize)
-                text_y = top + ((height - LongSize) / 2);
-        }
+        bg_color = LIBGUI_COLOR_PANEL_FACE;  //0x00E0E0E0;
+        text_x = left + 8;
+        text_y = top  + 8;
+        break;
+    default:
+        // Unknown type: keep the old behavior (nothing is drawn).
+        return (struct ui_component_d *) uic;
+    };
 
-        lingui_draw_rectangle0_dc(dc, left, top, width, height, 0x00E0E0E0, 0);
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
+// ====================================
+
+    // Center horizontally based on the component width
+    if (uic->flags & 0x0001)
+    {
+        LongSize = (unsigned long) (uic->label_size * 8 * scale);  // 8px per char
+        if (width > LongSize)
+            text_x = left + ((width - LongSize) / 2);
+    }
+    // Center vertically based on the component height
+    // #test: Using (8x16) for now, because we still do not have the char dimensions.
+    if (uic->flags & 0x0002)
+    {
+        LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
+        if (height > LongSize)
+            text_y = top + ((height - LongSize) / 2);
     }
 
-	// ...
+// ================================
+// Background (color depends on the type)
+
+    lingui_draw_rectangle0_dc(
+        dc,
+        left, top, width, height,
+        bg_color,
+        0   // rop
+    );
+
+// =======================================
+
+// Borders (only for button-like components)
+
+    if (has_borders == TRUE)
+    {
+        // #todo: Hardcoded for now. Maybe the function can receive a parameter for the status.
+        uic->status = BS_DEFAULT;  // default status for buttons
+        __draw_button_borders_dc(
+            dc,
+            uic,
+            0x00E0E0E0,  // tl 2 inner (light)
+            0x00FAFAFA,  // tl 1 most inner (lighter)
+            0x00505050,  // br 2 inner (dark)
+            0x00989898,  // br 1 most inner (light)
+            0x00101010   // outer
+        );
+    }
+
+// =====================================
+
+// Label (drawn once, on top of everything)
+
+    if (uic->label_size > 0)
+    {
+        libgui_drawstringblock_dc(
+            dc, text_x, text_y, 0x00101010, uic->label, scale );
+    }
 
     return (struct ui_component_d *) uic;
 }
@@ -3147,6 +3045,7 @@ top/left = dark
 bottom/right = light
 */
 
+
 int 
 libgui_redraw_ui_component(
 	struct ui_component_d *uic,
@@ -3156,6 +3055,17 @@ libgui_redraw_ui_component(
     unsigned long text_y=0;
     unsigned long LongSize=0;
     unsigned long scale = 1;  // default
+
+    unsigned int bg_color = 0x00E0E0E0;
+    int has_borders = FALSE;   // button-like components
+
+    // Border colors (only used when has_borders == TRUE)
+    unsigned int tl1_color = 0;  // tl 1 most inner
+    unsigned int tl2_color = 0;  // tl 2 inner
+    unsigned int br1_color = 0;  // br 1 most inner
+    unsigned int br2_color = 0;  // br 2 inner
+
+
 
 	// uic
     if ((void*) uic == NULL)
@@ -3173,320 +3083,164 @@ libgui_redraw_ui_component(
 	    return -1;
 
 
-    // ---- Button ----
-	if (uic->type == UI_COMPONENT_BUTTON)
-	{
-        text_x = uic->left+8;
-        text_y = uic->top+8;
+
+// ================================
+// Per-type settings (the only things that differ)
+
+    switch (uic->type){
+    case UI_COMPONENT_BUTTON:
         scale = 1;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (uic->width > LongSize)
-                text_x = uic->left + ((uic->width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (uic->height > LongSize)
-                text_y = uic->top + ((uic->height - LongSize) / 2);
-        }
-
-		// Draw button's background
-        lingui_draw_rectangle0_dc(
-            dc,
-            uic->left, uic->top, uic->width, uic->height,
-            0x00C0C0C0,  //color
-            0   //rop 
-        );
-
-        unsigned long tl1_color = 0;  // inner
-        unsigned long tl2_color = 0;  // most inner
-        unsigned long br1_color = 0;  // inner
-        unsigned long br2_color = 0;  // most inner
-
-        // #test: Changing colors based on the button's status
-        switch (uic->status){
-        case BS_RELEASED:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_FOCUS:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_PRESSED:
-            tl1_color = 0x00505050;  // tl 1 most inner (dark)
-            tl2_color = 0x00989898;  // tl 2 inner (light)
-            br1_color = 0x00E0E0E0;  // br 1 most inner (light) 
-            br2_color = 0x00FAFAFA;  // br 2 inner (lighter)
-            break;
-        case BS_HOVER:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_DISABLED:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_PROGRESS:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        default:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        };
-
-		// Draw button's borders
-        __draw_button_borders_dc(
-            dc,
-            uic,
-            0x00E0E0E0,  // tl 2 inner (light)
-            0x00FAFAFA,  // tl 1 most inner (lighter)
-            0x00505050,  // br 2 inner (dark)
-            0x00989898,  // br 1 most inner (light) 
-            0x00101010   // outer 
-		);
-
-        /*
-		// Draw button's label
-        libgui_drawstring_dc(
-            dc,
-            text_x,
-            text_y,
-            0x00101010,   // white
-            0x00C0C0C0,   // gray
-            0,            // ROP 
-            uic->label    // label 
-        );
-        */
-
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-
-		// ...
-
-        return 0;
-	}
-
-    // ---- Icon ----
-	if (uic->type == UI_COMPONENT_ICON)
-	{
-        text_x = uic->left+8;
-        text_y = uic->top+8;
+        bg_color = LIBGUI_COLOR_BUTTON_FACE;  //0x00C0C0C0;
+        has_borders = TRUE;
+        text_x = uic->left + 8;
+        text_y = uic->top  + 8;
+        break;
+    case UI_COMPONENT_ICON:
         scale = 1;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale);  // rough width in pixels (8px per char)
-            if (uic->width > LongSize)
-                text_x = uic->left + ((uic->width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (uic->height > LongSize)
-                text_y = uic->top + ((uic->height - LongSize) / 2);
-        }
-
-		// Draw button's background
-        lingui_draw_rectangle0_dc(
-            dc,
-            uic->left, uic->top, uic->width, uic->height,
-            0x00C0C0C0,  //color
-            0   //rop 
-        );
-
-        unsigned long tl1_color = 0;  // inner
-        unsigned long tl2_color = 0;  // most inner
-        unsigned long br1_color = 0;  // inner
-        unsigned long br2_color = 0;  // most inner
-
-        // #test: Changing colors based on the button's status
-        switch (uic->status){
-        case BS_RELEASED:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_FOCUS:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_PRESSED:
-            tl1_color = 0x00505050;  // tl 1 most inner (dark)
-            tl2_color = 0x00989898;  // tl 2 inner (light)
-            br1_color = 0x00E0E0E0;  // br 1 most inner (light) 
-            br2_color = 0x00FAFAFA;  // br 2 inner (lighter)
-            break;
-        case BS_HOVER:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_DISABLED:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        case BS_PROGRESS:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        default:
-            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
-            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
-            br1_color = 0x00989898;  // br 1 most inner (light) 
-            br2_color = 0x00505050;  // br 2 inner (dark)
-            break;
-        };
-
-		// Draw button's borders
-        __draw_button_borders_dc(
-            dc,
-            uic,
-            0x00E0E0E0,  // tl 2 inner (light)
-            0x00FAFAFA,  // tl 1 most inner (lighter)
-            0x00505050,  // br 2 inner (dark)
-            0x00989898,  // br 1 most inner (light) 
-            0x00101010   // outer 
-		);
-
-        /*
-		// Draw button's label
-        libgui_drawstring_dc(
-            dc,
-            text_x,
-            text_y,
-            0x00101010,   // white
-            0x00C0C0C0,   // gray
-            0,            // ROP 
-            uic->label    // label 
-        );
-        */
-
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-
-		// ...
-
-        return 0;
-	}
-
-    // ---- Label ----
-    // It’s just static text drawn inside a rectangle or at a position. 
-    if (uic->type == UI_COMPONENT_LABEL)
-    { 
-        text_x = uic->left+8;
-        text_y = uic->top+8;
+        bg_color = LIBGUI_COLOR_BUTTON_FACE; //0x00C0C0C0;
+        has_borders = TRUE;
+        text_x = uic->left + 8;
+        text_y = uic->top  + 8;
+        break;
+    case UI_COMPONENT_LABEL:
+        scale = 1;   // same as create (was 2 here before)
+        bg_color = LIBGUI_COLOR_PANEL_FACE;  //0x00E0E0E0;
+        text_x = uic->left + 8;
+        text_y = uic->top  + 8;
+        break;
+    case UI_COMPONENT_HEADER:
         scale = 2;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (uic->width > LongSize)
-                text_x = uic->left + ((uic->width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (uic->height > LongSize)
-                text_y = uic->top + ((uic->height - LongSize) / 2);
-        }
+        bg_color = LIBGUI_COLOR_PANEL_FACE; //0x00E0E0E0;
+        text_x = uic->left + 8;
+        text_y = uic->top  + 8;
+        break;
+    case UI_COMPONENT_FOOTER:
+        scale = 1;
+        bg_color = LIBGUI_COLOR_PANEL_FACE; //0x00E0E0E0;
+        text_x = uic->left + 8;
+        text_y = uic->top  + 8;
+        break;
+    default:
+        // Unknown type: nothing to draw.
+        return -1;
+    };
 
-        lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-    }
 
-    // ---- Header ----
-    if (uic->type == UI_COMPONENT_HEADER)
-    { 
-        text_x = uic->left+8;
-        text_y = uic->top+8;
-        scale = 2;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (uic->width > LongSize)
-                text_x = uic->left + ((uic->width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (uic->height > LongSize)
-                text_y = uic->top + ((uic->height - LongSize) / 2);
-        }
+// ==================================================
+// Border colors depending on the status (button-like only)
 
-        lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-    }
-
-    // ---- Footer ----
-    if (uic->type == UI_COMPONENT_FOOTER) 
+    if (has_borders == TRUE)
     {
-        text_x = uic->left+8;
-        text_y = uic->top+8;
-        scale = 1;
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0001) 
-        {
-            LongSize = (unsigned long) (uic->label_size * 8 * scale); // rough width in pixels (8px per char)
-            if (uic->width > LongSize)
-                text_x = uic->left + ((uic->width - LongSize) / 2);
-        }
-        // #test: Because we still do not have the char dimensions.
-        // #test: Using (8x16) for now
-        // Center horizontally based on client area width
-        if (uic->flags & 0x0002) 
-        {
-            LongSize = (unsigned long) (1 * 16 * scale); // rough height in pixels (16px per char)
-            if (uic->height > LongSize)
-                text_y = uic->top + ((uic->height - LongSize) / 2);
-        }
-
-        lingui_draw_rectangle0_dc(dc, uic->left, uic->top, uic->width, uic->height, 0x00E0E0E0, 0);
-        libgui_drawstringblock_dc(dc, text_x, text_y, 0x00101010, uic->label, scale);
-
-        return 0;
+    
+        // #test: Changing colors based on the button's status
+        switch (uic->status){
+        case BS_RELEASED:
+            tl1_color = LIBGUI_COLOR_BEVEL_RAISED_TL_1;  //0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = LIBGUI_COLOR_BEVEL_RAISED_TL_2;  //0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = LIBGUI_COLOR_BEVEL_RAISED_BR_1;  //0x00989898;  // br 1 most inner (light) 
+            br2_color = LIBGUI_COLOR_BEVEL_RAISED_BR_2;  //0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_FOCUS:
+            tl1_color = LIBGUI_COLOR_BEVEL_RAISED_TL_1;  //0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = LIBGUI_COLOR_BEVEL_RAISED_TL_2;  //0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = LIBGUI_COLOR_BEVEL_RAISED_BR_1;  //0x00989898;  // br 1 most inner (light) 
+            br2_color = LIBGUI_COLOR_BEVEL_RAISED_BR_2;  //0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_PRESSED:
+            tl1_color = LIBGUI_COLOR_BEVEL_SUNKEN_TL_1;  //0x00505050;  // tl 1 most inner (dark)
+            tl2_color = LIBGUI_COLOR_BEVEL_SUNKEN_TL_2;  //0x00989898;  // tl 2 inner (light)
+            br1_color = LIBGUI_COLOR_BEVEL_SUNKEN_BR_1;  //0x00E0E0E0;  // br 1 most inner (light) 
+            br2_color = LIBGUI_COLOR_BEVEL_SUNKEN_BR_2;  //0x00FAFAFA;  // br 2 inner (lighter)
+            break;
+        case BS_HOVER:
+            tl1_color = LIBGUI_COLOR_BEVEL_RAISED_TL_1;  //0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = LIBGUI_COLOR_BEVEL_RAISED_TL_2;  //0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = LIBGUI_COLOR_BEVEL_RAISED_BR_1;  //0x00989898;  // br 1 most inner (light) 
+            br2_color = LIBGUI_COLOR_BEVEL_RAISED_BR_2;  //0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_DISABLED:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        case BS_PROGRESS:
+            tl1_color = 0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = 0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = 0x00989898;  // br 1 most inner (light) 
+            br2_color = 0x00505050;  // br 2 inner (dark)
+            break;
+        default:
+            tl1_color = LIBGUI_COLOR_BEVEL_DEFAULT_TL_1;  //0x00FAFAFA;  // tl 1 most inner (lighter)
+            tl2_color = LIBGUI_COLOR_BEVEL_DEFAULT_TL_2;  //0x00E0E0E0;  // tl 2 inner (light)
+            br1_color = LIBGUI_COLOR_BEVEL_DEFAULT_BR_1;  //0x00989898;  // br 1 most inner (light) 
+            br2_color = LIBGUI_COLOR_BEVEL_DEFAULT_BR_2;  //0x00505050;  // br 2 inner (dark)
+            break;
+        };
     }
 
-	// ...
 
-	return 0;
+// ====================================
+// Label position (computed once for all types)
+
+    // Center horizontally based on the component width
+    if (uic->flags & 0x0001)
+    {
+        LongSize = (unsigned long) (uic->label_size * 8 * scale);  // 8px per char
+        if (uic->width > LongSize)
+            text_x = uic->left + ((uic->width - LongSize) / 2);
+    }
+    // Center vertically based on the component height
+    // #test: Using (8x16) for now, because we still do not have the char dimensions.
+    if (uic->flags & 0x0002)
+    {
+        LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
+        if (uic->height > LongSize)
+            text_y = uic->top + ((uic->height - LongSize) / 2);
+    }
+
+// ==================================================
+// Background (color depends on the type)
+
+    lingui_draw_rectangle0_dc(
+        dc,
+        uic->left, uic->top, uic->width, uic->height,
+        bg_color,
+        0   // rop
+    );
+
+
+// ==================================================
+// Borders (only for button-like components)
+// Do not touch uic->status here. Redraw must keep the current status.
+
+    if (has_borders == TRUE)
+    {
+        __draw_button_borders_dc(
+            dc,
+            uic,
+            tl2_color,   // tl 2 inner
+            tl1_color,   // tl 1 most inner
+            br2_color,   // br 2 inner
+            br1_color,   // br 1 most inner
+            0x00101010   // outer
+        );
+    }
+
+
+// =====================================
+// Label (drawn once, on top of everything)
+
+
+    if (uic->label_size > 0)
+    {
+        libgui_drawstringblock_dc(
+            dc, text_x, text_y, 0x00101010, uic->label, scale );
+    }
+
+    return 0;
 }
+
 
 int 
 libgui_set_ui_component_position(
