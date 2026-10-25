@@ -1816,14 +1816,25 @@ void I_kmain(int arch_type)
             // We crashed when trying to launch more than one core.
             // But for onw single core we are able to launch any one of them.
 
+            // #suspended (This is working)
             // IN: hw id
-            __test_initialize_ap_processor(1);   // ok
-            mdelay(40);            
-            __test_initialize_ap_processor(2);  // ok
-            mdelay(40);
-            __test_initialize_ap_processor(3);  // ok
-            mdelay(40);
+            //__test_initialize_ap_processor(1);   // ok
+            //mdelay(40);            
+            //__test_initialize_ap_processor(2);  // ok
+            //mdelay(40);
+            //__test_initialize_ap_processor(3);  // ok
+            //mdelay(40);
             // ...
+
+            // #test: This is working
+            int cpu_id;
+            for ( cpu_id=1; 
+                  cpu_id <= smp_info.mptable_number_of_processors; 
+                  cpu_id++ )
+            {
+                __test_initialize_ap_processor(cpu_id);   // ok
+                mdelay(40);            
+            }
         }
 
         // #debug

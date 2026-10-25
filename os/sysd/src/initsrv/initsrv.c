@@ -316,11 +316,11 @@ xxxProcessEvent (
                 {
                     //#debug
                     //printf("init.bin: 4004, from {%d}\n",caller_tid);
-                    memset(__filename_local_buffer,0,64);
-                    sprintf(__filename_local_buffer,"#gws.bin");
+                    //memset(__filename_local_buffer,0,64);
+                    //sprintf(__filename_local_buffer, "#gws.bin");
                     //sprintf(__filename_local_buffer,"#memory.bin");
                     //sprintf(__filename_local_buffer,"#power.bin");
-                    rtl_clone_and_execute(__filename_local_buffer);
+                    //rtl_clone_and_execute(__filename_local_buffer);
                     return 0;
                 }
                 break;
