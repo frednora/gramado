@@ -465,6 +465,16 @@ fail:
     return (int) -1;
 }
 
+
+// #test
+void set_notification(const char *string1, const char *string2)
+{
+    Compositor.notification_string1 = (char *) string1;
+    Compositor.notification_string2 = (char *) string2;
+    Compositor.notification_ticks = 0;
+    Compositor.has_notification = TRUE;
+}
+
 // It signalise that we need to erease the mouse pointer,
 // copying the content from the backbuffer to the front buffer.
 // #ps: Only when the server/compositor is drawing the mouse pointer.
@@ -1115,6 +1125,23 @@ void compComposeDesktop(void)
         Counter++;
         ci = ci->next;  // Get next in the list
     };
+
+
+//
+// Notification
+//
+
+    if (Compositor.has_notification == TRUE)
+    {
+        if (Compositor.notification_ticks < 40){
+            yellow_status(Compositor.notification_string1);
+            Compositor.notification_ticks++;
+        }
+        if (Compositor.notification_ticks >= 40){
+            Compositor.notification_ticks = 0;
+            Compositor.has_notification = FALSE;
+        }
+    }
 
 // Flush
 // #todo: Where this values came from?

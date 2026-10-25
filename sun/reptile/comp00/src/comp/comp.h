@@ -91,6 +91,13 @@ struct compositor_d
     //int dropped_frames;
     //int logging_enabled;
 
+
+
+    char *notification_string1;
+    char *notification_string2;
+    unsigned int notification_ticks;
+    int has_notification;
+
 };
 extern struct compositor_d  Compositor;
 
@@ -140,6 +147,8 @@ int flush_window_by_id(int wid);
 void gwssrv_show_backbuffer(void);
 // Flush the whole backbuffer
 void flush_frame(void);
+
+void set_notification(const char *string1, const char *string2);
 
 //
 // Compose

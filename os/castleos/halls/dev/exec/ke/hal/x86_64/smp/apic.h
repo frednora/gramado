@@ -273,6 +273,10 @@ struct lapic_info_d
 //
 
 // Current Interrupt Request Level for this processor.
+// #ps:
+// A thread’s scheduling priority and the processor’s current IRQL 
+// determine whether a running thread can be pre-empted or interrupted. 
+
     int irql;
 
 // This processor is responsable for scheduling?

@@ -3353,6 +3353,11 @@ dsProcedure (
     case GWS_CreateWindow:
         rv = (int) serviceCreateWindow(client_fd);
         NoReply = FALSE;
+
+        // #test
+        // Notify that a window was created
+        set_notification("Window was created", NULL);
+
         if (rv<0)
             goto fail;
         break;
