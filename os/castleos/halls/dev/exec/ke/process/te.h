@@ -30,13 +30,16 @@
 // Based on environment subsystems.
 // Only GUI and Non-GUI.
 // daemons, r3 drivers and r3 servers are NON-GUI.
+
+// #bugbug
+// This is wrong.
 typedef enum {
 // Unknown personality.
     PERSONALITY_UNKNOWN,
 // Standard userland applications. (Default option)
     PERSONALITY_POSIX,
 // Graphical apps. Display server and client-side GUI applications.
-    PERSONALITY_GUI
+    PERSONALITY_GRAMADO
 } personality_t;
 
 // ...
@@ -138,70 +141,91 @@ typedef enum {
 #define GID_DEFAULT  0
 // ...
 
-// Security Access token.
-struct token_d
+
+//
+// Process privilege flags
+// These belong to the process security token / runtime security context,
+// not the static user account policy.
+//
+
+
+#define PROC_PRIV_CREATE_PROCESS    0x00001000
+#define PROC_PRIV_KILL_PROCESS      0x00002000
+#define PROC_PRIV_CREATE_THREAD     0x00004000
+#define PROC_PRIV_DEBUG_PROCESS     0x00008000
+
+#define PROC_PRIV_LOAD_MODULE       0x00010000
+#define PROC_PRIV_UNLOAD_MODULE     0x00020000
+
+#define PROC_PRIV_MOUNT_FS          0x00040000
+#define PROC_PRIV_UNMOUNT_FS        0x00080000
+
+#define PROC_PRIV_CREATE_SESSION    0x00100000
+#define PROC_PRIV_MANAGE_USERS      0x00200000
+
+#define PROC_PRIV_NETWORK_ADMIN     0x00400000
+#define PROC_PRIV_REBOOT_SYSTEM     0x00800000
+
+#define PROC_PRIV_SHUTDOWN_SYSTEM   0x01000000
+#define PROC_PRIV_ALL_ACCESS        0xFFFFFFFFFFFFFFFF
+
+// Do we trust this process
+// trust classification / sensitivity
+typedef enum {
+    IL_LOW,
+    IL_MEDIUM,
+    IL_HIGH,
+    IL_SYSTEM
+} process_integrity_level_t;
+
+// Security Access Token - SAT
+struct process_token_d
 {
     int used;
     int magic;
 
-    int token_id;
-    int token_type;
+    uid_t uid;  // Who it is (user SID / account context)
+    gid_t gid;  // What groups it belongs to
+
+// Granted: “this process is allowed to have this privilege in principle”
+// Enabled: “this privilege is currently active for this context”
+// Denied:  “this privilege is explicitly blocked even though it was granted”
+
+// some privileges are dangerous or high-risk
+// you do not want them permanently active
+// you want them active only while needed
+
+// granted_privileges
+// the process is allowed to have this privilege in principle
+// this is like “the policy says it is assigned”
+// granted_privileges is the privilege set that the process is allowed 
+// to hold in its token, as determined by policy or parent context.
+
+    unsigned long granted_privileges;
+
+// enabled_privileges
+// the privilege is currently active and usable
+// this is like “the process is actually using it right now”
+// the subset currently active / usable
+
+    unsigned long enabled_privileges;
+
+// denied_privileges
+// the privilege is explicitly blocked
+// this overrides normal grant/enable behavior
+// the subset explicitly removed or blocked even if granted
+
+    unsigned long denied_privileges;
+
+    process_integrity_level_t integrity_level;  // its integrity level
+    // #todo: whether it is protected
+
+// whether the thread/process can temporarily adopt another identity
+    int can_impersonate;
+
     // ...
-
-    // pid_t created_by_pid;
-
-    // Capabilities
-
-    // Expiration time.
-
-// ================================================
-// USER
-
-// UID (User ID): 
-// Represents the user identity of the process owner. 
-// It determines what actions a user can perform on the system.
-    uid_t uid;
-
-// RUID (Real User ID): 
-// The actual user ID of the person who started the process. 
-// It remains unchanged to track the original owner.
-    uid_t ruid;
-
-// EUID (Effective User ID):
-// Indicates the user identity under which a process is currently operating. 
-// It can temporarily differ from the UID for privilege escalation.
-// (Run as administrator)
-    uid_t euid;
-
-// SUID (Saved User ID): 
-// Stores the EUID for use when processes need to return to their original privileges 
-// after executing with elevated rights.
-    uid_t suid;
-
-// ================================================
-// GROUP OF USERS
-
-// GID, (Group Identification).
-    gid_t gid;
-
-// RGID (Real Group ID): 
-// Denotes the group ID of the user who initiated the process, 
-// reflecting the user's primary group membership.
-    gid_t rgid;
-
-// EGID (Effective Group ID): 
-// Represents the group identity the process is actively operating under, 
-// which determines group-based permissions.
-    gid_t egid;
-
-// SGID (Saved Group ID): Works like the SUID but for group IDs, 
-// allowing processes to save their effective group identity.
-    gid_t sgid;
-
-// ================================================
-// More ...
-
 };
+
 
 // Terminal Connection support.
 // When a child wants to communicate with a terminal 
@@ -221,6 +245,13 @@ struct terminal_connection_d
     int _is_child_of_terminal;  // Child process
 };
 
+typedef enum {
+    PROCESS_CLASS_NULL,
+    PROCESS_CLASS_CONSOLE,
+    PROCESS_CLASS_GUI
+} process_class_t;
+
+
 // Thread Environment structure. (fka process_d)
 // The old 'process_d' structure.
 struct te_d
@@ -230,6 +261,9 @@ struct te_d
     int magic;
 
     process_type_t type;
+
+// CONSOLE or GUI
+    process_class_t _class;
 
 // --------------------------
 // PROCESS
@@ -294,8 +328,10 @@ struct te_d
     unsigned long base_priority;  // static 
     unsigned long priority;       // dinamic
 
-// Security Access Token
-    struct token_d  token;
+// Security Access Token - SAT
+
+    struct process_token_d  primary_token;
+    struct process_token_d  impersonation_token;
 
 // --------------------------
 

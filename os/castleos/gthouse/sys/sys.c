@@ -207,7 +207,7 @@ void *sys_create_process (
 
 // Environment subsystem
     if ( ProcessPersonality != PERSONALITY_POSIX &&
-         ProcessPersonality != PERSONALITY_GUI )
+         ProcessPersonality != PERSONALITY_GRAMADO )
     {
         panic("sys_create_process: ProcessPersonality\n");
     }

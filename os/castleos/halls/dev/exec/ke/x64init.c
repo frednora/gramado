@@ -414,16 +414,13 @@ int I_x64CreateInitialProcess(void)
     TEInitProcess->threadListHead = NULL;
     TEInitProcess->thread_count = 0;
 
-// Security Access Token.
+// Security Access Token
 
-    // users
-    //...
+    // users #todo
+    // ...
 
-    // Group of users.
-    TEInitProcess->token.gid  = (gid_t) GID_DEFAULT;
-    TEInitProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
-    TEInitProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
-    TEInitProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
+    // Group of users
+    TEInitProcess->primary_token.gid = (gid_t) GID_DEFAULT;
 
 // The init process is a system application.
     TEInitProcess->type = PROCESS_TYPE_SYSTEM;
@@ -1024,13 +1021,10 @@ int I_x64CreateKernelProcess(void)
 
 // Security Access Token
 
-    // user
+    // user #todo
 
     // group of users
-    TEKernelProcess->token.gid  = (gid_t) GID_DEFAULT;
-    TEKernelProcess->token.rgid = (gid_t) GID_DEFAULT;  // real 
-    TEKernelProcess->token.egid = (gid_t) GID_DEFAULT;  // effective
-    TEKernelProcess->token.sgid = (gid_t) GID_DEFAULT;  // saved
+    TEKernelProcess->primary_token.gid = (gid_t) GID_DEFAULT;
 
 // The kernel process is a system program
     TEKernelProcess->type = PROCESS_TYPE_SYSTEM;

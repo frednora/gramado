@@ -102,6 +102,57 @@ typedef enum {
     // ...
 }user_type_t;
 
+
+//
+// Account flags
+//
+
+#define UAF_ENABLED            0x00001000
+#define UAF_DISABLED           0x00002000
+
+#define UAF_INTERACTIVE        0x00004000
+#define UAF_NONINTERACTIVE     0x00008000
+
+#define UAF_SYSTEM             0x00010000
+#define UAF_ADMINISTRATOR      0x00020000
+
+#define UAF_GUEST              0x00040000
+#define UAF_LOCKED             0x00080000
+
+#define UAF_CAN_LOGIN          0x00100000
+#define UAF_PASSWORD_REQUIRED  0x00200000
+
+#define UAF_BUILTIN_ACCOUNT    0x00400000
+#define UAF_SERVICE_ACCOUNT    0x00800000
+
+
+//
+// Account permissions
+//
+
+#define UPERM_CREATE_PROCESS   0x00001000
+#define UPERM_KILL_PROCESS     0x00002000
+
+#define UPERM_CREATE_THREAD    0x00004000
+#define UPERM_DEBUG_PROCESS    0x00008000
+
+#define UPERM_LOAD_MODULE      0x00010000
+#define UPERM_UNLOAD_MODULE    0x00020000
+
+#define UPERM_MOUNT_FS         0x00040000
+#define UPERM_UNMOUNT_FS       0x00080000
+
+#define UPERM_CREATE_SESSION   0x00100000
+#define UPERM_MANAGE_USERS     0x00200000
+
+#define UPERM_NETWORK_ADMIN    0x00400000
+#define UPERM_REBOOT_SYSTEM    0x00800000
+
+#define UPERM_SHUTDOWN_SYSTEM  0x01000000
+#define UPERM_ALL_ACCESS       0xFFFFFFFFFFFFFFFF
+
+
+
 // user_info_d:
 // Estrutura para perfil de usuário do computador. 
 // #test
@@ -113,13 +164,17 @@ struct user_info_d
     struct kobject_d kobj;
     int used;
     int magic;
+    int initialized;  // This structure was initialized
     
     uid_t userId;
-    
-// This structure was initialized.
-    int initialized;
+    user_type_t userType;  // user type
 
+    uint64_t account_flags;
+    uint64_t account_permissions;
+
+//
 // Security
+//
 
     // user session
     struct usession_d *usession;
@@ -129,15 +184,24 @@ struct user_info_d
     struct cgroup_d *cg;
     int cg_id;
 
-    //??
+
+//
+// path for user directory
+//
+
     char *path;             // '/root/user/(name)'
+
+//
+// Name
+//
 
     char __username[64];    // HOSTNAME_BUFFER_SIZE
     size_t userName_len;    // len 
 
 // Indica quais os tipos de objetos permitidos para esse usuário.
 // see kobject.h
-    int permissions[128];
+    // #deleted i dont like it.
+    //int permissions[128];
 
 // Bancos de Dados 
 	//struct bank_d *kdb;         //O banco de dados do processo kernel.	
@@ -158,8 +222,6 @@ struct user_info_d
     //struct virtual_console_d *virtual_console;
 //=========================
 
-// user type.
-    user_type_t userType;
 
 //#importante:
 //Olhe as explicações logo acima.

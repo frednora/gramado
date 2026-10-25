@@ -276,8 +276,8 @@ unsigned long get_process_stats(pid_t pid, int index)
         case 2:  return (unsigned long) p->ppid;  break; 
 
         // Security Acess Token
-        case 3:  return (unsigned long) p->token.uid;  break; 
-        case 4:  return (unsigned long) p->token.gid;  break; 
+        case 3:  return (unsigned long) p->primary_token.uid;  break; 
+        case 4:  return (unsigned long) p->primary_token.gid;  break; 
 
         case 5:  return (unsigned long) p->state;  break; 
         case 6:  return (unsigned long) p->plane;  break; 
@@ -1039,16 +1039,9 @@ static void __initialize_process_common_elements(struct te_d *p)
 // --------------
 // Security Access Token
 
-    // users
-    p->token.uid  = (uid_t) GetCurrentUserId(); 
-    p->token.ruid = (uid_t) p->token.uid;  // Real
-    p->token.euid = (uid_t) p->token.uid;  // Effective
-    p->token.suid = (uid_t) p->token.uid;  // Saved
-    // group of users
-    p->token.gid  = (gid_t) GetCurrentGroupId(); 
-    p->token.rgid = (gid_t) p->token.gid; // Real
-    p->token.egid = (gid_t) p->token.gid; // Effective
-    p->token.sgid = (gid_t) p->token.gid; // Saved
+    p->primary_token.uid  = (uid_t) GetCurrentUserId(); 
+    p->primary_token.gid  = (gid_t) GetCurrentGroupId(); 
+    // ...
 
     p->syscalls_counter = 0;
 
@@ -1212,16 +1205,9 @@ struct te_d *create_and_initialize_process_object(void)
 
 // Security Access Token
 
-    // users
-    new_process->token.uid  = (uid_t) current_user;
-    new_process->token.ruid = (uid_t) current_user;  // real
-    new_process->token.euid = (uid_t) current_user;  // effective 
-    new_process->token.suid = (uid_t) current_user;  // saved
-    // group of users
-    new_process->token.gid  = (gid_t) current_group;
-    new_process->token.rgid = (gid_t) current_group;  // real
-    new_process->token.egid = (gid_t) current_group;  // effective
-    new_process->token.sgid = (gid_t) current_group;  // saved
+    new_process->primary_token.uid = (uid_t) current_user;
+    new_process->primary_token.gid = (gid_t) current_group;
+
 
     new_process->syscalls_counter = 0;
 
@@ -1401,7 +1387,8 @@ static struct te_d *create_process_imp (
         printk("create_process: on teObject()\n");
         return NULL;
     }
-    Process->type = PROCESS_TYPE_NULL;  // #todo
+    Process->type = PROCESS_TYPE_NULL;     // #todo
+    Process->_class = PROCESS_CLASS_NULL;  // #todo
     Process->state = PROCESS_CREATED;
 
 // Initializing the elements common for all types of processes

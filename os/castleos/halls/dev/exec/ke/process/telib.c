@@ -67,7 +67,7 @@ void show_process_information (void)
 // Usado pelo comando "current-process" no shell
 void show_currentprocess_info (void)
 {
-    struct te_d  *Current;
+    struct te_d  *cur_te;
 
     // Get PID for the current process for a given core.
     // IN: core id
@@ -82,36 +82,38 @@ void show_currentprocess_info (void)
     }
 
 // Struct
-    Current = (void *) teList[current_process];
-    if ((void *) Current == NULL){
-        printk ("show_currentprocess_info: [FAIL] Current \n");
+    cur_te = (void *) teList[current_process];
+    if ((void *) cur_te == NULL){
+        printk ("show_currentprocess_info: cur_te\n");
         return;
     }
-    if (Current->magic != 1234)
+    if (cur_te->magic != 1234)
         return;
 
     //Index.
     printk ("PID={%d} PPID={%d} UID={%d} GID={%d} \n",
-        Current->pid, Current->ppid, 
-        Current->token.uid, Current->token.gid );
+        cur_te->pid, 
+        cur_te->ppid, 
+        cur_te->primary_token.uid, 
+        cur_te->primary_token.gid );
 
     //Name
-    //printk ("Name={%s} \n", Current->name_address );
-    printk ("Name={%s} \n", Current->name );
+    //printk ("Name={%s} \n", cur_te->name_address );
+    printk ("Name={%s} \n", cur_te->name );
  
     //Image Address.
-    printk ("ImageAddress={%x} \n", Current->Image );
+    printk ("ImageAddress={%x} \n", cur_te->Image );
 
     //Directory Address. *IMPORTANTE.
-    //printk (">>DirectoryPA={%x} \n", Current->DirectoryPA );
-    //printk (">>DirectoryVA={%x} \n", Current->DirectoryVA );
+    //printk (">>DirectoryPA={%x} \n", cur_te->DirectoryPA );
+    //printk (">>DirectoryVA={%x} \n", cur_te->DirectoryVA );
 
 // Heap and stack.
 
     printk("HeapStart={%x}  HeapSize={%d KB}  \n", 
-        Current->HeapStart, Current->HeapSize );
+        cur_te->HeapStart, cur_te->HeapSize );
     printk("StackStart={%x} StackSize={%d KB} \n", 
-        Current->StackStart, Current->StackSize );
+        cur_te->StackStart, cur_te->StackSize );
 
     //...
 

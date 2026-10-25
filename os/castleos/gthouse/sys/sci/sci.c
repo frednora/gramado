@@ -315,7 +315,7 @@ void *sci0 (
 
 // Environment subsystem
     if ( p->personality != PERSONALITY_POSIX &&
-         p->personality != PERSONALITY_GUI )
+         p->personality != PERSONALITY_GRAMADO )
     {
         panic("sci0: Personality\n");
     }
@@ -2292,7 +2292,7 @@ void *sci2 (
 
 // Environment subsystem
     if ( p->personality != PERSONALITY_POSIX &&
-         p->personality != PERSONALITY_GUI )
+         p->personality != PERSONALITY_GRAMADO )
     {
         panic("sci2: Personality\n");
     }

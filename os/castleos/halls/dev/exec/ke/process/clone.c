@@ -128,16 +128,8 @@ copy_process_struct(
 
 // Security Access Token
 
-    // users
-    Process2->token.uid  = (uid_t) Process1->token.uid;   // UID
-    Process2->token.ruid = (uid_t) Process1->token.ruid;  // RUID 
-    Process2->token.euid = (uid_t) Process1->token.euid;  // EUID 
-    Process2->token.suid = (uid_t) Process1->token.suid;  // SUID 
-    // group of users
-    Process2->token.gid  = (gid_t) Process1->token.gid;   // GID
-    Process2->token.rgid = (gid_t) Process1->token.rgid;  // RGID 
-    Process2->token.egid = (gid_t) Process1->token.egid;  // EGID 
-    Process2->token.sgid = (gid_t) Process1->token.sgid;  // SGID 
+    Process2->primary_token.uid  = (uid_t) Process1->primary_token.uid;   // UID
+    Process2->primary_token.gid  = (gid_t) Process1->primary_token.gid;   // GID
 
 // Validation
 // #todo: Copy the validation only at the end of the routine.

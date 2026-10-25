@@ -85,20 +85,18 @@ int dispsrv_setup_ds_info(pid_t pid)
 
 // ----------------
 // Process Personality
-    p->personality = (int) PERSONALITY_GUI;
-    DisplayServerInfo.pid_personality = (int) PERSONALITY_GUI;
+    p->personality = (int) PERSONALITY_GRAMADO;
+    DisplayServerInfo.pid_personality = (int) PERSONALITY_GRAMADO;
 
 // ----------------
 // Security Access token
 
-    // users
+    // users #todo
     // ...
 
-    // group of users.
-    p->token.gid  = (gid_t) GID_DEFAULT;
-    p->token.rgid = (gid_t) GID_DEFAULT;  // real
-    p->token.egid = (gid_t) GID_DEFAULT;  // effective
-    p->token.sgid = (gid_t) GID_DEFAULT;  // saved
+    // group of users
+    p->primary_token.gid  = (gid_t) GID_DEFAULT;
+
 
     DisplayServerInfo.initialized = TRUE;
     return 0; // OK

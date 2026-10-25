@@ -1132,7 +1132,6 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 
 // Type, class, base priority and priority.
     clone->type = father->type;
-    clone->_class = father->_class;
     clone->base_priority = father->base_priority; 
     clone->priority = father->priority;
 
@@ -1630,15 +1629,6 @@ static struct thread_d *create_thread_imp (
     } else {
         Thread->type = THREAD_TYPE_NORMAL;
     };
-
-//
-// class
-//
-
-    // #todo:
-    // CONSOLE or GUI thread.
-    // This is a work in progress
-    Thread->_class = THREAD_CLASS_NULL;
 
 
 // The thread is been created, but the structure is not 

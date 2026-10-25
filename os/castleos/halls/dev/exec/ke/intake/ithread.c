@@ -48,9 +48,6 @@ struct thread_d *create_init_thread(void)
 // The init thread is a system thread
     t->type = THREAD_TYPE_SYSTEM;
 
-// The init thread is a console thread, not a GUI thread.
-    t->_class = THREAD_CLASS_CONSOLE;
-
 // THREAD IDENTIFIERS
     t->tid = (tid_t) (TID & 0xFFFF);
 

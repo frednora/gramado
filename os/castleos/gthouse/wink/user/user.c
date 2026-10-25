@@ -402,9 +402,10 @@ struct user_info_d *CreateUser(char *name, int type)
 
 // Inicializando a lista de objetos permitidos.
 // Proibindo tudo.
-    for (i=0; i<128; i++){
-        New->permissions[i]=0;
-    };
+    //for (i=0; i<128; i++)
+    //{
+    //    New->permissions[i]=0;
+    //};
 
     //Inicializa tokens. (rever)
     //New->k_token = KERNEL_TOKEN_NULL;
