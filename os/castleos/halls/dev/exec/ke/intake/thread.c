@@ -1153,9 +1153,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // ou ela pode rodar e falhar por n�o esta pronta,
 // vamos testar op��es.
 
-// Começando com o clone bloqueada ...
-// Mas isso será mudado pela função que chamou essa.
-// obs: Isso funcionou.
+// Blocking just for safety. The caller will change it.
     clone->state = BLOCKED;  
 
 //Apenas Initialized, pois a fun��o SelectForExecution

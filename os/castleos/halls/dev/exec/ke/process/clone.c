@@ -20,9 +20,8 @@ the parent’s user mappings, but has its own top‑level PML4 entry.
 int copy_process_in_progress=FALSE;
 unsigned long __copy_process_counter=0;
 
-//#test
-// Local copy for the process name.
-char __local_process_name[64] = {0};
+// Local copy for the process name
+// char __local_process_name[64] = {0};
 
 
 /*
@@ -475,9 +474,35 @@ fail:
 }
 
 
-// Cloning the current process and executing the clone.
-// This behaves like posix_spawn() today (clone + exec).
-// TODO: add fork() semantics (child returns 0, parent returns child PID).
+/*
+copy_process00:
+
+    Cloning the current process and executing the clone.
+    Creates a new ring 3 process from an ELF file on disk, using the
+calling process as its parent.
+    Today this behaves like posix_spawn() (clone + exec in one step):
+the child does NOT continue from the parent's call site. It starts
+fresh at FLOWERTHREAD_ENTRYPOINT (0x201000) of the loaded image.
+fork() semantics (child returns 0, parent returns child PID) are
+not implemented. See F_CLONE_UNIX_STYLE.
+
+   This is currently the only way a ring 3 process can launch another
+process. Change it carefully.
+
+ORDER OF OPERATIONS
+   [A] Parameter checks and flags
+   [B] Clone the kernel PML4 (before the parent is validated)
+   [C] Validate the parent process and its flower thread
+   [D] Create the child process object, validate its PID
+   [E] Allocate image and stack, copy the process structure
+   [F] Create the child thread (copy_thread_struct)
+   [G] Load the image file, check the ELF signature
+   [H] Build the child's page tables (PT, PD0, PDPT0, PML4[0])
+   [I] Final thread setup: rip, new_clone flag, name, cmdline, priority
+   [J] Make the child schedulable, restore current_tid, return
+ 
+
+*/
 
 // Clonning the current process and 
 // executing the clone for the first time.
@@ -528,7 +553,10 @@ copy_process00(
     tid_t CallerTID = (tid_t) lapic_info[0].current_tid;
 
 // Usado como armazenamento temporário de endereço físico de tabela.
-    unsigned long phy=0;
+    // unsigned long phy=0;
+
+    int Status = -1;
+
 
 //
 // Tables
@@ -580,16 +608,14 @@ copy_process00(
     // #todo
     // Check more clone_flags here.
 
-// Clonning the kernel's pml4.
+// Clonning the kernel's PML4
     _pml4 = (void *) CloneKernelPML4();
     if ((void*) _pml4 == NULL){
         panic("copy_process00: _pml4\n");
     }
 
-    //printk ("_pml4: %x\n",_pml4);
-    //while(1){}
-
     //#debug
+    //printk ("_pml4: %x\n",_pml4);
     //printk (" :) \n");
     //return 0;
 
@@ -607,9 +633,8 @@ copy_process00(
 // Socket support.
 // indice usado na inicializaçao da lista de 
 // conexoes pendentes do processo servidor.
-    register int sIndex=0;
 
-    int Status = -1;
+    // register int sIndex=0;
 
 // A place to save the pml4 of the current process.
     //unsigned long old_pml4=0;
@@ -622,7 +647,7 @@ copy_process00(
     // #debug
     // debug_print ("copy_process:\n");
 
-    // Get PID for the current process for a given core.
+    // Get PID for the current process for a given core
     // IN: core id
 
     pid_t CurrentPID = (pid_t) get_current_process(0);
@@ -654,6 +679,9 @@ copy_process00(
 
 // cpl:
 // Only ring 3 processes can clone for now.
+// Note: this is a panic, so a ring 0 caller (or a corrupted cpl) halts
+// the kernel instead of getting -1.
+
     if (parent_process->cpl != RING3){
         panic("copy_process00: cpl != RING3\n");
     }
@@ -704,8 +732,15 @@ copy_process00(
     // ...
 
 //
-// Parent's flower thread
+// The parent's main thread (flower thread).
 //
+
+// The parent's main thread (flower thread).
+// #bugbug:
+// For now only the flower thread of the parent is considered the caller.
+// A clone request from any other thread of the process fails the
+// CallerTID check below (panic).
+
     parent_thread = (struct thread_d *) parent_process->flower;
     if ((void*) parent_thread == NULL){
         panic("copy_process00: parent_thread\n");
@@ -796,7 +831,7 @@ copy_process00(
 // == child_process =========================================
 //
 
-do_clone:
+// do_clone:
 
     // Switch
     //x64mm_load_pml4_table( kernel_mm_data.pml4_pa );
@@ -837,30 +872,25 @@ do_clone:
     }
 
 //
-// Heap
+// Page tables
 //
 
 // ==============================
 // pml4
-// A tabela pml4 usada pelo clone.
-// Ela é uma cópia da tabela do kernel.
-// Fizemos essa clonagem no início da rotina.
+// PML4 table is used by the child. It is a copy of the kernel's PML4.
 
-// Endereço virtual do pml4 do processo filho.
+// It saves the virtual and physical  address of the child's PML4
+
     child_process->pml4_VA = (unsigned long) _pml4;
     if ((void *) child_process->pml4_VA == NULL){
         panic("copy_process00: [FAIL] child_process->pml4_VA\n");
     }
-
-// Endereço físico do pml4 do processo filho.
     child_process->pml4_PA = 
         (unsigned long) virtual_to_physical ( 
-                            child_process->pml4_VA, 
-                            gKernelPML4Address ); 
+                            child_process->pml4_VA, gKernelPML4Address ); 
 
 
-// Breakpoint
-
+    // Breakpoint
     // #debug
     //printk ("child_process->pml4_VA: %x\n",child_process->pml4_VA);
     //printk ("child_process->pml4_PA: %x\n",child_process->pml4_PA);
@@ -868,16 +898,20 @@ do_clone:
 
 // ==============================
 // pdpt0
-// A tabela pdpt usada pelo clone.
-// Ela é uma cópia da tabela usada pelo processo pai.
+// The PDPT0 table used by the child.
+// Here we are cloning it from the father.
+// #ps: It sounds unsafe. But we are gonna change it bellow.
+// Its provisory.
 
     child_process->pdpt0_VA = (unsigned long) parent_process->pdpt0_VA;
     child_process->pdpt0_PA = (unsigned long) parent_process->pdpt0_PA;
 
 // ========
 // pd0
-// A tabela do pd do clone.
-// Ela é uma cópia da tabela usada pelo processo pai.
+// The PD0 table used by the child.
+// Here we are cloning it from the father.
+// #ps: It sounds unsafe. But we are gonna change it bellow.
+// Its provisory.
 
     child_process->pd0_VA = (unsigned long) parent_process->pd0_VA;
     child_process->pd0_PA = (unsigned long) parent_process->pd0_PA;
@@ -932,7 +966,12 @@ do_clone:
     //debug_print("copy_process: [1] Copying process image and stack\n");
     //printk   ("copy_process: [1] Copying process image and stack\n");
 
-// Allocating memory for the image and for the stack.
+
+//
+// Image and stack
+//
+
+// Allocating memory for the image and for the stack
     Status = (int) alloc_memory_for_image_and_stack(parent_process);
     if (Status != 0){
         panic("copy_process00: on alloc_memory_for_image_and_stack()\n");
@@ -940,9 +979,8 @@ do_clone:
 
 // Copy process structure.
 // [2]
-// Copiar a estrutura de processo. 
-// Do atual para o clone que estamos criando.
-// #important: It will also copy the flower thread.
+// Copies fields from the parent's te_d to the child's te_d.
+// #important: It will also copy the main thread (flower).
 // see: process.c
 
     //#debug
@@ -974,39 +1012,56 @@ do_clone:
         panic("copy_process00: on copy_thread_struct()\n");
     }
 
+// #important
+// Link the child's process and thread (thread environment):
+//   process->flower = thread
+//   thread->te      = process
+//   thread->tgid    = child PID
+// After these three lines the identity of the child thread is correct.
+
 // #bugbug: 
 // We already get the childs personality.
 // It needs to be a parameter given by the caller.
 
     //child_thread->personality = (int) parent_thread->personality;
 
-// Save the pointer for the flower thread
+// Save the pointer for the main thread, (flower).
     child_process->flower = (struct thread_d *) child_thread;
-// This is the 'thread environment' for the child thread
+// This is the 'thread environment' for the child thread. aka process.
     child_thread->te = (struct te_d *) child_process;  // te
 // Saving the thread group id.
 // Thread environment id (fka PID)
     child_thread->tgid = (tgid_t) child_pid;
 
+//
+// The entry point for the child's main thread, (flower thread).
+//
+
 // Standard va entry point. (RIP = 0x201000)
+// It's provisory. We are gonna change it bellow.
     child_thread->context.rip = (unsigned long) FLOWERTHREAD_ENTRYPOINT;
 
-// RSP
-// 32KB size
-// #todo 
-// Precisa ser do mesmo tamanho que o pai 
-// no caso de fork()
-// #todo: Precismos levar emconsideração o tamanho da stack
-// que foi alocada anteriormente. Precisamos de uma variavel
-// na estrutura que registre seu tamanho.
-// ok This is the va allocated to the stack. Not the canonical address.
+//
+// The stack pointer for the child's main thread, flower thread).
+//
+
+// #ps:
+// The stack was previously allocated.
+// probably 32 KB
+// It needs to have the same size in the case of fork().
+// Maybe we need a variable that register the stack size for the father.
+
+// This is the va allocated to the stack. But its not canonical.
 
     child_thread->context.rsp = 
         (unsigned long) ( 
             parent_process->childStack + 
             (CONFIG_RING3_STACK_SIZE_IN_KB*1024) -1 );
 
-    // #todo: Preparing for fork() suppprt
+// #todo: 
+// Return address
+// Preparing for fork() support
+
     //child_thread->context.rax = 0; // fork: child return
 
     // #debug
@@ -1017,6 +1072,7 @@ do_clone:
 // #hackhack
 // Vamos herdar porque configuramos esses valores para o process clone.
 // Agora eles serão usados na thread flower do clone.
+// #ps: The main thread is using the same PML4 of its process.
 
     child_thread->pml4_VA = (unsigned long) child_process->pml4_VA;
     child_thread->pml4_PA = (unsigned long) child_process->pml4_PA;
@@ -1026,16 +1082,16 @@ do_clone:
     //printk ("child_thread->pml4_PA: %x\n",child_thread->pml4_PA);
     //while(1){}
 
-// A flower thread do processo clone
-// está herdando as tabelas usadas por ele.
-    child_thread->pml4_PA = (unsigned long) child_process->pml4_PA;
 
-// Salvando o pid do owner.
+// Saving the owner PID
     //child_thread->ownerPID = (pid_t) child_pid;
 
 //
 // Load image
 //
+
+// Loading the image for the child.
+// #ps: In the case of fork() this operation is not necessary.
 
 // Configurando os buffers.
 // Os endereços virtual e físico da imagem do processo filho.
@@ -1057,15 +1113,11 @@ do_clone:
         panic("copy_process00: [FAIL] child_process->ImagePA\n");
     }
 
-//
-// Load image
-//
-
-    //debug_print("copy_process: [4] load image\n");
-
 // Loading the image for the clone into the buffer created for it.
 // IN: name, image va.
 // see: fsload.c
+
+    //debug_print("copy_process: [4] load image\n");
 
     Status = 
         (int) fs_load_image(filename, (unsigned long) child_process->Image);
@@ -1076,15 +1128,15 @@ do_clone:
     }
 
 // [5]
-// Check ELF signature.
-// OK. O comando existe e o arquivo foi carregado, mas 
-// precisamos saber se a assinatura de ELF é válida.
-// Assinatura ELF inválida. 
+// Check the ELF signature of the loaded image. Only the signature is
+// checked, the entry point is NOT read from the ELF header (it is fixed
+// at 0x201000).
+// #ps: A failure is a soft failure with leaks.
 // Vamos matar a thread e o processo.
 // See: fs.c
 
     // #debug
-    printk ("copy_process00: [5] Check ELF signature\n");
+    printk("copy_process00: [5] Check ELF signature\n");
 
 // #bugbug
 // O processo init deve ter suas proprias tabelas de paginas.
@@ -1126,8 +1178,6 @@ do_clone:
 //
 
     //printk (":)\n");
-    //return -1;
-
     //debug_print ("copy_process:  This is a work in progress\n");
     //     printk ("copy_process:  This is a work in progress\n");
     // debug_print("copy_process00: Calling CreateAndIntallPageTable\n");
@@ -1153,7 +1203,6 @@ do_clone:
 
     //#debug
     //printk (" :) \n");
-    //return 0;
 
 //
 // BUG BUG BUG BUG
@@ -1184,17 +1233,16 @@ do_clone:
 // Page table
 //
 
-// Alocando um endereço virtual onde 
-// criaremos nossa pagetable.
+// Create new page table for the child
+
+// Allocating a virtual address where we area gonna put our pt.
     unsigned long ptVA = (unsigned long) get_table_pointer_va();
     if (ptVA == 0){
         panic("copy_process00: [FAIL] ptVA\n");
     }
-// Get the physical address.
+// Get the physical address of it.
     unsigned long ptPA = 
-        (unsigned long) virtual_to_physical ( 
-                            ptVA, 
-                            gKernelPML4Address ); 
+        (unsigned long) virtual_to_physical(ptVA, gKernelPML4Address); 
 
 // Vamos mapear uma região de memória 
 // preenchendo a nossa page table recem criada.
@@ -1207,11 +1255,11 @@ do_clone:
 
 // Clonning the kernel's pd0.
 // (Page Directory 0)
+// #ps: See that we are changing the provisory value allocated before.
     child_process->pd0_VA = (unsigned long) CloneKernelPD0();
     child_process->pd0_PA = 
         (unsigned long) virtual_to_physical ( 
-                            child_process->pd0_VA, 
-                            gKernelPML4Address ); 
+                            child_process->pd0_VA, gKernelPML4Address ); 
 
     if (child_process->pd0_VA == 0)
         panic("copy_process00: child_process->pd0_VA==0\n");
@@ -1246,10 +1294,13 @@ do_clone:
 
 // Image base va.
 // The desired canonical virtual address. FLOWERTHREAD_BASE
+// From here on, child_process->Image is the child's VIRTUAL base
+// (FLOWERTHREAD_BASE = 0x200000), the same for every process.
     child_process->Image = (unsigned long) __image_va; 
 
 // Clonning the kernel's pdpt0.
 // (Page Directory Pointer Table 0)
+// #ps: See that we are changing the provisory value allocated before.
     child_process->pdpt0_VA = (unsigned long) CloneKernelPDPT0();
     child_process->pdpt0_PA = 
         (unsigned long) virtual_to_physical ( 
@@ -1262,7 +1313,7 @@ do_clone:
         panic("copy_process00: child_process->pdpt0_PA == 0\n");
 
 //
-// Installing (danger)
+// Installing the table used by the child
 //
 
     unsigned long *PageTable                 = (unsigned long *) ptVA;
@@ -1310,6 +1361,10 @@ do_clone:
 // RIP:
 // Entry point 0x201000.
 // The desired canonical virtual address. FLOWERTHREAD_ENTRYPOINT
+// Final rip. The entry point is FLOWERTHREAD_ENTRYPOINT (0x201000),
+// that is, FLOWERTHREAD_BASE plus one page. 
+// #todo: It does not come from the ELF header yet.
+
     child_thread->context.rip = (unsigned long) __image_entrypoint_va;
 
 //
@@ -1343,9 +1398,12 @@ do_clone:
 // Clone thread
 //
 
-    // [filho]
+    // #todo:
+    // What is this? is it about the context? 
+    // The context is not saved yet.
     child_thread->saved = 0;  //#todo: FALSE
 
+    // It says the thread is a new thread. It helps the dispatcher.
     // Used by spawn.c
     child_thread->new_clone = TRUE;
 
@@ -1469,8 +1527,7 @@ do_clone:
     // Next current thread for this core
     tid_t NextCurrentThread = (tid_t) parent_thread->tid; 
 
-    if ( NextCurrentThread < 0 || 
-         NextCurrentThread >= THREAD_COUNT_MAX )
+    if (NextCurrentThread < 0 || NextCurrentThread >= THREAD_COUNT_MAX)
     {
         panic("copy_process00: NextCurrentThread limits\n");
     }
@@ -1483,13 +1540,17 @@ do_clone:
 // Return to the father the child's PID.
     copy_process_in_progress = FALSE;
 
-// #test: Testing the return of a tid.
-// At the end of copy_process00(), in the parent context:
-    if (clone_flags & F_CLONE_RETURN_TID) {
+// #test: 
+// Some ring 3 applications want the syscall to return the child's TID, not PID.
+// Remember, for Gramado Kernel its not the same structure.
+// At the end of copy_process00(), in the parent context.
+
+    if (clone_flags & F_CLONE_RETURN_TID)
+    {
         return (pid_t) child_thread->tid;
     }
 
-    return (pid_t) child_pid;  // Return PID
+    return (pid_t) child_pid;  // Return child's PID
 
 fail:
 
