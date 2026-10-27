@@ -58,6 +58,8 @@
 // The client-side library
 #include <libgui.h>
 
+#include "theme.h"
+
 #include "desktop.h"
 
 
@@ -74,9 +76,9 @@ static unsigned long __sh_flags = 0;
 
 
 // Colors
-#define DEFAULT_TB_BACKGROUND_COLOR  COLOR_WHITE
-#define HONEY_COLOR_TASKBAR  0x00C3C3C3 
-#define MYGREEN  0x0b6623
+// #define DEFAULT_TB_BACKGROUND_COLOR  COLOR_WHITE
+// #define HONEY_COLOR_TASKBAR  0x00C3C3C3 
+// #define MYGREEN  0x0b6623
 //...
 
 struct gws_display_d *Display;
@@ -223,6 +225,7 @@ static struct button_info_d  StartButton;
 static unsigned long uicList[32];   // List of pointers
 struct ui_component_d *uic_button_start;
 
+struct ui_component_d *uic_clock;
 
 //
 // Taskbar icons.
@@ -269,11 +272,13 @@ const char *app2_name = "#editor.bin";
 
 static void 
 draw_clock_string_line(
-    unsigned long left, 
-    unsigned long top, 
+    unsigned long left_pad, 
+    unsigned long top_pad, 
     unsigned long value1,
     unsigned long value2,
     const char *label );
+
+static struct ui_component_d *create_clock_label(int fd, const char *label);
 
 //static int __initialize_connection(void);
 static void doPrompt(int fd);
@@ -334,17 +339,19 @@ static struct ui_component_d *create_icon_area_icon(
 
 static void 
 draw_clock_string_line(
-    unsigned long left, 
-    unsigned long top, 
+    unsigned long left_pad, 
+    unsigned long top_pad, 
     unsigned long value1,
     unsigned long value2,
     const char *label )
 {
     char line[64];
-    unsigned int Color1 = COLOR_BLACK;
-    unsigned int Color2 = COLOR_WHITE;
+    unsigned int Color1 = THEME_CLOCK_TEXT;
+    unsigned int Color2 = THEME_CLOCK_BG;
+    unsigned long ClockROP = 0;
 
     memset(line, 0, sizeof(line));
+    // #bugbug: We can get an overflow
     sprintf(line, "%lu:%lu %s", value1, value2, label);
 
     if ((void*) dc_taskbar == NULL)
@@ -352,14 +359,72 @@ draw_clock_string_line(
 
     libgui_drawstring_dc(
         dc_taskbar,
-        TaskbarInfo.notification_area.left + left,
-        TaskbarInfo.notification_area.top + top,
-        Color1,
-        Color2,
-        0,  // ROP 
-        line
+        TaskbarInfo.notification_area.left + left_pad,
+        TaskbarInfo.notification_area.top + top_pad,
+        Color1, Color2, ClockROP, line
     );
 }
+
+// Creates the clock as a UI_COMPONENT_LABEL inside the notification area.
+// Returns the component pointer or NULL on failure.
+static struct ui_component_d *create_clock_label(int fd, const char *label)
+{
+    if (fd < 0)
+        return NULL;
+    if ((void*)dc_taskbar == NULL)
+        return NULL;
+    //if (TaskbarInfo.notification_area.initialized != TRUE)
+        //return NULL;
+
+    // === Geometry ===
+    // Reserve only the rightmost part of the notification area for the clock
+    const unsigned long CLOCK_WIDTH  = 90;
+    const unsigned long CLOCK_HEIGHT = TaskbarInfo.notification_area.height - 4;
+    const unsigned long MARGIN       = 4;
+
+    unsigned long clock_left = TaskbarInfo.notification_area.left 
+                             + TaskbarInfo.notification_area.width 
+                             - CLOCK_WIDTH 
+                             - MARGIN;
+
+    unsigned long clock_top  = TaskbarInfo.notification_area.top + 2;
+
+    // Create the label component
+    struct ui_component_d *clock = libgui_create_ui_component(
+        dc_taskbar,
+        UI_COMPONENT_LABEL,                 // ← label type
+        clock_left,
+        clock_top,
+        CLOCK_WIDTH,
+        CLOCK_HEIGHT,
+        label,               // initial text
+        (0x0001 | 0x0002)    // same flags you use for others
+    );
+
+    if ((void*)clock == NULL)
+        return NULL;
+
+    // Optional: if your libgui supports setting colors on labels
+    // libgui_set_ui_component_colors(clock, THEME_CLOCK_TEXT, THEME_CLOCK_BG);
+
+    // Register in the global list
+    int i;
+    for (i = 0; i < 32; i++) {
+        if (uicList[i] == 0) {
+            uicList[i] = (unsigned long) clock;
+            break;
+        }
+    }
+
+    // Keep a dedicated pointer if you want easier access later
+    // TaskbarInfo.clock_label = clock;
+
+    // Draw it immediately
+    libgui_redraw_ui_component(clock, dc_taskbar);
+
+    return clock;
+}
+
 
 
 static void set_default_responder(int wid)
@@ -773,19 +838,20 @@ static void draw_taskbar_areas(void)
     lingui_draw_rectangle0_dc(dc_taskbar,
         TaskbarInfo.launch_area.left, TaskbarInfo.launch_area.top,
         TaskbarInfo.launch_area.width, TaskbarInfo.launch_area.height,
-        COLOR_GREEN, 0);
+        THEME_TASKBAR_BG, 0);
 
     lingui_draw_rectangle0_dc(dc_taskbar,
         TaskbarInfo.icon_area.left, TaskbarInfo.icon_area.top,
         TaskbarInfo.icon_area.width, TaskbarInfo.icon_area.height,
-        COLOR_BLUE, 0);
+        THEME_TASKBAR_BG, 0);
 
     lingui_draw_rectangle0_dc(dc_taskbar,
         TaskbarInfo.notification_area.left, TaskbarInfo.notification_area.top,
         TaskbarInfo.notification_area.width, TaskbarInfo.notification_area.height,
-        COLOR_YELLOW, 0);
+        THEME_TASKBAR_BG, 0);
 
-    draw_clock_string_line(2, 2, 11, 56, "PM");
+    // draw_clock_string_line(2, 2, 11, 56, "PM");
+    libgui_redraw_ui_component(uic_clock, dc_taskbar);
 }
 
 static void update_clients(int fd)
@@ -809,7 +875,7 @@ static void update_clients(int fd)
     lingui_draw_rectangle0_dc (
         dc_taskbar,
         0, 0, wi.cr_width, wi.cr_height,
-        DEFAULT_TB_BACKGROUND_COLOR,
+        THEME_TASKBAR_CLIENT_BG,
         0  // ROP
     );
 
@@ -1471,8 +1537,7 @@ int main(int argc, char *argv[])
                 d_l, d_t, d_w, d_h,
                 0, 
                 d_style,
-                COLOR_WHITE, 
-                COLOR_WHITE );
+                THEME_DESKTOP_BG, THEME_DESKTOP_BG );
 
     if (desktop_window < 0){
         printf ("taskbar: desktop_window\n");
@@ -1515,7 +1580,7 @@ int main(int argc, char *argv[])
     lingui_draw_rectangle0_dc (
         dc_desktop,
         0, 0, dwi.cr_width, dwi.cr_height,
-        COLOR_RED,
+        THEME_DESKTOP_BG,
         0  // ROP
     );
 
@@ -1572,7 +1637,7 @@ int main(int argc, char *argv[])
                 tb_l, tb_t, tb_w, tb_h,
                 0, 
                 style,
-                HONEY_COLOR_TASKBAR, HONEY_COLOR_TASKBAR );
+                THEME_TASKBAR_BG, THEME_TASKBAR_BG );
 
     if (taskbar_window < 0){
         printf ("taskbar: taskbar_window\n");
@@ -1657,7 +1722,7 @@ int main(int argc, char *argv[])
     lingui_draw_rectangle0_dc (
         dc_taskbar,
         0, 0, wi.cr_width, wi.cr_height,
-        DEFAULT_TB_BACKGROUND_COLOR,
+        THEME_TASKBAR_CLIENT_BG,
         0  // ROP
     );
 
@@ -1702,7 +1767,7 @@ int main(int argc, char *argv[])
         TaskbarInfo.launch_area.top,
         TaskbarInfo.launch_area.width,
         TaskbarInfo.launch_area.height,
-        COLOR_GREEN,  //COLOR_GRAY,
+        THEME_TASKBAR_CLIENT_BG,  //COLOR_GRAY,
         0 
     );
 
@@ -1733,12 +1798,15 @@ int main(int argc, char *argv[])
         TaskbarInfo.notification_area.top,
         TaskbarInfo.notification_area.width,
         TaskbarInfo.notification_area.height,
-        COLOR_YELLOW,  //COLOR_GRAY,
+        THEME_TASKBAR_CLIENT_BG,  //COLOR_GRAY,
         0 
     );
 
 // #test: String
-    draw_clock_string_line(2, 2, 11, 56, "PM");
+    // draw_clock_string_line(2, 2, 11, 56, "PM");
+    uic_clock = (struct ui_component_d *) create_clock_label(client_fd, "11:56 PM");
+
+    TaskbarInfo.notification_area.initialized = TRUE;
 
 // ===============================
 
@@ -1764,7 +1832,7 @@ int main(int argc, char *argv[])
         TaskbarInfo.icon_area.top,
         TaskbarInfo.icon_area.width,
         TaskbarInfo.icon_area.height,
-        COLOR_BLUE,  //COLOR_GRAY,
+        THEME_TASKBAR_CLIENT_BG,  //COLOR_GRAY,
         0 
     );
 
