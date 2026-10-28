@@ -1,6 +1,8 @@
 // main.c
-// This is the implementation of the terminal application.
-// Created by Fred Nora.
+// Virtual terminal for Gramado OS.
+// This is a host application for the command-line shells.
+// It provides the user interface and communication layer for a shell process.
+// Created by Fred Nora
 
 //#include <ctype.h>
 #include <termios.h>
