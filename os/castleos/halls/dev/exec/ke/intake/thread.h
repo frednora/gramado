@@ -914,6 +914,7 @@ struct thread_d
     int wait4pid;
 // id da thread que a thread está esperando morrer.
     int wait4tid;
+    int wait4tid_pending;
 
 //---------------------------------------
 

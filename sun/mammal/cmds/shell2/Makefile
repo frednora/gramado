@@ -106,7 +106,7 @@ LIBIOOBJ = ../api/libs/libio01/obj
 # Objects
 myObjects = crt0.o \
 ctype.o stdio.o stdlib.o string.o time.o \
-unistd.o termios.o ioctl.o fcntl.o rtl.o libio.o \
+unistd.o termios.o ioctl.o fcntl.o rtl.o libio.o wait.o \
 main.o    
 
 
@@ -133,8 +133,13 @@ all-c:
 	@cp $(LIBCOBJ)/termios.o  .
 	@cp $(LIBCOBJ)/ioctl.o  .
 	@cp $(LIBCOBJ)/fcntl.o  .
+	@cp $(LIBCOBJ)/wait.o  .
 
+
+# libio
 	@cp $(LIBIOOBJ)/libio.o  .
+
+
 	
 cat-link:
 	@echo "Linking ..."

@@ -310,17 +310,42 @@ Now the two children are connected directly through the pipe.
         sprintf(msg, "shell: launched tid=%d\n", tid);
         write(__fd_stdout, msg, strlen(msg));
 
-        rtl_sleep(2000);  //2sec
+        // Tell the kernel the child is now foreground 
+        // #not in the case of running inside the terminal
+        // sc82 (10011, tid, tid, tid);
+
+        printf("Waiting ...\n");
+        int _status;
+        // #bugbug: We need the child's pid here
+        // waitpid( pid?, &_status, 0);
+
+        // #test:
+        // 84: join_thread(tid) implementation
+        // #but in the case of running inside the terminal,
+        // maybe the terminal will lose the focus and we get the focus.
+        // The right thing is keep the terminal with the focus
+        sc80 (84, tid, tid, tid);
+
+        printf("Waked ...\n");
+
+        // rtl_sleep(2000);  //2sec
+    
+        // Exit the shell right after a positive launch 
+        // exit(0);
+        // while(1){}
+
+        
+        // rtl_sleep(2000);  //2sec
 
         // Tell the kernel the child is now foreground 
         // sc82 (10011,tid,tid,tid);
 
-        if (use_pipes == TRUE){
-            pipe_worker(fd[0]);  // Read from the pipe
-        }
+        //if (use_pipes == TRUE){
+            //pipe_worker(fd[0]);  // Read from the pipe
+        //}
 
         // Exit the shell right after a positive launch 
-        exit(0);
+        // exit(0);
     }
 }
 
@@ -397,6 +422,8 @@ static void process_command(void)
 
         // Call the worker
         process_run_command(cmdline, FALSE);
+
+        return;
     }
     else if (strcmp(argv[0], "run2") == 0 && argc > 1) {
         char __filename_local_buffer[64];

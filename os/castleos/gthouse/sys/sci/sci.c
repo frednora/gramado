@@ -830,7 +830,22 @@ void *sci0 (
        //block_for_a_reason ( (int) CurrentTID, (int) arg2 ); //suspenso
     }
 
-// 84 - free
+// 84 - 
+// #test: Implementing a join_thread(tid) syscall.
+// This is a work in progress
+    if (number == 84)
+    {
+        printk("84: join thread\n");
+        if ((void*) p->flower != NULL)
+        {
+            if (p->flower->magic == 1234)
+            {
+                p->flower->wait4tid = (tid_t) arg2;
+                p->flower->wait4tid_pending = TRUE;
+            }
+        }
+        return NULL; 
+    }
 
 // 85 - Get current process ID
     if (number == SCI0_GETPID){

@@ -462,8 +462,40 @@ static void __on_zombie(struct thread_d *thread)
         {
             if (tmp->magic == 1234 && (void*) tmp->te != NULL)
             {
+
+                if (tmp->state == BLOCKED)
+                    printk("bingo\n");
+                if (tmp->wait4tid == thread->tid)
+                {
+                    printk("bingo 2: waking up\n");
+                    tmp->state = READY;
+                    // #test
+                    // Its good for shell2 that runs using the terminal console.
+                    // for the shell that runs inside a virtual terminal it will fail,
+                    // because the terminal is not getting the focus, the shell is.
+                    set_foreground_thread(tmp->tid);
+                    continue;
+                }
+
+                // valid process
+                if (tmp->te != NULL)
+                {
+
+                    /*
+                    //#test its actually a thread
+                    if (tmp->te->wait4pid != thread->tid)
+                    {
+                        printk("bingo\n");
+                        tmp->te->state = PROCESS_RUNNING;
+                        tmp->te->state = READY;  
+                    }
+                    */
+
+                }
+
                 if ( (void*) thread->te != NULL)
                 {
+
                     // Same process?
                     // In this case this thread also change its state
                     if (tmp->te == thread->te)
@@ -945,13 +977,21 @@ static tid_t __scheduler_rr(unsigned long sched_flags)
                     continue;
                 }
 
+                // Block a thread that needs to wai for a child
+                if (TmpThread->wait4tid_pending == TRUE)
+                {
+                    printk("blocking ...\n");
+                    TmpThread->wait4tid_pending = FALSE;
+                    TmpThread->state = BLOCKED;
+                }
+
                 // Block in proress:
                 // We already setted the reason in ipc.c
                 if (TmpThread->msgctl.block_in_progress == TRUE)
                 {
                     printk("msgctl: Blocking...\n");
                     do_thread_blocked(TmpThread->tid);
-                    TmpThread->wait_reason = WAIT_REASON_LOOP; //Waiting for message
+                    TmpThread->wait_reason = WAIT_REASON_LOOP;  //Waiting for message
                     TmpThread->msgctl.block_in_progress = FALSE;
                     continue;
                 }

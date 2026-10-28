@@ -284,8 +284,10 @@ int do_waitpid (pid_t pid, int *status, int options)
     tid_t CurrentTID = (tid_t) lapic_info[0].current_tid;
 
     //#debug
-    //printk ( "do_waitpid: current_process=%d pid=%d \n", 
-        //current_process, pid );
+    printk( "do_waitpid: current_process=%d pid=%d \n", 
+        current_process, pid );
+
+    printk( "do_waitpid: CurrentTID=%d \n", CurrentTID );
 
     // #todo
     // tem que bloquear o processo atual até que um dos seus 
@@ -307,10 +309,11 @@ int do_waitpid (pid_t pid, int *status, int options)
     }
    
 // Block this process         
-    p->state = PROCESS_BLOCKED;
+    // p->state = PROCESS_BLOCKED;
 
 // It is the process we are waiting for
     p->wait4pid = (pid_t) pid; 
+    // p->wait4tid = (pid_t) tid;  //#todo 
 
 //
 // Our thread
@@ -330,14 +333,26 @@ int do_waitpid (pid_t pid, int *status, int options)
         goto fail;
     }
 
+    printk ("do_waitpid: Flower tid = %d\n", p->flower->tid);
+
 // Mismatch?
-    if (CurrentTID == p->flower->tid){
+// It needs to be equal
+    if (CurrentTID != p->flower->tid)
+    {
         printk ("do_waitpid: [Mismatch] TID\n");
         goto fail;
     }
 
+
+// #bugbug
+// We can't block. Because we are into a syscall and 
+// we have some data into the stack. If we block,
+// the dispatcher will select another thread and
+// rebuild the stack for the new thread.
+
 // Block our thread
-    p->flower->state = BLOCKED; 
+    printk ("do_waitpid: Blocking thread %d\n", CurrentTID);
+    // p->flower->state = BLOCKED; 
 
 // #todo:
 // Set the reason we are blocking the thread
