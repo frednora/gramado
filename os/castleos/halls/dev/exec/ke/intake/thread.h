@@ -101,8 +101,10 @@ typedef enum {
 } thread_wait_reason_t;
 
 
-// #todo
-// t->input_mode
+// #test: t->input_mode
+
+// This thread does not want input
+#define IM_NO_INPUT    0
 // Do not process anything ...
 // Just port the raw byte to the target thread.
 #define IM_RAW_INPUT  1
@@ -111,14 +113,12 @@ typedef enum {
 #define IM_MESSAGE_INPUT  2
 
 
+// #deprecated: Lets use input mode
 // Input model
-// t->input_flags
-// Com essa flag o kernel deve enviar input de teclado
-// para stdin.
-#define INPUT_MODEL_STDIN         1
-// Com essa flag o kernel deve enviar input para
-// a fila de mensagens na current thread.
-#define INPUT_MODEL_MESSAGEQUEUE  2
+// #define INPUT_MODEL_NO_INPUT      0
+//#define INPUT_MODEL_STDIN         1
+//#define INPUT_MODEL_MESSAGEQUEUE  2
+
 
 //
 // Thread flags

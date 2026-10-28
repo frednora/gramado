@@ -4170,10 +4170,27 @@ int terminal_init(unsigned short flags)
         exit(0);
     }
     //rtl_sleep(4000);
+
 // Delegate foreground to the child
 // Delegate a second stdin reader for the foreground thread.
 // Only the foreground thread can change this.
-    sc82(10013, tid, tid, tid);
+// Allow a second reader
+
+    // sc82(10013, tid, tid, tid);
+
+
+// #test
+// We are saying that this thread will not receive any input at all.
+// This way the terminal keeps receiving input.
+
+// #todo
+// This flag where the terminal selects the input mode of the child is working. ... 
+// but for now im doing it after the launch. 
+// We need to incorporate it to the launch syscall.
+// The launch syscall needs more parameters.
+
+    sc82(10014, tid, tid, tid);
+
 
 /*
 // =================================================

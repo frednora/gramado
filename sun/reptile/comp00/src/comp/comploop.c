@@ -4800,7 +4800,7 @@ int comploop_main (int argc, char **argv)
             // What is the first client to be launched?
 
             // Launches the default Terminal
-            if ( gramado_strncmp( argv[i], "--term", 4 ) == 0 ){
+            if ( gramado_strncmp( argv[i], "--term", 6 ) == 0 ){
                 fLaunchTerminal=TRUE;
             }
 

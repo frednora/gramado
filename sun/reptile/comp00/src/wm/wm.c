@@ -949,6 +949,9 @@ void on_control_clicked(struct gws_window_d *window)
                             if (w2->state == WINDOW_STATE_MINIMIZED)
                                 return;
 
+                            // #test
+                            // set_focus(w2);
+
                             // Let's maximize, because we're not minized.
                             maximize_window(w2);
 
@@ -963,7 +966,7 @@ void on_control_clicked(struct gws_window_d *window)
                             //if (WindowManager.initialized == TRUE){
                             //    if (WindowManager.is_fullscreen != TRUE)
                             //        wm_enter_fullscreen_mode();
-                            //}
+                            //
                             
                             return;
                         }

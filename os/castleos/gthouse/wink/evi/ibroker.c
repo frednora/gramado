@@ -3914,8 +3914,7 @@ done:
             if (Event_LongVK == VK_TAB)
             {
                 int ItWantsTAB = FALSE;
-                ItWantsTAB = 
-                    (int) ibroker_app_wants_event( 
+                ItWantsTAB = (int) ibroker_app_wants_event( 
                         foreground_thread, MSG_KEYDOWN, VK_TAB );
                 if (ItWantsTAB == TRUE)
                 {

@@ -3038,10 +3038,31 @@ void *sci2 (
             return NULL;
         if (fg0000->magic != 1234)
             return NULL;
+        // Allow a second reader
         fg0000->stdin_second_reader_tid = (tid_t) (arg2 & 0xFFFFFFFF);
+        // What is this?
         special_reader = (tid_t) (arg2 & 0xFFFFFFFF);
         return NULL;
     }
+
+// This thread will not be setted as foreground thread.
+// The terminal wants that the shell do not receive input,
+// because the input needs to stay with the terminal.
+
+    if (number == 10014)
+    {
+        tid_t __thistid = (tid_t) (arg2 & 0xFFFFFFFF);
+        struct thread_d *this_thread = 
+            (struct thread_d *) threadList[__thistid];
+        if ((void*) this_thread == NULL)
+            return NULL;
+        if (this_thread->magic != 1234)
+            return NULL;
+        // This thread do not want input
+        this_thread->input_mode = IM_NO_INPUT;
+        return NULL;
+    }
+
 
 // Get Init PID
     if (number == 10020){ 

@@ -473,7 +473,11 @@ static void __on_zombie(struct thread_d *thread)
                     // Its good for shell2 that runs using the terminal console.
                     // for the shell that runs inside a virtual terminal it will fail,
                     // because the terminal is not getting the focus, the shell is.
-                    set_foreground_thread(tmp->tid);
+                    if ( tmp->input_mode == IM_RAW_INPUT ||
+                         tmp->input_mode == IM_MESSAGE_INPUT )
+                    {
+                        set_foreground_thread(tmp->tid);
+                    }
                     continue;
                 }
 

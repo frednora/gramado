@@ -52,8 +52,9 @@ static const char *app5_name = "shell.bin";
 // --tb - Launches the default taskbar application.
 // -?   - ...
 
-//static const char *cmdline1 = "comp00 -1 -2 -3 --tb";
 //static const char *cmdline1 = "comp00 -1 -2 -3 --dm";
+//static const char *cmdline1 = "comp00 -1 -2 -3 --term";
+//static const char *cmdline1 = "comp00 -1 -2 -3 --tb";
 static const char *cmdline1 = "comp00 -1 -2 -3 --desktop";
 static const char *cmdline2 = "comp00 -1 -2 -3 --tb";
 // ...
