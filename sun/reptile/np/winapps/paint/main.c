@@ -267,8 +267,7 @@ static void on_button_clicked(int id)
     switch (id)
     {
         case 1:  // Clear
-            //printf("paint: Clear canvas\n");
-            clear_canvas();
+            clear_canvas(); return;
             break;
 
         case 2:  // Black
@@ -459,13 +458,15 @@ paintProcedure(
         // Only refresh the toolbar – keep the drawing
         update_children(fd);
         return 0;
+        break;
 
     case MSG_KEYDOWN:
-        switch (long1)
-        {
+        switch (long1){
+
         case 'C':
         case 'c':
             clear_canvas();
+            return 0;
             break;
         case 'K':
         case 'k':
@@ -489,14 +490,15 @@ paintProcedure(
             // #test: This syscall quit the server
             // gws_async_command(fd, 88, 0, 0);
             break;
-        }
+        };
+        return 0;
         break;
 
     case MSG_SYSKEYDOWN:
         // F1 = clear, F2-F5 = colours
         switch (long1)
         {
-        case VK_F1: clear_canvas(); break;
+        case VK_F1: clear_canvas(); return 0;    break;
         case VK_F2: current_color = COLOR_BLACK; break;
         case VK_F3: current_color = COLOR_RED;   break;
         case VK_F4: current_color = COLOR_GREEN; break;
@@ -530,6 +532,8 @@ paintProcedure(
                 last_y = long2;
             }
         }
+
+        return 0;
         break;
 
     case MSG_MOUSEPRESSED:
@@ -562,6 +566,8 @@ paintProcedure(
             if (last_y >= current_cr_height)
                 on_button_pressed(__hover_button_id);
         }
+
+        return 0;
         break;
 
     case MSG_MOUSERELEASED:
@@ -578,10 +584,12 @@ paintProcedure(
             on_button_clicked(__hover_button_id);
         //}
 
+        return 0;
         break;
 
     case MSG_CLOSE:
         isTimeToQuit = TRUE;
+        return 0;
         break;
 
     default:

@@ -633,6 +633,11 @@ memoryProcedure(
     case 0:
         return 0;
 
+    case MSG_PAINT:
+        update_children(fd);
+        return 0;
+        break;
+
     case MSG_KEYDOWN:
     switch (long1) {
     case VK_RETURN:  // Enter key
@@ -641,27 +646,28 @@ memoryProcedure(
 
     case 'R':
     case 'r':
-        //update_children(fd);
         libgui_on_button_pressed(uic_button_refresh, dc00);
+        return 0;
         break;
 
     case 'C':
     case 'c':
-        //gws_destroy_window(fd, refresh_button);
-        //gws_destroy_window(fd, close_button);
-        //gws_destroy_window(fd, main_window);
-        //exit(0);
         libgui_on_button_pressed(uic_button_close, dc00);
+        return 0;
         break;
 
-    // #test: Shut display server down
-    // case 'Q':
-    // case 'q':
+    case 'Q':
+    case 'q':
+        // #test: Shut display server down
         // printf("memory: Send QUIT message\n");
         // gws_async_command(fd,88,0,0);  // Send quit message
-        // break;
-
+        
+        // Quit application
+        //isTimeToQuit = TRUE;
+        return 0;
+        break;
     }
+    return 0;
     break;
 
     case MSG_KEYUP:
@@ -680,22 +686,21 @@ memoryProcedure(
     case 'c':
         libgui_on_button_released(uic_button_close, dc00);
         isTimeToQuit = TRUE;
-        //gws_destroy_window(fd, refresh_button);
-        //gws_destroy_window(fd, close_button);
-        //gws_destroy_window(fd, main_window);
-        //exit(0);
+        return 0;
         break;
 
-    // #test: Shut display server down
-    // case 'Q':
-    // case 'q':
+
+    case 'Q':
+    case 'q':
+        // #test: Shut display server down
         // printf("memory: Send QUIT message\n");
         // gws_async_command(fd,88,0,0);  // Send quit message
-        // break;
 
+        isTimeToQuit = TRUE;
+        return 0;
+        break;
     }
     break;
-
 
     case MSG_SYSKEYDOWN:
         switch (long1) {
@@ -727,24 +732,10 @@ memoryProcedure(
         };
         break;
 
+    // This is sent by the server
     case GWS_MouseClicked:
-        /*
-        // Child ID comes in long1
-        if ((int)long1 == refresh_button) {
-            // Just trigger a repaint to refresh metrics
-            update_children(fd);
-            return 0;
-        }
-        if ( (int)long1 == close_button ) {
-            gws_destroy_window(fd, refresh_button);
-            gws_destroy_window(fd, close_button);
-            gws_destroy_window(fd, main_window);
-            exit(0);
-        }
-        */
         break;
 
-    // #test
     case MSG_MOUSEMOVE:
         // #bugbug
         // Kernel is sending us absolute values
@@ -753,13 +744,15 @@ memoryProcedure(
         ButtonId = (int) __hit_test_button(long1, long2);
         if (ButtonId > 0)
             __hover_button_id = ButtonId;
-        if (ButtonId <= 0)
+        if (ButtonId <= 0){
             __hover_button_id = -1;
+        }
+        return 0;
         break;
-
 
     case MSG_MOUSEPRESSED:
         on_button_pressed(__hover_button_id);  // Visual effect
+        return 0;
         break;
 
     case MSG_MOUSERELEASED:
@@ -775,18 +768,15 @@ memoryProcedure(
         //gws_set_active( fd, main_window );
         //gws_refresh_window (fd, main_window);
 
-        break;
-
-    case MSG_PAINT:
-        update_children(fd);
         return 0;
+        break;
 
     case MSG_CLOSE:
         isTimeToQuit = TRUE;
         break;
 
+    // Unknown event
     default:
-        // Unknown event
         return -1;
     };
 

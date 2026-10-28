@@ -920,11 +920,12 @@ tbProcedure(
 // Process the event
     switch (event_type){
 
-        // #ps: 
-        // Sent by the server. 
-        // But now we are using the shared flag.
+        // #ps:
+        // This is called in two moments:
+        // Sent by the server or shared flag is setted. 
         case MSG_PAINT:
             update_clients(fd);
+            return 0;
             break;
 
         case MSG_MOUSEMOVE:
@@ -932,8 +933,10 @@ tbProcedure(
             IconId = (int) __hit_test_icon(long1, long2);
             if (IconId > 0)
                 __hover_icon_id = IconId;
-            if (IconId <= 0)
+            if (IconId <= 0){
                 __hover_icon_id = -1;
+            }
+            return 0;
             break;
 
         case MSG_MOUSEPRESSED:
@@ -1009,14 +1012,16 @@ tbProcedure(
         case MSG_SYSKEYDOWN:
             //printf("taskbar: MSG_SYSKEYDOWN\n");
             switch (long1){
-                case VK_F5: 
-                    printf("taskbar: VK_F5\n");
-                    gws_update_desktop(fd); 
-                    break;
-                //case VK_F2:  do_launch_app(2);  break;
+
                 //case VK_F1:  do_launch_app(1);  break;
                 //case VK_F2:  do_launch_app(2);  break;
                 // ...
+                case VK_F5: 
+                    //printf("taskbar: VK_F5\n");
+                    // gws_update_desktop(fd);
+                    return 0; 
+                    break;
+
                 //case VK_F5: gws_async_command(fd,30,0,0);    break;
                 //case VK_F6: gws_async_command(fd,1011,0,0);  break;
                 //case VK_F7: gws_async_command(fd,30,0,0);    break;
@@ -1027,7 +1032,7 @@ tbProcedure(
                 case VK_ARROW_DOWN:   printf("taskbar: VK_ARROW_DOWN \n"); break;
                 case VK_ARROW_LEFT:
                     printf("taskbar: VK_ARROW_LEFT \n"); 
-                    switch_responder(fd);
+                    //switch_responder(fd);
                     break;
                 default:
                     break;
@@ -1060,16 +1065,6 @@ tbProcedure(
         case 99500:
             break;
 
-        // #bugbug
-        // The taskbar application is the Shell, just like the explorer.exe
-        // in Windows. We can't simply close it.
-        // #todo
-        // It only can happen when in certain situations.
-        case MSG_CLOSE:
-            printf("taskbar: Closing ...\n");
-            isTimeToQuit = TRUE;  // Let's leave the main loop
-            break;
-
         case MSG_COMMAND:
             /*
             printf("taskbar.bin: MSG_COMMAND %d \n",long1);
@@ -1085,6 +1080,16 @@ tbProcedure(
             gws_clone_and_execute("#terminal.bin");  break;
             };
             */
+            break;
+
+        // #bugbug
+        // The taskbar application is the Shell, just like the explorer.exe
+        // in Windows. We can't simply close it.
+        // #todo
+        // It only can happen when in certain situations.
+        case MSG_CLOSE:
+            printf("taskbar: Closing ...\n");
+            isTimeToQuit = TRUE;  // Let's leave the main loop
             break;
 
         default:
