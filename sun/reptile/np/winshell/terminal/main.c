@@ -1833,14 +1833,11 @@ void test_standard_stream(int fd)
     */
 }
 
-// Launch a child.
-void
-test_child_message(void)
+// Launch a child
+void test_child_message(void)
 {
     // #todo: use clone_and_execute.
-    sc80 ( 900, 
-       (unsigned long) "sh1.bin", 0, 0 );
-
+    sc80(900, (unsigned long) "sh1.bin", 0, 0);
 }
 
 //
@@ -2836,15 +2833,14 @@ void _draw(int fd, int c)
                 //terminal_drawchar_response((int) fd);
 }
 
-
-// worker
+// When ENTER is pressed
 static void __on_return_key_pressed(int fd)
 {
     unsigned long jiffie_start=0;
     unsigned long jiffie_end=0;
     unsigned long jiffie_delta=0;
 
-// Finalize the command line.
+// Finalize the command line
     input('\0');
 
     //jiffie_start = (unsigned long) rtl_get_system_metrics(118);
@@ -2863,8 +2859,7 @@ static void __on_return_key_pressed(int fd)
 
     //printf("speed: %d ms\n",jiffie_delta);
 
-// Clear prompt.
-    doPrompt(fd);
+    doPrompt(fd);  // Clear prompt
 }
 
 static int 
@@ -2916,26 +2911,24 @@ terminalProcedure (
                 
                 // When using the embedded shell.
                 // Compare strings.
-                if (isUsingEmbeddedShell == TRUE){
-                    //printf ("terminalProcedure; VK_RETURN\n");
+                if (isUsingEmbeddedShell == TRUE)
+                {
                     __on_return_key_pressed(fd);
                     return 0;
                 }
 
-                // When not using the embedded shell.
-                // Goto next line.
+                // When not using the embedded shell
                 if (isUsingEmbeddedShell == FALSE)
                 {
+                    // ---- Go to next line ----
                     cursor_x++;
                     if (cursor_x >= Terminal.width_in_chars)
                     {
                         cursor_x = Terminal.left;
                         cursor_y++;
                     }
-                }
 
-                if (isUsingEmbeddedShell == FALSE)
-                {
+                    // ---- Send LF to the child ----
                     // Actually we need to convert VK into ascii.
                     char toshellBuffer2[4];
                     toshellBuffer2[0] = (char) '\n';  //10
@@ -2976,12 +2969,32 @@ terminalProcedure (
         {
             case VK_F1:
                 tputstring(fd, "VK_F1\n");
+                doHelp(fd);
+                // #ps: 
+                // Its not what we want. This prompt is for embedded shell.
+                // When in normal mode the terminal sends a LF to the child.
+                // doPrompt(fd); 
                 break;
+
+            case VK_F2:
+                tputstring(fd, "VK_F2\n");
+                doAbout(fd);
+                // #ps: 
+                // Its not what we want. This prompt is for embedded shell.
+                // When in normal mode the terminal sends a LF to the child.
+                // doPrompt(fd);
+                break;
+
+            // Not expected. F11 goes only to the display server
             case VK_F11:
-                tputstring(fd, "VK_F11\n"); // Not expected
+                tputstring(fd, "VK_F11\n");
                 break;
             case VK_F12:
                 tputstring(fd, "VK_F12\n");
+                break;
+
+            case VK_DELETE:
+                tputstring(fd, "VK_DELETE\n");
                 break;
             // ...
         };
@@ -3074,11 +3087,7 @@ static int __input_STDIN(int fd)
 // We don't need this
 // O kernel seleciona qual será 
 // o arquivo para teclado ps2.
-    sc80(
-        8002,
-        fileno(new_stdin),
-        0,
-        0 );
+    sc80( 8002, fileno(new_stdin), 0, 0 );
 */
 
 // Poisiona no início do arquivo.
@@ -3096,6 +3105,7 @@ static int __input_STDIN(int fd)
     char chBuffer[4];
 
     while (1){
+
         //if (isUsingEmbeddedShell == FALSE){
             //break;
         //}
@@ -3241,19 +3251,15 @@ RelaunchShell:
 
         isUsingEmbeddedShell = TRUE;
 
-        // VT Interactivity
-        // + Get bytes from stdin.
+        // VT Interactivity: Get bytes from stdin
         C = fgetc(stdin);
+
         if (C > 0)
         {
-            // VT Renderer
-            // Process the char.
-            terminalProcedure( 
-                client_fd,    // socket
-                window_id,    // window ID
-                MSG_KEYDOWN,  // message code
-                C,            // long1 (ascii)
-                C );          // long2 (ascii)
+            // VT Renderer: Process the char
+            // IN: socket, window id, msg code, long1 (ascii), long2 (ascii)
+            terminalProcedure(client_fd, window_id, MSG_KEYDOWN, C, C);
+
             //continue;
         }
 
@@ -3413,7 +3419,7 @@ static void __get_system_event(int fd, int wid)
         return;
         break;
 
-    // Accepting only these messages.
+    // Accepting only these messages
     case MSG_CLOSE:
     case MSG_PAINT:
     // ...

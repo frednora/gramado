@@ -420,34 +420,32 @@ static inline void do_sti(void)
 
 static int input_compare_string(void)
 {
-    int ret_val=-1;
+    int ret_val = -1;
     char *c;
-// Generic file support.
+// File support
     int fd= -1;
     FILE *fp;
 
-// Primeira letra do prompt.
+// Get first char from prompt[]
     c = prompt;
     if (*c == '\0'){
         goto exit_cmp;
     }
 
-// LF
-    printf("\n");
+    printf("\n");  // LF
 
-// #test
-// Enter the cool menu.
-    if (gramado_strncmp(prompt,"menu",4) == 0){
+// Enter the cool menu
+    if (gramado_strncmp(prompt, "menu", 4) == 0){
         loopMenu();
         goto exit_cmp;
     }
 
-    if (gramado_strncmp(prompt,"exit",4) == 0){
+    if (gramado_strncmp(prompt, "exit", 4) == 0){
         loopMenu_ExitGramadoOS();
         goto exit_cmp;
     }
 
-    if ( gramado_strncmp(prompt,"quit",4) == 0 ){
+    if ( gramado_strncmp(prompt, "quit", 4) == 0 ){
         isTimeToQuitCmdLine=TRUE;
         goto exit_cmp;
     }
@@ -954,6 +952,7 @@ static int input_process_control_char(int ch)
     if (ch<0)
         return -1;
 
+    // Not control?
     if (ch > 0x1F)
         return -1;
 
@@ -1020,13 +1019,12 @@ static int ProcessCharInput(int c)
         input_process_cmdline();
         return 0;
 
-    // Printable chars
+    // Printable chars. (0x20 ~ 0x7F)
     } else if ( c >= 0x20 && c <= 0x7F ){
         input_process_printable_char(c);
         return 0;
 
-    // #test
-    // Control chars. (0~0x1F)
+    // Control chars. (0 ~ 0x1F)
     } else if (c <= 0x1F){
         input_process_control_char(c);
         return 0;
