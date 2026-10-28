@@ -342,6 +342,9 @@ int rtl_focus_on_me(void);
 
 void rtl_yield(void);
 
+// Wait for this thread
+void rtl_join_thread(int tid);
+
 void rtl_sleep_until(unsigned long ms);
 void rtl_sleep(unsigned long ms);
 

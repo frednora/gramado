@@ -115,7 +115,8 @@ static void process_run_command(const char *cmdline, int use_pipes)
 
         // #test:
         // 84: join_thread(tid) implementation
-        sc80 (84, tid, tid, tid);
+        //sc80 (84, tid, tid, tid);
+        rtl_join_thread(tid);
 
         printf("Waked ...\n");
 

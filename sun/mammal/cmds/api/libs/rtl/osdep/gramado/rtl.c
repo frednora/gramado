@@ -2305,6 +2305,18 @@ void rtl_yield(void)
     sc80 (265,0,0,0);
 }
 
+// Wait for this thread
+void rtl_join_thread(int tid)
+{
+    if (tid < 0)
+        return;
+
+    // #test:
+    // 84: join_thread(tid) implementation
+    sc80 (84, tid, tid, tid);
+}
+
+
 // This is a worker called bu rtl_sleep()
 // Mayme we can have more parameters here
 // allowing us to create more different sort of wrappers.

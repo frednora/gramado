@@ -324,7 +324,8 @@ Now the two children are connected directly through the pipe.
         // #but in the case of running inside the terminal,
         // maybe the terminal will lose the focus and we get the focus.
         // The right thing is keep the terminal with the focus
-        sc80 (84, tid, tid, tid);
+        // sc80 (84, tid, tid, tid);
+        rtl_join_thread(tid);
 
         printf("Waked ...\n");
 
