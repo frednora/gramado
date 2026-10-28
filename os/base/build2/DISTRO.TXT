@@ -1,2 +1,2 @@
-Distro name: base01
+Distro name: build2
 Guest OS

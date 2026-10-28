@@ -1,2 +1,2 @@
-Distro name: base00
+Distro name: build1
 Hypervisor
