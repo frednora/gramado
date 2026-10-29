@@ -673,60 +673,56 @@ void rtl_exit_critical_section (void)
 // #todo: Change parameter type to const char 
 int rtl_create_empty_file(char *file_name)
 {
-    unsigned long Value=0;
+    int rv;
+    unsigned long l_rv;
 
-    if ((void*) file_name == NULL){
-        debug_print("rtl_create_empty_file: [FAIL] file_name\n");
-        return (int) -1;
-    }
+    if ((void*) file_name == NULL)
+        goto fail;
+
     if ( *file_name == 0 ){
-        debug_print("rtl_create_empty_file: [FAIL] *file_name\n");
-        return (int) -1;
+        goto fail;
     }
 
-    Value = 
-        (unsigned long) sc80 ( 
-                            43, 
-                            (unsigned long) file_name, 
-                            0, 
-                            0 );
+    l_rv = (unsigned long) sc80(43, (unsigned long) file_name, 0, 0);
+    rv = (int) (l_rv & 0xFF);
 
-// #todo
-// Error message.
+    if (rv < 0){
+        goto fail;
+    }
 
-    return (int) (Value & 0xF);
+    return (int) rv;  // OK
+fail:
+    printf("rtl_create_empty_file: fail\n");
+    return (int) -1;
 }
 
 // Create empty directory.
 // #todo: Change parameter type to const char 
 int rtl_create_empty_directory(char *dir_name)
 {
-    unsigned long Value=0;
+    int rv;
+    unsigned long l_rv;
 
-    if ((void*) dir_name == NULL){
-        debug_print("rtl_create_empty_directory: [FAIL] dir_name\n");
-        return (int)(-1);
-    }
+    if ((void*) dir_name == NULL)
+        goto fail;
+
     if (*dir_name == 0){
-        debug_print("rtl_create_empty_directory: [FAIL] *dir_name\n");
-        return (int)(-1);
+        goto fail;
     }
 
-// #todo
-// Quais são os valores de retorno.
-// TRUE or FALSE?
+    l_rv = (unsigned long) sc80(44, (unsigned long) dir_name, 0, 0);
 
-    Value = 
-        (unsigned long) sc80 ( 
-                            44, 
-                            (unsigned long) dir_name, 
-                            0, 
-                            0 );
+    rv = (int) (l_rv & 0xFF);
 
-// #todo
-// Error message
+    if (rv < 0){
+        goto fail;
+    }
 
-    return (int) (Value & 0xF);
+    return (int) rv;  // OK
+
+fail:
+    printf("rtl_create_empty_directory: fail\n");
+    return (int) -1;
 }
 
 void *rtl_create_process(const char *file_name)

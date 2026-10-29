@@ -161,6 +161,15 @@ static void process_command(void)
     if (strcmp(argv[0], "about") == 0) {
         write(1, "shell2: minimal stdin/stdout shell\n", 34);
         write(1, "\n", 1);  // Go to the next line
+
+
+        // #test
+        // Testing the creation of files and folders using rtl.
+        // #bugbug: The file is ok. The folder has been created, 
+        // but not perfect to open in Windows machines.
+        // rtl_create_empty_file("NEWFILE.TXT");
+        // rtl_create_empty_directory("NEWDIR");
+
     }
     else if (strcmp(argv[0], "help") == 0) {
 

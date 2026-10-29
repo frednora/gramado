@@ -422,6 +422,16 @@ __found:
         goto fail;
     }
 
+// #todo
+// We can get the attribute
+// Directory
+// Volume label
+// LFN entry
+// Hidden file
+// Deleted file
+
+    // attribute = DirEntry[11]
+
 // ========================================
 // FAT
 // Carrega fat na memória.

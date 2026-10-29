@@ -757,7 +757,7 @@ int fat16Init(void)
     fs_init_structures();                // fs structures
     fat16_init_fat_structure();          // fat structure
 
-    debug_print ("fat16Init: Done\n");
+    // debug_print ("fat16Init: Done\n");
     return 0;
 }
 

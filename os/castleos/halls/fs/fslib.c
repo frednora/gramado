@@ -3902,7 +3902,8 @@ fsSaveFile (
 // Entry structure.
 // see: fat.h
     //struct fat16_directory_entry_d entry_fat16;
-// Directory entry buffer.
+
+// Directory entry buffer
     char DirEntry[32];
 
 //Entry size in words.
@@ -3987,6 +3988,11 @@ fsSaveFile (
             size_in_sectors ); 
         goto fail;
     }
+
+
+// Clean the buffer
+    memset(DirEntry, 0, 32);
+
 
 // Load root dir and FAT.
     fs_load_rootdir( VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32 );
@@ -4185,6 +4191,7 @@ save_file:
 
 // Folders will have a File Size of 0x0000
 // (for folders)
+
     if (flag == 0x10)
     {
         DirEntry[28] = (char) 0;
