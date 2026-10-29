@@ -1,8 +1,23 @@
-// main.c
-// Gramado OS client-side GUI app: Paint (simple sketchpad)
-// Freehand drawing with mouse + colour toolbar.
-// Respects the exact same event loop, DC, shared-flags and
-// interaction pattern used by the Power and Launch examples.
+// main.c (Created by claude ai)
+// Gramado OS client-side GUI app: Paint (v2)
+//
+// What is new compared to the first version:
+//  - Strokes are continuous (Bresenham between mouse samples).
+//  - Tools: Pen, Eraser, Fill (bucket).
+//  - Brush sizes (table), with Size -/+ buttons and [ ] keys.
+//  - 8-colour palette (swatches) plus the K/R/G/B shortcuts.
+//  - Fast direct-write rectangle/span filler (no per-pixel ROP chain).
+//  - Status line in the footer (tool, size, colour, shortcuts).
+//  - Table-driven toolbar instead of copy-pasted code per button.
+//  - Press/release logic fixed: the press position comes from last_x/last_y
+//    (RTLEventBuffer[4]/[5]), and a click only happens if the button that was
+//    pressed is the one under the pointer on release.
+//
+// The input loop is unchanged in spirit:
+//   while(1) { shared-flags check; if (rtl_get_event()) paintProcedure(...); }
+// Nothing heavy runs per iteration: no syscalls, no window-info queries,
+// no allocations. Drawing happens only inside the procedure, only when an
+// event arrives.
 
 // rtl
 #include <types.h>
@@ -35,13 +50,42 @@ struct dccanvas_d *dc00;  // shared dc
 
 static unsigned long __sh_flags = 0;
 
-// Toolbar buttons
-struct ui_component_d *uic_btn_clear;
-struct ui_component_d *uic_btn_black;
-struct ui_component_d *uic_btn_red;
-struct ui_component_d *uic_btn_green;
-struct ui_component_d *uic_btn_blue;
-struct ui_component_d *uic_footer;
+// ----------------------------------------------------
+// Layout
+// ----------------------------------------------------
+//
+// [ canvas ........................................... ]
+// [ row 1: Clear Pen Eraser Fill Size- Size+          ]  toolbar
+// [ row 2: palette swatches                           ]
+// [ footer / status line                              ]
+//
+#define TOOLBAR_H      88
+#define FOOTER_H       18
+#define ROW1_Y         6     // relative to toolbar top
+#define ROW1_H         28
+#define ROW2_Y         40    // relative to toolbar top
+#define ROW2_H         22
+#define GAP            8
+
+// ----------------------------------------------------
+// Tools, buttons and palette
+// ----------------------------------------------------
+#define TOOL_PEN     1
+#define TOOL_ERASER  2
+#define TOOL_FILL    3
+
+// Toolbar button ids (index = id - 1)
+#define BTN_CLEAR    1
+#define BTN_PEN      2
+#define BTN_ERASER   3
+#define BTN_FILL     4
+#define BTN_SIZE_DN  5
+#define BTN_SIZE_UP  6
+#define BTN_COUNT    6
+
+// Palette swatch ids
+#define SWATCH_BASE   100
+#define SWATCH_COUNT  8
 
 struct button_info_d
 {
@@ -55,386 +99,639 @@ struct button_info_d
     unsigned long top;
     int state;
 };
-static struct button_info_d  MyBtn_Clear;
-static struct button_info_d  MyBtn_Black;
-static struct button_info_d  MyBtn_Red;
-static struct button_info_d  MyBtn_Green;
-static struct button_info_d  MyBtn_Blue;
 
-static int __hover_button_id = -1;
+// Toolbar buttons (relative to the client area)
+static struct button_info_d   Btn[BTN_COUNT];
+static struct ui_component_d *Uic[BTN_COUNT];
+static const char *BtnLabel[BTN_COUNT] = {
+    "Clear", "Pen", "Eraser", "Fill", "Size -", "Size +"
+};
 
+// Palette swatches (relative to the client area)
+static struct button_info_d  Swatch[SWATCH_COUNT];
+static const unsigned int Palette[SWATCH_COUNT] = {
+    0x00000000,  // black
+    0x00808080,  // gray
+    0x00FF0000,  // red
+    0x00FF8000,  // orange
+    0x00FFFF00,  // yellow
+    0x0000A000,  // green
+    0x000000FF,  // blue
+    0x008000FF   // purple
+};
 
-// Drawing state
+// Brush sizes in pixels
+static const int BrushSizes[] = { 1, 2, 3, 5, 8, 12, 16, 24 };
+#define BRUSH_COUNT  (int)(sizeof(BrushSizes)/sizeof(BrushSizes[0]))
+
+// ----------------------------------------------------
+// State
+// ----------------------------------------------------
+static int __hover_button_id   = -1;
+static int __pressed_button_id = -1;
+
 static int is_drawing = FALSE;
+static int has_prev   = FALSE;   // prev_x/prev_y are valid for this stroke
+static long prev_x = 0;
+static long prev_y = 0;
+
+// last_x/last_y are filled by the input loop from the event buffer
+// (positions of the pointer at the time of the event).
 static unsigned long last_x = 0;
 static unsigned long last_y = 0;
-static unsigned long current_color = COLOR_BLACK;  // default pen
 
-// Toolbar height
-#define TOOLBAR_H  80
-
-static int CantPaint = TRUE;
+static int current_tool       = TOOL_PEN;
+static int current_size_index = 2;                // 3 px, like the old brush
+static unsigned int current_color = COLOR_BLACK;  // default pen
 
 // The current height for the area where the
 // pointer is allowed to paint.
-unsigned long current_cr_height=0;
+unsigned long current_cr_height = 0;
 
 // Window
 static int main_window = -1;
 
+unsigned long window_x;
+unsigned long window_y;
+
+// Used by all the routines
+struct gws_window_info_d  wi;
+
+// ----------------------------------------------------
+// Prototypes
+// ----------------------------------------------------
 static void on_button_pressed(int button_id);
 static void on_button_released(int button_id);
 static void on_button_clicked(int id);
 
 static int  __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
 static void update_children(int fd);
-static void draw_pixel(unsigned long x, unsigned long y);
 static void clear_canvas(void);
+static void draw_status(void);
+static void refresh_toolbar_state(void);
 
+// ====================================================
+// Fast drawing primitives (direct writes into the dc)
+// ====================================================
 
-unsigned long window_x;
-unsigned long window_y;
-
-// Current mouse position
-struct current_mouse_position_d 
+// Fill a rectangle, clipped against the dc. ROP_COPY only.
+// This is much cheaper than lingui_draw_rectangle0_dc(), which goes
+// through the ROP chain for every single pixel.
+static void 
+paint_fill_rect(
+    struct dccanvas_d *dc,
+    long x, long y, long w, long h,
+    unsigned int color )
 {
-    // Mouse
-    unsigned long absolute_x;
-    unsigned long absolute_y;
-    unsigned long x;
-    unsigned long y;
-};
-struct current_mouse_position_d  CurrentMousePosition;
+    long x2, y2, yy, xx;
+    long dw, dh;
+    unsigned char *row;
+    unsigned int c = (color & 0x00FFFFFF);
+    unsigned char b = (unsigned char)( c        & 0xFF);
+    unsigned char g = (unsigned char)((c >> 8)  & 0xFF);
+    unsigned char r = (unsigned char)((c >> 16) & 0xFF);
 
-// Used by all the routines
-struct gws_window_info_d  wi;
+    if ((void*) dc == NULL || (void*) dc->data == NULL)
+        return;
+    if (w <= 0 || h <= 0)
+        return;
 
+    dw = (long) dc->device_width;
+    dh = (long) dc->device_height;
 
-static void get_current_mouse_position(void);
+    x2 = x + w;
+    y2 = y + h;
+    if (x  < 0)  x  = 0;
+    if (y  < 0)  y  = 0;
+    if (x2 > dw) x2 = dw;
+    if (y2 > dh) y2 = dh;
+    if (x >= x2 || y >= y2)
+        return;
 
-// =====================================================
-
-
-
-// #test
-// Getting the current mouse position
-static void get_current_mouse_position(void)
-{
-    unsigned long rv;
-    unsigned long buf[8];
-
-    rv = (unsigned long) sc80(300, buf, buf, buf);
-
-    if (rv == 1234)
+    for (yy = y; yy < y2; yy++)
     {
-        // Get absolute values
-        CurrentMousePosition.absolute_x = (unsigned long) buf[2];
-        CurrentMousePosition.absolute_y = (unsigned long) buf[3];
+        row = (unsigned char *) dc->data + ((unsigned long) yy * dc->pitch);
 
-        // relative
-        CurrentMousePosition.x = 
-            CurrentMousePosition.absolute_x - (wi.left + wi.cr_left);
-        CurrentMousePosition.y = 
-            CurrentMousePosition.absolute_y - (wi.top + wi.cr_top);
+        if (dc->bpp == 32)
+        {
+            unsigned int *p = (unsigned int *) (row + ((unsigned long) x << 2));
+            for (xx = x; xx < x2; xx++)
+                *p++ = c;
+        }
+        else if (dc->bpp == 24)
+        {
+            unsigned char *p = row + ((unsigned long) x * 3);
+            for (xx = x; xx < x2; xx++)
+            {
+                p[0] = b;
+                p[1] = g;
+                p[2] = r;
+                p += 3;
+            }
+        }
+    }
+}
 
+// Read a pixel as 0x00RRGGBB. Caller guarantees x,y are inside the dc.
+static unsigned int paint_get_pixel(long x, long y)
+{
+    unsigned char *row = 
+        (unsigned char *) dc00->data + ((unsigned long) y * dc00->pitch);
+
+    if (dc00->bpp == 32)
+        return (*(unsigned int *)(row + ((unsigned long) x << 2))) & 0x00FFFFFF;
+
+    // 24 bpp
+    {
+        unsigned char *p = row + ((unsigned long) x * 3);
+        return (unsigned int)( p[0] | (p[1] << 8) | (p[2] << 16) );
+    }
+}
+
+// Width of the paintable area.
+static long canvas_w(void)
+{
+    return (long) dc00->device_width;
+}
+
+// Height of the paintable area (above the toolbar).
+static long canvas_h(void)
+{
+    long h = (long) current_cr_height;
+    if (h > (long) dc00->device_height)
+        h = (long) dc00->device_height;
+    return h;
+}
+
+// ----------------------------------------------------
+// Brush
+// ----------------------------------------------------
+static long brush_size(void)
+{
+    long s = BrushSizes[current_size_index];
+    // The eraser is a bit bigger than the pen.
+    if (current_tool == TOOL_ERASER)
+        s = (s * 2) + 4;
+    return s;
+}
+
+static unsigned int brush_color(void)
+{
+    if (current_tool == TOOL_ERASER)
+        return COLOR_WHITE;
+    return current_color;
+}
+
+// Square brush centred on x,y, clipped to the paintable area.
+static void paint_stamp(long x, long y, long size, unsigned int color)
+{
+    long l = x - (size / 2);
+    long t = y - (size / 2);
+    long h = size;
+    long ch = canvas_h();
+
+    if (t < 0){
+        h += t;
+        t = 0;
+    }
+    if (t + h > ch)
+        h = ch - t;
+
+    paint_fill_rect(dc00, l, t, size, h, color);
+}
+
+// Continuous stroke between two points (Bresenham).
+// The brush is stamped every size/2 steps, which is dense enough for a
+// square brush and keeps big brushes cheap.
+static void 
+paint_stroke(
+    long x0, long y0, 
+    long x1, long y1, 
+    long size, 
+    unsigned int color )
+{
+    long dx = (x1 > x0) ? (x1 - x0) : (x0 - x1);
+    long dy = (y1 > y0) ? (y1 - y0) : (y0 - y1);
+    long sx = (x0 < x1) ? 1 : -1;
+    long sy = (y0 < y1) ? 1 : -1;
+    long err = dx - dy;
+    long e2;
+    long step = size / 2;
+    long n = 0;
+
+    if (step < 1)
+        step = 1;
+
+    while (1)
+    {
+        if ((n % step) == 0 || (x0 == x1 && y0 == y1))
+            paint_stamp(x0, y0, size, color);
+
+        if (x0 == x1 && y0 == y1)
+            break;
+
+        e2 = 2 * err;
+        if (e2 > -dy){ err -= dy; x0 += sx; }
+        if (e2 <  dx){ err += dx; y0 += sy; }
+        n++;
+    }
+}
+
+// ----------------------------------------------------
+// Flood fill (scanline, explicit seed stack, no recursion, no malloc)
+// If the stack overflows on a very complex region, some seeds are
+// dropped and the fill may be incomplete; pressing again finishes it.
+// ----------------------------------------------------
+#define FILL_STACK_MAX  4096
+struct seed_d { int x; int y; };
+static struct seed_d fill_stack[FILL_STACK_MAX];
+static int fill_sp = 0;
+
+static void fill_push(int x, int y)
+{
+    if (fill_sp < FILL_STACK_MAX)
+    {
+        fill_stack[fill_sp].x = x;
+        fill_stack[fill_sp].y = y;
+        fill_sp++;
+    }
+}
+
+static void flood_fill(long sx, long sy, unsigned int color)
+{
+    long w = canvas_w();
+    long h = canvas_h();
+    unsigned int target;
+    long x, y, lx, rx, ny, i;
+    int inrun;
+
+    if (sx < 0 || sy < 0 || sx >= w || sy >= h)
+        return;
+
+    color &= 0x00FFFFFF;
+    target = paint_get_pixel(sx, sy);
+    if (target == color)
+        return;
+
+    fill_sp = 0;
+    fill_push((int) sx, (int) sy);
+
+    while (fill_sp > 0)
+    {
+        fill_sp--;
+        x = fill_stack[fill_sp].x;
+        y = fill_stack[fill_sp].y;
+
+        if (paint_get_pixel(x, y) != target)
+            continue;
+
+        lx = x;
+        while (lx > 0 && paint_get_pixel(lx - 1, y) == target)
+            lx--;
+        rx = x;
+        while (rx < (w - 1) && paint_get_pixel(rx + 1, y) == target)
+            rx++;
+
+        paint_fill_rect(dc00, lx, y, (rx - lx + 1), 1, color);
+
+        // Seeds for the rows above and below
+        for (ny = y - 1; ny <= y + 1; ny += 2)
+        {
+            if (ny < 0 || ny >= h)
+                continue;
+
+            inrun = FALSE;
+            for (i = lx; i <= rx; i++)
+            {
+                if (paint_get_pixel(i, ny) == target)
+                {
+                    if (inrun == FALSE){
+                        fill_push((int) i, (int) ny);
+                        inrun = TRUE;
+                    }
+                } else {
+                    inrun = FALSE;
+                }
+            }
+        }
     }
 }
 
 // ----------------------------------------------------
 static void clear_canvas(void)
 {
-    // struct gws_window_info_d wi;
-
-    if ((void*)dc00 == NULL) 
+    if ((void*) dc00 == NULL)
         return;
-
-    gws_get_window_info(Display->fd, main_window, &wi);
 
     // Only the drawing area (above toolbar)
-    lingui_draw_rectangle0_dc (
-        dc00,
-        0, 0,
-        wi.cr_width,
-        wi.cr_height - TOOLBAR_H,
-        COLOR_WHITE,
-        0 );
+    paint_fill_rect(
+        dc00, 
+        0, 0, 
+        canvas_w(), (long) current_cr_height, 
+        COLOR_WHITE );
 
-// The current height for the area where the
-// pointer is allowed to paint.
-    current_cr_height = wi.cr_height - TOOLBAR_H;
+    is_drawing = FALSE;
+    has_prev = FALSE;
 }
 
-// Draw a small “pixel” (3×3 rect) at relative coordinates
-static void draw_pixel(unsigned long x, unsigned long y)
+// ====================================================
+// Status line
+// ====================================================
+
+static char *sput(char *d, char *end, const char *s)
 {
-    if ((void*)dc00 == NULL) 
-        return;
-
-    // Keep the pixel inside the canvas (above toolbar)
-    //struct gws_window_info_d wi;
-    //gws_get_window_info(Display->fd, main_window, &wi);
-    //if (y >= (wi.cr_height - TOOLBAR_H - 2))
-        //return;
-
-    // if (y >= current_cr_height)
-       // return;
-
-    if (is_drawing != TRUE)
-        return;
-
-    lingui_draw_rectangle0_dc (
-        dc00,
-        x, y,
-        3, 3,               // size of the “brush”
-        current_color,
-        0 );
+    while (*s && d < end)
+        *d++ = *s++;
+    return d;
 }
 
-// For visual effects
-// #todo: We need to implement this kind of worker inside the library
-static void on_button_pressed(int button_id)
+static char *snum(char *d, char *end, unsigned long v)
 {
-    if (button_id < 0)
-        return;
+    char tmp[16];
+    int n = 0;
 
-    if (button_id == MyBtn_Clear.button_id)
-    {
-        libgui_on_button_pressed(uic_btn_clear, dc00);
+    if (v == 0)
+        tmp[n++] = '0';
+    while (v > 0 && n < 15){
+        tmp[n++] = (char)('0' + (v % 10));
+        v /= 10;
     }
-    else if (button_id == MyBtn_Black.button_id)
-    {
-        libgui_on_button_pressed(uic_btn_black, dc00);
-    }
-    else if (button_id == MyBtn_Red.button_id)
-    {
-        libgui_on_button_pressed(uic_btn_red, dc00);
-    }
-    else if (button_id == MyBtn_Green.button_id)
-    {
-        libgui_on_button_pressed(uic_btn_green, dc00);
-    }
-    else if (button_id == MyBtn_Blue.button_id)
-    {
-        libgui_on_button_pressed(uic_btn_blue, dc00);
-    }
-    else
-    {
-        // Unknown button
-        return;
-    }
-
+    while (n > 0 && d < end)
+        *d++ = tmp[--n];
+    return d;
 }
 
-// For visual effects
-// #todo: We need to implement this kind of worker inside the library
-static void on_button_released(int button_id)
+static char *shex(char *d, char *end, unsigned int v)
 {
-    if (button_id < 0)
-        return;
-
-    if (button_id == MyBtn_Clear.button_id)
-    {
-        libgui_on_button_released(uic_btn_clear, dc00);
-    }
-    else if (button_id == MyBtn_Black.button_id)
-    {
-        libgui_on_button_released(uic_btn_black, dc00);
-    }
-    else if (button_id == MyBtn_Red.button_id)
-    {
-        libgui_on_button_released(uic_btn_red, dc00);
-    }
-    else if (button_id == MyBtn_Green.button_id)
-    {
-        libgui_on_button_released(uic_btn_green, dc00);
-    }
-    else if (button_id == MyBtn_Blue.button_id)
-    {
-        libgui_on_button_released(uic_btn_blue, dc00);
-    }
-    else
-    {
-        // Unknown button
-        return;
-    }
+    int i;
+    for (i = 5; i >= 0 && d < end; i--)
+        *d++ = "0123456789ABCDEF"[(v >> (i * 4)) & 0xF];
+    return d;
 }
 
-static void on_button_clicked(int id)
+static void draw_status(void)
 {
-    if (id < 0) 
+    char line[160];
+    char *p = line;
+    char *end = line + sizeof(line) - 1;
+    unsigned long max_chars;
+    unsigned long top;
+    const char *tool_name = "Pen";
+
+    if ((void*) dc00 == NULL)
         return;
 
-    switch (id)
-    {
-        case 1:  // Clear
-            clear_canvas(); return;
-            break;
+    if (current_tool == TOOL_ERASER) tool_name = "Eraser";
+    if (current_tool == TOOL_FILL)   tool_name = "Fill";
 
-        case 2:  // Black
-            current_color = COLOR_BLACK;
-            //printf("paint: Pen = Black\n");
-            break;
+    p = sput(p, end, " ");
+    p = sput(p, end, tool_name);
+    p = sput(p, end, " | size ");
+    p = snum(p, end, (unsigned long) brush_size());
+    p = sput(p, end, " | #");
+    p = shex(p, end, current_color);
+    p = sput(p, end, " | P pen  E erase  F fill  C clear  [ ] size  K/R/G/B  Q quit");
+    *p = '\0';
 
-        case 3:  // Red
-            current_color = COLOR_RED;
-            //printf("paint: Pen = Red\n");
-            break;
+    // libgui_drawstring_dc() does not clip, so never exceed the width.
+    max_chars = (unsigned long) (canvas_w() / 8);
+    if (max_chars < sizeof(line))
+        line[max_chars] = '\0';
 
-        case 4:  // Green
-            current_color = COLOR_GREEN;
-            //printf("paint: Pen = Green\n");
-            break;
+    top = wi.cr_height - FOOTER_H;
 
-        case 5:  // Blue
-            current_color = COLOR_BLUE;
-            //printf("paint: Pen = Blue\n");
-            break;
-
-        default:
-            break;
-    };
+    paint_fill_rect(dc00, 0, (long) top, canvas_w(), FOOTER_H, LIBGUI_COLOR_PANEL_FACE);
+    libgui_drawstring_dc(
+        dc00, 
+        0, top + 5, 
+        0x00101010, LIBGUI_COLOR_PANEL_FACE, 
+        0, 
+        line );
 }
 
-// Hit-test for toolbar buttons
+// ====================================================
+// Toolbar
+// ====================================================
+
+static void draw_swatches(void)
+{
+    int i;
+    long x, y, w, h;
+
+    for (i = 0; i < SWATCH_COUNT; i++)
+    {
+        x = (long) Swatch[i].left;
+        y = (long) Swatch[i].top;
+        w = (long) Swatch[i].width;
+        h = (long) Swatch[i].height;
+
+        if (Palette[i] == (current_color & 0x00FFFFFF))
+        {
+            // Selected: black frame, white ring, colour
+            paint_fill_rect(dc00, x,     y,     w,     h,     0x00000000);
+            paint_fill_rect(dc00, x + 1, y + 1, w - 2, h - 2, 0x00FFFFFF);
+            paint_fill_rect(dc00, x + 2, y + 2, w - 4, h - 4, 0x00000000);
+            paint_fill_rect(dc00, x + 3, y + 3, w - 6, h - 6, Palette[i]);
+        }
+        else
+        {
+            paint_fill_rect(dc00, x,     y,     w,     h,     0x00404040);
+            paint_fill_rect(dc00, x + 1, y + 1, w - 2, h - 2, Palette[i]);
+        }
+    }
+}
+
+// Tool buttons look "sunken" while their tool is active.
+static void refresh_tool_buttons(void)
+{
+    int i;
+    int active_id = -1;
+
+    if (current_tool == TOOL_PEN)    active_id = BTN_PEN;
+    if (current_tool == TOOL_ERASER) active_id = BTN_ERASER;
+    if (current_tool == TOOL_FILL)   active_id = BTN_FILL;
+
+    for (i = 0; i < BTN_COUNT; i++)
+    {
+        if ((void*) Uic[i] == NULL)
+            continue;
+
+        if (Btn[i].button_id == active_id)
+            libgui_set_ui_component_status(Uic[i], BS_PRESSED);
+        else
+            libgui_set_ui_component_status(Uic[i], BS_RELEASED);
+
+        libgui_redraw_ui_component(Uic[i], dc00);
+    }
+}
+
+// Cheap refresh after a tool/colour/size change. No window-info query.
+static void refresh_toolbar_state(void)
+{
+    refresh_tool_buttons();
+    draw_swatches();
+    draw_status();
+}
+
+static void select_tool(int tool)
+{
+    current_tool = tool;
+    refresh_toolbar_state();
+}
+
+static void select_color(unsigned int color)
+{
+    current_color = (color & 0x00FFFFFF);
+    // Picking a colour while erasing goes back to the pen.
+    if (current_tool == TOOL_ERASER)
+        current_tool = TOOL_PEN;
+    refresh_toolbar_state();
+}
+
+static void change_size(int delta)
+{
+    int n = current_size_index + delta;
+    if (n < 0) n = 0;
+    if (n >= BRUSH_COUNT) n = BRUSH_COUNT - 1;
+    current_size_index = n;
+    draw_status();
+}
+
+// Lay out the toolbar and repaint it. The canvas is left intact
+// so the user's drawing survives MSG_PAINT.
+static void update_children(int fd)
+{
+    int i;
+    unsigned long toolbar_top;
+    unsigned long btn_w;
+    unsigned long sw_w = 40;
+    unsigned long sw_gap = 6;
+
+    gws_get_window_info(fd, main_window, &wi);
+
+    if ((void*) dc00 == NULL)
+        return;
+
+    toolbar_top = wi.cr_height - TOOLBAR_H;
+    btn_w = (wi.cr_width - (GAP * (BTN_COUNT + 1))) / BTN_COUNT;
+
+    // The current height for the area where the
+    // pointer is allowed to paint.
+    current_cr_height = toolbar_top;
+
+    // Toolbar background strip (buttons + swatches area)
+    paint_fill_rect(
+        dc00, 
+        0, (long) toolbar_top, 
+        (long) wi.cr_width, (TOOLBAR_H - FOOTER_H), 
+        COLOR_GRAY );
+
+    // ---- Row 1: buttons ----
+    for (i = 0; i < BTN_COUNT; i++)
+    {
+        Btn[i].left   = GAP + ((btn_w + GAP) * i);
+        Btn[i].top    = toolbar_top + ROW1_Y;
+        Btn[i].width  = btn_w;
+        Btn[i].height = ROW1_H;
+        Btn[i].absolute_left = wi.left + wi.cr_left + Btn[i].left;
+        Btn[i].absolute_top  = wi.top  + wi.cr_top  + Btn[i].top;
+
+        libgui_set_ui_component_position(Uic[i], Btn[i].left, Btn[i].top);
+        libgui_set_ui_component_dimension(Uic[i], Btn[i].width, Btn[i].height);
+        libgui_set_ui_component_flags(Uic[i], (0x0001 | 0x0002));
+    }
+
+    // ---- Row 2: swatches ----
+    for (i = 0; i < SWATCH_COUNT; i++)
+    {
+        Swatch[i].button_id = SWATCH_BASE + i;
+        Swatch[i].left   = GAP + ((sw_w + sw_gap) * i);
+        Swatch[i].top    = toolbar_top + ROW2_Y;
+        Swatch[i].width  = sw_w;
+        Swatch[i].height = ROW2_H;
+        Swatch[i].absolute_left = wi.left + wi.cr_left + Swatch[i].left;
+        Swatch[i].absolute_top  = wi.top  + wi.cr_top  + Swatch[i].top;
+    }
+
+    refresh_toolbar_state();
+}
+
+// ====================================================
+// Hit test and button handlers
+// ====================================================
+
+// Hit-test for toolbar buttons and swatches.
 static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my)
 {
-    if ( rel_mx >= MyBtn_Clear.left &&
-         rel_mx <= MyBtn_Clear.left + MyBtn_Clear.width &&
-         rel_my >= MyBtn_Clear.top  &&
-         rel_my <= MyBtn_Clear.top  + MyBtn_Clear.height )
+    int i;
+
+    for (i = 0; i < BTN_COUNT; i++)
     {
-        // printf("CLEAR: BINGO!\n");
-        return MyBtn_Clear.button_id;
+        if ( rel_mx >= Btn[i].left &&
+             rel_mx <  Btn[i].left + Btn[i].width &&
+             rel_my >= Btn[i].top  &&
+             rel_my <  Btn[i].top  + Btn[i].height )
+            return Btn[i].button_id;
     }
 
-    if ( rel_mx >= MyBtn_Black.left &&
-         rel_mx <= MyBtn_Black.left + MyBtn_Black.width &&
-         rel_my >= MyBtn_Black.top  &&
-         rel_my <= MyBtn_Black.top  + MyBtn_Black.height )
-        return MyBtn_Black.button_id;
-
-    if ( rel_mx >= MyBtn_Red.left &&
-         rel_mx <= MyBtn_Red.left + MyBtn_Red.width &&
-         rel_my >= MyBtn_Red.top  &&
-         rel_my <= MyBtn_Red.top  + MyBtn_Red.height )
-        return MyBtn_Red.button_id;
-
-    if ( rel_mx >= MyBtn_Green.left &&
-         rel_mx <= MyBtn_Green.left + MyBtn_Green.width &&
-         rel_my >= MyBtn_Green.top  &&
-         rel_my <= MyBtn_Green.top  + MyBtn_Green.height )
-        return MyBtn_Green.button_id;
-
-    if ( rel_mx >= MyBtn_Blue.left &&
-         rel_mx <= MyBtn_Blue.left + MyBtn_Blue.width &&
-         rel_my >= MyBtn_Blue.top  &&
-         rel_my <= MyBtn_Blue.top  + MyBtn_Blue.height )
-        return MyBtn_Blue.button_id;
+    for (i = 0; i < SWATCH_COUNT; i++)
+    {
+        if ( rel_mx >= Swatch[i].left &&
+             rel_mx <  Swatch[i].left + Swatch[i].width &&
+             rel_my >= Swatch[i].top  &&
+             rel_my <  Swatch[i].top  + Swatch[i].height )
+            return Swatch[i].button_id;
+    }
 
     return -1;
 }
 
-// ----------------------------------------------------
-// Only redraws the toolbar + footer.  The canvas is left intact
-// so the user’s drawing survives MSG_PAINT.
-static void update_children(int fd)
+// For visual effects (only real buttons have a pressed look)
+static void on_button_pressed(int button_id)
 {
-    gws_get_window_info(fd, main_window, &wi);
-
-    if ((void*)dc00 == NULL) 
+    if (button_id < 1 || button_id > BTN_COUNT)
         return;
-
-    unsigned long btn_w = (wi.cr_width - 40) / 5;
-    unsigned long btn_h = 28;
-    unsigned long btn_y = wi.cr_height - TOOLBAR_H + 6;
-    unsigned long gap   = 8;
-
-    // Toolbar background strip
-    lingui_draw_rectangle0_dc (
-        dc00,
-        0, wi.cr_height - TOOLBAR_H,
-        wi.cr_width, TOOLBAR_H,
-        COLOR_GRAY,
-        0 );
-
-    // ---- Clear ----
-    // Relative values
-    MyBtn_Clear.left = gap;  
-    MyBtn_Clear.top  = btn_y;
-    MyBtn_Clear.width  = btn_w;
-    MyBtn_Clear.height = btn_h;
-    MyBtn_Clear.absolute_left = wi.left + wi.cr_left + MyBtn_Clear.left;
-    MyBtn_Clear.absolute_top  = wi.top  + wi.cr_top  + MyBtn_Clear.top;
-
-    libgui_set_ui_component_position(uic_btn_clear, MyBtn_Clear.left, MyBtn_Clear.top);
-    libgui_set_ui_component_dimension(uic_btn_clear, btn_w, btn_h);
-    libgui_set_ui_component_flags(uic_btn_clear, (0x0001 | 0x0002));
-    libgui_redraw_ui_component(uic_btn_clear, dc00);
-
-    // ---- Black ----
-    MyBtn_Black.left = gap + (btn_w + gap)*1;
-    MyBtn_Black.top  = btn_y;
-    MyBtn_Black.width  = btn_w;
-    MyBtn_Black.height = btn_h;
-    MyBtn_Black.absolute_left = wi.left + wi.cr_left + MyBtn_Black.left;
-    MyBtn_Black.absolute_top  = wi.top  + wi.cr_top  + MyBtn_Black.top;
-
-    libgui_set_ui_component_position(uic_btn_black, MyBtn_Black.left, MyBtn_Black.top);
-    libgui_set_ui_component_dimension(uic_btn_black, btn_w, btn_h);
-    libgui_set_ui_component_flags(uic_btn_black, (0x0001 | 0x0002));
-    libgui_redraw_ui_component(uic_btn_black, dc00);
-
-    // ---- Red ----
-    MyBtn_Red.left = gap + (btn_w + gap)*2;
-    MyBtn_Red.top  = btn_y;
-    MyBtn_Red.width  = btn_w;
-    MyBtn_Red.height = btn_h;
-    MyBtn_Red.absolute_left = wi.left + wi.cr_left + MyBtn_Red.left;
-    MyBtn_Red.absolute_top  = wi.top  + wi.cr_top  + MyBtn_Red.top;
-
-    libgui_set_ui_component_position(uic_btn_red, MyBtn_Red.left, MyBtn_Red.top);
-    libgui_set_ui_component_dimension(uic_btn_red, btn_w, btn_h);
-    libgui_set_ui_component_flags(uic_btn_red, (0x0001 | 0x0002));
-    libgui_redraw_ui_component(uic_btn_red, dc00);
-
-    // ---- Green ----
-    MyBtn_Green.left = gap + (btn_w + gap)*3;
-    MyBtn_Green.top  = btn_y;
-    MyBtn_Green.width  = btn_w;
-    MyBtn_Green.height = btn_h;
-    MyBtn_Green.absolute_left = wi.left + wi.cr_left + MyBtn_Green.left;
-    MyBtn_Green.absolute_top  = wi.top  + wi.cr_top  + MyBtn_Green.top;
-
-    libgui_set_ui_component_position(uic_btn_green, MyBtn_Green.left, MyBtn_Green.top);
-    libgui_set_ui_component_dimension(uic_btn_green, btn_w, btn_h);
-    libgui_set_ui_component_flags(uic_btn_green, (0x0001 | 0x0002));
-    libgui_redraw_ui_component(uic_btn_green, dc00);
-
-    // ---- Blue ----
-    MyBtn_Blue.left = gap + (btn_w + gap)*4;
-    MyBtn_Blue.top  = btn_y;
-    MyBtn_Blue.width  = btn_w;
-    MyBtn_Blue.height = btn_h;
-    MyBtn_Blue.absolute_left = wi.left + wi.cr_left + MyBtn_Blue.left;
-    MyBtn_Blue.absolute_top  = wi.top  + wi.cr_top  + MyBtn_Blue.top;
-
-    libgui_set_ui_component_position(uic_btn_blue, MyBtn_Blue.left, MyBtn_Blue.top);
-    libgui_set_ui_component_dimension(uic_btn_blue, btn_w, btn_h);
-    libgui_set_ui_component_flags(uic_btn_blue, (0x0001 | 0x0002));
-    libgui_redraw_ui_component(uic_btn_blue, dc00);
-
-    // Footer (very bottom)
-    libgui_set_ui_component_position(uic_footer, 0, wi.cr_height - 18);
-    libgui_set_ui_component_dimension(uic_footer, wi.cr_width, 18);
-    libgui_set_ui_component_flags(uic_footer, (0x0001 | 0x0002));
-    libgui_redraw_ui_component(uic_footer, dc00);
-
-// The current height for the area where the
-// pointer is allowed to paint.
-    current_cr_height = wi.cr_height - TOOLBAR_H;
+    libgui_on_button_pressed(Uic[button_id - 1], dc00);
 }
 
-// ----------------------------------------------------
+// For visual effects
+static void on_button_released(int button_id)
+{
+    if (button_id < 1 || button_id > BTN_COUNT)
+        return;
+    libgui_on_button_released(Uic[button_id - 1], dc00);
+}
+
+static void on_button_clicked(int id)
+{
+    if (id < 0)
+        return;
+
+    // Palette
+    if (id >= SWATCH_BASE && id < (SWATCH_BASE + SWATCH_COUNT))
+    {
+        select_color(Palette[id - SWATCH_BASE]);
+        return;
+    }
+
+    switch (id)
+    {
+        case BTN_CLEAR:
+            clear_canvas();
+            refresh_toolbar_state();   // restore the tool highlight
+            break;
+        case BTN_PEN:     select_tool(TOOL_PEN);    break;
+        case BTN_ERASER:  select_tool(TOOL_ERASER); break;
+        case BTN_FILL:    select_tool(TOOL_FILL);   break;
+        case BTN_SIZE_DN: change_size(-1); refresh_tool_buttons(); break;
+        case BTN_SIZE_UP: change_size(+1); refresh_tool_buttons(); break;
+        default: break;
+    };
+}
+
+// ====================================================
+// The procedure
+// ====================================================
 static int
 paintProcedure(
     int fd,
@@ -443,7 +740,9 @@ paintProcedure(
     unsigned long long1,
     unsigned long long2 )
 {
-    int ButtonId = -1;
+    int id = -1;
+    long cw = 0;
+    long ch = 0;
 
     if (fd < 0) return -1;
     if (event_window < 0) return -1;
@@ -463,32 +762,24 @@ paintProcedure(
     case MSG_KEYDOWN:
         switch (long1){
 
-        case 'C':
-        case 'c':
+        case 'C': case 'c':
             clear_canvas();
-            return 0;
+            refresh_toolbar_state();
             break;
-        case 'K':
-        case 'k':
-            current_color = COLOR_BLACK;
-            break;
-        case 'R':
-        case 'r':
-            current_color = COLOR_RED;
-            break;
-        case 'G':
-        case 'g':
-            current_color = COLOR_GREEN;
-            break;
-        case 'B':
-        case 'b':
-            current_color = COLOR_BLUE;
-            break;
-        case 'Q':
-        case 'q':
+        case 'P': case 'p':  select_tool(TOOL_PEN);    break;
+        case 'E': case 'e':  select_tool(TOOL_ERASER); break;
+        case 'F': case 'f':  select_tool(TOOL_FILL);   break;
+
+        case 'K': case 'k':  select_color(0x00000000); break;
+        case 'R': case 'r':  select_color(0x00FF0000); break;
+        case 'G': case 'g':  select_color(0x0000A000); break;
+        case 'B': case 'b':  select_color(0x000000FF); break;
+
+        case '[': case '-':  change_size(-1); break;
+        case ']': case '+': case '=':  change_size(+1); break;
+
+        case 'Q': case 'q':
             isTimeToQuit = TRUE;  // Quit the application
-            // #test: This syscall quit the server
-            // gws_async_command(fd, 88, 0, 0);
             break;
         };
         return 0;
@@ -498,38 +789,45 @@ paintProcedure(
         // F1 = clear, F2-F5 = colours
         switch (long1)
         {
-        case VK_F1: clear_canvas(); return 0;    break;
-        case VK_F2: current_color = COLOR_BLACK; break;
-        case VK_F3: current_color = COLOR_RED;   break;
-        case VK_F4: current_color = COLOR_GREEN; break;
-        case VK_F5: current_color = COLOR_BLUE;  break;
+        case VK_F1: clear_canvas(); refresh_toolbar_state(); break;
+        case VK_F2: select_color(0x00000000); break;
+        case VK_F3: select_color(0x00FF0000); break;
+        case VK_F4: select_color(0x0000A000); break;
+        case VK_F5: select_color(0x000000FF); break;
         }
+        return 0;
         break;
 
     case MSG_MOUSEMOVE:
 
-        // printf(".\n");
-        // long1/long2 are currently absolute – the hit-test still works
-        // for the toolbar.  For drawing we use the relative values
-        // that the procedure receives.
-        ButtonId = __hit_test_button(long1, long2);
-        if (ButtonId > 0){
-            __hover_button_id = ButtonId;
-        } else {
-            __hover_button_id = -1;
-        }
-        
-        CantPaint = FALSE;
-        if (long2 >= current_cr_height)
-            CantPaint = TRUE;
+        // long1/long2 carry the pointer position for the toolbar hit-test
+        // and for drawing.
+        id = __hit_test_button(long1, long2);
+        __hover_button_id = id;
 
-        if (CantPaint != TRUE)
+        if (is_drawing == TRUE)
         {
-            if (is_drawing == TRUE)
+            cw = canvas_w();
+            ch = canvas_h();
+
+            if ((long) long1 < cw && (long) long2 < ch)
             {
-                draw_pixel(long1, long2);
-                last_x = long1;
-                last_y = long2;
+                if (has_prev == TRUE)
+                    paint_stroke(prev_x, prev_y, (long) long1, (long) long2,
+                                 brush_size(), brush_color());
+                else
+                    paint_stamp((long) long1, (long) long2,
+                                brush_size(), brush_color());
+
+                prev_x = (long) long1;
+                prev_y = (long) long2;
+                has_prev = TRUE;
+            }
+            else
+            {
+                // Left the canvas: the stroke continues when we come back,
+                // but without a connecting line.
+                has_prev = FALSE;
             }
         }
 
@@ -538,33 +836,39 @@ paintProcedure(
 
     case MSG_MOUSEPRESSED:
 
-        // It started inside the valid area
-        // #bugbug: This is wrong. long2 is carries the button number (maybe)
-        // Maybe we need to use last_y here
-        if (long2 < current_cr_height)
-            is_drawing = TRUE;
+        // In the case of pressed, long1 and long2 carry the button
+        // numbers. The pointer position is in last_x/last_y
+        // (saved by the input loop from RTLEventBuffer[4]/[5]).
 
-        if (is_drawing == TRUE)
+        __pressed_button_id = -1;
+        cw = canvas_w();
+        ch = canvas_h();
+
+        if ((long) last_x < cw && (long) last_y < ch)
         {
-            // #debug
-            // In the case of pressed, long1 and long2 
-            // carries the button numbers.
-            // The mouse positions are in long3 and long4
-            // That were saved in last_x and last_y
-
-            if (last_y >= current_cr_height)
-                CantPaint = TRUE;
-
-            if (CantPaint != TRUE)
-                draw_pixel(last_x, last_y);
+            // Inside the canvas
+            if (current_tool == TOOL_FILL)
+            {
+                flood_fill((long) last_x, (long) last_y, current_color);
+            }
+            else
+            {
+                is_drawing = TRUE;
+                paint_stamp((long) last_x, (long) last_y,
+                            brush_size(), brush_color());
+                prev_x = (long) last_x;
+                prev_y = (long) last_y;
+                has_prev = TRUE;
+            }
         }
-
-        // #test
-        // Inside the toolbar
-        if (is_drawing != TRUE)
+        else
         {
-            if (last_y >= current_cr_height)
-                on_button_pressed(__hover_button_id);
+            // Inside the toolbar
+            id = __hit_test_button(last_x, last_y);
+            if (id < 0)
+                id = __hover_button_id;
+            __pressed_button_id = id;
+            on_button_pressed(id);
         }
 
         return 0;
@@ -574,15 +878,20 @@ paintProcedure(
 
         // Not drawing anymore
         is_drawing = FALSE;
+        has_prev = FALSE;
 
-        // #bugbug:
-        // We can't use this condition. Why?
-        //if (long2 >= current_cr_height)
-        //{
-            //printf("paint: Button released: %d\n", __hover_button_id);
-            on_button_released(__hover_button_id);
-            on_button_clicked(__hover_button_id);
-        //}
+        if (__pressed_button_id >= 0)
+        {
+            on_button_released(__pressed_button_id);
+
+            // A click only counts if we are still over the same button
+            if (__pressed_button_id == __hover_button_id)
+                on_button_clicked(__pressed_button_id);
+            else
+                refresh_tool_buttons();   // restore highlight
+
+            __pressed_button_id = -1;
+        }
 
         return 0;
         break;
@@ -600,32 +909,13 @@ paintProcedure(
 }
 
 // ----------------------------------------------------
-static void pump(int fd)
-{
-    struct gws_event_d event;
-    event.used  = FALSE;
-    event.magic = 0;
-    event.type  = 0;
-
-    struct gws_event_d *e;
-    e = (struct gws_event_d *) gws_get_next_event(
-            fd, (int) main_window, (struct gws_event_d *) &event);
-
-    if ((void*)e == NULL) return;
-    if (e->magic != 1234 || e->used != TRUE) return;
-    if (e->type <= 0) return;
-
-    paintProcedure(fd, e->window, e->type, e->long1, e->long2);
-}
-
-// ----------------------------------------------------
 int main(int argc, char *argv[])
 {
     const char *display_name = "display:name.0";
     int client_fd = -1;
+    int i;
 
     isTimeToQuit = FALSE;
-    CantPaint = TRUE;
 
     Display = gws_open_display(display_name);
     if ((void*)Display == NULL) {
@@ -649,19 +939,10 @@ int main(int argc, char *argv[])
     }
 
     // Main window
-    //unsigned long win_w = screen_w / 2;
-    //unsigned long win_h = screen_h / 2;
-    //unsigned long win_x = screen_w / 4;
-    //unsigned long win_y = screen_h / 4;
-
-    // Main window
     unsigned long win_w = screen_w -20;
     unsigned long win_h = screen_h -40;
     unsigned long win_x = 10;
     unsigned long win_y = 10;
-
-    // window_x = win_x;
-    // window_y = win_y;
 
     main_window = (int) gws_create_window(
             client_fd,
@@ -680,8 +961,6 @@ int main(int argc, char *argv[])
     }
 
     // Window info
-    // struct gws_window_info_d wi;
-
     gws_get_window_info(client_fd, main_window, &wi);
 
     // wproxy update
@@ -712,122 +991,41 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    // Initial white canvas
-    lingui_draw_rectangle0_dc(
-            dc00,
-            0, 0, wi.cr_width, wi.cr_height,
-            COLOR_WHITE, 0);
-
-    // Help text at the top
-    libgui_drawstringblock_dc(
-            dc00,
-            8, 8,
-            COLOR_BLACK,
-            "Drag mouse to draw.  C=Clear  K/R/G/B=Colour  Q=Quit",
-            1);
-
-    // ---- Create toolbar buttons ----
-    unsigned long btn_w = (wi.cr_width - 40) / 5;
-    unsigned long btn_h = 28;
-    unsigned long btn_y = wi.cr_height - TOOLBAR_H + 6;
-    unsigned long gap   = 8;
-
-//
-// Clear
-//
-
-    MyBtn_Clear.button_id = 1;
-
-    // relative values
-    MyBtn_Clear.left = gap;  
-    MyBtn_Clear.top = btn_y;
-    MyBtn_Clear.width = btn_w; 
-    MyBtn_Clear.height = btn_h;
-
-    uic_btn_clear = libgui_create_ui_component(
-            dc00, 
-            UI_COMPONENT_BUTTON,
-            MyBtn_Clear.left, MyBtn_Clear.top,
-            MyBtn_Clear.width, MyBtn_Clear.height,
-            "Clear", (0x0001 | 0x0002));
-
-//
-// Black
-//
-
-    MyBtn_Black.button_id = 2;
-    MyBtn_Black.left = gap + (btn_w+gap)*1; MyBtn_Black.top = btn_y;
-    MyBtn_Black.width = btn_w; MyBtn_Black.height = btn_h;
-    uic_btn_black = libgui_create_ui_component(
-            dc00, 
-            UI_COMPONENT_BUTTON,
-            MyBtn_Black.left, MyBtn_Black.top,
-            MyBtn_Black.width, MyBtn_Black.height,
-            "Black", (0x0001 | 0x0002));
-
-//
-// Red
-//
-
-    MyBtn_Red.button_id = 3;
-    MyBtn_Red.left = gap + (btn_w+gap)*2; MyBtn_Red.top = btn_y;
-    MyBtn_Red.width = btn_w; MyBtn_Red.height = btn_h;
-    uic_btn_red = libgui_create_ui_component(
-            dc00, 
-            UI_COMPONENT_BUTTON,
-            MyBtn_Red.left, MyBtn_Red.top,
-            MyBtn_Red.width, MyBtn_Red.height,
-            "Red", (0x0001 | 0x0002));
-
-//
-// Green
-//
-
-    MyBtn_Green.button_id = 4;
-    MyBtn_Green.left = gap + (btn_w+gap)*3; MyBtn_Green.top = btn_y;
-    MyBtn_Green.width = btn_w; MyBtn_Green.height = btn_h;
-    uic_btn_green = libgui_create_ui_component(
-            dc00, 
-            UI_COMPONENT_BUTTON,
-            MyBtn_Green.left, MyBtn_Green.top,
-            MyBtn_Green.width, MyBtn_Green.height,
-            "Green", (0x0001 | 0x0002));
-
-//
-// Blue
-//
-
-    MyBtn_Blue.button_id = 5;
-    MyBtn_Blue.left = gap + (btn_w+gap)*4; MyBtn_Blue.top = btn_y;
-    MyBtn_Blue.width = btn_w; MyBtn_Blue.height = btn_h;
-    uic_btn_blue = libgui_create_ui_component(
-            dc00, 
-            UI_COMPONENT_BUTTON,
-            MyBtn_Blue.left, MyBtn_Blue.top,
-            MyBtn_Blue.width, MyBtn_Blue.height,
-            "Blue", (0x0001 | 0x0002));
-
-    // Footer
-    uic_footer = libgui_create_ui_component(
-            dc00,
-            UI_COMPONENT_FOOTER,
-            0, wi.cr_height - 18,
-            wi.cr_width, 18,
-            "-- paint --",
-            (0x0001 | 0x0002));
-
-
-// The current height for the area where the
-// pointer is allowed to paint.
+    // The current height for the area where the
+    // pointer is allowed to paint.
     current_cr_height = wi.cr_height - TOOLBAR_H;
 
-    // First toolbar paint
+    // Initial white canvas
+    paint_fill_rect(dc00, 0, 0, (long) wi.cr_width, (long) wi.cr_height, COLOR_WHITE);
+
+    // ---- Create toolbar buttons (positions are fixed up by update_children) ----
+    unsigned long btn_w = (wi.cr_width - (GAP * (BTN_COUNT + 1))) / BTN_COUNT;
+    unsigned long btn_y = current_cr_height + ROW1_Y;
+
+    for (i = 0; i < BTN_COUNT; i++)
+    {
+        Btn[i].button_id = i + 1;
+        Btn[i].left   = GAP + ((btn_w + GAP) * i);
+        Btn[i].top    = btn_y;
+        Btn[i].width  = btn_w;
+        Btn[i].height = ROW1_H;
+
+        Uic[i] = libgui_create_ui_component(
+                dc00,
+                UI_COMPONENT_BUTTON,
+                Btn[i].left, Btn[i].top,
+                Btn[i].width, Btn[i].height,
+                BtnLabel[i], (0x0001 | 0x0002));
+    }
+
+    // First toolbar paint (also paints swatches and the status line)
     update_children(client_fd);
 
     gws_set_active(client_fd, main_window);
 
     // -------------------- Event loop --------------------
-    int nSysMsg = 0;
+    // Same loop as before: one cheap check of the shared flags and one
+    // event poll per iteration. The procedure does all the work.
     while (1)
     {
         if (isTimeToQuit == TRUE)
@@ -844,41 +1042,21 @@ int main(int argc, char *argv[])
             }
         }
 
-        // 1. Display-server events
-        // #ps: This is super slow ... 
-        // maybe we can review it in all the apps.
-        // pump(client_fd);
+        // Input-broker events
+        if (rtl_get_event() == TRUE)
+        {
+            last_x = (unsigned long) RTLEventBuffer[4];
+            last_y = (unsigned long) RTLEventBuffer[5];
 
-        // Get current mouse position
-        // get_current_mouse_position();
+            paintProcedure(
+                client_fd,
+                (int) RTLEventBuffer[0],
+                (int) RTLEventBuffer[1],
+                (unsigned long) RTLEventBuffer[2],
+                (unsigned long) RTLEventBuffer[3] );
 
-        //if (is_drawing == TRUE)
-        //{
-            //printf("x=%d y=%d\n",CurrentMousePosition.x,CurrentMousePosition.y);
-            //draw_pixel(CurrentMousePosition.x, CurrentMousePosition.y);
-            //last_x = CurrentMousePosition.x;
-            //last_y = CurrentMousePosition.y;
-        //}
-
-        // 2. Input-broker events
-        //for (nSysMsg = 0; nSysMsg < 32; nSysMsg++)
-        //{
-            if (rtl_get_event() == TRUE)
-            {
-
-                last_x = (unsigned long) RTLEventBuffer[4];
-                last_y = (unsigned long) RTLEventBuffer[5];
-
-                paintProcedure(
-                    client_fd,
-                    (int) RTLEventBuffer[0],
-                    (int) RTLEventBuffer[1],
-                    (unsigned long) RTLEventBuffer[2],
-                    (unsigned long) RTLEventBuffer[3] );
-
-                RTLEventBuffer[1] = 0;
-            }
-        //}
+            RTLEventBuffer[1] = 0;
+        }
     }
 
     if (isTimeToQuit == TRUE){
@@ -891,3 +1069,4 @@ int main(int argc, char *argv[])
 
     return EXIT_SUCCESS;
 }
+
