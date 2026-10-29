@@ -149,7 +149,7 @@ struct thread_d *create_init_thread(void)
     t->irql = IRQL_NULL;
 
 //
-// Temporizadores.
+// Temporizadores
 //
 
     // Jiffies
@@ -328,6 +328,8 @@ struct thread_d *create_init_thread(void)
     t->state = INITIALIZED;
     t->used = TRUE;
     t->magic = 1234;
+
+    KEInfo.threads_created++;
 
 // == Execution ===============================
 // #todo

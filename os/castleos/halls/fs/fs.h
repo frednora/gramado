@@ -6,6 +6,15 @@
 #ifndef __FS_FS_H
 #define __FS_FS_H    1
 
+struct fs_info_d 
+{
+    int initialized;
+    //unsigned countstuff;
+    // ...
+};
+extern struct fs_info_d FSInfo;
+
+
 //
 // FILES ?
 //

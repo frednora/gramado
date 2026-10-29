@@ -6,6 +6,16 @@
 #ifndef __MM_MM_H
 #define __MM_MM_H    1
 
+
+struct mm_info_d
+{
+    int initialized;
+    //unsigned long countstuff;
+    // ...
+};
+extern struct mm_info_d MMInfo;
+
+
 // Aligns a value on a boundary.
 //#define ALIGN(x, a)    (((x) + ((a) - 1)) & ~((a) - 1))
 

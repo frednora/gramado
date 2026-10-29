@@ -8,6 +8,9 @@
 
 #include <kernel.h>
 
+struct mm_info_d MMInfo;
+
+
 // List of main physical addresses.
 unsigned long paList[32];
 // List of main virtual addresses.
@@ -529,7 +532,6 @@ unsigned long heapAllocateMemory(unsigned long size)
 // Se falhamos, retorna 0. Que equivalerá à NULL.
 
 fail:
-    // refresh_screen();
     return (unsigned long) 0;
 }
 
@@ -970,6 +972,8 @@ int mmInitialize(int phase)
 
     if (phase == 0){
 
+        MMInfo.initialized = FALSE;
+
         // Video support
         wink_initialize_video();
 
@@ -1043,6 +1047,8 @@ int mmInitialize(int phase)
             x_panic("mmInitialize: Paging");
         }
 
+        MMInfo.initialized = TRUE;
+
         // End of phase 1.
         goto InitializeEnd;
     } else {
@@ -1053,13 +1059,11 @@ int mmInitialize(int phase)
 InitializeEnd:
     //#debug
     //debug_print("mmInitialize: done\n");
-    //refresh_screen();
     //while(1){}
     return TRUE;
 
 fail:
     debug_print("mmInitialize: fail\n");
-    //refresh_screen();
     //while(1){}
     return FALSE;
 }

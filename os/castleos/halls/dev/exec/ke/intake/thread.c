@@ -806,7 +806,7 @@ int thread_profiler(int service, int lapic_id)
             profiler_percentage_idle_thread = 
                 Idle->profiler_percentage_running ;
             
-            return 0;  //ok done.
+            return 0;  // ok done
 
             break;
 
@@ -973,8 +973,7 @@ int exit_thread(tid_t tid)
         panic ("exit_thread: Idle validation\n");
     }
 // Are we trying to exit the init thread?
-    if (tid == Idle->tid)
-    {
+    if (tid == Idle->tid){
         panic ("exit_thread: We can't kill the Idle thread\n");
     }
 
@@ -1317,7 +1316,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 
 // Stack frame
     clone->context.ss = 
-        (unsigned short) (father->context.ss & 0xFFFF);    // RING 3.
+        (unsigned short) (father->context.ss & 0xFFFF);    // RING 3
     clone->context.rsp = 
         (unsigned long) father->context.rsp;   // wrong
     clone->context.rflags = 
@@ -1332,12 +1331,12 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
         (unsigned long) father->initial_rip; 
 
 // check iopl
-     int cpl=-1;
-     cpl = (int) (clone->context.cs & 0xFF);
-     cpl = (int) (cpl & 3);
-     if (cpl != 3){
-         panic("copy_thread_struct: cpl\n");
-     }
+    int cpl=-1;
+    cpl = (int) (clone->context.cs & 0xFF);
+    cpl = (int) (cpl & 3);
+    if (cpl != 3){
+        panic("copy_thread_struct: cpl\n");
+    }
 
 // #bugbug:
 // We need the initial stack address
@@ -1400,8 +1399,8 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // ORDEM:
 // O que segue é referenciado com pouca frequência.
 
-    clone->waitingCount = father->waitingCount;  //Tempo esperando algo.
-    clone->blockedCount = father->blockedCount;  //Tempo bloqueada.
+    clone->waitingCount = father->waitingCount;  //Tempo esperando algo
+    clone->blockedCount = father->blockedCount;  //Tempo bloqueada
 
 // The 'thread environment' structure. (fka process)
 // Same as the father.
@@ -1444,7 +1443,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 	while(1){}
 */
     
-// Returning the pointer for the clone.
+// Returning the pointer for the clone
     return (struct thread_d *) clone;
 }
 
@@ -1987,6 +1986,8 @@ struct thread_d *create_thread (
         name,
         cpl
     );
+
+    KEInfo.threads_created++;
 
     return (struct thread_d *) thread;
 }

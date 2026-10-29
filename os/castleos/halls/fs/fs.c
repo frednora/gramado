@@ -4,6 +4,8 @@
 
 #include <kernel.h>
 
+struct fs_info_d FSInfo;
+
 
 struct target_dir_d  current_target_dir;
 
@@ -1046,10 +1048,14 @@ fail:
 // Called by I_initKernelComponents() in x64init.c
 int fsInitialize(void)
 {
+
+
     // #ps: Not a local worker.
     // Change name?
     // see: fslib.c.
     __fs_initialize_imp();
+
+
 
     return 0;
 }

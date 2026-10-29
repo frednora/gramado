@@ -1809,6 +1809,8 @@ struct te_d *create_process (
         personality
     );
 
+    KEInfo.processes_created++;
+
     return (struct te_d *) te;
 }
 

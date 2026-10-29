@@ -4,6 +4,17 @@
 #ifndef __KE_KE_H
 #define __KE_KE_H    1
 
+
+struct ke_info_d 
+{
+    int initialized;
+    unsigned long processes_created;
+    unsigned long threads_created;
+    // ...
+};
+extern struct ke_info_d KEInfo;
+
+
 void keDie(void);
 void keSoftDie(void);
 int keReboot(void);

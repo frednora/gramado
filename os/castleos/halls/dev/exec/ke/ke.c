@@ -4,9 +4,9 @@
 
 #include <kernel.h>
 
-// 
-// Imports
-//
+
+struct ke_info_d KEInfo;
+
 
 // ============================
 static unsigned long presence_level=32;
@@ -606,7 +606,11 @@ int keInitialize(int phase)
 
         // serial_printk("phase %d\n",phase);
 
-        // kernel font.
+        KEInfo.initialized = FALSE;
+        KEInfo.processes_created = 0;
+        KEInfo.threads_created = 0;
+
+        // kernel font
         wink_initialize_default_kernel_font();
         // Initializing background for the very first time.
         wink_initialize_background();
@@ -737,6 +741,8 @@ int keInitialize(int phase)
         // ?? At this moment we already initialized the e1000 driver.
         // See: network.c
         // networkInit();
+
+        KEInfo.initialized = TRUE;
 
         goto InitializeEnd;
 
