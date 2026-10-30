@@ -9,8 +9,9 @@ all:
 	make -C power/
 	make -C sysinfo/
 
-
 	make -C paint/
+#	make -C studio/
+
 
 clean:
 #todo

@@ -31,6 +31,9 @@
 static int font_width  = (8 * SCALE_FACTOR);
 static int font_height = (8 * SCALE_FACTOR);
 
+#define SB_SCALE_FACTOR  2
+static int sb_font_width  = (8 * SB_SCALE_FACTOR);
+static int sb_font_height = (8 * SB_SCALE_FACTOR);
 static int UseStatusbar = TRUE;
 
 // -------------------------------------
@@ -812,6 +815,9 @@ editorSetCursor(
 static void editorDrawStatusBar(void)
 {
     struct dccanvas_d *dc;
+
+    unsigned int BgColor = COLOR_LIGHTGRAY;
+    unsigned int FgColor = COLOR_BLACK;
    
     dc = dc00;
 
@@ -821,7 +827,7 @@ static void editorDrawStatusBar(void)
     if (!dc || !text_buffer) 
         return;
 
-    unsigned long sb_height = font_height *3;  //24;
+    unsigned long sb_height = (sb_font_height * 3);
     unsigned long sb_left   = 0;
     unsigned long sb_top    = cr_height - sb_height;
     unsigned long sb_width  = cr_width;
@@ -830,34 +836,34 @@ static void editorDrawStatusBar(void)
     lingui_draw_rectangle0_dc(
         dc,
         sb_left, sb_top, sb_width, sb_height,
-        COLOR_LIGHTGRAY,  // background
-        0                 // ROP
+        BgColor,
+        0         // ROP
     );
 
     // Build status string from cursor position
-    char status[64];
-    sprintf( status, "Ln %d | Col %d", 
+    static char status_buf[64];
+    sprintf( status_buf, "Ln %d | Col %d", 
         cursor_y + 1, cursor_x + 1 );
 
     libgui_drawstringblock_dc(
         dc, 
-        sb_left + (8 * SCALE_FACTOR), 
-        sb_top + (6 * SCALE_FACTOR), 
-        COLOR_BLACK, 
-        status, 
-        SCALE_FACTOR 
+        sb_left + (8 * SB_SCALE_FACTOR), 
+        sb_top + (6 * SB_SCALE_FACTOR), 
+        FgColor, 
+        status_buf, 
+        SB_SCALE_FACTOR 
     );
 
     /*
-    // Draw string into the status bar
+    // Draw string into the status bar without scale factor
     libgui_drawstring_dc(
         dc,
         sb_left + 8,        // x offset
         sb_top + 6,         // y offset
         COLOR_BLACK,        // foreground
         COLOR_LIGHTGRAY,    // background
-        0, 
-        status
+        0,                  // ROP
+        status_buf
     );
     */
 }
@@ -882,6 +888,9 @@ static int editorDrawInSmallBuffer(void)
     );
 
 // Draw at position (2, 2) inside the small buffer
+// #bugbug:
+// libgui_drawstring_dc() does not clip, so never exceed the width.
+
     libgui_drawstring_dc(
         small_dc,
         2, 2,                 // x, y
@@ -938,17 +947,14 @@ editorProcedure(
         break;
 
     case MSG_PAINT:
+        // Redraw the window chrome and client area
+        // Redraw the text buffer contents
+        // Draw the status bar
         if (event_window == main_window)
         {
-            // Redraw the window chrome and client area
             update_clients(fd);
-
-            // Redraw the text buffer contents
             editorRedrawBuffer(dc00);
-
-            // Draw the status bar
             editorDrawStatusBar();
-
             return 0;
         }
         break;

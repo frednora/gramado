@@ -1,0 +1,1993 @@
+// main.c
+// Main file for desktop.bin application. (Explorer-like)
+// Program image: desktop.bin 
+// Created by Fred Nora
+
+/*
+ *    Client side application for Gramado Window Server.
+ *    Using socket to connect with gws.
+ *    AF_GRAMADO family.
+ *    #warning:
+ *    This application is using floating point.
+ */
+
+// #todo
+// This is gonna be a command line interpreter application.
+// It will looks like the old gdeshell application.
+// #todo: See the 32bit version of gdeshell.
+// #todo
+// We can have a custom status bar in this client.
+// goal: Identity purpose.
+// tutorial example taken from. 
+// https://www.tutorialspoint.com/unix_sockets/socket_server_example.htm
+ 
+/*
+    To make a process a TCP server, you need to follow the steps given below −
+    Create a socket with the socket() system call.
+    Bind the socket to an address using the bind() system call. 
+    For a server socket on the Internet, an address consists of a 
+    port number on the host machine.
+    Listen for connections with the listen() system call.
+    Accept a connection with the accept() system call. 
+    This call typically blocks until a client connects with the server.
+    Send and receive data using the read() and write() system calls.
+*/ 
+
+// See:
+// https://wiki.osdev.org/Message_Passing_Tutorial
+// https://wiki.osdev.org/Synchronization_Primitives
+// ...
+ 
+
+// rtl
+#include <types.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <math.h>
+#include <netdb.h>
+#include <netinet/in.h>
+//#include <arpa/inet.h>
+#include <sys/socket.h>
+#include <rtl/gramado.h>
+
+// libgws - The client-side library.
+#include <gws.h>
+
+// The client-side library
+#include <libgui.h>
+
+#include "theme.h"
+
+#include "desktop.h"
+
+
+static unsigned long __sh_flags = 0;
+
+// Network ports
+#define PORTS_WS  4040
+#define PORTS_NS  4041
+#define PORTS_FS  4042
+// ...
+
+#define IP(a, b, c, d) \
+    (a << 24 | b << 16 | c << 8 | d)
+
+
+// Colors
+// #define DEFAULT_TB_BACKGROUND_COLOR  COLOR_WHITE
+// #define HONEY_COLOR_TASKBAR  0x00C3C3C3 
+// #define MYGREEN  0x0b6623
+//...
+
+struct gws_display_d *Display;
+
+
+struct dccanvas_d *dc_desktop;  // shared dc for desktop window
+struct dccanvas_d *dc_taskbar;  // shared dc for taskbar
+// ...
+
+// #bugbug
+// The display server doesn't know the value we're setting here.
+// So We need to synchronize the value here and the value 
+// used by the server. 
+// #todo:
+// Maybe we can make a request to get this value,
+// and use it to make our window.
+// And maybe we can make a request to setup the 
+// taskbar values in the display server.
+// Remember: 
+// The display server also controls the size of the 'working area'.
+// This area represents the screen size less the taskbar size.
+// >> For now 28 is smaller then the value in the server.
+
+//#define TASKBAR_HEIGHT  28
+#define TASKBAR_HEIGHT  48
+// #define TASKBAR_HEIGHT  80
+
+// Device Info.
+struct device_info_d 
+{
+    unsigned long width;
+    unsigned long height;
+};
+struct device_info_d  DeviceInfo;
+
+// Desktop info
+struct desktop_info_d
+{
+    int initialized;
+    int inUse;
+    int style;
+    // ...
+};
+struct desktop_info_d  DesktopInfo;
+
+
+// Taskbar info
+// See: taskbar.h
+struct taskbar_info_d  TaskbarInfo;
+
+// This application is the OS Shell
+struct os_shell_info_d 
+{
+    int initialized;
+    // ...
+    //struct desktop_info_d  DesktopInfo;
+    //struct taskbar_info_d  TaskbarInfo;
+
+};
+struct os_shell_info_d  OSShellInfo;
+
+
+// Clients
+// Creating 32 clients.
+// It represents the order in the taskbar.
+// If an entry is not used, it will not be
+// shown in the taskbar.
+struct tb_client_d clientList[CLIENT_COUNT_MAX];
+
+//
+// Windows
+//
+
+static int desktop_window = -1;  // Desktop window
+static int taskbar_window = -1;  // Main window
+
+
+// ...
+static int default_responder = -1;
+
+static int isTimeToQuit=FALSE;
+
+// Main buttons
+// (Navigation bar)
+// #todo: Maybe we can create an structure and 
+// allow customization.
+
+struct navigation_info_d
+{
+    int initialized;
+
+// Buttons
+    int button00_window;
+    int button01_window;
+    //int button02_window;
+// Separator
+    int useSeparator;
+
+// Taskbar icons
+// #todo
+// Create and initialize a structure for this.
+    //int icon_counter = 0;
+    //int icon_left_limit = 80; // Limit in pixels.
+    // Icon list
+    //int iconList[32];
+};
+struct navigation_info_d  NavigationInfo;
+
+
+struct button_info_d
+{
+    int button_id;
+
+// This is the window id that represents the icon.
+    int wid;
+
+// Absolute values
+    unsigned long absolute_left;
+    unsigned long absolute_top;
+    unsigned long width; 
+    unsigned long height;
+
+// Relative values
+    unsigned long left;
+    unsigned long top;
+
+// The state of the icon, it also represents
+// the state of the client application.
+// (running, minimized, etc.).
+    int state;
+};
+
+//
+// Buttons
+//
+
+static struct button_info_d  StartButton;
+
+
+//
+// UI components
+//
+
+static unsigned long uicList[32];   // List of pointers
+struct ui_component_d *uic_button_start;
+
+struct ui_component_d *uic_clock;
+
+//
+// Taskbar icons.
+// Not the start menu.
+//
+
+// #todo
+// Create and initialize a structure for this.
+static int icon_counter = 0;
+static int icon_left_limit = 80; // Limit in pixels.
+// Icon list
+int iconList[32];
+
+
+static int __hover_icon_id = -1;
+
+
+//
+// Strings
+//
+
+const char *program_name = "Taskbar";
+
+//const char *start_menu_button_label = "Gramado";
+//const char *start_menu_button_label = "Start";
+//const char *start_menu_button_label = "|||";
+
+// Main labels
+const char *buttom00_label = "<";  // Navigation
+const char *buttom01_label = ">";  // Navigation
+const char *buttom02_label = "[]";  // Purpose?
+
+//const char *app1_name = "#launch.bin";
+const char *app1_name = "#paint.bin";
+//const char *app1_name = "#terminal.bin";
+const char *app2_name = "#editor.bin";
+
+
+//static const char *cmdline1 = "gramland -1 -2 -3 --tb";
+
+//
+// == Private functions: prototypes ====================
+//
+
+static void 
+draw_clock_string_line(
+    unsigned long left_pad, 
+    unsigned long top_pad, 
+    unsigned long value1,
+    unsigned long value2,
+    const char *label );
+
+static struct ui_component_d *create_clock_label(int fd, const char *label);
+
+//static int __initialize_connection(void);
+static void doPrompt(int fd);
+static void compareStrings(int fd);
+static void testASCIITable(int fd,unsigned long w, unsigned long h);
+static void print_ascii_table(int fd);
+
+static int do_launch_app(int app_number);
+
+static void on_button_pressed(int button_id);
+static void on_button_released(int button_id);
+static void on_button_clicked(int button_id);
+
+static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my);
+
+static void draw_taskbar_areas(void);
+
+static int 
+tbProcedure(
+    int fd, 
+    int event_window, 
+    int event_type, 
+    unsigned long long1, 
+    unsigned long long2 );
+
+static void 
+updateStatusBar(
+    int fd,
+    unsigned long w, 
+    unsigned long h, 
+    int first_number, 
+    int second_number);
+
+
+static void __initialize_client_list(void);
+void pump(int fd, int wid);
+
+
+static void set_default_responder(int wid);
+static void trigger_default_responder(int fd);
+static void switch_responder(int fd);
+
+
+static void update_clients(int fd);
+
+static void create_start_button(int fd);
+
+// Creates a squared icon inside the icon area (middle section of the taskbar).
+// Automatically finds the next free horizontal slot.
+// Returns the new ui_component pointer, or NULL on failure.
+static struct ui_component_d *create_icon_area_icon(
+    int fd,
+    int icon_id,                 // your icon resource / index
+    const char *label,           // optional (usually NULL on taskbar)
+    unsigned long flags);
+
+//==================================
+
+static void 
+draw_clock_string_line(
+    unsigned long left_pad, 
+    unsigned long top_pad, 
+    unsigned long value1,
+    unsigned long value2,
+    const char *label )
+{
+    char line[64];
+    unsigned int Color1 = THEME_CLOCK_TEXT;
+    unsigned int Color2 = THEME_CLOCK_BG;
+    unsigned long ClockROP = 0;
+
+    memset(line, 0, sizeof(line));
+    // #bugbug: We can get an overflow
+    sprintf(line, "%lu:%lu %s", value1, value2, label);
+
+    if ((void*) dc_taskbar == NULL)
+        return;
+
+    libgui_drawstring_dc(
+        dc_taskbar,
+        TaskbarInfo.notification_area.left + left_pad,
+        TaskbarInfo.notification_area.top + top_pad,
+        Color1, Color2, ClockROP, line
+    );
+}
+
+// Creates the clock as a UI_COMPONENT_LABEL inside the notification area.
+// Returns the component pointer or NULL on failure.
+static struct ui_component_d *create_clock_label(int fd, const char *label)
+{
+    if (fd < 0)
+        return NULL;
+    if ((void*)dc_taskbar == NULL)
+        return NULL;
+    //if (TaskbarInfo.notification_area.initialized != TRUE)
+        //return NULL;
+
+    // === Geometry ===
+    // Reserve only the rightmost part of the notification area for the clock
+    const unsigned long CLOCK_WIDTH  = 90;
+    const unsigned long CLOCK_HEIGHT = TaskbarInfo.notification_area.height - 4;
+    const unsigned long MARGIN       = 4;
+
+    unsigned long clock_left = TaskbarInfo.notification_area.left 
+                             + TaskbarInfo.notification_area.width 
+                             - CLOCK_WIDTH 
+                             - MARGIN;
+
+    unsigned long clock_top  = TaskbarInfo.notification_area.top + 2;
+
+    // Create the label component
+    struct ui_component_d *clock = libgui_create_ui_component(
+        dc_taskbar,
+        UI_COMPONENT_LABEL,                 // ← label type
+        clock_left,
+        clock_top,
+        CLOCK_WIDTH,
+        CLOCK_HEIGHT,
+        label,               // initial text
+        (0x0001 | 0x0002)    // same flags you use for others
+    );
+
+    if ((void*)clock == NULL)
+        return NULL;
+
+    // Optional: if your libgui supports setting colors on labels
+    // libgui_set_ui_component_colors(clock, THEME_CLOCK_TEXT, THEME_CLOCK_BG);
+
+    // Register in the global list
+    int i;
+    for (i = 0; i < 32; i++) {
+        if (uicList[i] == 0) {
+            uicList[i] = (unsigned long) clock;
+            break;
+        }
+    }
+
+    // Keep a dedicated pointer if you want easier access later
+    // TaskbarInfo.clock_label = clock;
+
+    // Draw it immediately
+    libgui_redraw_ui_component(clock, dc_taskbar);
+
+    return clock;
+}
+
+
+
+static void set_default_responder(int wid)
+{
+    if (wid >= 0)
+        default_responder = wid;
+}
+
+static void trigger_default_responder(int fd)
+{
+    if (default_responder == NavigationInfo.button00_window) {
+        gws_dock_active_window(fd, 4); // dock left
+    } else if (default_responder == NavigationInfo.button01_window) {
+        gws_dock_active_window(fd, 2); // dock right
+    }
+}
+
+static void switch_responder(int fd)
+{
+    if (default_responder == NavigationInfo.button00_window) {
+        set_default_responder(NavigationInfo.button01_window);
+        gws_set_focus(fd, NavigationInfo.button01_window);
+    } else {
+        set_default_responder(NavigationInfo.button00_window);
+        gws_set_focus(fd, NavigationInfo.button00_window);
+    }
+}
+
+
+// initialize via AF_GRAMADO.
+// Ainda nao podemos mudar isso para a lib, pois precisamos
+// do suporte as rotinas de socket e as definiçoes.
+// tem que incluir mais coisa na lib.
+
+/*
+static int __initialize_connection(void)
+{
+
+//==============================
+    struct sockaddr_in addr_in;
+    addr_in.sin_family = AF_INET;
+    addr_in.sin_addr.s_addr = IP(127,0,0,1);
+    addr_in.sin_port = PORTS_WS;
+//==============================
+
+    int client_fd = -1;
+
+    //gws_debug_print ("-------------------------\n"); 
+    //printf          ("-------------------------\n"); 
+    gws_debug_print("taskbar.bin: Initializing\n");
+    //printf       ("taskbar.bin: Initializing ...\n");
+
+// Socket:
+// Create a socket. 
+// AF_GRAMADO = 8000
+
+    // #debug
+    //printf ("gws: Creating socket\n");
+
+    client_fd = 
+        (int) socket( 
+            AF_INET,   // Remote or local connections
+            SOCK_RAW,  // Type
+            0 );       // Protocol
+
+    if (client_fd < 0)
+    {
+       gws_debug_print("taskbar.bin: on socket()\n");
+       printf         ("taskbar.bin: on socket()\n");
+       exit(1);  //#bugbug Cuidado.
+    }
+
+// Connect
+// Nessa hora colocamos no accept um fd.
+// então o servidor escreverá em nosso arquivo.
+// Tentando nos conectar ao endereço indicado na estrutura
+// Como o domínio é AF_GRAMADO, então o endereço é "w","s".
+
+    //printf ("gws: Trying to connect to the address 'ws' ...\n");      
+
+    while (TRUE){
+        if (connect(client_fd, (void *) &addr_in, sizeof(addr_in)) < 0){ 
+            debug_print("taskbar.bin: Connection Failed\n"); 
+            printf     ("taskbar.bin: Connection Failed\n"); 
+        }else{ break; }; 
+    };
+
+    return (int) client_fd;
+}
+*/
+
+static void doPrompt(int fd)
+{
+    register int i=0;
+
+    if (fd<0){
+        return;
+    }
+
+// Clean prompt buffer.    
+    for (i=0; i<PROMPT_MAX_DEFAULT; i++){
+        prompt[i] = (char) '\0';
+    };
+
+    prompt[0] = (char) '\0';
+    prompt_pos    = 0;
+    prompt_status = 0;
+    prompt_max    = PROMPT_MAX_DEFAULT;  
+
+//
+// Usando o console do kernel
+//
+
+    // Prompt
+    printf("\n");
+    //printf("taskbar.bin: Type something\n");
+    printf("$ ");
+    fflush(stdout);
+
+    //if (taskbar_window<0){
+    //    return;
+    //}
+
+}
+
+static void compareStrings(int fd)
+{
+    unsigned long message_buffer[8];
+    int init_tid=-1;
+
+    if (fd<0)
+        return;
+
+    printf("\n");
+
+    if ( gramado_strncmp(prompt, "close", 5) == 0 )
+    {
+        printf("~close()\n");
+        close(fd);
+        //#test
+        //gws_draw_char ( 
+        //    fd, status_window, 3 * 2, (8), COLOR_BLUE, 127 );
+        goto exit_cmp;
+    }
+
+    if ( gramado_strncmp(prompt,"exit",4) == 0 )
+    {
+        printf("~exit()\n");
+        exit(0);
+        goto exit_cmp;
+    }
+
+    if ( gramado_strncmp(prompt,"test",4) == 0 )
+    {
+        //get init tid.
+        init_tid = (int) sc82(10021,0,0,0);
+        message_buffer[0] = 0;
+        message_buffer[1] = MSG_COMMAND;  //msg code
+        message_buffer[2] = 4002;  //fileman
+        message_buffer[3] = 4002;  //fileman
+        rtl_post_system_message(init_tid,message_buffer);
+        goto exit_cmp;
+    }
+
+    if ( gramado_strncmp(prompt,"ascii",5) == 0 )
+    {
+        //not working
+        //print_ascii_table(fd);
+        goto exit_cmp;
+    }
+
+    if ( gramado_strncmp(prompt,"reboot",6) == 0 )
+    {
+        rtl_reboot();
+        goto exit_cmp;
+    }
+
+    if ( gramado_strncmp(prompt,"cls",3) == 0 )
+    {
+        gws_redraw_window(fd, taskbar_window, TRUE);
+        //#define SYSTEMCALL_SETCURSOR  34
+        sc80 ( 34, 2, 2, 0 );
+        goto exit_cmp;
+    }
+
+    if ( gramado_strncmp(prompt,"about",5) == 0 )
+    {
+        printf("taskbar.bin: Command line application\n");
+        goto exit_cmp;
+    }
+
+    printf("Command not found\n");
+
+exit_cmp:
+    doPrompt(fd);
+}
+
+static void testASCIITable(int fd,unsigned long w, unsigned long h)
+{
+    int i=0;
+    register int j=0;
+    int c=0;
+
+    if (fd<0)
+        return;
+
+    for (i=0; i<4; i++)
+    {
+        for (j=0; j<64; j++)
+        {
+            //gws_draw_char ( 
+            //    fd, status_window, 
+            //    (w/64) * j, (i*8), 
+            //    COLOR_YELLOW, c );
+
+            c++;
+        };
+    };
+}
+
+static int do_launch_app(int app_number)
+{
+    int ret_val=-1;
+
+    char filename[16];
+    size_t StringSize=0;
+    memset(filename,0,16);
+
+    //do_clear_console();
+    //printf ("Launching GUI\n");
+
+// #bugbug
+// Sending cmdline via stdin
+    //rewind(stdin);
+    //write( fileno(stdin), cmdline1, strlen(cmdline1) );
+
+// Launch new process.
+
+    if (app_number == 1){
+        sprintf(filename,app1_name);
+        StringSize = (size_t) strlen(app1_name);
+    }else if (app_number == 2){
+        sprintf(filename,app2_name);
+        StringSize = (size_t) strlen(app2_name);
+    }else{
+        return -1;
+    };
+
+    filename[StringSize] = 0;
+    //ret_val = (int) rtl_clone_and_execute(filename);
+    //ret_val = (int) rtl_clone_and_execute(app1_name);
+    ret_val = (int) rtl_clone_and_execute_return_tid(filename);
+    if (ret_val <= 0){
+        printf("Couldn't clone\n");
+        return -1;
+    }
+
+// Sleep (Good!)
+    //sc82( 266, 8000, 8000, 8000 );
+
+    //printf("pid=%d\n",ret_val);
+
+// Quit the command line.
+    //isTimeToQuit = TRUE;
+
+    return (int) ret_val;  // TID
+}
+
+static void print_ascii_table(int fd)
+{
+    register int i=0;
+    int line=0;
+
+    if (fd<0)
+        return;
+
+    printf("ascii: :)\n");
+
+    gws_redraw_window(fd, taskbar_window, TRUE);
+    //#define SYSTEMCALL_SETCURSOR  34
+    sc80 ( 34, 2, 2, 0 );
+
+    for(i=0; i<256; i++)
+    {
+        gws_draw_char ( 
+            fd, 
+            taskbar_window, 
+            i*8,  //x 
+            (8*line),  //y
+            COLOR_YELLOW, i );
+        
+        if ((i % 10) == 0)  //if (i%10)
+            line++;
+    };
+}
+
+static void 
+updateStatusBar(
+    int fd,
+    unsigned long w, 
+    unsigned long h, 
+    int first_number, 
+    int second_number)
+{
+    if (fd<0)
+        return;
+
+// first box
+    //gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_BLUE, 127 );
+// second box
+    //gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_BLUE, 127 );
+// first number
+    //gws_draw_char ( fd, status_window, (w/30)  * 2, (8), COLOR_YELLOW, first_number );
+// second number
+   // gws_draw_char ( fd, status_window, (w/30)  * 3, (8), COLOR_YELLOW, second_number );
+}
+
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_pressed(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == StartButton.button_id)
+    {
+        libgui_on_button_pressed(uic_button_start, dc_taskbar);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+
+}
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_released(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    if (button_id == StartButton.button_id)
+    {
+        libgui_on_button_released(uic_button_start, dc_taskbar);
+    }
+    else
+    {
+        // Unknown button
+        return;
+    }
+}
+
+// Handle click events for components
+static void on_button_clicked(int button_id)
+{
+    if (button_id < 0)
+        return;
+
+    switch (button_id)
+    {
+        case 1:  // StartButton.button_id
+            //printf("Button %d clicked!\n", button_id);
+            // Example: launch an app
+            do_launch_app(1);
+            break;
+
+        // Future buttons/icons
+        case 2:
+            printf("Button %d clicked!\n", button_id);
+            //do_launch_app(2);
+            break;
+
+        default:
+            printf("Unknown button clicked: %d\n", button_id);
+            break;
+    }
+}
+
+
+// #todo
+// In the future it will be a function inside the library
+// that check against the standard list of components.
+static int __hit_test_icon(unsigned long rel_mx, unsigned long rel_my) 
+{
+
+// #test
+// For now we only check against our button.
+// Let's use the relative values for that.
+
+    if ( rel_mx >= StartButton.left && 
+         rel_mx <= StartButton.left + StartButton.width &&
+         rel_my >= StartButton.top  && 
+         rel_my <= StartButton.top + StartButton.height )
+    {
+        return (int) StartButton.button_id;
+    }
+
+    // ...
+
+    return (int) -1;
+}
+
+static void draw_taskbar_areas(void)
+{
+    if ((void*) dc_taskbar == NULL)
+        return;
+
+    lingui_draw_rectangle0_dc(dc_taskbar,
+        TaskbarInfo.launch_area.left, TaskbarInfo.launch_area.top,
+        TaskbarInfo.launch_area.width, TaskbarInfo.launch_area.height,
+        THEME_TASKBAR_BG, 0);
+
+    lingui_draw_rectangle0_dc(dc_taskbar,
+        TaskbarInfo.icon_area.left, TaskbarInfo.icon_area.top,
+        TaskbarInfo.icon_area.width, TaskbarInfo.icon_area.height,
+        THEME_TASKBAR_BG, 0);
+
+    lingui_draw_rectangle0_dc(dc_taskbar,
+        TaskbarInfo.notification_area.left, TaskbarInfo.notification_area.top,
+        TaskbarInfo.notification_area.width, TaskbarInfo.notification_area.height,
+        THEME_TASKBAR_BG, 0);
+
+    // draw_clock_string_line(2, 2, 11, 56, "PM");
+    libgui_redraw_ui_component(uic_clock, dc_taskbar);
+}
+
+static void update_clients(int fd)
+{
+    if (fd<0){
+        return;
+    }
+    if ((void*)dc_taskbar == NULL)
+        return;
+
+// Get window info
+    struct gws_window_info_d wi;
+    gws_get_window_info(
+        fd,
+        taskbar_window,
+        (struct gws_window_info_d *) &wi );
+
+// -----------------------
+// Draw background for the client area
+
+    lingui_draw_rectangle0_dc (
+        dc_taskbar,
+        0, 0, wi.cr_width, wi.cr_height,
+        THEME_TASKBAR_CLIENT_BG,
+        0  // ROP
+    );
+
+    draw_taskbar_areas();
+
+    int i;
+    for (i=0; i<32; i++)
+    {
+        struct ui_component_d *uic = (struct ui_component_d *) uicList[i];
+        
+        if ((void*)uic != NULL)
+        {
+            if (uic->magic == 1234)
+                libgui_redraw_ui_component(uic, dc_taskbar);
+        }
+    }
+
+
+    // #todo: Redraw icon area and notification area.
+}
+
+static int 
+tbProcedure(
+    int fd, 
+    int event_window, 
+    int event_type, 
+    unsigned long long1, 
+    unsigned long long2 )
+{
+    int f12Status = -1;
+    int tmpNewWID = -1;
+    int IconId = -1;
+
+// Parameters:
+    if (fd < 0){
+        goto fail;
+    }
+    if (event_type <= 0){
+        goto fail;
+    }
+
+// Process the event
+    switch (event_type){
+
+        // #ps:
+        // This is called in two moments:
+        // Sent by the server or shared flag is setted. 
+        case MSG_PAINT:
+            update_clients(fd);
+            return 0;
+            break;
+
+        case MSG_MOUSEMOVE:
+            // printf("%d %d\n", long1, long2);
+            IconId = (int) __hit_test_icon(long1, long2);
+            if (IconId > 0)
+                __hover_icon_id = IconId;
+            if (IconId <= 0){
+                __hover_icon_id = -1;
+            }
+            return 0;
+            break;
+
+        case MSG_MOUSEPRESSED:
+            //printf("taskbar: MSG_MOUSEPRESSED:\n");
+            //on_button_pressed(__hover_icon_id);  // Visual effect
+            
+            if (__hover_icon_id == StartButton.button_id)
+            {
+                printf("taskbar: Button pressed\n");
+
+                on_button_pressed(__hover_icon_id);  // Visual effect
+            }
+
+            break;
+
+        case MSG_MOUSERELEASED:
+            //printf("taskbar: MSG_MOUSERELEASED:\n");
+
+            if (__hover_icon_id == StartButton.button_id)
+            {
+                printf("taskbar: Button released\n");
+
+                on_button_released(__hover_icon_id);  // Visual effect
+
+                // #todo: on button released
+                on_button_clicked(__hover_icon_id);
+            }
+            break;
+
+        // #suspended: This message was sent by the server
+        case GWS_MouseClicked:
+            printf("taskbar: GWS_MouseClicked\n");
+            break;
+
+        // 20 = MSG_KEYDOWN
+        case MSG_KEYDOWN:
+            switch (long1) 
+            {
+                case VK_RETURN:
+                    // trigger_default_responder(fd);
+                    // do_launch_app(1);  // First responder
+                    break;
+
+                case '<':   // ASCII '<'
+                case ',':
+                    printf("taskbar: [<] pressed  dock left\n");
+                    gws_dock_active_window(fd, 1);   // margin 1 = left
+                    break;
+
+                case '>':   // ASCII '>'
+                case '.':
+                    printf("taskbar: [>] pressed  dock right\n");
+                    gws_dock_active_window(fd, 2);   // margin 2 = right
+                    break;
+
+                case 'R':  // Refresh
+                case 'r': 
+                    gws_update_desktop(fd); 
+                    break;
+
+                case 'S':  // Start menu
+                case 's': 
+                    // gws_update_desktop(fd);
+                    do_launch_app(1);  // First responder 
+                    break;
+
+                default:
+                    break;
+            };
+            break;
+
+        // 22 = MSG_SYSKEYDOWN
+        case MSG_SYSKEYDOWN:
+            //printf("taskbar: MSG_SYSKEYDOWN\n");
+            switch (long1){
+
+                //case VK_F1:  do_launch_app(1);  break;
+                //case VK_F2:  do_launch_app(2);  break;
+                // ...
+                case VK_F5: 
+                    //printf("taskbar: VK_F5\n");
+                    // gws_update_desktop(fd);
+                    return 0; 
+                    break;
+
+                //case VK_F5: gws_async_command(fd,30,0,0);    break;
+                //case VK_F6: gws_async_command(fd,1011,0,0);  break;
+                //case VK_F7: gws_async_command(fd,30,0,0);    break;
+
+                //
+                case VK_ARROW_RIGHT:  printf("taskbar: VK_ARROW_RIGHT \n"); break;
+                case VK_ARROW_UP:     printf("taskbar: VK_ARROW_UP \n"); break;
+                case VK_ARROW_DOWN:   printf("taskbar: VK_ARROW_DOWN \n"); break;
+                case VK_ARROW_LEFT:
+                    printf("taskbar: VK_ARROW_LEFT \n"); 
+                    //switch_responder(fd);
+                    break;
+                default:
+                    break;
+            };
+            break;
+
+        //case GWS_ServerNotifyApp:
+            //break;
+
+        // Add new client. Given the wid.
+        // The server created a client.
+        case 99440:
+            printf("taskbar: [99440]\n");
+            break;
+
+        // Remove client. Given the wid.
+        // The server removed a client.
+        case 99441:
+            printf("taskbar: [99441]\n");
+            break;
+        
+        // Update client info.
+        // The server send data about the client.
+        case 99443:
+            printf("taskbar: [99443]\n");
+            break;
+
+        // #test:
+        // ds sent us a message to create an iconic window for an app.
+        case 99500:
+            break;
+
+        case MSG_COMMAND:
+            /*
+            printf("taskbar.bin: MSG_COMMAND %d \n",long1);
+            switch(long1){
+            case 4001:  //app1
+            printf("taskbar.bin: 4001\n");
+            gws_clone_and_execute("#browser.bin");  break;
+            case 4002:  //app2
+            printf("taskbar.bin: 4002\n");
+            gws_clone_and_execute("#editor.bin");  break;
+            case 4003:  //app3
+            printf("taskbar.bin: 4003\n");
+            gws_clone_and_execute("#terminal.bin");  break;
+            };
+            */
+            break;
+
+        // #bugbug
+        // The taskbar application is the Shell, just like the explorer.exe
+        // in Windows. We can't simply close it.
+        // #todo
+        // It only can happen when in certain situations.
+        case MSG_CLOSE:
+            printf("taskbar: Closing ...\n");
+            isTimeToQuit = TRUE;  // Let's leave the main loop
+            break;
+
+        default:
+            goto fail;
+            break;
+    };
+
+    // ok
+    // retorna TRUE quando o diálogo chamado 
+    // consumiu o evento passado à ele.
+
+done:
+    //check_victory(fd);
+    return 0;
+    //return (int) gws_default_procedure(fd,0,msg,long1,long2);
+fail:
+    return (int) (-1);
+}
+
+// Pump event
+// + Request next event with the server.
+// + Process the event.
+void pump(int fd, int wid)
+{
+    struct gws_event_d  lEvent;
+    lEvent.used = FALSE;
+    lEvent.magic = 0;
+    lEvent.type = 0;
+    //lEvent.long1 = 0;
+    //lEvent.long2 = 0;
+
+    struct gws_event_d *e;
+
+    if (fd<0)
+        return;
+    if (wid<0)
+        return;
+
+// Request event with the display server.
+    e = 
+        (struct gws_event_d *) gws_get_next_event(
+                                   fd, 
+                                   wid,
+                                   (struct gws_event_d *) &lEvent );
+
+    if ((void *) e == NULL)
+        return;
+    if (e->magic != 1234){
+        return;
+    }
+    if (e->type < 0)
+        return;
+
+
+/*
+    if (e->type == GWS_ServerNotifyApp || e->type == APP_EVENT_CREATED)
+    {
+        // Debug: print full payload before dispatching
+        //printf("Event received:\n");
+        //printf("  Type: %d\n",               e->type);
+        //printf("  Window: %d\n",             e->window); // target wid ok
+        //printf("  long1 (sub-event):  %d\n", e->long1);
+        //printf("  long2 (client wid): %d\n", e->long2);
+        printf("  long3 (client pid): %d\n", e->long3);
+        printf("  long4 (client tid): %d\n", e->long4);
+    }
+*/
+
+// Process event.
+    int Status = -1;
+    Status = tbProcedure( fd, e->window, e->type, e->long1, e->long2 );
+    // ...
+}
+
+static void __initialize_client_list(void)
+{
+    register int i=0;
+    for (i=0; i<CLIENT_COUNT_MAX; i++)
+    {
+        clientList[i].used = FALSE;
+        clientList[i].magic = 0;
+        clientList[i].client_id = -1;
+        
+        clientList[i].icon_info.wid = -1;
+        clientList[i].icon_info.icon_id = -1;
+        clientList[i].icon_info.state = 0;
+
+        // Icon info
+        clientList[i].icon_info.left = 0;
+        clientList[i].icon_info.top = 0;
+        clientList[i].icon_info.width = 0;
+        clientList[i].icon_info.height = 0;
+    };
+}
+
+static void create_start_button(int fd)
+{
+    struct gws_window_info_d wi;
+
+
+    if (fd<0)
+        return;
+    if (TaskbarInfo.launch_area.initialized != TRUE)
+        return;
+
+// Get info with the server
+    gws_get_window_info(fd, taskbar_window, &wi);
+
+// Setup metadata
+
+    StartButton.button_id = 1;
+
+/*
+    StartButton.left  = 2;
+    StartButton.top   = 2;
+    StartButton.width = 80;
+    StartButton.height= wi.cr_height - 4;  // use client rectangle height
+    // StartButton.height= TASKBAR_HEIGHT - 8;
+    StartButton.absolute_left = wi.left + wi.cr_left + StartButton.left;
+    StartButton.absolute_top  = wi.top  + wi.cr_top  + StartButton.top;
+*/
+
+    StartButton.left   = TaskbarInfo.launch_area.left +2;
+    StartButton.top    = TaskbarInfo.launch_area.top  +2;
+    //StartButton.width  = TaskbarInfo.launch_area.width  -4;
+    StartButton.width  = (TaskbarInfo.launch_area.width  -4) >> 1;
+    StartButton.height = TaskbarInfo.launch_area.height -4;
+
+    StartButton.state = 0;
+
+    // Create UI component (client-side only)
+    uic_button_start = libgui_create_ui_component(
+        dc_taskbar,
+        UI_COMPONENT_BUTTON,  // type 1 = button
+        StartButton.left,
+        StartButton.top,
+        StartButton.width,
+        StartButton.height,
+        "Start", 
+        (0x0001 | 0x0002)
+    );
+
+    // Register:
+    // Manually register the first component
+    uicList[0] = uic_button_start;
+}
+
+// Creates a squared icon inside the icon area (middle section of the taskbar).
+// Automatically finds the next free horizontal slot.
+// Returns the new ui_component pointer, or NULL on failure.
+static struct ui_component_d *create_icon_area_icon(
+    int fd,
+    int icon_id,                 // your icon resource / index
+    const char *label,           // optional (usually NULL on taskbar)
+    unsigned long flags)
+{
+    if (fd < 0)
+        return NULL;
+    if ((void*)dc_taskbar == NULL)
+        return NULL;
+
+    // Preferred size for taskbar icons (squared)
+    const unsigned long ICON_SIZE   = 24;
+    const unsigned long ICON_GAP    = 2;    // space between icons
+    const unsigned long LEFT_MARGIN = 2;    // small margin from the left of the area
+
+    // Current number of icons already in the area
+    int count = TaskbarInfo.icon_area.component_count;
+
+    // Calculate next free X position
+    unsigned long icon_left = TaskbarInfo.icon_area.left 
+                            + LEFT_MARGIN 
+                            + count * (ICON_SIZE + ICON_GAP);
+
+    // Vertical centering inside the icon area
+    unsigned long icon_top = TaskbarInfo.icon_area.top 
+                           + (TaskbarInfo.icon_area.height - ICON_SIZE) / 2;
+
+    // Safety: do not overflow the icon area
+    if (icon_left + ICON_SIZE > 
+        TaskbarInfo.icon_area.left + TaskbarInfo.icon_area.width)
+    {
+        // printf("icon area: no more space\n");
+        return NULL;
+    }
+
+    // Create the UI component
+    struct ui_component_d *icon = libgui_create_ui_component(
+        dc_taskbar,
+        UI_COMPONENT_ICON,
+        icon_left, icon_top, ICON_SIZE, ICON_SIZE,
+        label ? label : "",
+        flags
+    );
+
+    if ((void*)icon == NULL)
+        return NULL;
+
+    // Optional: store extra data if your component structure supports it
+    // icon->icon_id = icon_id;
+    // icon->state   = 0;
+
+    // Register in the global component list
+    int i;
+    for (i=0; i < 32; i++) {
+        if (uicList[i] == 0) {
+            uicList[i] = (unsigned long) icon;
+            break;
+        }
+    }
+
+    // Update counter
+    TaskbarInfo.icon_area.component_count++;
+
+    // Draw it immediately
+    libgui_redraw_ui_component(icon, dc_taskbar);
+
+    return icon;
+}
+
+// ==========================================
+// Main
+
+int main(int argc, char *argv[])
+{
+    const char *display_name_string = "display:name.0";
+
+    /*
+    // #debug: Let's crash this application
+    int *pf_ptr = NULL;
+    // Dereferencing the NULL pointer triggers a page fault.
+    int pf_value = *pf_ptr;
+    printf("Value: %d\n", pf_value);
+    */
+
+// #config
+
+    int ShowCube = FALSE;
+    int launchChild = TRUE;
+    int useDesktop = TRUE;
+    // ...
+    int client_fd = -1;
+    int status = -1;
+
+// --------------------------------
+
+    if (argc <= 0)
+    {
+        // #test
+    }
+
+// --------------------------------
+// Initialize the library
+    status = (int) libgui_initialize();
+    if (status < 0){
+        printf("taskbar: libgui_initialize fail\n");
+        exit(1);
+    }
+
+
+    int k;
+    for (k = 0; k < 32; k++)
+        uicList[k] = 0;
+
+// --------------------------------
+
+// Initialize navigation info structure.
+    NavigationInfo.button00_window = -1;
+    NavigationInfo.button01_window = -1;
+    //NavigationInfo.button02_window = -1;
+    NavigationInfo.useSeparator = TRUE;
+    NavigationInfo.initialized = TRUE;
+
+// Initialization
+    icon_left_limit = 80;
+    icon_counter = 0;
+    int ic=0;
+    for (ic=0; ic<32; ic++)
+        iconList[ic] = 0;
+
+// hello
+    //gws_debug_print ("taskbar.bin: Hello world \n");
+    //printf ("taskbar.bin: Hello world \n");
+    //while(1){}
+
+// interrupts
+    //gws_debug_print ("taskbar.bin: Enable interrupts \n");
+    //printf          ("taskbar.bin: Enable interrupts \n");
+    //asm ("int $199 \n");
+
+// interrupts
+// Unlock the taskswitching support.
+// Unlock the scheduler embedded into the base kernel.
+// Only the init process is able to do this.
+
+    //gws_debug_print ("taskbar.bin: Unlock taskswitching and scheduler\n");
+    //printf          ("taskbar.bin: Unlock taskswitching and scheduler\n");
+
+    //sc80 (641,0,0,0);
+    //sc80 (643,0,0,0);
+
+// Create the rectangle
+    //printf          ("taskbar.bin: Create rectangle\n");
+    //sc80(897,0,0,0);
+
+//
+// hang
+//
+    //while (1){
+    //    sc80(897,0,0,0);
+    //}
+
+// ============================
+// Open display
+// IN: hostname:number.screen_number
+    Display = (struct gws_display_d *) gws_open_display(display_name_string);
+    if ((void*) Display == NULL){
+        printf("taskbar.bin: Display\n");
+        exit(1);
+        //goto fail;
+    }
+// Get client socket.
+    client_fd = (int) Display->fd;
+    if (client_fd <= 0){
+        printf("taskbar.bin: fd\n");
+        exit(1);
+        //goto fail;
+    }
+
+// #debug
+    //printf(":: Entering taskbar.bin pid{%d} fd{%d}\n",
+        //getpid(), client_fd);
+    //while(1){}
+
+// ==================================================
+
+//========================================
+
+    /*
+    char buf[32];
+    while (1)
+    {
+        read (client_fd, buf, 4);
+        
+        // Not yes
+        if( buf[0] != 'y')
+        { 
+            buf[4] = 0;
+            printf ("%s",buf); 
+            fflush(stdout);
+        }
+        
+        // yes!
+        if( buf[0] == 'y')
+        {
+            printf ("YES babe!\n");
+            break;
+            //exit(0);
+        }
+        
+        //gws_draw_char ( client_fd, 
+        //    taskbar_window, 
+        //    w/3, 8, COLOR_RED, 'C' );
+    }
+    //================
+    */
+
+//========================================
+// Device info
+
+    unsigned long w = gws_get_system_metrics(1);
+    unsigned long h = gws_get_system_metrics(2);
+    if ( w == 0 || h == 0 ){
+        printf ("taskbar.bin: w h\n");
+        exit(1);
+    }
+    // Saving display properties
+    DeviceInfo.width  = (unsigned long) (w & 0xFFFF);
+    DeviceInfo.height = (unsigned long) (h & 0xFFFF);
+
+    //ok
+    //rtl_show_heap_info();
+
+    //while(1){
+    //gws_async_command(client_fd,3,0,0);  // Hello
+    //gws_async_command(client_fd,5,0,0);  // Draw black rectangle.
+    //}
+
+
+//
+// Desktop window
+//
+
+// ==================================================
+// Create the desktop area and one icon for test.
+
+    //if (useDesktop == TRUE)
+    // ...
+
+/*
+
+// #test: 
+// This is a test yet.
+// The server needs a lot of resources for that
+
+// It creates the window that is gonna be used 
+// as desktop window.
+// The desktop icons goes into it.
+
+    int dw = gws_create_window(
+        client_fd,
+        WT_POPUP,
+        0,  // status
+        WINDOW_STATE_NULL,
+        "dw",
+        0, 0, DeviceInfo.width, DeviceInfo.height,
+        0, 
+        WS_APP,  // style
+        COLOR_BLUE, 
+        COLOR_BLUE
+    );
+    if (dw < 0){
+        printf ("taskbar: dw\n");
+        exit(1);
+    }
+
+    gws_refresh_window(client_fd, dw);
+*/
+
+
+//
+// == Taskbar window =====================================
+//
+
+    // #experiment:
+    unsigned long d_l = 0;
+    unsigned long d_t = 0;
+    unsigned long d_w = w;
+    unsigned long d_h = h;
+
+    unsigned long d_style = WS_APP | WS_DESKTOP;
+
+    desktop_window = 
+        (int) gws_create_window (
+                client_fd,
+                WT_POPUP,  // type 
+                WINDOW_STATUS_ACTIVE,  // status
+                WINDOW_STATE_NULL,     // state
+                "Desktop",
+                d_l, d_t, d_w, d_h,
+                0, 
+                d_style,
+                THEME_DESKTOP_BG, THEME_DESKTOP_BG );
+
+    if (desktop_window < 0){
+        printf ("taskbar: desktop_window\n");
+        exit(1);
+    }
+    // gws_set_active( client_fd, desktop_window );
+
+
+// Get the dc
+
+    struct gws_window_info_d dwi;
+    gws_get_window_info(
+        client_fd,
+        desktop_window,
+        (struct gws_window_info_d *) &dwi );
+
+
+// ============================================================
+// create the dc
+
+    dc_desktop = (struct dccanvas_d *) libgui_create_dc(
+        dwi.ca_canvas_base_address,
+        dwi.ca_canvas_width,
+        dwi.ca_canvas_height,
+        dwi.ca_canvas_bpp
+    );
+    if ((void*)dc_desktop == NULL)
+    {
+        printf("desktop: on dc_desktop\n");
+        exit(1);
+    }
+    if ((void*)dc_desktop != NULL){
+        // ...
+    }
+
+
+// -----------------------
+// Draw background for the client area of the desktop window
+
+    lingui_draw_rectangle0_dc (
+        dc_desktop,
+        0, 0, dwi.cr_width, dwi.cr_height,
+        THEME_DESKTOP_BG,
+        0  // ROP
+    );
+
+
+//
+// == Taskbar window =====================================
+//
+
+
+// Create the main window. 
+// The frame for the taskbar application.
+ 
+
+    // #important:
+    // Taskbar position and dimensions.
+    // #ps: The server only know how to handle these values
+    // for the taskbar at the bottom. Otherwise it will crash.
+    // The working area is created by the server. It it the desktop area,
+    // less the taskbar area, lass the notification area.
+    // #ps: Maybe we can create an API to setup/fetch the working area.
+    // #ps: Maybe we dont need to handle the desktop area in this application (desktop.bin)
+    // We can operate like a mobile desktop area that handles only the topbar and the navigation bar.
+
+/*
+    // Fixed bar ar the bottom
+    unsigned long tb_l = 0;
+    unsigned long tb_t = h - TASKBAR_HEIGHT;
+    unsigned long tb_w = w;
+    unsigned long tb_h = TASKBAR_HEIGHT;
+*/
+
+    // #experiment:
+    unsigned long tb_l = 0;
+    unsigned long tb_t = h - TASKBAR_HEIGHT;
+    unsigned long tb_w = w;
+    unsigned long tb_h = TASKBAR_HEIGHT;
+
+
+    TaskbarInfo.left   = tb_l;
+    TaskbarInfo.top    = tb_t;
+    TaskbarInfo.width  = tb_w;
+    TaskbarInfo.height = tb_h;
+
+    unsigned long style = WS_APP | WS_TASKBAR;
+    //TaskbarInfo.style = style;
+
+    taskbar_window = 
+        (int) gws_create_window (
+                client_fd,
+                WT_POPUP,  // type 
+                WINDOW_STATUS_ACTIVE,  // status
+                WINDOW_STATE_NULL,     // state
+                program_name,
+                tb_l, tb_t, tb_w, tb_h,
+                0, 
+                style,
+                THEME_TASKBAR_BG, THEME_TASKBAR_BG );
+
+    if (taskbar_window < 0){
+        printf ("taskbar: taskbar_window\n");
+        exit(1);
+    }
+    gws_set_active( client_fd, taskbar_window );
+
+
+// =============================
+
+// Update the wproxy structure that belongs to this thread.
+
+    unsigned long m[10];
+    int mytid = gettid();
+
+    m[0] = (unsigned long) (mytid & 0xFFFFFFFF);
+
+    // Frame/chrome rectangle
+    m[1] = TaskbarInfo.left;
+    m[2] = TaskbarInfo.top;
+    m[3] = TaskbarInfo.width;
+    m[4] = TaskbarInfo.height;
+
+    // #ps: 
+    // In the case of taskbar, frame and client are equal.
+    // It means the offset for the client area is 0.
+    // #todo: Maybe popup window still have some kind of border,
+    // that can be considered a frame. In this case, messages
+    // go to the server. Allowing it to move or change the dimensions.
+
+    // Client area rectangle
+    m[5] = 0;  // TaskbarInfo.left;
+    m[6] = 0;  // TaskbarInfo.top;
+    m[7] = TaskbarInfo.width;
+    m[8] = TaskbarInfo.height;
+
+    sc80( 48, &m[0], &m[0], &m[0] );
+
+// =============================
+// Set this thread and its window as the system shell
+// The taskbar.
+
+    sc80(46, 0, 0, 0);
+
+
+// ====================================
+// After creating taskbar_window.
+// Get the dc.
+
+    struct gws_window_info_d wi;
+    gws_get_window_info(
+        client_fd,
+        taskbar_window,
+        (struct gws_window_info_d *) &wi );
+
+// ============================================================
+// Getting the flag earlier. This way we can use it in the loop.
+
+    __sh_flags = (unsigned long) wi.sh_flags;
+
+// ============================================================
+// create the dc
+
+    dc_taskbar = (struct dccanvas_d *) libgui_create_dc(
+        wi.ca_canvas_base_address,
+        wi.ca_canvas_width,
+        wi.ca_canvas_height,
+        wi.ca_canvas_bpp
+    );
+    if ((void*)dc_taskbar == NULL)
+    {
+        printf("desktop: on dc_taskbar\n");
+        exit(1);
+    }
+    if ((void*)dc_taskbar != NULL){
+        // ...
+    }
+
+// -----------------------
+// Draw background for the client area
+
+    lingui_draw_rectangle0_dc (
+        dc_taskbar,
+        0, 0, wi.cr_width, wi.cr_height,
+        THEME_TASKBAR_CLIENT_BG,
+        0  // ROP
+    );
+
+
+// Hover what icon?
+    __hover_icon_id = -1;  // Invalidates
+
+// #todo:
+// Create separator
+
+// #test:
+// Setup kernel console.
+// Set cursor position on top of the raw window.
+// We're using graphics, but 
+// we want to keep the console in a known position.
+
+    sc80 ( 34, 2, 2, 0 );
+
+
+// ===============================
+
+    __initialize_client_list();
+
+
+// ===============================
+
+//
+// Launch area (Menu and fixed apps)
+//
+
+    TaskbarInfo.launch_area.initialized = FALSE;
+
+    TaskbarInfo.launch_area.left   = 0;
+    TaskbarInfo.launch_area.top    = 2;
+    TaskbarInfo.launch_area.width  = wi.cr_width/4;
+    TaskbarInfo.launch_area.height = wi.cr_height - 4;
+    TaskbarInfo.launch_area.component_count = 0;
+
+    lingui_draw_rectangle0_dc(
+        dc_taskbar,
+        TaskbarInfo.launch_area.left,
+        TaskbarInfo.launch_area.top,
+        TaskbarInfo.launch_area.width,
+        TaskbarInfo.launch_area.height,
+        THEME_TASKBAR_CLIENT_BG,  //COLOR_GRAY,
+        0 
+    );
+
+    TaskbarInfo.launch_area.initialized = TRUE;
+
+// -----------------------
+// Create the start button
+// Using a worker to create an UI component (button)
+    create_start_button(client_fd);
+
+
+// ===============================
+
+//
+// Notification area
+//
+
+    unsigned long na_left = (wi.cr_width - (wi.cr_width/4));
+    TaskbarInfo.notification_area.left   = na_left;
+    TaskbarInfo.notification_area.top    = 2;
+    TaskbarInfo.notification_area.width  = (wi.cr_width/4);
+    TaskbarInfo.notification_area.height = wi.cr_height - 4;
+    TaskbarInfo.notification_area.component_count = 0;
+
+    lingui_draw_rectangle0_dc(
+        dc_taskbar,
+        TaskbarInfo.notification_area.left,
+        TaskbarInfo.notification_area.top,
+        TaskbarInfo.notification_area.width,
+        TaskbarInfo.notification_area.height,
+        THEME_TASKBAR_CLIENT_BG,  //COLOR_GRAY,
+        0 
+    );
+
+// #test: String
+    // draw_clock_string_line(2, 2, 11, 56, "PM");
+    uic_clock = (struct ui_component_d *) create_clock_label(client_fd, "11:56 PM");
+
+    TaskbarInfo.notification_area.initialized = TRUE;
+
+// ===============================
+
+//
+// Icon area
+//
+
+    unsigned long ia_left = (wi.cr_width/4);
+    unsigned long ia_w = (
+        wi.cr_width - 
+        TaskbarInfo.launch_area.width - 
+        TaskbarInfo.notification_area.width
+    );
+    TaskbarInfo.icon_area.left   = ia_left;
+    TaskbarInfo.icon_area.top    = 2;
+    TaskbarInfo.icon_area.width  = ia_w;
+    TaskbarInfo.icon_area.height = wi.cr_height - 4;
+    TaskbarInfo.icon_area.component_count = 0;
+
+    lingui_draw_rectangle0_dc(
+        dc_taskbar,
+        TaskbarInfo.icon_area.left,
+        TaskbarInfo.icon_area.top,
+        TaskbarInfo.icon_area.width,
+        TaskbarInfo.icon_area.height,
+        THEME_TASKBAR_CLIENT_BG,  //COLOR_GRAY,
+        0 
+    );
+
+
+// =========================================================
+// Test:
+// Populating the icon area with test icons
+
+// Example: add a couple of icons to the middle area
+    create_icon_area_icon(client_fd, 1, "1", (0x0001 | 0x0002));  // first icon
+    create_icon_area_icon(client_fd, 2, "2", (0x0001 | 0x0002));  // second icon
+    create_icon_area_icon(client_fd, 3, "3", (0x0001 | 0x0002));  // third icon
+    create_icon_area_icon(client_fd, 4, "4", (0x0001 | 0x0002));  //
+
+// =======================
+// Event loop
+// Getting input events from the system.
+
+    // Select the first reponder, it will not affect the
+    // apparence of the button.
+    set_default_responder(NavigationInfo.button00_window);
+
+    // Do not set focus now, it changes the apparence
+    // gws_set_focus(client_fd, NavigationInfo.button00_window);
+
+/*
+// ================================
+// #test
+// Lets setup if we want to block on empty queue or not
+// #todo: Create msgctl() api
+
+    int rv = -1;
+    rv = (int) sc80( 912, 1000, 1000, 1000 );  // Yes
+    //rv = (int) sc80( 912, 1001, 1001, 1001 );  // No
+    if (rv < 0){
+        printf ("on sc80:912\n");
+        exit(0);
+    }
+*/
+
+    unsigned long MainLoopIntervalMS;
+    if (CONFIG_MAIN_LOOP_INTERVAL_MS == 0){
+        MainLoopIntervalMS = 16;
+    }else{
+        MainLoopIntervalMS = CONFIG_MAIN_LOOP_INTERVAL_MS;
+    };
+
+    unsigned long start_jiffie=0;
+    unsigned long end_jiffie=0;
+    unsigned long delta_jiffie=0;
+    int UseSleep = TRUE;
+
+// #ps: We will sleep if a round was less than 16 ms, (60fps).
+// The thread wait until complete the 16 ms.
+// #bugbug: Valid only if the timer fires 1000 times a second.
+// It gives the opportunities for other threads to run a bit more.
+
+    // printf("taskbar: Event loop\n");
+    isTimeToQuit = FALSE;
+
+    int iSysMsg = 0;  // Iterator for system messages
+
+    while (1){
+        if (isTimeToQuit == TRUE)
+            break;
+
+        start_jiffie = (unsigned long) rtl_jiffies();
+
+
+        // #test It's working
+        // But its dangeours.
+        // Get value inside the shared area
+
+        // #important
+        // It doesnt work for the taskbar because its a different kind of window
+        //char *p;
+        if (__sh_flags != 0)
+        {
+            char *flags_ptr = (char *) __sh_flags;
+            if (*flags_ptr & 0x0008)
+            {
+                // Clear BLIT bit
+                *flags_ptr &= ~0x0008;
+                  // Redraw
+                update_clients(client_fd);
+            }
+            //if (*p == 1)
+            //{
+            //    printf("power: FLAGS\n");
+            //    exit(0);
+            //}
+        }
+
+        // 1. Pump events from Display Server
+        // #bugbug:
+        // This pump is very slow, affecting the responsivity
+        // for the other pump that gets events from the system.
+        // pump(client_fd, taskbar_window);
+
+        // 2. Pump events from Input Broker (system events)
+        //for (iSysMsg=0; iSysMsg<32; iSysMsg++)
+        //{
+            if (rtl_get_event() == TRUE)
+            {
+
+                tbProcedure(
+                    client_fd,
+                    (int) RTLEventBuffer[0],   // window id
+                    (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
+                    (unsigned long) RTLEventBuffer[2], // VK code
+                    (unsigned long) RTLEventBuffer[3]  // scancode
+                    );
+                RTLEventBuffer[1] = 0; // clear after dispatch
+            };
+        //};
+
+        end_jiffie = rtl_jiffies();
+
+        if (end_jiffie > start_jiffie)
+        {
+            delta_jiffie = (unsigned long) (end_jiffie - start_jiffie);
+            // Let's sleep if the round was less than 16 ms.
+            if (delta_jiffie < MainLoopIntervalMS)
+            {
+                // #suspended:
+                // We are still implementing the sleep() support.
+                // if (UseSleep == TRUE)
+                    // rtl_sleep(MainLoopIntervalMS - delta_jiffie);
+
+                //#test
+                rtl_yield();
+            }    
+        }
+    };
+
+
+    if (isTimeToQuit == TRUE)
+    {
+        printf("taskbar: Close window\n");
+        gws_destroy_window(client_fd, desktop_window);
+        gws_destroy_window(client_fd, taskbar_window);
+    }
+
+    // Close the socket
+    if (client_fd > 0)
+        close(client_fd);
+ 
+    return EXIT_SUCCESS;  // OK
+}
+
+//
+// End
+//

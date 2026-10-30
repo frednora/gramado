@@ -493,6 +493,7 @@ static void draw_status(void)
     p = sput(p, end, " | P pen  E erase  F fill  C clear  [ ] size  K/R/G/B  Q quit");
     *p = '\0';
 
+    // #bugbug:
     // libgui_drawstring_dc() does not clip, so never exceed the width.
     max_chars = (unsigned long) (canvas_w() / 8);
     if (max_chars < sizeof(line))
@@ -505,8 +506,9 @@ static void draw_status(void)
         dc00, 
         0, top + 5, 
         0x00101010, LIBGUI_COLOR_PANEL_FACE, 
-        0, 
-        line );
+        0,      // ROP
+        line 
+    );
 }
 
 // ====================================================
@@ -591,8 +593,10 @@ static void select_color(unsigned int color)
 static void change_size(int delta)
 {
     int n = current_size_index + delta;
-    if (n < 0) n = 0;
-    if (n >= BRUSH_COUNT) n = BRUSH_COUNT - 1;
+    if (n < 0) 
+        n = 0;
+    if (n >= BRUSH_COUNT) 
+        n = BRUSH_COUNT - 1;
     current_size_index = n;
     draw_status();
 }
@@ -765,6 +769,7 @@ paintProcedure(
         case 'C': case 'c':
             clear_canvas();
             refresh_toolbar_state();
+            return 0;
             break;
         case 'P': case 'p':  select_tool(TOOL_PEN);    break;
         case 'E': case 'e':  select_tool(TOOL_ERASER); break;
