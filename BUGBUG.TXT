@@ -1,0 +1,7 @@
+
+
+We have a problem with the syscall that creates an empty folder.
+When its called twice by the same app, the dir name passed is corrupted during the syscall.
+The worker in kernel-side is good.
+
+

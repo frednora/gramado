@@ -414,6 +414,10 @@ fsGetFileSize (
     if (dir_address == VOLUME1_ROOTDIR_ADDRESS)
     {
         // #bugbug: We can not do this everytime the function is called
+        // #bugbug:
+        // This type of operations is associated with the
+        // increase of memory used by the image during the compilation.
+
         fs_load_rootdir(VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32);
     }
 

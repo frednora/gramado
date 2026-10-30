@@ -39,6 +39,11 @@ static void __do_initialize_sdROOT(void)
     if (bpFAT.initialized != TRUE){
         x_panic("__do_initialize_sdROOT: bpFAT");
     }
+
+// #bugbug:
+// This type of operations is associated with the
+// increase of memory used by the image during the compilation.
+
 // Load the root dir into the canonical virtual address.
     fs_load_rootdir ( 
         VOLUME1_ROOTDIR_ADDRESS, 

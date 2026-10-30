@@ -608,7 +608,6 @@ static int input_compare_string(void)
         InstanceID = rtl_instance_id();
         printf ("init: This is the first user application. instance={%x}\n",
             InstanceID );
-
         goto exit_cmp;
     }
 
