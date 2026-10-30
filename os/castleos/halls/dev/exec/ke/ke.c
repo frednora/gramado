@@ -315,56 +315,68 @@ static void __check_gramado_mode(void)
 
 // ================================
 
+// #test:
+// We are getting data provided by the linker file.
+// (dangerous)
 static void __import_data_from_linker(void)
 {
-// #todo
-// Isso deve ter uma flag no aquivo de configuração.
-// config.h i guess.
 
-    if (ImportDataFromLinker == TRUE)
+//
+// Configuration do not allow us to operate.
+// #ps: But i guess this function is an important safe measure.
+//
+
+    if (ImportDataFromLinker != TRUE)
     {
-        //printk("\n");
-
-        //-------------
-
-        // Não queremos um tamanho de imagem que
-        // exceda o tamanho da região de memória mapeada para ela.
-
-        KernelImage_Size = (kernel_end - kernel_begin);
-        //printk ("Image Size %d KB \n",KernelImage_Size/1024);
-
-        // .text
-        KernelImage_CODE_Size = (code_end - code_begin);
-        //printk ("CODE Size %d KB \n",KernelImage_CODE_Size/1024);
-
-        // .rodata
-        KernelImage_RODATA_Size = (rodata_end - rodata_begin);
-        //printk ("RODATA Size %d KB \n",KernelImage_RODATA_Size/1024);
-
-        // .data
-        KernelImage_DATA_Size = (data_end - data_begin);
-        //printk ("DATA Size %d KB \n",KernelImage_DATA_Size/1024);
-
-        // .bss
-        KernelImage_BSS_Size = (bss_end - bss_begin);
-        //printk ("BSS Size %d KB \n",KernelImage_BSS_Size/1024);
-
-        // Limit 1 MB
-        // The kernel image is too long.
-        if ( KernelImage_Size/1024 > 1024 ){
-            panic("Error 0x04: Image size\n");
-        }
-        
-        // Address limit for the kernel image.
-        // See: x64gva.h
-        if (kernel_end > KERNEL_HEAP_START)
-        {
-            panic("Error 0x04: kernel_end\n");
-        }
-
-        // #debug: breakpoint
-        //while(1){}
+        debug_print("__import_data_from_linker: ImportDataFromLinker\n");
+        return;
     }
+
+
+// Não queremos um tamanho de imagem que
+// exceda o tamanho da região de memória mapeada para ela.
+
+    KernelImage_Size = (kernel_end - kernel_begin);
+    //printk ("Image Size %d KB \n",KernelImage_Size/1024);
+
+    // .text
+    KernelImage_CODE_Size = (code_end - code_begin);
+    //printk ("CODE Size %d KB \n",KernelImage_CODE_Size/1024);
+
+    // .rodata
+    KernelImage_RODATA_Size = (rodata_end - rodata_begin);
+    //printk ("RODATA Size %d KB \n",KernelImage_RODATA_Size/1024);
+
+    // .data
+    KernelImage_DATA_Size = (data_end - data_begin);
+    //printk ("DATA Size %d KB \n",KernelImage_DATA_Size/1024);
+
+    // .bss
+    KernelImage_BSS_Size = (bss_end - bss_begin);
+    //printk ("BSS Size %d KB \n",KernelImage_BSS_Size/1024);
+
+    // Limit 1 MB
+    // The kernel image is too long.
+    if ( KernelImage_Size/1024 > 1024 )
+    {
+        debug_print("__import_data_from_linker: Image size\n");
+        x_panic("__import_data_from_linker: Image size\n");
+        // #bugbug: Probably panic function is not working at this point yet
+        //panic("Error 0x04: Image size\n");
+    }
+       
+    // Address limit for the kernel image.
+    // See: x64gva.h
+    if (kernel_end > KERNEL_HEAP_START)
+    {
+        debug_print("__import_data_from_linker: kernel_end\n");
+        x_panic("__import_data_from_linker: kernel_end\n");
+        // #bugbug: Probably panic function is not working at this point yet
+        //panic("Error 0x04: kernel_end\n");
+    }
+
+    // #debug: breakpoint
+    //while(1){}
 }
 
 unsigned long keGetSystemMetrics(int index)
