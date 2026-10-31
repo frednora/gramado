@@ -390,7 +390,7 @@ clean-all: clean
 	-rm $(INIT_PROCESS)/src/bin/*.BIN 
 
 # ==================
-# (3) modules/
+# modules/
 # Clear the ring0 module images
 	-rm -rf modules/*.o
 	-rm -rf modules/*.BIN

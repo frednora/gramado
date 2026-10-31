@@ -106,6 +106,7 @@ static void worker_nb_test(void);
 
 static void dummy_signal_handler(void);
 
+static void do_create_stuff(void);
 
 //
 // ==============================================================
@@ -418,6 +419,32 @@ static inline void do_sti(void)
     asm ("sti");
 }
 
+
+static void do_create_stuff(void)
+{
+
+    // #important: This way the syscall fails
+    // static const char *file00 = "newfile.txt";
+    // static const char *dir00  = "newdir";
+
+    // #important: This way the syscall works
+    char file00[64];
+    char dir00[64];
+
+    memset(file00, 0, 64);
+    memset(dir00, 0, 64);
+
+    strcat(file00, "12345678TXT");   // 8.3 format
+    strcat(dir00,  "newdir");
+
+    printf("r3: %x\n", file00);
+    rtl_create_empty_file(file00);
+
+    printf("r3: %x\n", dir00);
+    rtl_create_empty_directory(dir00);
+}
+
+
 static int input_compare_string(void)
 {
     int ret_val = -1;
@@ -608,6 +635,9 @@ static int input_compare_string(void)
         InstanceID = rtl_instance_id();
         printf ("init: This is the first user application. instance={%x}\n",
             InstanceID );
+        
+        do_create_stuff();
+    
         goto exit_cmp;
     }
 

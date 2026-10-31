@@ -565,7 +565,7 @@ void *sci0 (
 
 // 40 - get user name 
     if (number == SCI0_GETUSERNAME){
-        return (void *) sys_getusername((char *) arg2);
+        return (void *) sys_getusername((const char *) arg2);
     }
 // 41 - Set user name 
     if (number == SCI0_SETUSERNAME){
@@ -574,16 +574,25 @@ void *sci0 (
 
 // 42 - free
 
+
+
 // 43 - Create an empty file
 // See: fs.c
-    if (number == SCI0_CREATE_EMPTY_FILE){
-        return (void *) sys_create_empty_file((char *) arg2);
+    if (number == SCI0_CREATE_EMPTY_FILE)
+    {
+        if ((void*) arg2 == NULL)
+            return NULL;
+        return (void *) sys_create_empty_file((const char *) arg2);
     }
+
 
 // 44 - Create an empty directory
 // See: fs.c
-    if (number == SCI0_CREATE_EMPTY_DIRECTORY){
-        return (void *) sys_create_empty_directory((char *) arg2);
+    if (number == SCI0_CREATE_EMPTY_DIRECTORY)
+    {
+        if ((void*) arg2 == NULL)
+            return NULL;
+        return (void *) sys_create_empty_directory((const char *) arg2);
     }
 
     // ...
@@ -3423,6 +3432,28 @@ void *sci3 (
 //
 // Not implemented yet
 //
+
+
+/*
+// 43 - Create an empty file
+// See: fs.c
+    if (number == 43)
+    {
+        if ((void*) arg2 == NULL)
+            return NULL;
+        return (void *) sys_create_empty_file((const char *) arg2);
+        //return (void *) sys_create_empty_directory((const char *) a2);
+    }
+// 44 - Create an empty directory
+// See: fs.c
+    if (number == 44)
+    {
+        if ((void*) arg2 == NULL)
+            return NULL;
+        return (void *) sys_create_empty_directory((const char *) arg2);
+        //return (void *) sys_create_empty_directory((const char *) a2);
+    }
+*/
 
     return NULL;
 

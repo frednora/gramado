@@ -117,6 +117,7 @@ all: main.o all-c cat-link finalize clean
 main.o:
 	@echo CC $@
 	@gcc  -c  main.c  $(CFLAGS) -I $(LIBC) -I $(LIBIO) -o main.o
+#	@gcc  -c  main.c  $(CFLAGS_OLD) -I $(LIBC) -I $(LIBIO) -o main.o
 all-c:
 	@echo "Importing library ..."
 

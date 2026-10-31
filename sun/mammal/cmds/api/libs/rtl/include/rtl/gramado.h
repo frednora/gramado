@@ -213,8 +213,8 @@ void rtl_show_heap_info(void);
 // Create file or directory.
 //
 
-int rtl_create_empty_file(char *file_name);
-int rtl_create_empty_directory(char *dir_name);
+int rtl_create_empty_file(const char *file_name);
+int rtl_create_empty_directory(const char *dir_name);
 
 //
 // == process ===============================

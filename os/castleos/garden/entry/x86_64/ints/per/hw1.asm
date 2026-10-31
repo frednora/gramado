@@ -1723,8 +1723,6 @@ PeripheralHall_irq14:
 
     ; #todo
     ; Work on this routine to make it kinda like the irq0.
-
-    ;cli 
     
     ;push eax
     ;PUSHAD
@@ -1796,7 +1794,6 @@ PeripheralHall_irq14:
     pop rbx
     pop rax
 
-    ;sti
     iretq 
 
 ;=================================================	

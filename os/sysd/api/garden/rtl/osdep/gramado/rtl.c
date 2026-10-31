@@ -779,7 +779,7 @@ void rtl_exit_critical_section (void)
 
 // Create empty file.
 // #todo: Change parameter type to const char 
-int rtl_create_empty_file(char *file_name)
+int rtl_create_empty_file(const char *file_name)
 {
     unsigned long Value=0;
 
@@ -807,7 +807,7 @@ int rtl_create_empty_file(char *file_name)
 
 // Create empty directory.
 // #todo: Change parameter type to const char 
-int rtl_create_empty_directory(char *dir_name)
+int rtl_create_empty_directory(const char *dir_name)
 {
     unsigned long Value=0;
 

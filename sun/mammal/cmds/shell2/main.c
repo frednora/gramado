@@ -14,9 +14,6 @@
 //#include "shell.h"
 
 
-const char *file00 = "newfile.txt";
-const char *dir00  = "newdir";
-
 
 static int __no_pipes = TRUE;
 
@@ -27,6 +24,8 @@ static int __fd_stderr = -1;
 
 
 static void process_run_command(const char *cmdline, int use_pipes);
+
+static void do_create_stuff(void);
 
 // ====================================================
 
@@ -133,6 +132,31 @@ static void process_run_command(const char *cmdline, int use_pipes)
     }
 }
 
+
+static void do_create_stuff(void)
+{
+
+    // #important: This way the syscall fails
+    // static const char *file00 = "newfile.txt";
+    // static const char *dir00  = "newdir";
+
+    // #important: This way the syscall works
+    char file00[64];
+    char dir00[64];
+
+    memset(file00, 0, 64);
+    memset(dir00, 0, 64);
+
+    strcat(file00, "newfile.txt");
+    strcat(dir00,  "newdir");
+
+    printf("r3: %x\n", file00);
+    rtl_create_empty_file(file00);
+
+    printf("r3: %x\n", dir00);
+    rtl_create_empty_directory(dir00);
+}
+
 //====================================================
 // Process a completed command
 //====================================================
@@ -164,16 +188,12 @@ static void process_command(void)
 
     // Built-in commands
     if (strcmp(argv[0], "about") == 0) {
+
         write(1, "shell2: minimal stdin/stdout shell\n", 34);
         write(1, "\n", 1);  // Go to the next line
 
-
-        // #bugbug
-        // This routine is nessing up the names stored.
-        // The issue happens when we call it for the secont time.
-
-        //rtl_create_empty_file(file00);
-        //rtl_create_empty_directory(dir00);
+        do_create_stuff();
+        return;
 
     }
     else if (strcmp(argv[0], "help") == 0) {
