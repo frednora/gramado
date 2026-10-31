@@ -189,6 +189,7 @@ char *safe_strcpy(char *to, const char *from, size_t maxlen)
 }
 
 // #test
+// #ps: Do not copy Zeros. For the case of string it looks fine.
 char *kernel_strcpy_safe(char *dst, size_t dst_size, const char *src)
 {
     size_t i;
@@ -196,8 +197,13 @@ char *kernel_strcpy_safe(char *dst, size_t dst_size, const char *src)
     if (dst == NULL || src == NULL || dst_size == 0)
         return NULL;
 
-    for (i = 0; i < dst_size - 1 && src[i] != '\0'; ++i)
+    // #ps: Do not copy Zeros.
+    for ( i=0; 
+          i < dst_size - 1 && src[i] != '\0'; 
+          ++i )
+    {
         dst[i] = src[i];
+    }
 
     dst[i] = '\0';
 
@@ -205,7 +211,8 @@ char *kernel_strcpy_safe(char *dst, size_t dst_size, const char *src)
 }
 
 // strcpy:  
-//     Copy a string
+// Copy a string
+// #bugbug: This code is unsafe. No limits. Remove it from the kernel!
 char *strcpy( char *to, const char *from )
 {
     register int i=0;
@@ -251,6 +258,8 @@ char *strcat(char *to, const char *from)
     };
 
     strcpy(to, from);
+    // #todo: We need a saver strcat
+    // that uses kernel_strcpy_safe as a worker
 
     return (ret);
 }

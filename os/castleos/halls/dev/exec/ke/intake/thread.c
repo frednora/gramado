@@ -495,8 +495,12 @@ int get_thread_name(tid_t tid, char *buffer)
         goto fail;
     }
 
+// #bugbug: We need another version of this funcion that
+// uses kernel_strcpy_safe insted of strcpy
+
 // Copy 64 bytes
     strcpy(name_buffer, (const char *) t->__threadname);
+    // kernel_strcpy_safe(name_buffer, t->threadName_len, (const char *) t->__threadname);
 
 // Return the lenght
     return (int) t->threadName_len;
@@ -1705,7 +1709,8 @@ try_next_slot:
 // #test 64 bytes max.
 
     Thread->name_address = (unsigned long) name;
-    strcpy( Thread->__threadname, (const char *) name );
+    //strcpy( Thread->__threadname, (const char *) name );
+    kernel_strcpy_safe( Thread->__threadname, 64, (const char *) name );
 
 
 //

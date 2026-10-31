@@ -711,7 +711,11 @@ kinguio_i2hex_versao2(
         if (*cp == '0'){
             cp++;
         }else{
-            strcpy(dest,cp);
+
+            // #bugbug: We need another version of this funcion that
+            // uses kernel_strcpy_safe insted of strcpy
+
+            strcpy(dest, cp);
             break;
         };
     };
@@ -767,6 +771,10 @@ kinguio_i2hex(
         if (*cp == '0'){
             cp++;
         } else {
+
+            // #bugbug: We need another version of this funcion that
+            // uses kernel_strcpy_safe insted of strcpy
+
             strcpy (dest,cp);
             break;
         };

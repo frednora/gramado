@@ -261,11 +261,13 @@ to_FAT_name (
     // Parent directory
     if ( !strcmp(src,"..") ) {
         strcpy(dst,src);
+        // #todo: use kernel_strcpy_safe(...)
         i=2;
     
     // Current directory
     } else if (!strcmp(src,".")) {
         strcpy(dst,src);
+        // #todo: use kernel_strcpy_safe(...)
         i=1;
  
     // Regular file

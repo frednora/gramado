@@ -506,7 +506,7 @@ devmgr_register_tty_device(
     if ((void*) name == NULL)
     {
         ksprintf( buf, "/DEV/%d", id );
-        strcpy( new_mount_point, buf );
+        kernel_strcpy_safe( new_mount_point, PathSize, buf );
     }
 // ----------------------
 // Se um nome foi indicado.
@@ -524,7 +524,7 @@ devmgr_register_tty_device(
         }
 
         ksprintf( buf, "/DEV/%s", name );
-        strcpy( new_mount_point, buf );
+        kernel_strcpy_safe( new_mount_point, PathSize, buf );
     }
 
 // /dev/tty0
@@ -688,7 +688,7 @@ devmgr_register_pci_device(
     if ((void*) name == NULL)
     {
         ksprintf( buf, "/DEV/%d", id );
-        strcpy( new_mount_point, buf );
+        kernel_strcpy_safe( new_mount_point, PathSize, buf );
     }
 // ----------------------
 // Se um nome foi indicado.
@@ -705,11 +705,8 @@ devmgr_register_pci_device(
             d->Name_len = NameSize;
         }
 
-        //ksprintf( buf, name );
-        // #todo: Copy n bytes using strncpy.
-        //strcpy( new_mount_point, buf );
         ksprintf( buf, "/DEV/%s", name );
-        strcpy( new_mount_point, buf );
+        kernel_strcpy_safe( new_mount_point, PathSize, buf );
     }
 
 // /dev/tty0
@@ -898,7 +895,7 @@ devmgr_register_legacy_device(
     if ((void*) name == NULL)
     {
         ksprintf( buf, "/DEV/%d", id );
-        strcpy( new_mount_point, buf );
+        kernel_strcpy_safe( new_mount_point, PathSize, buf );
     }
 // ----------------------
 // Se um nome foi indicado.
@@ -915,11 +912,8 @@ devmgr_register_legacy_device(
             d->Name_len = NameSize;
         }
 
-        //ksprintf( buf, name );
-        // #todo: Copy n bytes using strncpy.
-        //strcpy( new_mount_point, buf );
         ksprintf( buf, "/DEV/%s", name );
-        strcpy( new_mount_point, buf );
+        kernel_strcpy_safe( new_mount_point, PathSize, buf );
     }
 
 // /dev/tty0

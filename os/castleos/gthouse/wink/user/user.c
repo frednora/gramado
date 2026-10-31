@@ -281,11 +281,18 @@ int sys_getusername(char *ubuff)
         return (int) -EFAULT;
     }
 
+
+// #bugbug: We need another version of this funcion that
+// uses kernel_strcpy_safe insted of strcpy
+
 // Estrutura default para informações sobre o host.
 // 64 bytes
 // host.h
-    if ((void *) CurrentUser != NULL){
+    if ((void *) CurrentUser != NULL)
+    {
         strcpy( p, (const char *) CurrentUser->__username );
+        // kernel_strcpy_safe( p, CurrentUser->userName_len, (const char *) CurrentUser->__username );
+
         return (int) CurrentUser->userName_len;
     }
 
@@ -311,13 +318,33 @@ int sys_setusername(const char *new_username)
 // Where is this structure defined?
 // 64 bytes
 
+// #bugbug: We need another version of this funcion that
+// uses kernel_strcpy_safe insted of strcpy
+
+
     if ( (void *) CurrentUser != NULL )
     {
+        // #bugbug
+        // It needs to respect the size allocated in the structure.
+    
         CurrentUser->userName_len = 
             (size_t) (strlen(new_username) + 1);
-        strcpy( 
+
+        if (CurrentUser->userName_len <= 0)
+            return -1;
+
+        if (CurrentUser->userName_len > 64)
+            CurrentUser->userName_len = 64;
+
+        //strcpy( 
+            //CurrentUser->__username, 
+            //(const char *) new_username );
+
+        kernel_strcpy_safe( 
             CurrentUser->__username, 
+            CurrentUser->userName_len,
             (const char *) new_username );
+
         return 0;
     }
 

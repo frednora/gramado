@@ -951,11 +951,11 @@ pciHandleDevice (
     if (SizeOfNewName >= SizeOfNameBuffer){
         printk("pciHandleDevice: SizeOfNewName\n");
     }
-    // Save!
-    strcpy( newname, __tmpname );
+    // Save it
+    //strcpy( newname, __tmpname );
+    kernel_strcpy_safe( newname, SizeOfNameBuffer, __tmpname );
 
-// #bugbug
-// Finalize the string!
+// #bugbug: Finalize the string
 
 //
 // file

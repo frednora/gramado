@@ -114,8 +114,15 @@ int __ptsname(int fd, char *buf, size_t buflen)
     if ((void*) buf == NULL){
         return (int) (-EINVAL);
     }
+
+    if (buflen <= 0)
+        return (int) (-EINVAL);
+    if (buflen > 50)
+        return (int) (-EINVAL);
+
 // 64 bytes limit
-    strcpy( ptsname_buffer, (const char *) test_str );
+    kernel_strcpy_safe( ptsname_buffer, buflen, (const char *) test_str );
+
 // Lá na lib em ring3 a rotina retorna 
 // para o app o ponteiro para o buffer
     return 0;

@@ -56,17 +56,25 @@ int sys_gethostname(char *ubuff)
         printk("sys_gethostname: HostInfo\n");
         goto fail;
     }
-// Copy 64 bytes.
+
+// #bugbug: We need another version of this funcion that
+// uses kernel_strcpy_safe insted of strcpy
+
+// Copy 64 bytes
     strcpy ( 
         hostname_buffer, 
         (const char *) HostInfo->__hostname );
 
-// Get the size.
+    //kernel_strcpy_safe ( 
+        //hostname_buffer, 
+        //HostInfo->hostName_len,
+        //(const char *) HostInfo->__hostname );
+
+// Get the size
     size = (int) HostInfo->hostName_len;
     return (int) size;
 
 fail:
-    refresh_screen();
     return (int) -1;
 }
 
@@ -103,14 +111,36 @@ int sys_sethostname(const char *new_hostname, size_t len)
     HostInfo->hostName_len = (size_t) StringLen;
     // ...
 
-// Copy 64 bytes.
+    // #bugbug
+    // Probably it gotta be less than 64
+
+    if (HostInfo->hostName_len <= 0)
+        goto fail;
+
+    if (HostInfo->hostName_len > 64)
+    {
+        // HostInfo->hostName_len = 64;
+
+        // #provisory
+        goto fail;
+    }
+
+// #bugbug: We need another version of this funcion that
+// uses kernel_strcpy_safe insted of strcpy
+
+// Copy 64 bytes
     strcpy ( 
         HostInfo->__hostname, 
         (const char *) new_hostname );
 
+    //kernel_strcpy_safe ( 
+        //HostInfo->__hostname, 
+        // HostInfo->hostName_len,
+        //(const char *) new_hostname );
+
     return 0;
+
 fail:
-    refresh_screen();
     return (int) -1;
 }
 
