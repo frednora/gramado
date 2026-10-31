@@ -1002,8 +1002,6 @@ int sys_create_empty_directory(const char *dir_name)
 {
     int __ret=0;
 
-    char name_copy[64];
-
 // #bugbug: 
 // We need a buffer in another place.
     char buffer[BUFSIZ];  // 1024
@@ -1013,8 +1011,6 @@ int sys_create_empty_directory(const char *dir_name)
     debug_print ("sys_create_empty_directory:\n");
     printk      ("sys_create_empty_directory:\n");
 
-
-
 // Parameter:
     if ((void*) dir_name == NULL){
         return (int) (-EINVAL);
@@ -1023,22 +1019,7 @@ int sys_create_empty_directory(const char *dir_name)
         return (int) (-EINVAL);
     }
 
-// #bugbug
-// The conversion bellow is working fine.
-// The problem is when this function is called twice,
-// the second time is sending dirty string.
-// The problem is the way the app is storing the data.
-
-    printk("dir_name %s\n", dir_name);
-
-    memset(name_copy, 0, 64);
-    memcpy(name_copy, dir_name, 11);
-
-    //fs_fntos((char *) dir_name);
-    fs_fntos((char *) name_copy);
-
-    printk("name_copy %s\n", name_copy);
-
+    fs_fntos((char *) dir_name);
 
 // Clear the buffer
 // So the newly allocated directory cluster gets written with all zeros.
@@ -1057,7 +1038,7 @@ int sys_create_empty_directory(const char *dir_name)
                 VOLUME1_FAT_ADDRESS, 
                 VOLUME1_ROOTDIR_ADDRESS, 
                 FAT16_ROOT_ENTRIES,
-                (char *)         name_copy,
+                (char *)         dir_name,
                 (unsigned long)  number_of_sectors, 
                 (unsigned long)  size_in_bytes, 
                 (char *)         &buffer[0], 

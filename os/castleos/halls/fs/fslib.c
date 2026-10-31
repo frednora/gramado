@@ -39,18 +39,6 @@ unsigned long search_path_dir_entries=0;
 static int __initialize_fs_buffers(void);
 // ...
 
-static int fsSaveFile_imp ( 
-    unsigned long fat_address,
-    unsigned long dir_address,
-    int dir_entries,
-    const char *file_name, 
-    unsigned long size_in_sectors,
-    unsigned long size_in_bytes,
-    char *file_address,
-    char flag,
-    unsigned short parent_cluster );   // 0 = parent is the root directory
-
-
 //=============================
 
 
@@ -3880,7 +3868,6 @@ fail:
 // size_in_sectors → Size of the file in sectors (not bytes).
 // file_buffer → Pointer to the memory buffer containing the file’s contents.
 
-/*
 int
 fsSaveFile ( 
     unsigned long fat_address,
@@ -3898,8 +3885,6 @@ fsSaveFile (
 // Use the entry structure (fat16_directory_entry_d) found in fat.h.
 // >>> Used to save/create a file or a directory,
 // depending on the flag.
-
-    struct fat16_directory_entry_d entry;
 
     int Status = 0;
 
@@ -3919,7 +3904,7 @@ fsSaveFile (
     //struct fat16_directory_entry_d entry_fat16;
 
 // Directory entry buffer
-    //char DirEntry[32];
+    char DirEntry[32];
 
 //Entry size in words.
     int EntrySize = 0;
@@ -3970,6 +3955,15 @@ fsSaveFile (
 // #bugbug
 // Esse endereço eh valido?
 
+/*
+    printk ("name address = %x \n", &file_name );
+    printk ("name    = %s \n", file_name ); 
+    printk ("size    = %d \n", size_in_sectors );
+    printk ("nbytes  = %d \n", size_in_bytes );
+    printk ("address = %x \n", file_address );
+    printk ("flag    = %x \n", flag );
+    printk ("entries = %d \n", dir_entries );
+ */
 
 // How name direntries this directory have?
     if ( dir_entries == 0 || 
@@ -3997,15 +3991,10 @@ fsSaveFile (
 
 
 // Clean the buffer
-    //memset(DirEntry, 0, 32);
-    memset(&entry, 0, sizeof(struct fat16_directory_entry_d));
+    memset(DirEntry, 0, 32);
 
 
 // Load root dir and FAT.
-// #bugbug:
-// This type of operations is associated with the
-// increase of memory used by the image during the compilation.
-
     fs_load_rootdir( VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32 );
     fs_load_fat( VOLUME1_FAT_ADDRESS, VOLUME1_FAT_LBA, 246 );
 
@@ -4097,36 +4086,35 @@ save_file:
     j = (512*4);
 
 
-    memcpy(entry.FileName, file_name, 11);  // All the 11 bytes
-
 // Create directory entry
 // Name/ext 8.3
-    //DirEntry[0]  = (char) file_name[0];
-    //DirEntry[1]  = (char) file_name[1];
-    //DirEntry[2]  = (char) file_name[2];
-    //DirEntry[3]  = (char) file_name[3];
-    //DirEntry[4]  = (char) file_name[4];
-    //DirEntry[5]  = (char) file_name[5];
-    //DirEntry[6]  = (char) file_name[6];
-    //DirEntry[7]  = (char) file_name[7];
+    DirEntry[0]  = (char) file_name[0];
+    DirEntry[1]  = (char) file_name[1];
+    DirEntry[2]  = (char) file_name[2];
+    DirEntry[3]  = (char) file_name[3];
+    DirEntry[4]  = (char) file_name[4];
+    DirEntry[5]  = (char) file_name[5];
+    DirEntry[6]  = (char) file_name[6];
+    DirEntry[7]  = (char) file_name[7];
 // extension.
     // Use extension or files.
-    //DirEntry[8]  = (char) file_name[8];
-    //DirEntry[9]  = (char) file_name[9];
-    //DirEntry[10] = (char) file_name[10];
-
+    DirEntry[8]  = (char) file_name[8];
+    DirEntry[9]  = (char) file_name[9];
+    DirEntry[10] = (char) file_name[10];
     // No extension for directories. Using spaces. I guess. 
     if (flag == 0x10)
     {
-        entry.FileName[8]  = (char) 0x20;
-        entry.FileName[9]  = (char) 0x20;
-        entry.FileName[10] = (char) 0x20;
-
-        //DirEntry[8]  = (char) 0x20;
-        //DirEntry[9]  = (char) 0x20;
-        //DirEntry[10] = (char) 0x20;
+        DirEntry[8]  = (char) 0x20;
+        DirEntry[9]  = (char) 0x20;
+        DirEntry[10] = (char) 0x20;
     }
 
+    /*
+    printk ("flag=%x \n",flag);
+    printk ("%c\n",DirEntry[8]);
+    printk ("%c\n",DirEntry[9]);
+    printk ("%c\n",DirEntry[10]);
+    */
 
 // Attribute byte.
 // 0x01: read only
@@ -4138,8 +4126,7 @@ save_file:
 // 0x40: Unused
 // 0x80: Unused
 
-    entry.Attributes = flag;
-    //DirEntry[11] = (char) flag;
+    DirEntry[11] = (char) flag;
 
     // #todo
     //if (IsReadOnly)
@@ -4152,107 +4139,65 @@ save_file:
     //    DirEntry[11] = (char) DirEntry[11] | 0x08;
 
 // Reserved
-    // FAT12/16 always use zero here.
-    entry.Reserved1 = 0;
-    //DirEntry[12] = 0;
-
-// is 151, within the legal 0-199 range.
-// 23:22:38.
-// 2024-07-02 (day 2, month 7, year 1980+44).
-
-    entry.CreationMS   = 0x97;    // Create Time (ms)
-    entry.CreationTime = 0xBAD3;  // Create Time (Hrs/Mins/Secs)
-    entry.CreationDate = 0x58E2;
+    DirEntry[12] = 0; 
 
 // Creation time. 14 15 16
-    //DirEntry[13] = 0x97;  // Create Time (ms)
-
-    //DirEntry[14] = 0xD3;  // Create Time (Hrs/Mins/Secs)
-    //DirEntry[15] = 0xBA;
+    DirEntry[13] = 0x97;  // Create Time (ms)
+    //
+    DirEntry[14] = 0xD3;  // Create Time (Hrs/Mins/Secs)
+    DirEntry[15] = 0xBA;
 // Creation date
-    //DirEntry[16] = 0xE2;
-    //DirEntry[17] = 0x58;
-
-    entry.LastAccessDate = 0x58E2;
-
+    DirEntry[16] = 0xE2;
+    DirEntry[17] = 0x58;
 // Access date
-    //DirEntry[18] = 0xE2;
-    //DirEntry[19] = 0x58;
+    DirEntry[18] = 0xE2;
+    DirEntry[19] = 0x58;
 
 // First cluster. (16 bits)
 // Only used in FAT32 Systems
 // 0 para fat12 ou 16
-
-    entry.Reserved2 = 0;
-
-    //DirEntry[20] = 0;  // File/Folder Start Cluster (High)
-    //DirEntry[21] = 0;
-
-
-// A FAT time is:
-// bits 0-4  seconds/2
-// bits 5-10 minutes
-// bits 11-15 hours
-// 23:22:38.
-
-    entry.LastWriteTime = 0xBAD3;
+    DirEntry[20] = 0;  // File/Folder Start Cluster (High)
+    DirEntry[21] = 0;
 
 // Modifield time
-    //DirEntry[22] = 0xD3;
-    //DirEntry[23] = 0xBA;
-
-// A FAT date is:
-// bits 0-4  day
-// bits 5-8  month
-// bits 9-15 year-1980
-// date 2024-07-02 (day 2, month 7, year 1980+44).
-
-    entry.LastWriteDate = 0x58E2;
-
+    DirEntry[22] = 0xD3;
+    DirEntry[23] = 0xBA;
 // Modifield date
-    //DirEntry[24] = 0xE2;
-    //DirEntry[25] = 0x58;
+    DirEntry[24] = 0xE2;
+    DirEntry[25] = 0x58;
 
-
+// #test
 // First cluster. (Low word)
 // The low 16 bits of this entry's first cluster number. 
 // Use this number to find the first cluster for this entry.
 // first = Index in the fat16ClustersToSave[] list.
    //int fIndex = first;  //=0.
     unsigned short OurFirstCluster = (unsigned short) fat16ClustersToSave[0];
-
-    entry.StartingCluster = (unsigned short) OurFirstCluster;
-
-    //char *p = (char *) &OurFirstCluster;
-    //DirEntry[26] = (char) (*p);  // File/Folder Start Cluster (Low)
-    //p++;
-    //DirEntry[27] = (char) (*p);
-
-
-    entry.FileSize = (unsigned int) size_in_bytes;   // #ps: 32 bit
+    char *p = (char *) &OurFirstCluster;
+    DirEntry[26] = (char) (*p);  // File/Folder Start Cluster (Low)
+    p++;
+    DirEntry[27] = (char) (*p);
 
 // File size in bytes. (32 bits)
 // 4 bytes: (28,29,30,31)
 // (for files)
-    //DirEntry[28] = (char) size_in_bytes;
-    //size_in_bytes = (size_in_bytes >> 8);
-    //DirEntry[29] = (char) size_in_bytes;
-    //size_in_bytes = (size_in_bytes >> 8);
-    //DirEntry[30] = (char) size_in_bytes;
-    //size_in_bytes = (size_in_bytes >> 8);
-    //DirEntry[31] = (char) size_in_bytes;
+    DirEntry[28] = (char) size_in_bytes;
+    size_in_bytes = (size_in_bytes >> 8);
+    DirEntry[29] = (char) size_in_bytes;
+    size_in_bytes = (size_in_bytes >> 8);
+    DirEntry[30] = (char) size_in_bytes;
+    size_in_bytes = (size_in_bytes >> 8);
+    DirEntry[31] = (char) size_in_bytes;
 
 // Folders will have a File Size of 0x0000
 // (for folders)
 
     if (flag == 0x10)
     {
-        entry.FileSize = 0;
-
-       // DirEntry[28] = (char) 0;
-       // DirEntry[29] = (char) 0;
-       // DirEntry[30] = (char) 0;
-       // DirEntry[31] = (char) 0;
+        DirEntry[28] = (char) 0;
+        DirEntry[29] = (char) 0;
+        DirEntry[30] = (char) 0;
+        DirEntry[31] = (char) 0;
     }
 
 // #importante:
@@ -4300,15 +4245,8 @@ save_file:
     EntrySize = (FAT16_ENTRY_SIZE/2);
     Offset = (int) (FreeIndex * EntrySize);
 
-
-    memcpy(
-        &__dir[Offset],
-        &entry,
-        sizeof(struct fat16_directory_entry_d) 
-    );
-
 // FAT16_DIRENTRY_SIZE = 32
-    //memcpy ( &__dir[Offset], DirEntry, 32 );
+    memcpy ( &__dir[Offset], DirEntry, 32 );
 
 // reset
 // Reiniciamos o controlador antes de usarmos.
@@ -4473,357 +4411,6 @@ fail:
     return (int) 1;  // Why 1?
     //return -1;
 }
-*/
-
-
-// fsSaveFile: create/save a file or a directory on a FAT16 volume.
-//
-// Changes from the original:
-//  - New parameter parent_cluster: first cluster of the directory that
-//    receives the new entry (0 = root). Used for ".." and to persist
-//    subdirectories.
-//  - Directories get a proper first cluster with "." and ".." entries.
-//    The caller's file_address is ignored for directories.
-//  - size_in_sectors is saved before the search loop consumes it.
-//  - The FAT is only modified after every step that can fail has passed.
-//  - The FAT is NOT reloaded from disk on every call (that threw away
-//    clusters allocated since the last flush, because the cache is only
-//    saved later). Define FSSAVE_RELOAD_METADATA 1 to get the old behavior.
-//  - Empty files get start cluster 0 instead of 0xFFF8.
-//  - The directory is saved to the right place (root or subdirectory).
-//
-// Assumptions (same as your original code): 1 cluster = 1 sector,
-// data LBA = VOLUME1_DATAAREA_LBA + cluster - 2, and the helpers
-// findEmptyDirectoryEntry(), ataWriteSector(), disk_ata_wait_irq(),
-// atadsk_save_rootdir(), fs_fat16_cache_not_saved() behave as before.
-// struct fat16_directory_entry_d must be packed and exactly 32 bytes.
-//
-// Returns 0 on success, 1 on failure.
-
-//#define FSSAVE_RELOAD_METADATA   0
-#define FSSAVE_MAX_FILE_SECTORS  16
-#define FSSAVE_FIRST_CLUSTER     3        // do not start from 0 (kept from original)
-#define FSSAVE_FAT_ENTRIES       (246 * 256)
-#define FSSAVE_EOC               0xFFF8
-#define FSSAVE_DIR_SECTORS       1        // a new directory gets one cluster
-
-// Dummy timestamps (valid FAT values).
-#define FSSAVE_DUMMY_MS    0x97
-#define FSSAVE_DUMMY_TIME  0xBAD3
-#define FSSAVE_DUMMY_DATE  0x58E2
-
-// Writes a directory buffer that lives in a subdirectory back to disk,
-// following that directory's cluster chain.
-static int 
-__fsSaveSubdirBuffer (
-    unsigned int port,
-    unsigned short *fat,
-    unsigned short dir_first_cluster,
-    unsigned long dir_address,
-    int dir_entries )
-{
-    unsigned long sectors = (unsigned long) ((dir_entries * 32 + 511) / 512);
-    unsigned long k = 0;
-    unsigned short cluster = dir_first_cluster;
-
-    while (k < sectors && cluster >= 2 && cluster < FSSAVE_EOC)
-    {
-        disk_ata_wait_irq( ATACurrentPort.g_current_ide_port_index );
-        ataWriteSector ( 
-            port,
-            dir_address + (k * 512),
-            (unsigned long) (VOLUME1_DATAAREA_LBA + cluster - 2),
-            0, 
-            0 );
-        cluster = fat[cluster];
-        k++;
-    }
-
-    return (k == 0) ? -1 : 0;
-}
-
-
-
-static int fsSaveFile_imp ( 
-    unsigned long fat_address,
-    unsigned long dir_address,
-    int dir_entries,
-    const char *file_name, 
-    unsigned long size_in_sectors,
-    unsigned long size_in_bytes,
-    char *file_address,
-    char flag,
-    unsigned short parent_cluster )   // 0 = parent is the root directory
-{
-    struct fat16_directory_entry_d entry;
-
-    // One cluster is one sector, so a static sector buffer is enough
-    // to build the "." / ".." cluster of a new directory.
-    // Not reentrant. Fine for a single-threaded kernel path.
-    static unsigned char dir_sector[512];
-
-    unsigned short clusters[FSSAVE_MAX_FILE_SECTORS];
-    unsigned long total_sectors = 0;
-    unsigned long needed = 0;
-    unsigned long found = 0;
-    unsigned long c = 0;
-    unsigned long k = 0;
-    unsigned long address = 0;
-    unsigned short first_cluster = 0;
-    unsigned int port = 0;
-    int is_dir = 0;
-    int FreeIndex = -1;
-    int n = 0;
-
-    debug_print ("fsSaveFile:\n");
-
-    if (fat_address == 0){
-        panic("fsSaveFile: fat_address\n");
-    }
-    if (dir_address == 0){
-        panic("fsSaveFile: dir_address\n");
-    }
-    // We only support one FAT for now.
-    if (fat_address != VOLUME1_FAT_ADDRESS){
-        panic("fsSaveFile: fat_address\n");
-    }
-
-    unsigned short *fat = (unsigned short *) fat_address;
-
-    if ((void *) file_name == NULL || *file_name == 0){
-        printk ("fsSaveFile: [ERROR] file_name\n"); 
-        goto fail;
-    }
-
-    if (dir_entries <= 0 || dir_entries > FAT16_ROOT_ENTRIES){
-        panic ("fsSaveFile: [FAIL] max dir entries");
-    }
-
-    is_dir = ((flag & 0x10) != 0);
-
-    if (is_dir){
-        total_sectors = FSSAVE_DIR_SECTORS;
-    } else {
-        total_sectors = size_in_sectors;
-        if ((void *) file_address == NULL && total_sectors != 0){
-            printk ("fsSaveFile: [ERROR] file_address\n");
-            goto fail;
-        }
-    }
-
-    if (total_sectors > FSSAVE_MAX_FILE_SECTORS){
-        printk ("fsSaveFile: [FIXME] Size in sectors = %d\n", total_sectors);
-        goto fail;
-    }
-
-// #bugbug:
-// This type of operations is associated with the
-// increase of memory used by the image during the compilation.
-//#if FSSAVE_RELOAD_METADATA
-    //fs_load_rootdir( VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32 );
-    //fs_load_fat( VOLUME1_FAT_ADDRESS, VOLUME1_FAT_LBA, 246 );
-//#endif
-
-//
-// 1) Find free clusters. Nothing is modified yet.
-//
-
-    needed = total_sectors;
-
-    for ( c = FSSAVE_FIRST_CLUSTER; 
-          c < FSSAVE_FAT_ENTRIES && 
-          (c - FSSAVE_FIRST_CLUSTER) < CLUSTERS_TO_SAVE_MAX &&
-          found < needed; 
-          c++ )
-    {
-        if (fat[c] == 0){
-            clusters[found] = (unsigned short) c;
-            found++;
-        }
-    }
-
-    if (found < needed){
-        printk ("fsSaveFile: No free cluster \n");
-        goto fail;
-    }
-
-    // Empty regular file: no cluster, start cluster 0.
-    first_cluster = (needed > 0) ? clusters[0] : 0;
-
-//
-// 2) Find a free directory entry. Still nothing modified.
-//
-
-    FreeIndex = (int) findEmptyDirectoryEntry ( dir_address, dir_entries );
-    if (FreeIndex < 0){
-        printk ("fsSaveFile: [FAIL] No empty entry\n");
-        goto fail;
-    }
-
-//
-// 3) Build the directory entry.
-//
-
-    memset ( &entry, 0, sizeof(struct fat16_directory_entry_d) );
-
-
-    // 8.3 name: copy up to 11 chars, pad the rest with spaces,
-    // so a short NUL-terminated string never leaks garbage.
-    //for (n = 0; n < 11; n++)
-    //{
-    //    if (file_name[n] == 0)
-    //        break;
-    //    entry.FileName[n] = file_name[n];
-    //}
-    // #todo: Change this
-    //for (; n < 11; n++){
-    //    entry.FileName[n] = 0x20;
-    //}
-
-    // #ps: This is because the called already prepared tge name for us.
-    memcpy(entry.FileName, file_name, 11);  // All the 11 bytes
-
-    // Directories have no extension.
-    if (is_dir){
-        entry.FileName[8]  = 0x20;
-        entry.FileName[9]  = 0x20;
-        entry.FileName[10] = 0x20;
-    }
-
-    entry.Attributes     = flag;
-    entry.Reserved1      = 0;
-    entry.CreationMS     = FSSAVE_DUMMY_MS;
-    entry.CreationTime   = FSSAVE_DUMMY_TIME;
-    entry.CreationDate   = FSSAVE_DUMMY_DATE;
-    entry.LastAccessDate = FSSAVE_DUMMY_DATE;
-    entry.Reserved2      = 0;      // high word of cluster, FAT32 only
-    entry.LastWriteTime  = FSSAVE_DUMMY_TIME;
-    entry.LastWriteDate  = FSSAVE_DUMMY_DATE;
-    entry.StartingCluster = first_cluster;
-    entry.FileSize = 
-        is_dir 
-        ? 0 
-        : (unsigned int) size_in_bytes;
-
-//
-// 4) Build the data to write.
-//    Directory: "." and ".." followed by zeros.
-//    File: the caller's buffer.
-//
-
-    if (is_dir)
-    {
-        struct fat16_directory_entry_d dot;
-
-        memset ( dir_sector, 0, sizeof(dir_sector) );
-
-        // "." points to the directory itself.
-        memcpy ( &dot, &entry, sizeof(dot) );
-        memcpy ( dot.FileName, ".          ", 11 );
-        dot.Attributes      = 0x10;
-        dot.FileSize        = 0;
-        dot.StartingCluster = first_cluster;
-        memcpy ( &dir_sector[0], &dot, sizeof(dot) );
-
-        // ".." points to the parent (0 when the parent is the root).
-        memcpy ( dot.FileName, "..         ", 11 );
-        dot.StartingCluster = parent_cluster;
-        memcpy ( &dir_sector[32], &dot, sizeof(dot) );
-
-        address = (unsigned long) dir_sector;
-    } else {
-        address = (unsigned long) file_address;
-    }
-
-//
-// 5) Write the clusters and update the FAT chain in memory.
-//
-
-    port = (unsigned int) ata_get_current_ide_port_index();
-
-    for (k = 0; k < needed; k++)
-    {
-        fat[ clusters[k] ] = (k + 1 < needed) ? clusters[k+1] : FSSAVE_EOC;
-
-        disk_ata_wait_irq( ATACurrentPort.g_current_ide_port_index );
-        ataWriteSector ( 
-            port,
-            address, 
-            (unsigned long) (VOLUME1_DATAAREA_LBA + clusters[k] - 2), 
-            0, 
-            0 );
-
-        // Directory: only the first sector holds "." and "..",
-        // the rest of the new cluster chain must be zero.
-        if (is_dir && k == 0){
-            memset ( dir_sector, 0, sizeof(dir_sector) );
-        } else if (!is_dir){
-            address += 512;
-        }
-    }
-
-//
-// 6) Commit the entry into the directory buffer and save the directory.
-//
-
-    memcpy ( 
-        (unsigned char *) dir_address + (FreeIndex * FAT16_ENTRY_SIZE),
-        &entry,
-        sizeof(struct fat16_directory_entry_d) );
-
-    if (parent_cluster == 0 || dir_address == VOLUME1_ROOTDIR_ADDRESS)
-    {
-        atadsk_save_rootdir( VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32 );
-    } else {
-        if (__fsSaveSubdirBuffer ( port, fat, parent_cluster, 
-                dir_address, dir_entries ) < 0){
-            printk ("fsSaveFile: [FAIL] saving subdirectory\n");
-            goto fail;
-        }
-    }
-
-    // The FAT is flushed later, at the end of the session.
-    fs_fat16_cache_not_saved();
-
-    return 0;
-
-fail:
-    debug_print("fsSaveFile: fail\n");
-    printk     ("fsSaveFile: fail\n");
-    return 1;  // #todo: return -1
-}
-
-int
-fsSaveFile ( 
-    unsigned long fat_address,
-    unsigned long dir_address,
-    int dir_entries,
-    const char *file_name, 
-    unsigned long size_in_sectors,
-    unsigned long size_in_bytes,
-    char *file_address,
-    char flag )
-{
-    int rv = -1;
-    const unsigned short parent_cluster=0;    // 0 = parent is the root directory
-
-    rv = (int) fsSaveFile_imp(
-        fat_address,
-        dir_address,
-        dir_entries,
-        file_name,
-        size_in_sectors,
-        size_in_bytes,
-        file_address,
-        flag,
-        parent_cluster
-    );
-
-    return (int) rv;
-}
-
-
-
 
 /*
  * do_read_file_from_disk: 

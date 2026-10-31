@@ -173,8 +173,7 @@ Optional flags that indicates case information of the SFN.
     unsigned char CreationMS;  //Optional sub-second information.
     unsigned short CreationTime; 
 // Creation date. (2 byte)
-    unsigned short CreationDate;
-
+    unsigned short CreationDate; 
 // Optional last accesse date. (2 byte)
     unsigned short LastAccessDate; 
 
@@ -183,16 +182,12 @@ Optional flags that indicates case information of the SFN.
 // Always zero on the FAT12/16 volume.
 // For fat32 
     unsigned short Reserved2;
-
-
 // Modification time
     unsigned short LastWriteTime;  
 // Modification date
     unsigned short LastWriteDate;  
-
 // (First Cluster Low)
     unsigned short StartingCluster; 
-
 // File size
     unsigned int FileSize; 
 };  

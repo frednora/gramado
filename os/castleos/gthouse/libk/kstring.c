@@ -177,6 +177,7 @@ void *memcpy64( void *v_dst, const void *v_src, unsigned long n )
     return v_dst;
 }
 
+// #test
 char *safe_strcpy(char *to, const char *from, size_t maxlen)
 {
     size_t i;
@@ -185,6 +186,22 @@ char *safe_strcpy(char *to, const char *from, size_t maxlen)
     }
     to[i] = '\0';  // always terminate
     return to;
+}
+
+// #test
+char *kernel_strcpy_safe(char *dst, size_t dst_size, const char *src)
+{
+    size_t i;
+
+    if (dst == NULL || src == NULL || dst_size == 0)
+        return NULL;
+
+    for (i = 0; i < dst_size - 1 && src[i] != '\0'; ++i)
+        dst[i] = src[i];
+
+    dst[i] = '\0';
+
+    return dst;
 }
 
 // strcpy:  

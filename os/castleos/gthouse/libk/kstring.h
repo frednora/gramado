@@ -54,8 +54,10 @@ int gramado_strncmp ( char *s1, char *s2, int len );
 // int strncmp(const char *s1, const char *s2, size_t n);
 
 
-
+// #test
+char *kernel_strcpy_safe(char *dst, size_t dst_size, const char *src);
 char *safe_strcpy(char *to, const char *from, size_t maxlen);
+
 char *strcpy ( char *to, const char *from );
 char *strncpy (char *s1, const char *s2, size_t n);
 char *strcat (char *to, const char *from);
