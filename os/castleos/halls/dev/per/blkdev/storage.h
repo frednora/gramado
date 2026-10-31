@@ -89,8 +89,6 @@ struct superblock_d
 // volume
 // volume.h
 
-#define VOLUME_COUNT_MAX 1024
-
 #define VFS_VOLUME_ID              0
 #define BOOTPARTITION_VOLUME_ID    1
 #define SYSTEMPARTITION_VOLUME_ID  2
@@ -298,6 +296,8 @@ extern struct volume_d  *volume_systempartition; // volume 2
 
 // Volume list
 // See: storage.c
+#define VOLUME_COUNT_MAX  512 //1024
+
 extern unsigned long volumeList[VOLUME_COUNT_MAX];
 
 
@@ -350,7 +350,6 @@ Partition 3:
 #define MBR_BOOTABLE   0x80
 #define MBR_SIGNATURE  0xAA55
 
-#define DISK_COUNT_MAX  1024
 
 #define DISK_BYTES_PER_SECTOR  512 
 //#define DISK_BYTES_PER_SECTOR 4096 
@@ -649,6 +648,7 @@ extern struct disk_d  *____boot____disk;
 // Disk list.
 // Essa lista é preenchida pelo driver de IDE.
 // See: storage.c
+#define DISK_COUNT_MAX  512  //1024
 extern unsigned long diskList[DISK_COUNT_MAX];
 
 //

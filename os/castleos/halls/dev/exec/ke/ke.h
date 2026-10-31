@@ -15,6 +15,13 @@ struct ke_info_d
 extern struct ke_info_d KEInfo;
 
 
+extern unsigned long KernelImage_Size;
+extern unsigned long KernelImage_CODE_Size;
+extern unsigned long KernelImage_RODATA_Size;
+extern unsigned long KernelImage_DATA_Size;
+extern unsigned long KernelImage_BSS_Size;
+
+
 void keDie(void);
 void keSoftDie(void);
 int keReboot(void);

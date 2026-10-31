@@ -266,7 +266,8 @@ struct kstdio_sync_d
 };
 
 
-#define SYNC_COUNT_MAX  1024
+#define SYNC_COUNT_MAX  512 //1024
+
 // Lista global de objetos do tipo sync.
 // os processos utilizarao um id para a lista global.
 extern unsigned long syncList[SYNC_COUNT_MAX];

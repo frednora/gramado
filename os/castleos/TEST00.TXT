@@ -1,0 +1,2 @@
+   text	   data	    bss	    dec	    hex	filename
+ 517221	   6184	 515352	1038757	  fd9a5	KERNEL.BIN

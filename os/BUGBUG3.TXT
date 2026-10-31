@@ -11,8 +11,6 @@
  + get_table_pointer_va() in paging.c 
  + ____DANGER_TABLE_POINTER_HEAP_BASE in x64gpa.h 
 
-
-
 -----------------------------------------------------------
 #important
 >>> If a program has a sleep() in ring 3 and some hw interrupt happens,

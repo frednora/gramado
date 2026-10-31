@@ -1,0 +1,124 @@
+
+    >>>> BSS size issues <<<<
+
+
+ps: 
+The binary has 500+ KB, but it occupies almost 1MB in memory.
+Due the paging we have, probably we can use only 1MB, 
+we are working to use more.
+
+BUG REPORT
+Kernel Image Growth and Boot Instability
+
+Summary
+-------
+
+A boot instability issue was observed when small amounts of code were added
+to the kernel. In some cases, adding a seemingly harmless line of code caused
+the resulting kernel image to become unstable or fail during boot.
+
+At first, the behavior appeared to be related to the compiler, linker, or
+object file generation process. Further investigation showed that the root
+cause was related to kernel image size growth, especially the .bss section.
+
+Symptoms
+--------
+
+- Small source code modifications caused previously working builds to fail.
+- Different builds of nearly identical source code produced different runtime
+  behavior.
+- The problem appeared unrelated to the modified source file.
+- Intermediate object linking using "ld -r" improved stability but did not
+  eliminate the issue.
+- The kernel image size occasionally exceeded expected limits.
+
+Investigation
+-------------
+
+The kernel imports section boundaries from the linker script and calculates
+the size of the complete runtime image using linker-defined symbols.
+
+Measurements showed that:
+
+- The .text section changed only slightly between working and failing builds.
+- The .data section remained mostly unchanged.
+- The .bss section represented a large portion of the image size.
+- The total runtime image size was very close to the maximum memory region
+  reserved for the kernel.
+
+Because .bss is included in the runtime image, large static uninitialized
+objects significantly increased the amount of memory occupied by the kernel.
+
+Root Cause
+----------
+
+Several large static arrays stored in .bss consumed a substantial amount of
+memory.
+
+As the project grew, the combined size of:
+
+    .text
+    .rodata
+    .data
+    .bss
+
+approached the limit of the memory region reserved for the kernel image.
+
+Once this limit was reached or exceeded, boot instability appeared.
+
+The newly added source code was not the real cause of the bug. The additional
+code simply pushed the image size beyond a critical threshold.
+
+Confirmation
+------------
+
+To test the hypothesis, some large static tables were temporarily reduced in
+size.
+
+After reducing these allocations:
+
+- The .bss section became smaller.
+- The total kernel image size decreased.
+- Previously failing builds became stable.
+- Additional code could be added without triggering the failure.
+
+This confirmed that kernel image growth was a direct factor in the observed
+boot instability.
+
+Lessons Learned
+---------------
+
+1. Small source changes can expose hidden size-related limitations.
+
+2. A boot failure may be caused by image growth rather than the modified code.
+
+3. Large .bss allocations should be monitored carefully.
+
+4. Fixed-size global tables can become a scalability problem as the kernel
+   evolves.
+
+5. Intermediate linking may change memory layout and mask underlying size
+   limitations.
+
+6. Runtime image size should be tracked continuously during development.
+
+Recommendations
+---------------
+
+- Periodically review the size of .text, .data, and .bss.
+- Identify and audit large static arrays.
+- Consider dynamic allocation for structures that do not need to exist during
+  early boot.
+- Maintain a comfortable safety margin between the end of the kernel image
+  and the next reserved memory region.
+- Generate linker map files when investigating image growth.
+- Review historical memory layout assumptions as the kernel increases in size.
+
+Conclusion
+----------
+
+The issue was ultimately caused by kernel image growth rather than a compiler
+or linker defect. A large .bss section reduced the available space inside the
+memory region reserved for the kernel image. Reducing static allocations
+restored stability and confirmed the source of the problem.
+

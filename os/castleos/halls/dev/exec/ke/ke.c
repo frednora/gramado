@@ -50,13 +50,21 @@ extern unsigned long bss_end(void);
 
 // ==========================
 
-static unsigned long KernelImageSize=0;
 
+/*
+// old
 static unsigned long KernelImage_Size=0;
 static unsigned long KernelImage_CODE_Size=0;
 static unsigned long KernelImage_RODATA_Size=0;
 static unsigned long KernelImage_DATA_Size=0;
 static unsigned long KernelImage_BSS_Size=0;
+*/
+
+unsigned long KernelImage_Size=0;
+unsigned long KernelImage_CODE_Size=0;
+unsigned long KernelImage_RODATA_Size=0;
+unsigned long KernelImage_DATA_Size=0;
+unsigned long KernelImage_BSS_Size=0;
 
 // ==========================
 
@@ -357,6 +365,9 @@ static void __import_data_from_linker(void)
 
     // Limit 1 MB
     // The kernel image is too long.
+    // Scenario 1: the size really became > 1 MB
+    // Scenario 2: one of the imported symbols is wrong
+    // 
     if ( KernelImage_Size/1024 > 1024 )
     {
         debug_print("__import_data_from_linker: Image size\n");

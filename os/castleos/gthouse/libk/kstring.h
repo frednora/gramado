@@ -60,6 +60,11 @@ char *safe_strcpy(char *to, const char *from, size_t maxlen);
 
 char *strcpy ( char *to, const char *from );
 char *strncpy (char *s1, const char *s2, size_t n);
+
+// #test
+char *kernel_strcat_safe(char *dst, size_t dst_size, const char *src);
+
+
 char *strcat (char *to, const char *from);
 
 void bcopy (char *from, char *to, int len);

@@ -958,7 +958,7 @@ extern struct thread_d  *InitThread;
 // All the threads
 // see: thread.c
 
-#define THREAD_COUNT_MAX  1024 
+#define THREAD_COUNT_MAX  512  //1024 
 //#define THREAD_COUNT_MAX  4096
 
 // List of all threads.

@@ -240,11 +240,23 @@ void mmShowMemoryInfo(void)
         kernel_stack_start, kernel_stack_end, StackTotal );
     printk("KERNEL STACK PA: StartPhysicalAddress={%x} \n", kernel_stack_start_pa );
 
+// #test
+// Kernel image sections
+
+    printk("KERNEL image size:   %d\n", KernelImage_Size );
+    printk("KERNEL .code size:   %d\n", KernelImage_CODE_Size );
+    printk("KERNEL .rodata size: %d\n", KernelImage_RODATA_Size );
+    printk("KERNEL .data size:   %d\n", KernelImage_DATA_Size );
+    printk("KERNEL .bss size:    %d\n", KernelImage_BSS_Size );
+
+
 //==================================
-// Video info.
+// Video info
     pages_print_video_info();
 
-    //...
+
+
+    // ...
 }
 
 void mmShowPML4EntryForAllProcesses (int entry_number)

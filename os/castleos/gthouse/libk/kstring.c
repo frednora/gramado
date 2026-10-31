@@ -246,6 +246,32 @@ char *strncpy(char *s1, const char *s2, size_t n)
     return (char *) s1;
 }
 
+
+// #test
+char *kernel_strcat_safe(char *dst, size_t dst_size, const char *src)
+{
+    size_t dst_len;
+    size_t i;
+
+    if (dst == NULL || src == NULL || dst_size == 0)
+        return NULL;
+
+    dst_len = 0;
+    while (dst_len < dst_size && dst[dst_len] != '\0')
+        dst_len++;
+
+    if (dst_len >= dst_size)
+        return NULL;   // no room left
+
+    for (i = 0; i < dst_size - dst_len - 1 && src[i] != '\0'; ++i)
+        dst[dst_len + i] = src[i];
+
+    dst[dst_len + i] = '\0';
+
+    return dst;
+}
+
+
 // strcat: 
 //     Concatenate strings.
 char *strcat(char *to, const char *from)
@@ -263,6 +289,7 @@ char *strcat(char *to, const char *from)
 
     return (ret);
 }
+
 
 /* strcat */
 /* 

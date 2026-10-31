@@ -955,7 +955,7 @@ extern struct te_d  *TEDisplayServerProcess;  // Display Server process
 // ...
 
 // Max number of processes.
-#define  PROCESS_COUNT_MAX  1024 
+#define  PROCESS_COUNT_MAX  512  //1024 
 // Process table.
 extern unsigned long teList[PROCESS_COUNT_MAX];
 
