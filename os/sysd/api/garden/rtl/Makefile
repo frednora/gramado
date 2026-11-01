@@ -73,8 +73,10 @@ libc-header:
 
 ifeq ($(TARGETOS),gramado)
 
+
 # crt0 - C library initialization
-	$(CC) -c osdep/crt0/crt0.c  $(CFLAGS) $(LIBS) -o crt0.o
+	$(CC) -c startup/crt0.c  $(CFLAGS) $(LIBS) -o crt0.o
+
 # crt - rtl
 	$(CC) -c osdep/gramado/rtl.c  $(CFLAGS) $(LIBS) -o rtl.o
 

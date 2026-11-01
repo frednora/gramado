@@ -72,7 +72,8 @@ link install clean
 
 libc-header:
 
-	gcc -c  osdep/crt/crt0.c  $(CFLAGS) -I. -I include/ -o crt0.o
+	gcc -c startup/crt0.c  $(CFLAGS) -I. -I include/ -o crt0.o
+
 
 libc-content:
 

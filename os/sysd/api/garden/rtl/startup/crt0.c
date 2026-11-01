@@ -1,7 +1,6 @@
-
-// gcrt0.c
-// The crt0 for Gramado OS ring 3 GUI applications.
-
+// crt0.c
+// Standard crt0 for Gramado OS ring 3 applications.
+// Created by Fred Nora.
 
 #include <types.h>
 #include <stddef.h>
@@ -11,13 +10,10 @@
 #include <unistd.h>
 #include <rtl/gramado.h>
 
-// #todo
-extern int gramado_main ( int argc, char *argv[] );
 
 #define LSH_TOK_DELIM  " \t\r\n\a" 
 #define SPACE  " "
 #define TOKENLIST_MAX_DEFAULT  80
-
 
 //static const unsigned int something=1234;
 
@@ -64,17 +60,25 @@ const char *my_environ[] = {
     NULL 
 };
 
+// ==============================
+
+// Import from the ring3 application.
+extern int main(int argc, char *argv[]);
+
+// ==============================
 
 // # importante
 // Esses aplicativos rodam no terminal.
 // Esses aplicativos escrevem em stdout.
 // O terminal precisa conhecer esse stdout para ler.
 
-
 // #todo
 // Explain this argument better.
-int gcrt0 (unsigned long rdi)
+
+// Application entrypoint
+void crt0_startup(unsigned long rdi)
 {
+// This function never returns.
 
     // #todo
     // We can get the command line from 'stdin'.
@@ -132,9 +136,6 @@ int gcrt0 (unsigned long rdi)
 #endif
 */
 
-
-
-
 /*
  #debug
 #ifdef TEDITOR_VERBOSE
@@ -158,46 +159,38 @@ int gcrt0 (unsigned long rdi)
 #endif
 */
 
-
 //
 // Initialize the library.
 //
-
 
     // Stage 1
     // #debug: put char
     //sc80(65,'1',0,0); 
 
 
-// Initialize heap support.
-// See: 
-// stdlib/stdlib.c
+// ---------------------------------------------------------
+// #debug
+// Probably this is the first message in the serial debug 
+// when a new process is initializing. Let's make it 
+// friendly visable.
 
-    int rt_status = -1;  //fail
+    debug_print ("+\n");
+    debug_print ("++ crt0.c: Initializing (userland/) process\n");
+    debug_print ("+\n");
 
-    rt_status = (int) libcInitRT();
-    if (rt_status != 0){
-        // #debug: put char
-        sc80(65,'e',0,0);
+
+// Gramado Libc initialization
+// see: visitor/rtl.c
+    int c_status = -1;
+    c_status = (int) rtl_cinit();
+    if (c_status<0){
     }
-
-    // Stage 2
-    // #debug: put char
-    //sc80(65,'2',0,0);
-
-// return void.
-// See: 
-// stdio/stdio.c
-
-    stdioInitialize();
-
 
 // #todo
 // Chamar esse ao invés de chamar os dois acima.
 //See: sysdeps/x86/x86start.c
 
     //x86start ( ( token_count, tokenList, default_env );
-
 
 /*
 #ifdef TEDITOR_VERBOSE
@@ -206,17 +199,29 @@ int gcrt0 (unsigned long rdi)
 #endif
 */
 
+//
+// #bugbug
+// Command applications do NOT have focus.
+//
+
+// #test
+// Setup this thread as foreground thread,
+// this way the app can receive input via stdin.
+    // rtl_focus_on_this_thread();
+
 // ===================================================
 // #test
 // Reading command line from a file.
 
-    char buffer[4096];
+    //static char buffer[4096];
+    //memset(buffer, 0, 4096);
+
+    static char buffer[512];
     memset(buffer, 0, 512);
 
-// rewind
-    //rewind(stdin);
-
 // Copy
+// #important: Reading only 512 bytes, respecting
+// the limitation we have yet.
     int n=0;
     n = read(
             fileno(stdin),
@@ -232,6 +237,16 @@ int gcrt0 (unsigned long rdi)
         //fflush(stdout);
     //}
 
+
+// Depois de lido o stdin e colocada a cmdline no buffer local,
+// então é hora de apagarmos os arquivo, para que outro
+// programa consiga usar o arquivo.
+// Tambem atualizaremos a estrutura em ring3.
+// GRAMADO_SEEK_CLEAR = 1000.
+// see in kernel: kunistd.c e kstdio.c.
+    lseek( fileno(stdin), 0, 1000);
+    rewind(stdin);
+
 /*
     // from shared buffer
     // extra heap3.
@@ -239,12 +254,9 @@ int gcrt0 (unsigned long rdi)
     memcpy(buffer,shared_buffer,512);
     shared_buffer[511]=0;
 */
+
 // ===================================================
-
-//
 // Tokenizing.
-//
-
 // Criando o ambiente.
 // Transferindo os ponteiros do vetor para o ambiente.
 
@@ -255,7 +267,7 @@ int gcrt0 (unsigned long rdi)
     token = (char *) tokenList[0];
     index=0; 
 
-    while ( token != NULL )
+    while (token != NULL)
     {
         // Coloca na lista.
         // Salva a primeira palavra digitada.
@@ -264,7 +276,7 @@ int gcrt0 (unsigned long rdi)
         //#debug
         //printf("shellCompare: %s \n", tokenList[i] );
 
-        token = strtok ( NULL, LSH_TOK_DELIM );
+        token = strtok( NULL, LSH_TOK_DELIM );
 
         // Incrementa o índice da lista
         index++;
@@ -275,8 +287,6 @@ int gcrt0 (unsigned long rdi)
 
 // Finalizando a lista.
     tokenList[index] = NULL;
-
-
 // ===================================================
 
 // Changing  the interrupt flag and the iopl.
@@ -299,15 +309,12 @@ e o crt0 do driver, não ativa.
 
     asm volatile ("int $199");
 
-// Depois de lido o stdin e colocada acmdline no buffer local,
-// então é hora de apagarmos os arquivo, para que outro
-// programa consiga usar o arquivo.
-// tambem atualizaremos a estrutura em ring3.
-    lseek( fileno(stdin), 0, 1000);
-    rewind(stdin);
+//
+// Call main().
+//
 
-    main_ret = (int) gramado_main(token_count,tokenList);
-
+    // IN: argc, argv.
+    main_ret = (int) main( token_count, tokenList );
     switch (main_ret){
     case 0:
         //printf ("crt0: main returned 0\n");
@@ -329,11 +336,9 @@ e o crt0 do driver, não ativa.
 //
 
     //printf ("libc03-crts-crt0: *fail\n");
-
     exit(-1);
 
     //printf ("libc03-crts-crt0: *hang\n");
-
     while (1) { 
         asm ("pause"); 
     };

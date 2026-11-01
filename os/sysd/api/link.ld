@@ -1,7 +1,7 @@
 
 
 OUTPUT_FORMAT("elf64-x86-64")
-ENTRY(main)
+ENTRY(_crt0_startup)
 
 /* 0x00200000 = image base */
 /* 0x00201000 = The entry point */

@@ -3,17 +3,19 @@
 The entry point for the kernel. 
 
 ```
+It's a place considered 'outside'.
+
 + Startup routine for the kernel.
 + ISR/IRQ routines for the handlers.
-+ Network infrastructure
++ Network infrastructure.
 
 ```
 
 ## Folders
 
 ```
-ap/      - AP processors
-bsp/     - BSP processors
+entry/   - Entry point and startup routines for BSP and AP processors.
+         - ISR/IRQ low level handlers.
 gramnet/ - Top level protocols (API)
 net/     - Low level network infrastructure.
            (firewall, protocols and sockets)

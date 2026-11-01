@@ -1,6 +1,5 @@
 // crt0.c
-// Standard crt0 for Gramado OS ring 3 
-// client-side GUI applications.
+// Standard crt0 for Gramado OS ring 3 cmds.
 
 #include <types.h>
 #include <stddef.h>
@@ -39,9 +38,9 @@ const char *argv[] = {
 
 const char *__libc_default_environ[] = { 
 
-    "DISPLAY=comp00",  //#todo
+    "DISPLAY=wink",  //#todo
     "EDITOR=editor",
-    "HOME=/HOME",
+    "HOME=/DE",
     "HOSTNAME=gramado",
     "LANG=en-us",
     "LANG2=pt-br",
@@ -53,16 +52,16 @@ const char *__libc_default_environ[] = {
     "PWD=/",             //#bugbug: This is the working directory.
     "SHELL=shell",
     "TERM=terminal",     //#bugbug
-    "TMP=/TMP",
+    "TMP=/TMP",          //# Not implemented
     "UID=no-id",         //#todo
     "USER=anon",  
     NULL 
 };
 
-// ==============================
+
 // External reference.
-// The client-side GUI application needs to
-// implement this function.
+// This function is implemented by the ring 3 command application.
+
 extern int main(int argc, char *argv[]);
 
 // ==============================
@@ -75,9 +74,9 @@ extern int main(int argc, char *argv[]);
 // #todo
 // Explain this argument better.
 
-void crt0(unsigned long rdi)
+void crt0_startup(unsigned long rdi)
 {
-// This function never returns.
+// This function never returns
 
     // #todo
     // We can get the command line from 'stdin'.
@@ -96,6 +95,7 @@ void crt0(unsigned long rdi)
 // #todo
 // Explain it better.
 // Is it possible to access this address?
+// The kernel needs to pass a valid ring 3 address.
 
     unsigned long *surface_config = (unsigned long *) rdi;
 
@@ -118,7 +118,6 @@ void crt0(unsigned long rdi)
 
 // Environment.
 // The library will have this default environment.
-
     environ = __libc_default_environ;
 
 /*
@@ -126,7 +125,12 @@ void crt0(unsigned long rdi)
 #ifdef TEDITOR_VERBOSE
 	printf ("\n");
 	printf ("crt0: Initializing ...\n");
+	//printf("\n");
+	//printf(".\n");
+	printf ("..\n");
 	printf ("# MESSAGE={%s} #\n", shared_info );
+	printf ("..\n");
+	//printf(".\n");
 	//printf("\n");
 	//#debug
 	//while(1){ asm ("pause"); }
@@ -160,6 +164,9 @@ void crt0(unsigned long rdi)
 // Initialize the library.
 //
 
+    //write(1, "[CRT0 START]\n", 13);
+
+
     // Stage 1
     // #debug: put char
     //sc80(65,'1',0,0); 
@@ -172,7 +179,7 @@ void crt0(unsigned long rdi)
 
 /*
     debug_print ("+\n");
-    debug_print ("++ crt0.c: Initializing (ui/shell/) process\n");
+    debug_print ("++ crt0.c: Initializing (commands/) process\n");
     debug_print ("+\n");
 */
 
@@ -211,25 +218,58 @@ void crt0(unsigned long rdi)
 #endif
 */
 
+//
+// #bugbug: Commands do NOT have focus.
+//
+
 // Setup this thread as foreground thread,
 // this way the app can receive input via stdin.
-    rtl_focus_on_this_thread();
+    // rtl_focus_on_this_thread();
 
 // ===================================================
 // #test
 // Reading command line from a file.
 
-    char buffer[4096];
+    char buffer[512];
     memset(buffer, 0, 512);
 
 // Copy
+// No focus, we can't read from stdin, let's read from stderr.
+// cmds/ programs are reading the cmdline from stderr.
     int n=0;
-    n = read(
-            fileno(stdin),
-            buffer,
-            512 );
-// finzalize
-   buffer[511] = 0;
+/*
+    n = (int) read( fileno(stdin), buffer, 512 );
+    buffer[511] = 0;    // finalize
+*/
+
+/*
+    int c;
+    int pos = 0;
+    while (1) 
+    {
+        c = getc(stdin);
+        if (c == EOF)
+            break;
+        if (c == '\n')
+            break;
+        if (pos >= 511)
+            break;
+        if (c != 0)
+        {
+            buffer[pos] = (char) c;
+            pos++;
+        }
+    };
+    buffer[pos] = 0;
+*/
+
+    n = 0;
+    n = read(STDIN_FILENO, buffer, sizeof(buffer)-1);
+    if (n > 0) {
+        buffer[n] = '\0';
+        //printf("crt0: raw stdin buffer = [%s]\n", buffer);
+    }
+    buffer[n] = '\0';
 
     //if(n<=0){
         //#bugbug: We can't do this
@@ -238,14 +278,35 @@ void crt0(unsigned long rdi)
         //fflush(stdout);
     //}
 
+// Get cmdline passed by father via kernel.
+// Overriding only if there is some cmdline for us.
+    sc82(44011,buffer,buffer,buffer);
+    size_t nBytes = sizeof(buffer);
+    buffer[nBytes] = '\0';
+
+    // After reading stdin into buffer
+    // Debug: show exactly what was read
+    // printf("crt0: raw stdin buffer = [%s]\n", buffer);
+    //fflush(stdout);
+
 // Depois de lido o stdin e colocada a cmdline no buffer local,
 // então é hora de apagarmos os arquivo, para que outro
 // programa consiga usar o arquivo.
 // Tambem atualizaremos a estrutura em ring3.
 // GRAMADO_SEEK_CLEAR = 1000.
 // see in kernel: kunistd.c e kstdio.c.
+/*
     lseek( fileno(stdin), 0, 1000);
     rewind(stdin);
+*/
+
+    //lseek( fileno(stdin), 0, 1000);
+    //lseek( fileno(stdout), 0, 1000);
+    //lseek( fileno(stderr), 0, 1000);
+
+    //rewind(stdin);
+    //rewind(stdout);
+    //rewind(stderr);
 
 /*
     // from shared buffer
@@ -255,23 +316,14 @@ void crt0(unsigned long rdi)
     shared_buffer[511]=0;
 */
 
-// #test
-// Trying to do the same we are already doing with posix comands.
-
-// Get cmdline passed by father via kernel.
-// Overriding only if there is some cmdline for us.
-    sc82(44011,buffer,buffer,buffer);
-    size_t nBytes = sizeof(buffer);
-    buffer[nBytes] = '\0';
-
 // ===================================================
 // Tokenizing.
 // Criando o ambiente.
 // Transferindo os ponteiros do vetor para o ambiente.
 
     //tokenList[0] = strtok ( &shared_info[0], LSH_TOK_DELIM );
-    tokenList[0] = strtok(buffer,LSH_TOK_DELIM);
-
+    tokenList[0] = strtok ( buffer, LSH_TOK_DELIM );
+    
 // Salva a primeira palavra digitada.
     token = (char *) tokenList[0];
     index=0; 
@@ -320,7 +372,7 @@ e o crt0 do driver, não ativa.
 
 // Call main()
 // IN: argc, argv
-    main_ret = (int) main( token_count, tokenList );
+    main_ret = (int) main(token_count, tokenList);
 
 // Check against stdlin.h
     switch (main_ret){
