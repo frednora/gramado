@@ -303,7 +303,7 @@ static int __load_mod0_image(const char *image_name, unsigned long image_va)
 //    0 = ok
 
     fileret = 
-        (int) fsLoadFile( 
+        (int) fat16LoadFile( 
                 VOLUME1_FAT_ADDRESS, 
                 VOLUME1_ROOTDIR_ADDRESS, 
                 FAT16_ROOT_ENTRIES,    //#bugbug: number of entries.
@@ -313,7 +313,7 @@ static int __load_mod0_image(const char *image_name, unsigned long image_va)
     
     /*
     fileret = 
-        (int) fsLoadFile( 
+        (int) fat16LoadFile( 
                 VOLUME1_FAT_ADDRESS, 
                 sdDE.address, 
                 512,    //#bugbug: number of entries.
@@ -330,7 +330,7 @@ static int __load_mod0_image(const char *image_name, unsigned long image_va)
     */
 
     if (fileret != 0){
-        printk("__load_mod0_image: on fsLoadFile()\n");
+        printk("__load_mod0_image: on fat16LoadFile()\n");
         goto fail;
     }
 

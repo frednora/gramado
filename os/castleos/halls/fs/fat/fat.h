@@ -16,6 +16,7 @@ The root directory is treated as a normal directory, located by
 the 'Root Cluster' field in the BPB, and can grow dynamically.
 */
 
+
 // fat16 structure
 struct fat_d
 {
@@ -53,13 +54,15 @@ struct system_fat_d
     //struct fat_d  *_fat;
     // ...
 };
-extern struct system_fat_d  bpFAT;
+
+
 
 extern struct fat16_directory_entry_d *vol_label_directory_entry;
 
 // 
 // == prototypes ==========================================
 //
+
 
 void test_fat16_find_volume_info(void);
 

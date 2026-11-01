@@ -405,15 +405,18 @@ extern int system_state;
 // File system (After the devices)
 
 #include "../halls/fs/path.h"
-#include "../halls/fs/fat/fatlib.h"  // fat16 library
-#include "../halls/fs/fat/fat.h"     // fat16
+#include "../halls/fs/fat/fat16.h"
+#include "../halls/fs/fat/fat.h"
 #include "../halls/fs/inode.h"
 #include "../halls/fs/exec_elf.h"
 #include "../halls/fs/pipe.h"
 #include "../halls/fs/files.h"
 // Top level header for fs/
+#include "../halls/fs/fslib.h"
+#include "../halls/fs/fsbp.h"
+#include "../halls/fs/search.h"
+#include "../halls/fs/fsload.h"
 #include "../halls/fs/fs.h"
-
 
 // ==================================
 #include "../halls/res.h"

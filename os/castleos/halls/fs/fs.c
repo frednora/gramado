@@ -6,8 +6,15 @@
 
 struct fs_info_d FSInfo;
 
-
 struct target_dir_d  current_target_dir;
+
+// 10004
+// Create sync structure and
+// put the pointer into the list.
+// See: kstdio.h
+int sync_count=0;
+static int __saved_sync_id=0;
+
 
 // ===================================================
 
@@ -259,17 +266,11 @@ void sys_set_global_sync(int sync_id, int request, int data)
     }
 }
 
-// 10004
-// Create sync structure and
-// put the pointer into the list.
-// See: kstdio.h
-int sync_count=0;
-static int __saved_sync_id=0;
-
 // Get the id.
 // provisorio, para testes
 // See: kstdio.h
-int get_saved_sync(void)
+// 10005
+int sys_get_saved_sync(void)
 {
     return (int) __saved_sync_id;
 }
@@ -740,41 +741,6 @@ void sys_pwd(void)
     fs_print_process_cwd (current_process);
 }
 
-
-void 
-fs_load_boot_metafile (
-    unsigned long buffer, 
-    unsigned long first_lba, 
-    unsigned long size_in_sectors )
-{
-
-// #ps: Only on ATA disk
-// See: atadsk_r.c
-
-    atadsk_load_boot_metafile(
-        buffer,
-        first_lba,
-        size_in_sectors 
-    );
-}
-
-void 
-fs_store_boot_metafile (
-    unsigned long buffer, 
-    unsigned long first_lba, 
-    unsigned long size_in_sectors )
-{
-
-// #ps: Only on ATA disk
-// See: atadsk_w.c
-
-    atadsk_store_boot_metafile(
-        buffer,
-        first_lba,
-        size_in_sectors
-    );
-}
-
 // Wrapper
 // #todo: Explain it.
 int 
@@ -912,7 +878,7 @@ int sys_create_empty_file(const char *file_name)
 // See: write.c
     //printk ("0x20 \n");
     __ret = 
-        (int) fsSaveFile ( 
+        (int) fat16SaveFile ( 
                 VOLUME1_FAT_ADDRESS, 
                 VOLUME1_ROOTDIR_ADDRESS, 
                 FAT16_ROOT_ENTRIES,
@@ -991,7 +957,7 @@ int sys_create_empty_directory(const char *dir_name)
 // 0x10 = directory. 
     //printk ("0x10 \n");
     __ret = 
-        (int) fsSaveFile ( 
+        (int) fat16SaveFile ( 
                 VOLUME1_FAT_ADDRESS, 
                 VOLUME1_ROOTDIR_ADDRESS, 
                 FAT16_ROOT_ENTRIES,
@@ -1073,15 +1039,26 @@ void sys_cd_command (const char *string)
 // Called by I_initKernelComponents() in x64init.c
 int fsInitialize(void)
 {
+    int Status = -1;
+
+    FSInfo.initialized = FALSE;
+    __saved_sync_id = 0;  // Local
+
+    PROGRESS("fsInitialize:\n");
+    printk("fsInitialize:\n");
 
 
-    // #ps: Not a local worker.
-    // Change name?
-    // see: fslib.c.
-    __fs_initialize_imp();
+// #ps: 
+// Not a local worker
+// see: fslib.c.
 
+    Status = (int) __fs_initialize_imp();
+    if (Status < 0){
+        printk("fsInitialize: on __fs_initialize_imp()\n");
+        return (int) -1;
+    }
 
-
+    FSInfo.initialized = TRUE;
     return 0;
 }
 

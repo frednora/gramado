@@ -246,7 +246,7 @@ static int __load_initbin_image(unsigned long image_va)
 // + /DE/INIT.BIN
 
 // Our function options are:
-// + fsLoadFile()
+// + fat16LoadFile()
 // + fsLoadProgramFromDE()
 // + fsLoadProgramFromGRAMADO()
 // See: fsload.c
@@ -266,7 +266,7 @@ static int __load_initbin_image(unsigned long image_va)
 //    0 = ok
 
     Status = 
-        (int) fsLoadFile( 
+        (int) fat16LoadFile( 
                 VOLUME1_FAT_ADDRESS, 
                 VOLUME1_ROOTDIR_ADDRESS, 
                 FAT16_ROOT_ENTRIES,    //#bugbug: number of entries
@@ -275,7 +275,7 @@ static int __load_initbin_image(unsigned long image_va)
                 BUGBUG_IMAGE_SIZE_LIMIT );     // buffer limits
 
     if (Status != 0){
-        printk("__load_initbin_image: on fsLoadFile()\n");
+        printk("__load_initbin_image: on fat16LoadFile()\n");
         goto fail;
     }
 

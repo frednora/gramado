@@ -1,6 +1,7 @@
 // fs.h
 // Main header for the fs/ kernel module.
 // File system operations.
+// Mainly syscalls
 // Created by Fred Nora.
 
 #ifndef __FS_FS_H
@@ -54,21 +55,6 @@ struct system_directory_d
 // The total number of entries.
     int number_of_entries;
 };
-
-// Canonical:
-// The list of the main directories in the system.
-// These are the first directories searched when
-// we're looking for a file.
-// see: fs.c
-extern struct system_directory_d  sdROOT;      // '/'
-extern struct system_directory_d  sdGRAMADO;   // '/GRAMADO/'
-extern struct system_directory_d  sdDE;        // '/DE/'
-
-// Buffers to walk on a pathname,
-// loading until 8 directories.
-// 1 page size.
-#define FS_N_BUFFERS    5
-extern unsigned long fs_buffers[FS_N_BUFFERS];
 
 
 // The dev/ directory entry.
@@ -167,39 +153,7 @@ extern struct cwd_d  CWD;
 //  == Variables =================================
 //
 
-//
-// == Search path ================================
-//
 
-// See:
-// https://en.wikipedia.org/wiki/PATH_(variable)
-// ...
-// #importante
-// + Quando uma função para eecutar uma programa é chamada
-// o kernel deve tomar suas decisões sobre qual diretório
-// procurar. Não é seguro obedecer o search path indicado pelo
-// processo que chamou a função.
-// Então o kernel pode começar procurando em /BIN/ e /USER/BIN/.
-// O kernel só vai procurar no cwd se o pathname desejado começar
-// explicitamente com "./". 
-// Multics originated the idea of a search path. 
-// The early Unix shell only looked for program names in /bin, 
-// but by Version 3 Unix the directory was too large and /usr/bin, 
-// and a search path, became part of the operating system.
-
-extern unsigned long search_path_dir_address;
-extern unsigned long search_path_dir_entries;
-
-// ?? - Contagem de diretórios.
-//int dirCount;  
-
-// List of clusters. 
-// Usado na rotina de carregamento de arquivo.
-// #bugbug
-// O limite é um arquivo de 512KB.
-//#define MAX_CLUSTERS  1024
-#define MAX_CLUSTERS  2048
-extern unsigned short file_cluster_list[MAX_CLUSTERS]; 
 
 //
 // == Structures ====================================
@@ -398,26 +352,9 @@ struct file_context_d
 // == prototypes =====================================
 //
 
-int fs_initialize_dev_dir(void);
-
-int file_read_buffer(file *f, char *buffer, int len);
-int file_write_buffer(file *f, char *string, int len);
-
-// Implementations
-ssize_t __read_imp(int fd, char *ubuf, size_t count);
-ssize_t __write_imp(int fd, char *ubuf, size_t count);
-
 // syscall
 ssize_t sys_read(int fd, const char *ubuf, size_t count);
 ssize_t sys_write(int fd, const char *ubuf, size_t count);
-
-// Implementations
-int 
-__open_imp(
-    const char *pathname, 
-    int flags, 
-    mode_t mode );
-int __close_imp(int fd);
 
 // syscalls
 int 
@@ -427,15 +364,15 @@ sys_open(
     mode_t mode );
 int sys_close(int fd);
 
-int sys_fcntl( int fd, int cmd, unsigned long arg );
-int sys_ioctl( int fd, unsigned long request, unsigned long arg );
+int sys_fcntl(int fd, int cmd, unsigned long arg);
+int sys_ioctl(int fd, unsigned long request, unsigned long arg);
 
-file *get_file_from_fd(int fd);
 
 int sys_get_global_sync(int sync_id, int request);
 void sys_set_global_sync(int sync_id, int request, int data);
 int sys_create_new_sync(void);
-int get_saved_sync(void);
+
+int sys_get_saved_sync(void);
 
 int sys_get_file_sync(int fd, int request);
 void sys_set_file_sync(int fd, int request, int data);
@@ -447,152 +384,14 @@ unsigned long sys_get_file_size(const char *path);
 
 int sys_sleep_if_socket_is_empty(int fd);
 
-// ========
 
-int get_free_slots_in_the_file_table(void);
-int get_free_slots_in_the_inode_table(void);
+void sys_pwd(void);
 
-int get_filesystem_type (void);
-void set_filesystem_type (int type);
-
-unsigned long fs_count_path_levels (unsigned char *path);
-
-// manipulando a lista de arquivos do kernel.
-void *get_file(int Index);
-void set_file( void *file, int Index);
-
-int file_close (file *_file);
-size_t file_get_len(file *_file);
-struct inode_d *file_inode(file *f);
-int file_truncate(file *_file, size_t len);
-int fsCheckELFFile(unsigned long address);
-
-void fsInitializeWorkingDiretoryString(void);
-
-int fsInitTargetDir(unsigned long dir_address, char *dir_name);
-
-int fsList( const char *dir_name);
-
-void 
-fsListFiles ( 
-    int disk_id, 
-    int volume_id, 
-    int directory_id );
-
-int
-__load_sequential_sectors ( 
-    unsigned long address, 
-    unsigned long lba, 
-    unsigned long sectors );
-
-unsigned long 
-fatClustToSect ( 
-    unsigned short cluster, 
-    unsigned long spc, 
-    unsigned long first_data_sector );
-
-void 
-fatLoadCluster ( 
-    unsigned long sector, 
-    unsigned long address, 
-    unsigned long spc );
-
-
-// Load boot metafile into the memory.
-void 
-fs_load_boot_metafile (
-    unsigned long buffer, 
-    unsigned long first_lba, 
-    unsigned long size_in_sectors );
-
-// Save the boot metafile into the disk.
-void 
-fs_store_boot_metafile (
-    unsigned long buffer, 
-    unsigned long first_lba, 
-    unsigned long size_in_sectors );
-
-
-// MBR
-void fs_load_mbr(unsigned long mbr_address);
-
-// FAT
-void 
-fs_load_fat(
-    unsigned long fat_address, 
-    unsigned long fat_lba, 
-    size_t size_in_sectors );
-
-// ROOT
-void 
-fs_load_rootdir(
-    unsigned long root_address, 
-    unsigned long root_lba, 
-    size_t size_in_sectors );
-
-// For boot partition
-void fsbp_initialize_fat(void);
-// For boot partition
-int fsbp_initialize_bp_directories(void);
-
-void fsUpdateWorkingDiretoryString(char *string);
-
-void fs_fntos(char *name);
-void fs_fntos2(char *name);
-
-int fs_duplicate_fd(int oldfd, int start);
-
-int fs_get_free_fd_from_pid (pid_t pid);
-int fs_initialize_process_cwd ( pid_t pid, char *string );
-void fs_pathname_backup ( pid_t pid, int n );
-int fs_print_process_cwd (pid_t pid);
-
-void fs_show_file_info (file *f);
-void fs_show_file_table(void);
-void fs_show_inode_info (struct inode_d *i);
-void fs_show_inode_table(void);
-void fs_show_root_fs_info(void);
-void sys_pwd (void);
-
-int 
-search_in_dir ( 
-    const char *file_name, 
-    unsigned long dir_address );
-
-int search_in_root ( const char *file_name );
-unsigned short fs_find_n_empty_entries(int n);
-
-int 
-findEmptyDirectoryEntry ( 
-    unsigned long dir_address, 
-    int number_of_entries );
-
-int fsSearchFileInRoot(const char *file_name);
-unsigned short fs_find_empty_entry_in_fat(char *fat_address);
-int search_path_in_the_inode_table(const char *path);
-
-int
-fsSaveFile ( 
-    unsigned long fat_address,
-    unsigned long dir_address,
-    int dir_entries,
-    const char *file_name, 
-    unsigned long size_in_sectors,
-    unsigned long size_in_bytes,
-    char *file_address,
-    char flag );
 
 //
 // Read from disk
 //
 
-// Worker
-// See: fslib.c
-// OUT: fp
-file *do_read_file_from_disk ( 
-    char *file_name, 
-    int flags, 
-    mode_t mode );
 
 // Wrapper
 int 
@@ -602,17 +401,9 @@ sys_read_file_from_disk (
     mode_t mode );
 
 //
-// Write to file.
+// Write to file
 //
 
-// Worker
-int
-do_write_file_to_disk ( 
-    char *file_name, 
-    unsigned long size_in_sectors,
-    unsigned long size_in_bytes,
-    char *file_address,
-    char flag );
 
 // Wrapper
 int
@@ -625,58 +416,9 @@ sys_write_file_to_disk (
 
 int sys_create_empty_file(const char *file_name);
 int sys_create_empty_directory(const char *dir_name);
-void set_global_open_file ( void *file, int Index );
-void *get_global_open_file (int Index);
+
 void sys_cd_command ( const char *string );
 
-// From fsload.c
-
-int 
-fsLoadFile ( 
-    unsigned long fat_address,
-    unsigned long dir_address,
-    int dir_entries,
-    const char *file_name, 
-    unsigned long buffer,
-    unsigned long buffer_size_in_bytes );
-
-int 
-fsLoadFile2 ( 
-    struct file_context_d *fc, 
-    unsigned char *file_name );
-
-// Load an image from GRAMADO/
-int 
-fsLoadProgramFromGRAMADO (
-    char *program_name,
-    unsigned long buffer,
-    unsigned long buffer_size_in_bytes );
-
-// Load an image from DE/
-int 
-fsLoadProgramFromDE (
-    char *program_name,
-    unsigned long buffer,
-    unsigned long buffer_size_in_bytes );
-
-int 
-fs_load_path ( 
-    const char *path, 
-    unsigned long address, 
-    unsigned long buffer_size );
-
-int fsLoadFileFromCurrentTargetDir(void);
-
-int 
-fs_load_image(
-    const char *filename, 
-    unsigned long image_va );
-
-int __sys_fcntl_imp(int fd, int cmd, unsigned long arg);
-
-void fs_init_structures(void);
-
-int __fs_initialize_imp(void);  // #ps: Global worker for now. 
 int fsInitialize(void);
 
 #endif    

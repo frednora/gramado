@@ -1,21 +1,10 @@
-// fatlib.h
-// Definitions and structures used by the fs code.
-// Created by Fred Nora.
-
-#ifndef  __FAT_FATLIB_H
-#define  __FAT_FATLIB_H    1
+// fat16.h
+// Definitions and structures used by the fs/fat16 code
+// Created by Fred Nora
 
 
-/*
-FAT12/FAT16:
-The root directory is located in a fixed position right after the FAT, 
-with a maximum size defined in the BPB.
-
-FAT32:
-The root directory is treated as a normal directory, located by 
-the 'Root Cluster' field in the BPB, and can grow dynamically.
-*/
-
+#ifndef  __FAT_FAT16_H
+#define  __FAT_FAT16_H    1
 
 // fat16 file attributes.
 // See:
@@ -214,6 +203,27 @@ struct fat16_lfn_directory_entry_d
     unsigned short thing;            // offset 26 - always '0'
     unsigned short name3[2];         // offset 28 - name part3   (unicode)
 };
+
+
+int 
+fat16LoadFile ( 
+    unsigned long fat_address,
+    unsigned long dir_address,
+    int dir_entries,
+    const char *file_name, 
+    unsigned long buffer,
+    unsigned long buffer_size_in_bytes );
+
+int
+fat16SaveFile ( 
+    unsigned long fat_address,
+    unsigned long dir_address,
+    int dir_entries,
+    const char *file_name, 
+    unsigned long size_in_sectors,
+    unsigned long size_in_bytes,
+    char *file_address,
+    char flag );
 
 #endif    
 

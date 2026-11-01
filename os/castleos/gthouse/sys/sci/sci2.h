@@ -89,11 +89,11 @@
 // IN: fd, request
 
 
-// Global sync - Not used anymore.
+// Global sync - Not used anymore
 // 10002 - sys_set_global_sync
 // 10003 - sys_get_global_sync
 // 10004 - sys_create_new_sync
-// 10005 - get_saved_sync
+// 10005 - sys_get_saved_sync
 
 // Sync in file.
 // 10006 - sys_set_file_sync

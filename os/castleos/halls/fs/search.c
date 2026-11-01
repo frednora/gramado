@@ -1,11 +1,16 @@
 // search.c
-// Created by Fred Nora.
+// Created by Fred Nora
 
 // #todo
 // This routines belongs to fat16
 // we need to move it to fat/
 
 #include <kernel.h>
+
+
+unsigned long search_path_dir_address=0;
+unsigned long search_path_dir_entries=0;
+
 
 // List of clusters. 
 // Usado na rotina de carregamento de arquivo.
@@ -433,6 +438,7 @@ unsigned short fs_find_empty_entry_in_fat(char *fat_address)
 // #bugbug
 // Not tested yet.
 // OUT: index.
+
 int search_path_in_the_inode_table(const char *path)
 {
     struct inode_d *tmp_inode;

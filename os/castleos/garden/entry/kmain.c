@@ -958,13 +958,17 @@ static int __test_initialize_ap_processor(int target_hw_apic_id)
         printk("Loading AP image ...\n");
 
         // #todo: Check return value.
-        fsLoadFile ( 
+
+        int lrv = 0;
+        lrv = fat16LoadFile ( 
             VOLUME1_FAT_ADDRESS,
             VOLUME1_ROOTDIR_ADDRESS, //sdDE.address,
             FAT16_ROOT_ENTRIES, //512,           // Number of dir entries?
             "APX86   BIN", // AP image file name 
             (unsigned long) ____DANGER_TRAMPOLINE_CODE_BASE, // Address
             BufferSizeInBytes );
+        
+        // if (lrv < 0)
 
         // #important
         // Updating information inside the shared area.

@@ -105,7 +105,7 @@ static void __do_initialize_sdGRAMADO(void)
 
     int Ret = -1;  // -1 fail | 0 ok.
     Ret = 
-    (int) fsLoadFile ( 
+    (int) fat16LoadFile ( 
             (unsigned long) VOLUME1_FAT_ADDRESS,      // fat address
             (unsigned long) VOLUME1_ROOTDIR_ADDRESS,  // dir address. onde procurar.
             (int) FAT16_DEFAULT_NUMBER_OF_ENTRIES,    // Number of entries.  
@@ -171,7 +171,7 @@ static void __do_initialize_sdDE(void)
 
     int Ret = -1;  // -1 fail | 0 ok.
     Ret = 
-    (int) fsLoadFile ( 
+    (int) fat16LoadFile ( 
             (unsigned long) VOLUME1_FAT_ADDRESS,      // fat address
             (unsigned long) VOLUME1_ROOTDIR_ADDRESS,  // dir address. onde procurar.
             (int) FAT16_DEFAULT_NUMBER_OF_ENTRIES,    // Number of entries.  

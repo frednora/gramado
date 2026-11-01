@@ -25,10 +25,6 @@ static char *____root_name = "/";
 
 struct cwd_d  CWD;
 
-//char search_path[?];
-unsigned long search_path_dir_address=0;
-unsigned long search_path_dir_entries=0;
-
 
 // ========================================
 
@@ -80,6 +76,42 @@ static int __initialize_fs_buffers(void)
 fail:
     return (int) -1;
 }
+
+
+void 
+fs_load_boot_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors )
+{
+
+// #ps: Only on ATA disk
+// See: atadsk_r.c
+
+    atadsk_load_boot_metafile(
+        buffer,
+        first_lba,
+        size_in_sectors 
+    );
+}
+
+void 
+fs_store_boot_metafile (
+    unsigned long buffer, 
+    unsigned long first_lba, 
+    unsigned long size_in_sectors )
+{
+
+// #ps: Only on ATA disk
+// See: atadsk_w.c
+
+    atadsk_store_boot_metafile(
+        buffer,
+        first_lba,
+        size_in_sectors
+    );
+}
+
 
 // File read.
 // It's called by sys_read.
@@ -2349,7 +2381,7 @@ int __close_imp(int fd)
     if (fp->____object == ObjectTypeFile)
     {
         debug_print("__close_imp: [FIXME] trying to close a regular file\n");
-        //debug_print("__close_imp: [FIXME] fsSaveFile\n");
+        //debug_print("__close_imp: [FIXME] fat16SaveFile\n");
 
         // #fixme: buffer limit
         if (fp->_lbfsize < 512){  
@@ -2359,9 +2391,9 @@ int __close_imp(int fd)
 
         // Save file in the root dir.
         // #bugbug: Where to save?
-        debug_print("__close_imp: [FIXME] fsSaveFile\n");
+        debug_print("__close_imp: [FIXME] fat16SaveFile\n");
 
-        fsSaveFile ( 
+        fat16SaveFile ( 
             VOLUME1_FAT_ADDRESS, 
             VOLUME1_ROOTDIR_ADDRESS, 
             FAT16_ROOT_ENTRIES,
@@ -2411,6 +2443,7 @@ fail:
 // Prototype in rtl/sci/sys.h
 // OUT:
 // Return the file pointer.
+
 file *get_file_from_fd(int fd)
 {
     file *fp;
@@ -3572,7 +3605,7 @@ fail:
 // handle return value ...
 // What functions is calling us?
 
-int fs_initialize_process_cwd(pid_t pid, char *string)
+int fs_initialize_process_cwd(pid_t pid, const char *string)
 {
     struct te_d *p;
     register int i=0;
@@ -3838,580 +3871,6 @@ fail:
     printk("fail\n");
 }
 
-// fsSaveFile:
-// Salva um arquivo no disco.
-// Somente no diretório raiz.
-// It was called by sys_write_file() in fs.c.
-// It was called by sys_read_file when the file does not exist.
-// #obs
-// Isso salva um arquivo.
-// Também poderia ser usado para criar um arquivo ou diretório ? 
-// #todo: #test
-// Número máximo de entradas na lista de clusters. 
-// Quantas?
-// A FAT tem 246 setores, 123 KB
-// fsSaveFile:
-//     Salva um arquivo. 
-//     Onde? #todo vamos fornecer o endereço do diretorio.
-// IN: 
-// name, size in sectors, size in bytes, adress, flag. 
-// OUT:
-// #bugbug
-// O nome nao esta ficando certo na entrada.
-// #todo
-// is dir_address virtual or physical?
-// Change this name to dir_pa or dir_va.
-
-// dir_address → Directory buffer address where the file entry will be created.
-// dir_entries → Number of entries in that directory buffer.
-// file_name → The name of the file to be saved.
-// size_in_sectors → Size of the file in sectors (not bytes).
-// file_buffer → Pointer to the memory buffer containing the file’s contents.
-
-int
-fsSaveFile ( 
-    unsigned long fat_address,
-    unsigned long dir_address,
-    int dir_entries,
-    const char *file_name, 
-    unsigned long size_in_sectors,
-    unsigned long size_in_bytes,
-    char *file_address,
-    char flag )  
-{
-// #todo
-// For now we are using a local buffer to handle
-// the target directory entry.
-// Use the entry structure (fat16_directory_entry_d) found in fat.h.
-// >>> Used to save/create a file or a directory,
-// depending on the flag.
-
-    int Status = 0;
-
-    unsigned long i = 0; 
-    unsigned long j = 0;    // Deslocamento na lista, tem que ser zero.
-    unsigned long c = 0;    // Deslocamento na FAT.
-
-    unsigned short first=0;
-    unsigned short next=0;
-    unsigned short sector=0;
-
-    unsigned long MaxFileSizeInSectors = 16;
-
-// #todo: Use the structure.
-// Entry structure.
-// see: fat.h
-    //struct fat16_directory_entry_d entry_fat16;
-
-// Directory entry buffer
-    char DirEntry[32];
-
-//Entry size in words.
-    int EntrySize = 0;
-    int Offset = 0;
-    int FreeIndex = -1;
-
-    // #debug:
-    debug_print ("fsSaveFile:\n");
-    //printk      ("fsSaveFile:\n");
-
-// Updating fat address and dir address.
-
-    if (fat_address == 0){
-        panic("fsSaveFile: fat_address\n");
-    }
-    if (dir_address == 0){
-        panic("fsSaveFile: dir_address\n");
-    }
-
-// Ex: VOLUME1_FAT_ADDRESS
-    unsigned short *fat = (unsigned short *) fat_address;
-// Ex: VOLUME1_ROOTDIR_ADDRESS
-    unsigned short *__dir = (unsigned short *) dir_address;
-
-// #debug
-// #todo
-// We only support one address for now.
-
-    if (fat_address != VOLUME1_FAT_ADDRESS)
-    {
-        panic("fsSaveFile: fat_address\n");
-    }
-
-// Filename
-
-    if ((void *) file_name == NULL){
-        debug_print("fsSaveFile: [ERROR] file_name\n");
-        printk     ("fsSaveFile: [ERROR] file_name\n"); 
-        goto fail;
-    }
-    if (*file_name == 0){
-        debug_print("fsSaveFile: [ERROR] *file_name\n");
-        printk     ("fsSaveFile: [ERROR] *file_name\n"); 
-        goto fail;
-    }
-    // serial_printk ("fsSaveFile: %s\n", file_name);
-
-// #bugbug
-// Esse endereço eh valido?
-
-/*
-    printk ("name address = %x \n", &file_name );
-    printk ("name    = %s \n", file_name ); 
-    printk ("size    = %d \n", size_in_sectors );
-    printk ("nbytes  = %d \n", size_in_bytes );
-    printk ("address = %x \n", file_address );
-    printk ("flag    = %x \n", flag );
-    printk ("entries = %d \n", dir_entries );
- */
-
-// How name direntries this directory have?
-    if ( dir_entries == 0 || 
-         dir_entries > FAT16_ROOT_ENTRIES )
-    {
-        panic ("fsSaveFile: [FAIL] max dir entries");
-    }
-
-// size_in_sectors
-// #todo: 
-// precisamos implementar um limite para o tamanho do arquivo,
-// principamente nessa fase de teste.
-
-// #bugbug
-// Limite provisorio
-// Size in sectors.
-
-    if (size_in_sectors > MaxFileSizeInSectors)
-    {
-        debug_print("fsSaveFile: [FIXME] Size in sectors\n");
-        printk     ("fsSaveFile: [FIXME] Size in sectors = %d\n", 
-            size_in_sectors ); 
-        goto fail;
-    }
-
-
-// Clean the buffer
-    memset(DirEntry, 0, 32);
-
-
-// Load root dir and FAT.
-    fs_load_rootdir( VOLUME1_ROOTDIR_ADDRESS, VOLUME1_ROOTDIR_LBA, 32 );
-    fs_load_fat( VOLUME1_FAT_ADDRESS, VOLUME1_FAT_LBA, 246 );
-
-// Procurando cluster livre na fat.
-// Nesse momento construimos uma lista de clusters livres.
-// #todo: 
-// Essa lista já devia existir e agora somente 
-// usaríamos.
-// #todo: Essa rotina poderia seruma helper function?
-
-//SearchEmptyEntries:
- 
-// #bugbug
-// Obs: Esse limite é improvisado.
-// see fatlib.h
-
-    // nao podemos começar do 0.
-    c = 3; 
-
-    while (i < CLUSTERS_TO_SAVE_MAX)
-    {
-        //procurando cluster livre na fat.
-        //@todo:isso poderia ser uma função.
-
-        if (fat[c] == 0)
-        {
-            // number of sectors
-            // Encontrado todos os espaços livres que o arquivo precisa.
-            // Marca o fim.
-            // #importante: 
-            // Se der certo, saímos do loop.
-            // #bugbug: Esse size deve ter um limite.
-            // file_size = file size in sectors, (clusters??)
-            if (size_in_sectors == 0){
-                fat16ClustersToSave[j] = (unsigned short) 0xfff8; 
-                goto save_file;
-            }
-
-            //salva um endereço livre
-            //salvamos um índice na fat dentro da lista
-            //incrementa a lista
-
-            fat16ClustersToSave[j] = (unsigned short) c; 
-            j++; 
-
-            // Decrement the number of sectors we need to find
-            size_in_sectors--; 
-        };
-
-        c++;    // Incrementa o deslocamento na fat. 
-        i++;    // Incrementa a quantidade de busca.
-    }; 
-
-// Fail
-// Nossa busca por clusters livres dentro da fat não deu certo.
-// Provavelmente não encontramos uma quantidade suficiente.
-
-out_of_range:  
-    printk ("fsSaveFile: No free cluster \n");
-    goto fail;
-
-    // #debug
-    //while(1){ asm("hlt"); }
-
-// #importante:
-// Deu certo. Encontramos na fat todos os clusters que o arquivo precisa.   
-// Salva o arquivo.
-// O arquivo tem na lista todos os clusters que ele precisa.
-
-// Save!
-
-save_file:
-// saving file into the disk.
-// But remember, we goota save the fat and the root into the disk.
-
-    //#debug
-    //printk("fsSaveFile: save_file: \n"); 
-
-// Início da lista.
-    i = 0; 
-    first = i;
-
-// Size limits.
-
-// #bugbug
-// Limite máximo improvisado.
-// 2KB.
-
-    j = (512*4);
-
-
-// Create directory entry
-// Name/ext 8.3
-    DirEntry[0]  = (char) file_name[0];
-    DirEntry[1]  = (char) file_name[1];
-    DirEntry[2]  = (char) file_name[2];
-    DirEntry[3]  = (char) file_name[3];
-    DirEntry[4]  = (char) file_name[4];
-    DirEntry[5]  = (char) file_name[5];
-    DirEntry[6]  = (char) file_name[6];
-    DirEntry[7]  = (char) file_name[7];
-// extension.
-    // Use extension or files.
-    DirEntry[8]  = (char) file_name[8];
-    DirEntry[9]  = (char) file_name[9];
-    DirEntry[10] = (char) file_name[10];
-    // No extension for directories. Using spaces. I guess. 
-    if (flag == 0x10)
-    {
-        DirEntry[8]  = (char) 0x20;
-        DirEntry[9]  = (char) 0x20;
-        DirEntry[10] = (char) 0x20;
-    }
-
-    /*
-    printk ("flag=%x \n",flag);
-    printk ("%c\n",DirEntry[8]);
-    printk ("%c\n",DirEntry[9]);
-    printk ("%c\n",DirEntry[10]);
-    */
-
-// Attribute byte.
-// 0x01: read only
-// 0x02: hidden
-// 0x04: system
-// 0x08: volume label
-// 0x10: >>>> Directory <<<<
-// 0x20: >>>> Archive <<<<
-// 0x40: Unused
-// 0x80: Unused
-
-    DirEntry[11] = (char) flag;
-
-    // #todo
-    //if (IsReadOnly)
-    //    DirEntry[11] = (char) DirEntry[11] | 0x01;
-    //if (IsHidden)
-    //    DirEntry[11] = (char) DirEntry[11] | 0x02;
-    //if (IsSystem)
-    //    DirEntry[11] = (char) DirEntry[11] | 0x04;
-    //if (IsVolumeLabel)
-    //    DirEntry[11] = (char) DirEntry[11] | 0x08;
-
-// Reserved
-    DirEntry[12] = 0; 
-
-// Creation time. 14 15 16
-    DirEntry[13] = 0x97;  // Create Time (ms)
-    //
-    DirEntry[14] = 0xD3;  // Create Time (Hrs/Mins/Secs)
-    DirEntry[15] = 0xBA;
-// Creation date
-    DirEntry[16] = 0xE2;
-    DirEntry[17] = 0x58;
-// Access date
-    DirEntry[18] = 0xE2;
-    DirEntry[19] = 0x58;
-
-// First cluster. (16 bits)
-// Only used in FAT32 Systems
-// 0 para fat12 ou 16
-    DirEntry[20] = 0;  // File/Folder Start Cluster (High)
-    DirEntry[21] = 0;
-
-// Modifield time
-    DirEntry[22] = 0xD3;
-    DirEntry[23] = 0xBA;
-// Modifield date
-    DirEntry[24] = 0xE2;
-    DirEntry[25] = 0x58;
-
-// #test
-// First cluster. (Low word)
-// The low 16 bits of this entry's first cluster number. 
-// Use this number to find the first cluster for this entry.
-// first = Index in the fat16ClustersToSave[] list.
-   //int fIndex = first;  //=0.
-    unsigned short OurFirstCluster = (unsigned short) fat16ClustersToSave[0];
-    char *p = (char *) &OurFirstCluster;
-    DirEntry[26] = (char) (*p);  // File/Folder Start Cluster (Low)
-    p++;
-    DirEntry[27] = (char) (*p);
-
-// File size in bytes. (32 bits)
-// 4 bytes: (28,29,30,31)
-// (for files)
-    DirEntry[28] = (char) size_in_bytes;
-    size_in_bytes = (size_in_bytes >> 8);
-    DirEntry[29] = (char) size_in_bytes;
-    size_in_bytes = (size_in_bytes >> 8);
-    DirEntry[30] = (char) size_in_bytes;
-    size_in_bytes = (size_in_bytes >> 8);
-    DirEntry[31] = (char) size_in_bytes;
-
-// Folders will have a File Size of 0x0000
-// (for folders)
-
-    if (flag == 0x10)
-    {
-        DirEntry[28] = (char) 0;
-        DirEntry[29] = (char) 0;
-        DirEntry[30] = (char) 0;
-        DirEntry[31] = (char) 0;
-    }
-
-// #importante:
-// Vamos encontrar uma entrada livre no diretório para
-// salvarmos o nome do arquivo.
-// Copia o nome para dentro da entrada do diretório.
-// Obs: As entradas são de 32 bytes. Como root[] é um 
-// array de short então faremos um deslocamento de 16 shorts.
-// root[]
-// #importante: root[] é um array de short.	
-// IN: 
-// Endereço do diretótio e número máximo de entradas.
-// #todo: 
-// Talvez possamos ampliar esse número para o máximo 
-// de entradas no diretório.
-// #bugbug: A quantidade de entrada depende to diretório.
-// See: search.c
-
-// IN: 
-// directory address, max number of entries.
-    
-    FreeIndex = 
-        (int) findEmptyDirectoryEntry ( 
-                dir_address, 
-                dir_entries );
-
-    if (FreeIndex == -1){
-        printk ("fsSaveFile: [FAIL] No empty entry\n");
-        goto fail;
-    }
-
-//
-// Write entry into the directory buffer.
-//
-
-// 32/2 = 16 words.
-// Offset:
-// Deslocamento dentro do diretório.
-// representa o início da entrada que encontramos.
-// Encontramos multiplicando o índice da entrada pelo 
-// tamanho da entrada.
-// Copy entry into the root in the memory.
-// Copia 32 bytes.
- 
-    EntrySize = (FAT16_ENTRY_SIZE/2);
-    Offset = (int) (FreeIndex * EntrySize);
-
-// FAT16_DIRENTRY_SIZE = 32
-    memcpy ( &__dir[Offset], DirEntry, 32 );
-
-// reset
-// Reiniciamos o controlador antes de usarmos.
-
-//resetIDE:
-
-    //#debug
-    //printk("fsSaveFile: reset and while\n"); 
-
-    //reset_ide0 ();
-
-// ## Save ##
-// Vamos ao salvamento propriamente dito.
-
-    i=0; 
-
-//#debug 
-//improvisando um endereço válido
-
-    unsigned long address = (unsigned long) file_address;
-
-// Save!  
-// Saving the file into the disk.
-// Cluster by cluster.
-
-//SavingFile:
-
-// Routine:
-// +Pega um conteúdo da lista.
-// +Encontrada a assinatura na lista!
-// ...
-
-// #bugbug
-// E se o primeiro for um marcador de fim de arquivo?
-    //next = list[0];
-    //if (next == 0xFFF8)
-        //what??
-
-    unsigned int L_current_ide_port = 
-        (unsigned int) ata_get_current_ide_port_index();
-
-// Loop
-// Pegamos o atual na lista.
-// Se ele eh o sinalizador de fim de lista, 
-// entao entao colocamos o sinalizador de fim de arquivo
-// no offset indicado pelo penultimo elemento da lista.
-
-    while (TRUE){
-
-        next = fat16ClustersToSave[i];
-
-        // #debug
-        printk ("fsSaveFile: [DEBUG] next={%x}\n", next);
-
-        // O next é o marcador de fim de lista.
-        if (next == 0xFFF8){
-
-            // Então pegamos o penúltimo e colocamos
-            // o finalizador lá nesse offset.
-            next = fat16ClustersToSave[i-1];
-            fat[next] = 0xFFF8;
-            goto do_save_dir_and_fat;
-
-        // Se não é assinatura ainda.
-        } else {
-
-            // #bugbug
-            // Estamos usando isso sem nem mesmo checar seu valor.
-            // precisamos de limtes aqui. Para evitarmos overflow.
-            
-            // Grava na fat o endereço do próximo cluster
-            fat[next] = fat16ClustersToSave[i+1];
- 
-            //#debug 
-            //printk("write_lba\n");
-            
-            // Wait and write!
-            
-            // ata_get_current_ide_port_index()
-            disk_ata_wait_irq( ATACurrentPort.g_current_ide_port_index );
-
-            // Low level worker
-            //grava - Aqui next esta certo!
-            //write_lba ( (unsigned long) address, VOLUME1_DATAAREA_LBA + next -2 );
-            ataWriteSector ( 
-                L_current_ide_port,
-                (unsigned long) address, 
-                (unsigned long) ( VOLUME1_DATAAREA_LBA + next -2), 
-                0, 
-                0 );
-
-            address += 512;
-        }; 
-
-        i++;  // next value in the list
-
-        // #bugbug
-        // Limitando o tamanho do arquivo a 16 entradas.
-        // Why??
-
-        // #bugbug
-        // Limite provisorio.
-        if (i > 16){
-            debug_print ("fsSaveFile: [FIXME] write sectors limit\n");
-            printk      ("fsSaveFile: [FIXME] write sectors limit\n");
-            goto fail;
-        }
-
-        // ??
-    };
-
-// FAIL
-    debug_print ("fsSaveFile: Loop fail\n");
-    goto fail;
-   
-//
-// == done ========================================
-//
-
-// Saving rood dir and FAT.
-// Nesse momento já salvamos os clusters do arquivo.
-// OK. Funcionou no qemu.
-// #bugbug
-// Não vamos mais salvar a fat toda vez que salvarmos
-// um arquivo.
-// Vamos salvar a FAT apenas no fim da sessão.
-// Como ainda não temos shutdown, então vamos salvar 
-// quando chamarmos reboot.
-// #important
-// Updating the cache state.
-
-do_save_dir_and_fat:
-
-    //debug_print ("fsSaveFile: [DEBUG] do_save_dir_and_fat\n");
-    //printk("fsSaveFile: do_save_dir_and_fat:\n"); 
-
-// Save rootdir into the disk
-// #ps: ATA disk only
-// #bugbug: We need to save a directory, not the root.
-// IN: 
-// root dir address, root dir lba, root dir size in sectors.
-
-    atadsk_save_rootdir( 
-        VOLUME1_ROOTDIR_ADDRESS, 
-        VOLUME1_ROOTDIR_LBA, 
-        32
-    );
-
-// Sinalizing that the fat cache needs to be saved
-    fs_fat16_cache_not_saved();
-
-    //debug_print ("fsSaveFile: done\n");
-    //printk      ("fsSaveFile: done\n");
-
-    return 0;
-
-fail:
-    debug_print("fsSaveFile: fail\n");
-    printk     ("fsSaveFile: fail\n");
-
-    // #todo: Return value
-    return (int) 1;  // Why 1?
-    //return -1;
-}
-
 /*
  * do_read_file_from_disk: 
  *     This is called by sys_open() and sys_read_file_from_disk().
@@ -4618,7 +4077,7 @@ EndOfShortcuts:
             //++
             // See: 
             __ret = 
-                (int) fsSaveFile ( 
+                (int) fat16SaveFile ( 
                           VOLUME1_FAT_ADDRESS, 
                            TargetDirAddress, 
                            NumberOfEntries, 
@@ -4629,12 +4088,16 @@ EndOfShortcuts:
                            (char) 0x20 );         // flag 
               //--
 
-            // Ok
-            if (__ret == 0){
-                debug_print("do_read_file_from_disk: Created new file\n");
-                goto __go;
+            // Fail
+            if (__ret < 0){
+                debug_print("do_read_file_from_disk: on fat16SaveFile()\n");
+                goto fail;
             }
+
+            // OK
+            goto __go;
         }
+        // fail
         printk("do_read_file_from_disk: [FIXME] Can't create new file\n");
         goto fail;
     }
@@ -4833,7 +4296,7 @@ __OK:
     //printk("Load ....\n");
 
     Status = 
-        (int) fsLoadFile ( 
+        (int) fat16LoadFile ( 
                 VOLUME1_FAT_ADDRESS, 
                 TargetDirAddress, 
                 NumberOfEntries,
@@ -4841,8 +4304,8 @@ __OK:
                 (unsigned long) fp->_base,
                 fp->_lbfsize );
 
-    if (Status != 0){
-        printk("do_read_file_from_disk: on fsLoadFile()\n");
+    if (Status < 0){
+        printk("do_read_file_from_disk: on fat16LoadFile()\n");
         goto fail;
     }
     //printk("Loaded ....\n");
@@ -4992,7 +4455,7 @@ do_write_file_to_disk (
 //++
 // See: write.c
     __ret = 
-        (int) fsSaveFile ( 
+        (int) fat16SaveFile ( 
                 VOLUME1_FAT_ADDRESS, 
                 TargetDirAddress, 
                 NumberOfEntries,
@@ -5319,13 +4782,11 @@ void fsInitializeWorkingDiretoryString (void)
 // =========================================
 // __fs_initialize_imp:
 // Called by fsInitialize() in fs.c.
-int __fs_initialize_imp (void)
+
+int __fs_initialize_imp(void)
 {
     register int i=0;
     int slot = -1;
-
-    PROGRESS("__fs_initialize_imp:\n");
-    printk("__fs_initialize_imp:\n");
 
 // Initialize slab buffers to load directories.
     int buffers_ok = (int) __initialize_fs_buffers();
@@ -5520,10 +4981,10 @@ int __fs_initialize_imp (void)
     fsbp_initialize_bp_directories();
     // ...
 
-    PROGRESS("__fs_initialize_imp: Done\n");
-    printk("__fs_initialize_imp: Done\n");
+    return 0;  // OK
 
-    return 0;
+fail:
+    return (int) -1;
 }
 
 //

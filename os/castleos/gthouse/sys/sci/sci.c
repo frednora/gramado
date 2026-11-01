@@ -2794,8 +2794,9 @@ void *sci2 (
     }
 // Get sync id.
 // Provisorio para teste
-    if(number == 10005){
-        return (void*) get_saved_sync();
+    if(number == 10005)
+    {
+        return (void*) sys_get_saved_sync();
     }
 //=====
 

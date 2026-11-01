@@ -74,7 +74,7 @@ int gwsInstallFont(char *file_name)
     int number_of_entries = FAT16_ROOT_ENTRIES;
 
     fileret = 
-        (int) fsLoadFile ( 
+        (int) fat16LoadFile ( 
                 (unsigned long) VOLUME1_FAT_ADDRESS, 
                 (unsigned long) dir_address, 
                 (int) number_of_entries, 
