@@ -741,7 +741,7 @@ ZeroGravity:
     if ((void *) lapic_info[0].currentq->next != NULL)
     {
         lapic_info[0].currentq = (void *) lapic_info[0].currentq->next;
-        goto net_next_from_queue;
+        goto next_from_queue;
     }
 
 //
@@ -773,7 +773,7 @@ ZeroGravity:
     panic("ts: Unexpected error\n");
 
 // ==============================================
-// net_next_from_queue: 
+// next_from_queue: 
 // Go ahead
 // At this moment we already have a selected thread.
 // Let's check it's validation and try to execure it.
@@ -782,7 +782,7 @@ ZeroGravity:
 // ou chamamos o escalonador, ou saltamos para o início dessa rotina
 // para tentarmos outros critérios.
 
-net_next_from_queue:
+next_from_queue:
 
 // :)
 //#########################################//
