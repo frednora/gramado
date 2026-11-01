@@ -704,6 +704,12 @@ struct thread_d
     unsigned long runningCount_ms;
 
 
+// It means a change in the quantum requested.
+// In this case the dispatcher will change the quantum for this thread.
+// This change will safelly cause the preemption of the thread.
+
+    int _end_quantum_requested;
+
 // obs: 
 // ??
 // A soma das 3 esperas é a soma do tempo de espera

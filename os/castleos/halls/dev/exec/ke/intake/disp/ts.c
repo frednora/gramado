@@ -322,6 +322,15 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 
 static unsigned long __thread_switch(int lapic_info_id)
 {
+
+// Current
+    struct thread_d  *CurrentThread;
+    struct te_d *CurrentProcess;
+
+// Target
+    struct thread_d  *TargetThread;
+    struct te_d *TargetProcess;
+
     //unsigned long rv = 0;
 
     int __lapic_info_id = lapic_info_id;
@@ -332,14 +341,6 @@ static unsigned long __thread_switch(int lapic_info_id)
     }
 
     tid_t CurrentTID = lapic_info[__lapic_info_id].current_tid;
-
-// Current
-    struct thread_d  *CurrentThread;
-    struct te_d *CurrentProcess;
-
-// Target
-    struct thread_d  *TargetThread;
-    struct te_d *TargetProcess;
 
 // The owner of the current thread.
 // The 'thread environment id' for the current thread.
@@ -464,6 +465,24 @@ static unsigned long __thread_switch(int lapic_info_id)
     arch_save_context(0);
     CurrentThread->saved = TRUE;
 
+
+// #test
+// It means a change in the quantum requested.
+// In this case the dispatcher will change the quantum for this thread.
+// This change will safelly cause the preemption of the thread.
+//
+// If the 'end quantum' was requested,
+// we can safelly change the quantum here,
+// because the routine bellow is already prepered for 
+// this situation. It will check the quantum and 
+// preempt the thread if necessary.
+
+    if (CurrentThread->_end_quantum_requested == TRUE)
+    {
+        CurrentThread->_end_quantum_requested = FALSE;
+        CurrentThread->runningCount = CurrentThread->quantum;
+    }
+
 // #test
 // signal? timer ?
 // O contexto da thread está salvo.
@@ -539,6 +558,7 @@ static unsigned long __thread_switch(int lapic_info_id)
     // Do not preempt
     if (CurrentThread->runningCount < CurrentThread->quantum){
 
+        // -- sleep in progress --
         if (CurrentThread->Deferred.sleep_in_progress == TRUE && 
             CurrentThread->Deferred.sleep_phase == 1 )
         {
@@ -612,7 +632,7 @@ static unsigned long __thread_switch(int lapic_info_id)
             //goto dispatch_current;
         }
 
-
+        // -- sleep in progress --
         if (CurrentThread->Deferred.sleep_in_progress == TRUE && 
             CurrentThread->Deferred.sleep_phase == 1 )
         {
@@ -711,90 +731,29 @@ ZeroGravity:
         panic("ts: No threads\n");
     }
 
-// Only one thread.
-// The counter is telling us that there is only 
-// one thread in the system for uniprocessor.
-// It needs to be the thread marked as init for uniprocessor.
-    /*
-    if (UPProcessorBlock.threads_counter == 1)
-    {
-        if (UPProcessorBlock.IdleThread != (void *) InitThread)
-        {
-            panic("ts: Invalid idle thread for up\n");
-        }
-        // Let's run the init thread for Uniprocessor
-        lapic_info[0].currentq = (void *) UPProcessorBlock.IdleThread;
-        // No next ?
-        // lapic_info[0].currentq->next = NULL;
-        goto go_ahead;
-    }
-    */
-
-// Pick a thread and break the round?
-// We can do this if a thread was selected as 'ev_responder_thread'.
-// It means that the thread need to run now, in the next tick.
-
-    // #important:
-    // Event Responder.
-    // See: ipc.c, sci.c, thread.c
-    // For some reason, probably an input event, the kernel is
-    // making this thread a higher priority thread, and it will
-    // run along on it own round. Probably it is an input event.
-    // #bugbug
-    // At this time ts.c is operating as a scheduler for a single thread.
-
-    // Do we have an event responder that has a pending event?
-    // Are we using the event responder feature?
-    // Do we have a pending event for the ev responder thread?
-    // Set main fields, rebuild the queue and go ahead.
-    /*
-    int hasEvent = FALSE;
-    if (g_use_event_responder == TRUE) 
-    {
-        hasEvent = (int) has_pending_event(ev_responder_thread);
-        if (hasEvent == TRUE)
-        {
-            ev_responder_thread->runningCount = 0;
-            ev_responder_thread->runningCount_ms = 0;
-            ev_responder_thread->quantum = QUANTUM_MAX;
-            ev_responder_thread->priority = PRIORITY_MAX;
-            ev_responder_thread->state = READY;  // Read to run
-            // How many times it was scheduled
-            ev_responder_thread->scheduledCount++;
-            // Update flag
-            ev_responder_thread->has_pending_event = FALSE;
-
-            // Rebuild a queue with only one thread
-            lapic_info[0].currentq = (void *) ev_responder_thread;
-            lapic_info[0].currentq->next = NULL;
-            goto go_ahead;
-        }
-    }
-    */
 
 //
-// End of round?
+// >> Not the end of round yet <<
 //
 
-// ----------------------------------------
 // The queue is NOT over, get the next into the linked list
+
     if ((void *) lapic_info[0].currentq->next != NULL)
     {
         lapic_info[0].currentq = (void *) lapic_info[0].currentq->next;
-        goto go_ahead;
+        goto net_next_from_queue;
     }
-
-// ----------------------------------------
-// End of round or end of queue.
-// Rebuild the linked list and get the current thread.
 
 //
 // >> End of round <<
 //
 
-    // Round‑Robin Policy: End of round.
-    // Priority Interleaving Policy: 
-    // End of queue = end of stage, not round.
+// End of round or end of queue.
+// Rebuild the linked list and get the current thread.
+// Round‑Robin Policy: End of round.
+// Priority Interleaving Policy: 
+// End of queue = end of stage, not round.
+
     if ((void *) lapic_info[0].currentq->next == NULL)
     {
 
@@ -804,30 +763,17 @@ ZeroGravity:
 
         lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
 
-        // Avoiding the risk of bouncing back into ZeroGravity or 
-        // looping forever.
+        // Avoiding the risk of bouncing back into ZeroGravity or looping forever
         goto dispatch_current;
-        //goto go_ahead;
     }
 
-/*
-// #test
-// Maybe init thread can be our last option
-    if ((void *)InitThread != NULL)
-    {
-        if (InitThread->magic == 1234)
-        {
-            lapic_info[__lapic_info_id].current_tid = (tid_t) InitThread->tid;
-            goto go_ahead;
-        }
-    }
-*/
 
 // Not reached.
 // This is the end of our options when trying to select a thread.
     panic("ts: Unexpected error\n");
 
 // ==============================================
+// net_next_from_queue: 
 // Go ahead
 // At this moment we already have a selected thread.
 // Let's check it's validation and try to execure it.
@@ -836,7 +782,7 @@ ZeroGravity:
 // ou chamamos o escalonador, ou saltamos para o início dessa rotina
 // para tentarmos outros critérios.
 
-go_ahead:
+net_next_from_queue:
 
 // :)
 //#########################################//
@@ -847,36 +793,30 @@ go_ahead:
 // Esse foi o ponteiro configurado pelo scheduler
 // ou quando pegamos a próxima na lista.
 
-// #bugbug
-// Jumping to ZeroGravity can put us into an infinity loop.
 
+    // Get target from the queue
     TargetThread = (void *) lapic_info[0].currentq;
-    // #ps: This is dangerous. Possible loop.
-    if ((void *) TargetThread == NULL)
+
+// Dispatch if its a valid one
+    if (TargetThread != NULL)
     {
-        debug_print ("ts: pointer ");
-        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
-        goto ZeroGravity;
+        if ( TargetThread->used == TRUE && TargetThread->magic == 1234 )
+        {
+            if (TargetThread->state == READY)
+            {
+                // #debug
+                //serial_printk ("ts: state name=%s tid=%d ", 
+                    //TargetThread->__threadname, TargetThread->tid);
+                lapic_info[__lapic_info_id].current_tid = (tid_t) TargetThread->tid;
+                goto dispatch_current;
+            }
+        }
     }
-    // #ps: This is dangerous. Possible loop.
-    if ( TargetThread->used != TRUE || TargetThread->magic != 1234 )
-    {
-        debug_print ("ts: val ");
-        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
-        goto ZeroGravity;
-    }
-// Not ready?
-// We get from the queue a valid thread that changed it's state.
-    // #ps: This is dangerous. Possible loop.
-    if (TargetThread->state != READY)
-    {
-        // #debug
-        debug_print ("ts: state ");
-        //serial_printk ("ts: state name=%s tid=%d ", 
-            //TargetThread->__threadname, TargetThread->tid);
-        lapic_info[__lapic_info_id].current_tid = (tid_t) psScheduler();
-        goto ZeroGravity;
-    }
+
+// Its not valid
+// #debug: Not reached
+    panic("ts: Unexpected error\n");
+
 
 //
 // == Dispatcher ====
@@ -884,14 +824,6 @@ go_ahead:
 
 // OK, we already checked and our target thread is a valid one.
 // Let's set the current thread for this core.
-
-// Current selected
-    lapic_info[__lapic_info_id].current_tid = (int) TargetThread->tid;
-    goto dispatch_current;
-
-// #debug
-// Not reached
-    //panic("ts: [FAIL] dispatching target\n");
 
 // =================
 // Dispatch current 

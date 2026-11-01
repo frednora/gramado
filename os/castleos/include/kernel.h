@@ -197,6 +197,8 @@ extern int system_state;
 #include "../halls/dev/exec/ke/hal/x86_64/x64.h"
 #include "../halls/dev/exec/ke/hal/detect.h"
 
+#include "../halls/dev/exec/ke/intake/disp/x86_64/x64excep.h"
+
 // ==================================
 // virt/
 #include "../gthouse/sys/virt/hv.h"

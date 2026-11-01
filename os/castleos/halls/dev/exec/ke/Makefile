@@ -84,7 +84,7 @@ thread.o tlib.o te.o telib.o ithread.o clone.o \
 ipc.o \
 pit.o \
 x64sc.o \
-x64fault.o x64smp.o \
+x64excep.o x64smp.o \
 apic.o apictim.o ioapic.o \
 cpu.o \
 cpuid.o \
@@ -122,11 +122,12 @@ all:
 
 # Dispatcher
 
-	$(CC) -c intake/disp/ts.c              $(KERNEL_INCLUDE)  $(CFLAGS) -o ts.o  
-	$(CC) -c intake/disp/dispatch.c        $(KERNEL_INCLUDE)  $(CFLAGS) -o dispatch.o  
-	$(CC) -c intake/disp/spawn.c           $(KERNEL_INCLUDE)  $(CFLAGS) -o spawn.o  
-	$(CC) -c intake/disp/callback.c        $(KERNEL_INCLUDE)  $(CFLAGS) -o callback.o  
-	$(CC) -c intake/disp/x86_64/x64cont.c  $(KERNEL_INCLUDE)  $(CFLAGS) -o x64cont.o  
+	$(CC) -c intake/disp/ts.c               $(KERNEL_INCLUDE)  $(CFLAGS) -o ts.o  
+	$(CC) -c intake/disp/dispatch.c         $(KERNEL_INCLUDE)  $(CFLAGS) -o dispatch.o  
+	$(CC) -c intake/disp/spawn.c            $(KERNEL_INCLUDE)  $(CFLAGS) -o spawn.o  
+	$(CC) -c intake/disp/callback.c         $(KERNEL_INCLUDE)  $(CFLAGS) -o callback.o  
+	$(CC) -c intake/disp/x86_64/x64cont.c   $(KERNEL_INCLUDE)  $(CFLAGS) -o x64cont.o  
+	$(CC) -c intake/disp/x86_64/x64excep.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64excep.o
 
 # IPC
 
@@ -168,7 +169,6 @@ all:
 	$(CC) -c hal/x86_64/x64.c       $(KERNEL_INCLUDE) $(CFLAGS) -o x64.o
 	$(CC) -c hal/x86_64/x64info.c   $(KERNEL_INCLUDE) $(CFLAGS) -o x64info.o
 	$(CC) -c hal/x86_64/x64sc.c     $(KERNEL_INCLUDE) $(CFLAGS) -o x64sc.o
-	$(CC) -c hal/x86_64/x64fault.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64fault.o
 	$(CC) -c hal/x86_64/archhal.c   $(KERNEL_INCLUDE) $(CFLAGS) -o archhal.o
 
 	$(CC) -c hal/x86_64/archhal.c   $(KERNEL_INCLUDE) $(CFLAGS) -o archhal.o

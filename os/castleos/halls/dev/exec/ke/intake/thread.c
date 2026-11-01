@@ -1827,6 +1827,8 @@ try_next_slot:
     Thread->runningCount = 0;
     Thread->runningCount_ms = 0;
 
+    Thread->_end_quantum_requested = FALSE;
+
     Thread->readyCount  = 0; 
     Thread->ready_limit = QUANTUM_MAX;
 

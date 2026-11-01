@@ -46,7 +46,9 @@ _save_fault_number:
 ; Temos que salvar o contexto,
 ; pois vamos retornar após alguns tipos de fault,
 ; como é o caso de PF.
-extern _x64_all_faults
+
+extern _x64excep_all_exceptions
+
 align 4  
 all_faults:
 
@@ -100,11 +102,11 @@ all_faults:
     and rax, 3
     mov [_contextCPL], rax
 
+
 ; Call c routine in x64fault.c.
     mov rax, qword [_save_fault_number]
     mov rdi, rax 
-    call _x64_all_faults 
-    ;jmp _AllFaultsHang
+    call _x64excep_all_exceptions 
 
 ; FPU
     fxrstor [_context_fpu_buffer]

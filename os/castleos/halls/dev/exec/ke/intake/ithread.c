@@ -33,7 +33,11 @@ struct thread_d *create_init_thread(void)
     if (TEInitProcess->magic != 1234){
         panic ("create_init_thread: TEInitProcess validation\n");
     }
+
+//
 // Thread structure
+//
+
     t = (void *) kmalloc( sizeof(struct thread_d) );
     if ((void *) t == NULL){
         panic ("create_init_thread: t\n");
@@ -167,6 +171,8 @@ struct thread_d *create_init_thread(void)
 
     t->runningCount = 0;
     t->runningCount_ms = 0;
+
+    t->_end_quantum_requested = FALSE;
 
     t->readyCount  = 0;
     t->ready_limit = QUANTUM_MAX;

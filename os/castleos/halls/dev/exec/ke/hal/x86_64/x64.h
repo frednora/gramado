@@ -155,9 +155,5 @@ int x64_init_intel(void);
 // Show info
 void x64_info(void);
 
-// see: x64nmi.c 
-void x64_all_faults(unsigned long number);
-
-
 #endif    
 

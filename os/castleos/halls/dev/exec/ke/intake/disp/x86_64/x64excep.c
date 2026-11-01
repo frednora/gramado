@@ -1,8 +1,20 @@
 // x64fault.c
 // Handling Exceptions: (Faults, Traps and Aborts) for x86_64
+//
+// ps: 
+// This belongs to the dispatcher module. Beucase when a 
+// exception occurs we need to dispatch to the appropriate handler.
+// Sometimes this handler can be in the kernel and 
+// sometimes it can be in the user space.
+// When the handler is in the user mode, we need to use 
+// a registered callback/signal function in the user space.
+//
 // Created by Fred Nora.
 
 #include <kernel.h>
+
+struct exception_info_d ExceptionInfo;
+
 
 /*
 Intel Exceptions Overview
@@ -175,7 +187,7 @@ fail:
 }
 
 // Called by 'all_faults:' in exec.asm.
-void x64_all_faults(unsigned long number)
+void x64excep_all_exceptions(unsigned long number)
 {
 // Quote: 'You've never failed and You won't start now'.
 
@@ -190,6 +202,12 @@ void x64_all_faults(unsigned long number)
 // For the case the trap happned during some special irqls.
     int last_irql = lapic_info[0].irql;
     int was_running_in_r0 = -1;
+
+    int killstatus = (int) -1;
+    
+    // next process.
+    tid_t target_tid = INIT_TID;
+    pid_t target_pid = GRAMADO_PID_INIT;
 
 
 //
@@ -305,10 +323,8 @@ void x64_all_faults(unsigned long number)
     //unsigned long fault_pa=0;       //from cr2
     //unsigned long fault_pml4_pa=0;  //from cr3
 
-    debug_print("x64_all_faults:\n");
+    debug_print("x64excep_all_exceptions:\n");
 
-    //printk("\n");
-    //printk("\n");
     printk("\n");
     printk ("number: %d\n", number);
 
@@ -319,7 +335,7 @@ void x64_all_faults(unsigned long number)
 
 //#debug: 
 // We dont need this in every pagefault.
-    refresh_screen();
+    //refresh_screen();
 
 /*
 // #todo
@@ -403,95 +419,9 @@ void x64_all_faults(unsigned long number)
     }
 */
 
-    int killstatus = (int)-1;
-    
-    // next process.
-    tid_t target_tid = INIT_TID;
-    pid_t target_pid = GRAMADO_PID_INIT;
 
-//
-// Kill the process
-//
-
-// #todo
-// See ... we're killing the process
-// when we reach a PF. But its not our goal.
-// Maybe we're gonna implement some kind os
-// allocation of falting pages. (Demand paging)
-// See:
-// https://en.wikipedia.org/wiki/Demand_paging
-// https://wiki.osdev.org/Exceptions
-
-//      - Division Error,            0
-// (GP) - General Protection Fault, 13 (0xD) 
-// (PF) - Page Fault,               14 (0xE) 
-
-    if ( number == 0  ||
-         number == 13 || 
-         number == 14 )
-    {
-        // #todo:
-        // Treating this case is good only if the thread was running in ring 3
-
-        printk("x64_all_faults: {%d}\n", number);
-
-        // Kill process
-        // #bugbug: Precisamos checar o ring que o processo
-        // estava no momento da falta. Se foi em ring0
-        // entao temos problema.
-        // 0=OK | -1 = FAIL.
-        killstatus= (int) __kill_faulty_current_process();
-        if (killstatus != 0)
-        {
-            show_reg( lapic_info[0].current_tid );
-            x_panic("x64_all_faults: Coudn't kill process");
-        }
-        if (killstatus == 0)
-        {
-            // #debug
-            // Not necessary
-            printk("The process was killed\n");
-            
-            //
-            // Resume init thread
-            //
-
-            // Set the INIT_TID as the next current thread.
-            //current_tid = (tid_t) target_tid;
-            
-            // Set curren thread for this core.
-            // IN: tid, core id
-            set_current_thread((tid_t) target_tid, 0);
-
-            // Count the dispatcher method.
-            IncrementDispatcherCount(SELECT_DISPATCHER_COUNT);
-            
-            // Change the thread state.
-            // MOVEMENT 4 (Ready --> Running).
-            // It restores the context and update cr3. 
-            // So, when returning to the caller
-            // it will use the context of the target thread.
-            dispatcher(DISPATCHER_CURRENT);  
-            
-            // Se the next current process.
-            // #todo: 
-            // Precisamos atualizar os contadores da proxima thread.
-            // update the global variable
-            // IN: pid, cpu id.
-            set_current_process((pid_t)target_pid, 0);
-            
-            // Final message.
-            printk("Resuming the init thread\n");
-            refresh_screen();
-
-            // #test
-            // IN core id
-            arch_restore_context(0);
-
-            // Retorna pra assembly para efetuar iretq.
-            return;
-        }
-    }
+    // #debug
+    // printk("x64excep_all_exceptions: {%d}\n", number);
 
 //
 // More numbers
@@ -510,17 +440,89 @@ void x64_all_faults(unsigned long number)
         // #DE – Divide Error
         // Raised when integer or floating-point division by zero occurs.
         case 0: 
-            x_panic("x64_all_faults: 0"); 
+
+            // #todo: Check if we have a registered callback in the user space.
+            // #todo:
+            // Treating this case is good only if the thread was running in ring 3      
+
+            // For the page fault:
+            // Sometimes we will not kill the process when a pagefault happens.
+            // Normally this is managed by the page fault handler in the kernel.
+            // Its used by for example by the demand paging mechanism.
+            // But when we don't have a demand paging mechanism,
+            // we can call the registered callback in the user space, if any.
+
+            // Kill process
+            // #bugbug: Precisamos checar o ring que o processo
+            // estava no momento da falta. Se foi em ring0
+            // entao temos problema.
+            // 0=OK | -1 = FAIL.
+
+            killstatus = (int) __kill_faulty_current_process();
+
+            if (killstatus != 0)
+            {
+                show_reg( lapic_info[0].current_tid );
+                x_panic("x64excep_all_exceptions: Coudn't kill process");
+            }
+            if (killstatus == 0)
+            {
+                // #debug
+                // Not necessary
+                printk("The process was killed\n");
+            
+                //
+                // Resume init thread
+                //
+
+                // Set the INIT_TID as the next current thread.
+                //current_tid = (tid_t) target_tid;
+            
+                // Set curren thread for this core.
+                // IN: tid, core id
+                set_current_thread((tid_t) target_tid, 0);
+
+                // Count the dispatcher method.
+                IncrementDispatcherCount(SELECT_DISPATCHER_COUNT);
+            
+                // Change the thread state.
+                // MOVEMENT 4 (Ready --> Running).
+                // It restores the context and update cr3. 
+                // So, when returning to the caller
+                // it will use the context of the target thread.
+                dispatcher(DISPATCHER_CURRENT);  
+            
+                // Se the next current process.
+                // #todo: 
+                // Precisamos atualizar os contadores da proxima thread.
+                // update the global variable
+                // IN: pid, cpu id.
+                set_current_process((pid_t)target_pid, 0);
+            
+                // Final message.
+                printk("Resuming the init thread\n");
+                refresh_screen();
+
+                // #test
+                // IN core id
+                arch_restore_context(0);
+
+                // Retorna pra assembly para efetuar iretq.
+                return;
+            }
+            x_panic("x64excep_all_exceptions: 0"); 
             break;
 
         // Debug
         case 1:
-            x_panic("x64_all_faults: 1");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 1");
             break;
 
         // Non-maskable Interrupt
         case 2:
-            x_panic("x64_all_faults: 2");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 2");
             break;
 
         // Debug breakpoint - 3 (0x3) 
@@ -529,6 +531,7 @@ void x64_all_faults(unsigned long number)
         // So, we need to put some arguments in the faults() function.
         // #todo: faults(number,arg1,arg2,arg3).
         case 3: 
+            // #todo: Check if we have a registered callback in the user space.
             printk("\n");
             printk("== 3 ==\n");  
 
@@ -538,86 +541,234 @@ void x64_all_faults(unsigned long number)
 
             //show_slots();
             show_reg( lapic_info[0].current_tid );
-
             refresh_screen();
-            // Esse tipo funciona mesmo antes do console
-            // ter sido inicializado.
-            x_panic("x64_all_faults: 3"); 
+            x_panic("x64excep_all_exceptions: 3"); 
             break;
 
         // Overflow
         case 4:
-            x_panic("x64_all_faults: 4");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 4");
             break;
 
         // Bound Range Exceeded
         case 5:
-            x_panic("x64_all_faults: 5");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 5");
             break;
 
         // Invalid Opcode - 6 (0x6) 
         case 6:
-            x_panic("x64_all_faults: 6");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 6");
             break;
 
         // #NM – Device Not Available
         // Raised when floating-point or SIMD instructions are executed but 
         // the FPU/SIMD unit is disabled. Or not available.
         case 7: 
-            x_panic("x64_all_faults: 7 - No 80387");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 7 - No 80387");
             break;
 
         // Double fault
         case 8:
-            x_panic("x64_all_faults: 8 - DOUBLE");
+            // #todo: Check if we have a registered callback in the user space.
+            // #ps: Double fault is a critical exception.
+            // It can be caused by a stack overflow, or 
+            // by a fault in the exception handler itself.
+            // If this happens in ring 0, we need to panic the system.
+            x_panic("x64excep_all_exceptions: 8 - DOUBLE");
             break;
         
         // Coprocessor Segment Overrun?
         case 9:
-            x_panic("x64_all_faults: 9");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 9");
             break;
 
         // Invalid TSS
         case 10:
-            x_panic("x64_all_faults: 10 - Invalid tss");
+            // #todo: Check if we have a registered callback in the user space.
+            // #ps: Invalid TSS is a critical exception.
+            // It can be caused by a stack overflow, or 
+            // by a fault in the exception handler itself.
+            // If this happens in ring 0, we need to panic the system.
+            x_panic("x64excep_all_exceptions: 10 - Invalid tss");
             break;
 
         // Segment Not Present
         case 11:
-            x_panic("x64_all_faults: 11");
+            // #todo: Check if we have a registered callback in the user space.
+            x_panic("x64excep_all_exceptions: 11");
             break;
 
         // Stack-Segment Fault
         case 12:
-            x_panic("x64_all_faults: 12");
+            // #todo: Check if we have a registered callback in the user space.
+            // #ps: Stack-Segment Fault is a critical exception.
+            // It can be caused by a stack overflow, or 
+            // by a fault in the exception handler itself.
+            // If this happens in ring 0, we need to panic the system.
+            x_panic("x64excep_all_exceptions: 12");
             break;
 
         // (GP) - General Protection Fault
         case 13: 
+
+            // #todo: Check if we have a registered callback in the user space.
+            // #todo:
+            // Treating this case is good only if the thread was running in ring 3      
+
+            // Kill process
+            // #bugbug: Precisamos checar o ring que o processo
+            // estava no momento da falta. Se foi em ring0
+            // entao temos problema.
+            // 0=OK | -1 = FAIL.
+
+            killstatus = (int) __kill_faulty_current_process();
+
+            if (killstatus != 0)
+            {
+                show_reg( lapic_info[0].current_tid );
+                x_panic("x64excep_all_exceptions: Coudn't kill process");
+            }
+            if (killstatus == 0)
+            {
+                // #debug
+                // Not necessary
+                printk("The process was killed\n");
+            
+                //
+                // Resume init thread
+                //
+
+                // Set the INIT_TID as the next current thread.
+                //current_tid = (tid_t) target_tid;
+            
+                // Set curren thread for this core.
+                // IN: tid, core id
+                set_current_thread((tid_t) target_tid, 0);
+
+                // Count the dispatcher method.
+                IncrementDispatcherCount(SELECT_DISPATCHER_COUNT);
+            
+                // Change the thread state.
+                // MOVEMENT 4 (Ready --> Running).
+                // It restores the context and update cr3. 
+                // So, when returning to the caller
+                // it will use the context of the target thread.
+                dispatcher(DISPATCHER_CURRENT);  
+            
+                // Se the next current process.
+                // #todo: 
+                // Precisamos atualizar os contadores da proxima thread.
+                // update the global variable
+                // IN: pid, cpu id.
+                set_current_process((pid_t)target_pid, 0);
+            
+                // Final message.
+                printk("Resuming the init thread\n");
+                // refresh_screen();
+
+                // #test
+                // IN core id
+                arch_restore_context(0);
+
+                // Retorna pra assembly para efetuar iretq.
+                return;
+            }
+
             printk ("== GP ==\n");  
             //show_slots();
             //show_reg( lapic_info[0].current_tid );
             refresh_screen();
-            // Esse tipo funciona mesmo antes do console
-            // ter sido inicializado.
-            x_panic("x64_all_faults: 13  GP <<"); 
+            x_panic("x64excep_all_exceptions: 13 GP"); 
             break;
 
         // (PF) - Page Fault
         // #todo: Com assembly inline podemos pegar cr2 e cr3.
         case 14:
+  
+             // #todo: Check if we have a registered callback in the user space.
+            // #todo:
+            // Treating this case is good only if the thread was running in ring 3      
+
+            // For the page fault:
+            // Sometimes we will not kill the process when a pagefault happens.
+            // Normally this is managed by the page fault handler in the kernel.
+            // Its used by for example by the demand paging mechanism.
+            // But when we don't have a demand paging mechanism,
+            // we can call the registered callback in the user space, if any.
+
+            // Kill process
+            // #bugbug: Precisamos checar o ring que o processo
+            // estava no momento da falta. Se foi em ring0
+            // entao temos problema.
+            // 0=OK | -1 = FAIL.
+
+            killstatus = (int) __kill_faulty_current_process();
+
+            if (killstatus != 0)
+            {
+                show_reg( lapic_info[0].current_tid );
+                x_panic("x64excep_all_exceptions: Coudn't kill process");
+            }
+            if (killstatus == 0)
+            {
+                // #debug
+                // Not necessary
+                printk("The process was killed\n");
+            
+                //
+                // Resume init thread
+                //
+
+                // Set the INIT_TID as the next current thread.
+                //current_tid = (tid_t) target_tid;
+            
+                // Set curren thread for this core.
+                // IN: tid, core id
+                set_current_thread((tid_t) target_tid, 0);
+
+                // Count the dispatcher method.
+                IncrementDispatcherCount(SELECT_DISPATCHER_COUNT);
+            
+                // Change the thread state.
+                // MOVEMENT 4 (Ready --> Running).
+                // It restores the context and update cr3. 
+                // So, when returning to the caller
+                // it will use the context of the target thread.
+                dispatcher(DISPATCHER_CURRENT);  
+            
+                // Se the next current process.
+                // #todo: 
+                // Precisamos atualizar os contadores da proxima thread.
+                // update the global variable
+                // IN: pid, cpu id.
+                set_current_process((pid_t)target_pid, 0);
+            
+                // Final message.
+                printk("Resuming the init thread\n");
+                // refresh_screen();
+
+                // #test
+                // IN core id
+                arch_restore_context(0);
+
+                // Retorna pra assembly para efetuar iretq.
+                return;
+            }
+
             printk ("== PF ==\n");  
-            //if(user_thread == TRUE){
-            //    printk("It's an user thread!\n");
-            //}
             show_slots();
             refresh_screen();
-            x_panic("x64_all_faults: 14  PF"); 
+            x_panic("x64excep_all_exceptions: 14  PF"); 
             break;
 
         // Intel reserved
         case 15:
-            x_panic("x64_all_faults: 15 - Intel reserved");
+            x_panic("x64excep_all_exceptions: 15 - Intel reserved");
             break;
 
         // #MF – x87 Floating-Point Error
@@ -625,17 +776,17 @@ void x64_all_faults(unsigned long number)
         // (e.g., divide-by-zero, invalid operation, overflow, underflow, precision loss, denormal operand).
         // Co-processor error on 486 and above.
         case 16:
-            x_panic("x64_all_faults: 16 - Coprocessor error");
+            x_panic("x64excep_all_exceptions: 16 - Coprocessor error");
             break;
 
         // Alignment Check
         case 17:
-            x_panic("x64_all_faults: 17");
+            x_panic("x64excep_all_exceptions: 17");
             break;
 
         // Machine Check
         case 18:
-            x_panic("x64_all_faults: 18");
+            x_panic("x64excep_all_exceptions: 18");
             break;
 
         // Intel reserved faults
@@ -645,42 +796,42 @@ void x64_all_faults(unsigned long number)
         // Raised for SSE/SSE2/SIMD instructions when floating-point errors occur 
         // (similar conditions as x87 but for vectorized ops).
         case 19:
-            x_panic("x64_all_faults: 19 - SIMD Floating-Point Exception");
+            x_panic("x64excep_all_exceptions: 19 - SIMD Floating-Point Exception");
             break;
 
         // 20 - Virtualization Exception
         case 20: 
-            x_panic("x64_all_faults: 20 Virtualization Exception"); 
+            x_panic("x64excep_all_exceptions: 20 Virtualization Exception"); 
             break;
 
         // 21 - Control Protection Exception
-        case 21: x_panic("x64_all_faults: 21"); break;
-        case 22: x_panic("x64_all_faults: 22"); break;
-        case 23: x_panic("x64_all_faults: 23"); break;
-        case 24: x_panic("x64_all_faults: 24"); break;
-        case 25: x_panic("x64_all_faults: 25"); break;
-        case 26: x_panic("x64_all_faults: 26"); break;
-        case 27: x_panic("x64_all_faults: 27"); break;
+        case 21: x_panic("x64excep_all_exceptions: 21"); break;
+        case 22: x_panic("x64excep_all_exceptions: 22"); break;
+        case 23: x_panic("x64excep_all_exceptions: 23"); break;
+        case 24: x_panic("x64excep_all_exceptions: 24"); break;
+        case 25: x_panic("x64excep_all_exceptions: 25"); break;
+        case 26: x_panic("x64excep_all_exceptions: 26"); break;
+        case 27: x_panic("x64excep_all_exceptions: 27"); break;
 
         // 28 - Hypervisor Injection Exception
         case 28: 
-            x_panic("x64_all_faults: 28 - Hypervisor Injection Exception");
+            x_panic("x64excep_all_exceptions: 28 - Hypervisor Injection Exception");
             break;
 
         // 29 - VMM Communication Exception
         case 29:
-            x_panic("x64_all_faults: 29 - VMM Communication Exception");
+            x_panic("x64excep_all_exceptions: 29 - VMM Communication Exception");
             break;
 
         // 30 - Security Exception
-        case 30: x_panic("x64_all_faults: 30"); break;
-        case 31: x_panic("x64_all_faults: 31"); break;
+        case 30: x_panic("x64excep_all_exceptions: 30"); break;
+        case 31: x_panic("x64excep_all_exceptions: 31"); break;
 
         default:
-            x_panic("x64_all_faults: Unknown"); 
+            x_panic("x64excep_all_exceptions: Unknown"); 
             break;
     };
     
-    x_panic("x64_all_faults: Fail");
+    x_panic("x64excep_all_exceptions: Fail");
 }
 
