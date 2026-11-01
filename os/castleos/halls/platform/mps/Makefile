@@ -1,4 +1,7 @@
-#
+# Intel Multiprocessor Specification
+# MP Floating Pointer table support.
+# Created by Fred Nora.
+
 
 INCLUDE = ../../../include
 
