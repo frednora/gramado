@@ -6,7 +6,7 @@ Fred Nora: gramado
 
 ```
 admin/  - Administrator stuff
-os/     - Gramado Core OS Components
+core/   - Gramado Core OS Components
 docs/   - Documentation for Gramado 
 tools/  - Gramado Tools 
 winsys/ - Compositor and client-side GUI applications.
@@ -16,7 +16,7 @@ winsys/ - Compositor and client-side GUI applications.
 # Usage
 
 ```
-$ cd os/
+$ cd core/
 $ make
 ```
 
