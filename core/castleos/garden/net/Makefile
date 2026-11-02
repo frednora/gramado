@@ -1,6 +1,22 @@
 # net/
-# Compile all the files and create p3_net.o
+# Compile all the files and create ex_net.o
 # Makefile for the kernel networking.
+
+
+#
+# Config
+#
+
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
 
 INCLUDE = ../../include
 
@@ -12,13 +28,13 @@ MAKE	= make
 NASM	= nasm
 OBJCOPY	= objcopy
 OBJDUMP	= objdump
-LEX	= flex
-YACC	= bison
-PERL	= perl
+#LEX	= flex
+#YACC	= bison
+#PERL	= perl
 PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
-RUBY	= ruby
+#RUBY	= ruby
 
 
 # test: gramado 64bit
@@ -78,44 +94,41 @@ net.o
 
 all:
 
-	$(CC) -c net.c  $(KERNEL_INCLUDE) $(CFLAGS) -o net.o
+	$(Q)$(CC) -c net.c  $(KERNEL_INCLUDE) $(CFLAGS) -o net.o
 
 # network
-	$(CC) -c domain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o domain.o
-	$(CC) -c inet.c     $(KERNEL_INCLUDE) $(CFLAGS) -o inet.o
+	$(Q)$(CC) -c domain.c   $(KERNEL_INCLUDE) $(CFLAGS) -o domain.o
+	$(Q)$(CC) -c inet.c     $(KERNEL_INCLUDE) $(CFLAGS) -o inet.o
 
 # socket
-	$(CC) -c socket.c   $(KERNEL_INCLUDE) $(CFLAGS) -o socket.o
-	$(CC) -c sockint.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sockint.o
-
+	$(Q)$(CC) -c socket.c   $(KERNEL_INCLUDE) $(CFLAGS) -o socket.o
+	$(Q)$(CC) -c sockint.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sockint.o
 
 # Network inteface support
-	$(CC) -c ifconfig/netif.c  $(KERNEL_INCLUDE) $(CFLAGS) -o netif.o
+	$(Q)$(CC) -c ifconfig/netif.c  $(KERNEL_INCLUDE) $(CFLAGS) -o netif.o
 
 # ethernet
-	$(CC) -c ethernet/ethernet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
+	$(Q)$(CC) -c ethernet/ethernet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ethernet.o
 
 # firewall
-	$(CC) -c firewall/firewall.c  $(KERNEL_INCLUDE) $(CFLAGS) -o firewall.o
+	$(Q)$(CC) -c firewall/firewall.c  $(KERNEL_INCLUDE) $(CFLAGS) -o firewall.o
 
 # ipv4
-	$(CC) -c ipv4/arp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
-	$(CC) -c ipv4/ipv4.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
-	$(CC) -c ipv4/tcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
-	$(CC) -c ipv4/udp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
-	$(CC) -c ipv4/dhcp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
+	$(Q)$(CC) -c ipv4/arp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o arp.o
+	$(Q)$(CC) -c ipv4/ipv4.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ipv4.o
+	$(Q)$(CC) -c ipv4/tcp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o tcp.o
+	$(Q)$(CC) -c ipv4/udp.c   $(KERNEL_INCLUDE) $(CFLAGS) -o udp.o
+	$(Q)$(CC) -c ipv4/dhcp.c  $(KERNEL_INCLUDE) $(CFLAGS) -o dhcp.o
 
 # link
-	$(LD) -r -o ex_net.o $(OBJS)
+	$(Q)$(LD) -r -o ex_net.o $(OBJS)
 
 # Copy
-	cp ex_net.o ../../
+	$(Q)cp ex_net.o ../../
 
 # Clean
-	rm *.o
+	$(Q)rm *.o
 
 clean:
-	rm *.o    
+	$(Q)rm *.o    
 	
-	
-

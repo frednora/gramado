@@ -1,7 +1,21 @@
 # It compiles all in dev/ folder
 
-all:
+#
+# Config
+#
 
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
+
+all:
 
 # Application interaction hall
 
@@ -10,22 +24,22 @@ all:
 # Interrupt origin: cpu
 # Execution unit. (cpu, process, threads)
 
-	make -C exec/ke/
+	$(Q)make -C exec/ke/
 
 # AIH: Application Interaction Hall
 # -- app::memory --------------------
 # Interrupt origin: memory
 
-	make -C req/mm/
+	$(Q)make -C req/mm/
 
 # AIH: Application Interaction Hall
 # -- app::disk+net --------------------
 # Interrupt origin: irq
 
-	make -C per/blkdev/
-	make -C per/netdev/
-#	make -C per/fs/
-	make -C per/
+	$(Q)make -C per/blkdev/
+	$(Q)make -C per/netdev/
+#	$(Q)make -C per/fs/
+	$(Q)make -C per/
 
 clean:
 #todo

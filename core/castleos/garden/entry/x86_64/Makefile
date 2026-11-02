@@ -2,6 +2,22 @@
 # The final object is head_64.o  
 # Created by Fred Nora.
 
+#
+# Config
+#
+
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
+
+
 objTARGET := head_64.o    
 
 # Includes
@@ -10,7 +26,8 @@ STARTUP_INCLUDE  := -I startup/
 ENTRY_INCLUDE    := -I entry/ 
 INCLUDES := $(KERNEL_INCLUDE) $(STARTUP_INCLUDE) $(ENTRY_INCLUDE) 
 
-DESTINATION_FOLDER := ../../../
+
+DESTINATION_FOLDER := ../../../ 
 
 MAKE = make
 NASM = nasm
@@ -21,8 +38,9 @@ AR	= ar
 
 all:
 # Startup code and entry code
-	$(NASM) head_64.asm $(INCLUDES) -f elf64 -o $(objTARGET) 
+	$(Q)$(NASM) head_64.asm $(INCLUDES) -f elf64 -o $(objTARGET) 
 # Copy to destination folder
-	cp $(objTARGET) $(DESTINATION_FOLDER) 
+	$(Q)cp $(objTARGET) $(DESTINATION_FOLDER) 
 # Clean unused objects
-	rm *.o 
+	$(Q)rm *.o 
+

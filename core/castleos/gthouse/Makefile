@@ -1,14 +1,29 @@
 
+#
+# Config
+#
+
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
+
 all:
 
+	@echo "gthouse: all"
 
 # libk and rtl
-	make -C libk/
+	$(Q)make -C libk/
 
 # Top level routines
-	make -C sys/
+	$(Q)make -C sys/
 
 # Kernel-side support for user interaction
-	make -C wink/
-
+	$(Q)make -C wink/
 

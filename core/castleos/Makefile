@@ -41,9 +41,7 @@ linkFlags := -m elf_x86_64 \
 # Config
 #
 
-ifndef CONFIG_USE_VERBOSE
-	CONFIG_USE_VERBOSE=1
-endif
+include config.mk
 
 ifeq ($(CONFIG_USE_VERBOSE),1)
 # Not silent. It prints the commands.
@@ -110,30 +108,29 @@ MYTEST_CONFIG=n
 
 # Kernel Execution Environment
 objects-y := head_64.o 
-objects-y += kee.o  
-objects-y += kmain.o    
-objects-y += apmain.o    
+objects-y += kee.o 
+objects-y += kmain.o 
+objects-y += apmain.o 
 
 #
 # -- Executive layer --
 #
 
 # Abstractions
-objects-y += ex_gnet.o  
-objects-y += ex_net.o  
-objects-y += ex_libk.o  
-objects-y += ex_sys.o  
-objects-y += ex_wink.o  
-objects-y += ex_bdev.o  
-objects-y += ex_ndev.o  
-objects-y += ex_mm.o  
-objects-y += ex_fs.o  
-objects-y += ex_cdev.o  
-objects-y += ex_dev.o  
-objects-y += ex_acpi.o  
-objects-y += ex_bus.o  
-objects-y += ex_mps.o  
-
+objects-y += ex_gnet.o 
+objects-y += ex_net.o 
+objects-y += ex_libk.o 
+objects-y += ex_sys.o 
+objects-y += ex_wink.o 
+objects-y += ex_bdev.o 
+objects-y += ex_ndev.o 
+objects-y += ex_mm.o 
+objects-y += ex_fs.o 
+objects-y += ex_cdev.o 
+objects-y += ex_dev.o 
+objects-y += ex_acpi.o 
+objects-y += ex_bus.o 
+objects-y += ex_mps.o 
 
 # test
 # objects-$(MYTEST_CONFIG) += fake_mytest.o
@@ -148,18 +145,20 @@ clean
 
 # ----------------
 RedZone:
-	@echo "Compiling: Compiling RedZone"
-
+	@echo "\n"
+	@echo "==== Compiling: Compiling RedZone ===="
 	$(Q)$(MAKE) -C halls/
 
 # ----------------
 PinkZone:
-	@echo "Compiling: Compiling PinkZone"
+	@echo "\n"
+	@echo "==== Compiling: Compiling PinkZone ===="
 	$(Q)$(MAKE) -C gthouse/
 
 # ----------------
 WhiteZone:
-	@echo "Compiling: Compiling WhiteZone"
+	@echo "\n"
+	@echo "==== Compiling: Compiling WhiteZone ===="
 
 # (arch)
 # All the files in garden/entry/
@@ -167,8 +166,8 @@ WhiteZone:
 
 # ----------------
 link-kernel:
-
-	@echo "Linking: Linking the kernel image ..."
+	@echo "\n"
+	@echo "==== Linking: Linking kernel image ===="
 	$(LD) $(linkFlags) -o $(linkTarget) $(objects-y)  
 
 
@@ -190,13 +189,15 @@ clean-all:
 	rm -rf gthouse/libk/*.o   
 	rm -rf gthouse/wink/*.o   
 
-# user interaction
-	rm -rf halls/dev/chardev/*.o   
-
 # interrupt-driver stuff
 	rm -rf halls/dev/exec/*.o   
 	rm -rf halls/dev/per/*.o   
 	rm -rf halls/dev/req/*.o   
+
+	rm -rf halls/fs/*.o   
+
+# user interaction
+	rm -rf halls/hcidev/chardev/*.o   
 
 	rm -rf halls/platform/acpi/*.o   
 	rm -rf halls/platform/bus/*.o   

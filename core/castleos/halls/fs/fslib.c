@@ -1379,8 +1379,8 @@ fail:
 ssize_t __write_imp (int fd, char *ubuf, size_t count)
 {
     file *fp;
-    struct socket_d *s1;
-    struct socket_d *s2;
+//    struct socket_d *s1;
+//    struct socket_d *s2;
     struct te_d *p;  // Process structure
     ssize_t nbytes=0;
     size_t ncopy=0;
@@ -2038,7 +2038,8 @@ fail:
     // #debug
     // debug_print ("__write_imp: [FAIL] Something is wrong!\n");
     // printk      ("__write_imp: [FAIL] something is wrong!\n");
-fail2:
+
+// fail2:
 
     //invalidate_screen();
 
@@ -2080,7 +2081,7 @@ __open_imp (
     struct te_d *p;  // Process structure
     pid_t current_process = -1;
     char pathname_local_copy[256];
-    int value = -1;
+//    int value = -1;
 
     //debug_print ("__open_imp: $\n");
 
@@ -3311,8 +3312,8 @@ CompleteName8WithSpaces:
         ns++;
     };
 
-// Add extension.
-AddExt:
+// Add extension
+// AddExt:
 
 // Prepare a new extension 
 // if no extension was provided.
@@ -3483,8 +3484,8 @@ CompleteName8WithSpaces:
         ns++;
     };
 
-// Add extension.
-AddExt:
+// Add extension
+// AddExt:
 
 // Prepare a new extension 
 // if no extension was provided.
@@ -3769,9 +3770,9 @@ fail:
 }
 
 // #todo: showing only few fields
-void fs_show_file_info (file *f)
+void fs_show_file_info(file *f)
 {
-    size_t StringSize=0;
+//    size_t StringSize=0;
 
 // Parameter
     if ((void*) f == NULL){
@@ -4392,8 +4393,8 @@ __OK:
     // printk("do_read_file_from_disk-OUTPUT: %s \n", fp->_base);
     // ...
 
-done:
-    return (file *) fp;  // Valid file pointer
+    return (file *) fp;  // ok. Valid file pointer
+
 fail:
     return NULL;         // Invalid file pointer
 }
@@ -4785,7 +4786,7 @@ void fsInitializeWorkingDiretoryString (void)
 
 int __fs_initialize_imp(void)
 {
-    register int i=0;
+//    register int i=0;
     int slot = -1;
 
 // Initialize slab buffers to load directories.

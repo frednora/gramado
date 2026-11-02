@@ -1,4 +1,20 @@
 
+#
+# Config
+#
+
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
+
+
 # test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
 CFLAGS := \
@@ -35,17 +51,18 @@ CFLAGS := \
 	-fno-optimize-sibling-calls    
 
 all:
-#	make -C  arm/
-	make -C  x86_64/
+#	$(Q)make -C  arm/
+	$(Q)make -C  x86_64/
 
 # kmain for BSP processor
-	$(CC) -c kmain.c   -I ../../include  $(CFLAGS) -o kmain.o
+	$(Q)$(CC) -c kmain.c   -I ../../include  $(CFLAGS) -o kmain.o
 # kmain for AP processor
-	$(CC) -c apmain.c  -I ../../include  $(CFLAGS) -o apmain.o
+	$(Q)$(CC) -c apmain.c  -I ../../include  $(CFLAGS) -o apmain.o
 
 # Copy
-	mv kmain.o   ../../
-	mv apmain.o   ../../
+	$(Q)mv kmain.o   ../../
+	$(Q)mv apmain.o  ../../
 
 clean:
 # ...
+

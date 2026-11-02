@@ -1,18 +1,36 @@
 # Compile all in halls/ folder
 
+
+#
+# Config
+#
+
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
+
 all:
 
+	@echo "halls: all"
+
 # fs
-	make -C fs/
+	$(Q)make -C fs/
 
 # BUSes
-	make -C platform/
+	$(Q)make -C platform/
 
 # Devices (exec, per, req)
-	make -C dev/
+	$(Q)make -C dev/
 
 # Human-Computer Interfce devices
-	make -C hcidev/
+	$(Q)make -C hcidev/
 
 clean:
 # ...

@@ -2,6 +2,21 @@
 # Create p1_gnet.o kernel module.
 # Highest level component.
 
+#
+# Config
+#
+
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
+
 INCLUDE = ../../include
 
 AS	= as
@@ -12,13 +27,13 @@ MAKE	= make
 NASM	= nasm
 OBJCOPY	= objcopy
 OBJDUMP	= objdump
-LEX	= flex
-YACC	= bison
-PERL	= perl
+#LEX	= flex
+#YACC	= bison
+#PERL	= perl
 PYTHON	= python
 PYTHON2	= python2
 PYTHON3	= python3
-RUBY	= ruby
+#RUBY	= ruby
 
 # test: gramado 64bit
 # See: https://gcc.gnu.org/onlinedocs/gcc/Code-Gen-Options.html
@@ -71,17 +86,16 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = http.o gprot.o gramnet.o    
 
 all:
-	$(CC) -c http.c     $(KERNEL_INCLUDE) $(CFLAGS) -o http.o
-	$(CC) -c gprot.c    $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
-	$(CC) -c gramnet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramnet.o
+	$(Q)$(CC) -c http.c     $(KERNEL_INCLUDE) $(CFLAGS) -o http.o
+	$(Q)$(CC) -c gprot.c    $(KERNEL_INCLUDE) $(CFLAGS) -o gprot.o
+	$(Q)$(CC) -c gramnet.c  $(KERNEL_INCLUDE) $(CFLAGS) -o gramnet.o
 
 # link
-	$(LD) -r -o ex_gnet.o $(OBJS)
-	cp ex_gnet.o ../../
-	rm *.o
+	$(Q)$(LD) -r -o ex_gnet.o $(OBJS)
+	$(Q)cp ex_gnet.o ../../
+	$(Q)rm *.o
 
 clean:
-	rm *.o    
+	$(Q)rm *.o    
 	
-	
-	
+

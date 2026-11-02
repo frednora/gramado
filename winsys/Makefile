@@ -1,12 +1,27 @@
 # Windowing System
 
+#
+# Config
+#
+
+include config.mk
+
+ifeq ($(CONFIG_USE_VERBOSE),1)
+# Not silent. It prints the commands.
+	Q =
+else
+# silent
+	Q = @
+endif
+
+
 all:
 
 # Commands
-	make -C cmds/
+	$(Q)make -C cmds/
 
 # Desktop Environment
-	make -C de/
+	$(Q)make -C de/
 
 clean:
 #todo
