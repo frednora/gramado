@@ -116,6 +116,10 @@ copy_process_struct(
     Process2->base_priority = (unsigned long) CloneBasePriority;
     Process2->priority      = (unsigned long) ClonePriority;
 
+    Process2->ThreadQuantum = Process1->ThreadQuantum;
+    Process2->timeout = 0;
+    Process2->ticks_remaining = 0;
+
 // O clone não inicializa na seção crítica, pois senão teríamos
 // dois processos na sessão crítica.
     Process2->_critical = 0;

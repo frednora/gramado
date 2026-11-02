@@ -329,8 +329,11 @@ unsigned long get_process_stats(pid_t pid, int index)
 
         case 32:  return (unsigned long) p->base_priority;  break;
         case 33:  return (unsigned long) p->priority;  break;
-        case 34:  return (unsigned long) p->step;  break;
-        case 35:  return (unsigned long) p->quantum;  break;
+        // ps: p->step is deprecated
+        case 34:  
+            return (unsigned long) 0;   // #dummy
+            break;
+        case 35:  return (unsigned long) p->ThreadQuantum;  break;
         case 36:  return (unsigned long) p->timeout;  break;
         case 37:  return (unsigned long) p->ticks_remaining;  break;
         
@@ -1735,17 +1738,12 @@ static struct te_d *create_process_imp (
 // Que tipo de scheduler o processo utiliza. (rr, realtime ...).
     //Process->scheduler_type = ; 
 
-// #todo
+
 // Counters
 
-    //Process->step
-    //Process->quantum
-    //Process->timeout
-    //Process->ticks_remaining
-
-// As threads do processo iniciam com esse quantum.
-
-    //Process->ThreadQuantum   
+    Process->ThreadQuantum = QUANTUM_NORMAL_BALANCED;   
+    Process->timeout = 0;
+    Process->ticks_remaining = 0;
 
     //Process->event
 

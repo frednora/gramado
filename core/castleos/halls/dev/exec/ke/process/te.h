@@ -405,7 +405,6 @@ struct te_d
 
     char *net_buffer;
 
-
 // ============================================
 
 // ---------------------------
@@ -764,15 +763,6 @@ struct te_d
 // Timer
 //
 
-// Temporização da tarefa. 
-    unsigned long step;             // Quantas vezes a tarefa usou o processador. 
-    unsigned long quantum;          // thread quantum
-    unsigned long timeout;          // Tempo em modo de espera. 
-    unsigned long ticks_remaining;  // rt, quanto tempo a tarefa tem dispon�vel para ser concluida.
-
-// As threads do processo iniciam com esse quantum.
-    //unsigned long ThreadQuantum;
-
 // QUANTUM:
 // Quantum é a cota atrituida � cada processo pelo
 // scheduler. (time slice) 
@@ -780,6 +770,11 @@ struct te_d
 // execuçao de um processo. Ocorre ent�o uma preemp��o por tempo.
 // 'ProcessingTime' é atribu�do pelo processo. � o quanto
 // ele precisa. o quanto ele deseja.
+
+    unsigned long ThreadQuantum;    // Thread quantum
+    unsigned long timeout;          // Tempo em modo de espera. 
+    unsigned long ticks_remaining;  // rt, quanto tempo a tarefa tem dispon�vel para ser concluida.
+
 
 //
 // Working set support.
