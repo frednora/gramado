@@ -1208,12 +1208,6 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 	//Thread->Stack;
 	//Thread->StackSize;
 
-// --------------------------
-// Callback support
-    clone->callback_in_progress = FALSE;
-    clone->cb_r3_address = 0;
-    clone->is_alertable = FALSE;
-
 // Temporizadores. 
 // step - Quantas vezes ela usou o processador no total.
 
@@ -1284,7 +1278,6 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 // Signal
 // Sinais para threads.
     clone->signal_in_progress = FALSE;
-
     //clone->signal = 0;
     //clone->umask = 0;
 

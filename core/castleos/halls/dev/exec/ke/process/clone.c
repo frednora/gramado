@@ -1005,6 +1005,7 @@ copy_process00(
 //
 
 // Copy parent thread structure.
+// It creates a clone thread and copy its parent's elements.
 // see: thread.c
     //debug_print("copy_process: [3] Copying thread structure\n");
     child_thread = (struct thread_d *) copy_thread_struct(parent_thread);

@@ -1158,13 +1158,28 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
     tid_t target_tid = CurrentTID;
     struct thread_d *t;
     t = (struct thread_d *) threadList[target_tid];
+    //
+    // Thread in alertable state
+    //
     if (t->is_alertable == TRUE)
     {
-        t->is_alertable = FALSE;  //Consume the alertable flag
-        // The flag
+        // Consume the alertable flag. (Turn it off)
+        // The ring 3 process needs to set it again
+        t->is_alertable = FALSE;
+
+        // Setup the flag saing a callback was requested.
+        // This way the timer handler will call the 
+        // callback trampoline in ring 3 instead of 
+        // calling the current RIP. (intruction pointer) 
+        // #ps: The asm code use this value.
         f_callback_requested = (unsigned long)(0x1234 & 0xFFFF);
-        // The handler
+
+        // This ring 3 address was registered by a ring 3 thread.
+        // Normally it is a trampoline for the real callback handler.
+        // #ps: The asm code use this value.
         ring3_callback_address = (unsigned long) t->cb_r3_address;
+
+        // The callback is in progress
         t->callback_in_progress = TRUE;
     }
 
