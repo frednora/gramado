@@ -1,7 +1,7 @@
 # justfile
 
-projects_dir := "sun"
-os_dir := "os"
+projects_dir := "winsys"
+os_dir := "core"
 
 # Default recipe
 default: build

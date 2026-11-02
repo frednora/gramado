@@ -2,7 +2,7 @@
 all:
 
 # POSIX-like commands for eloquent people.
-	make -C cmds/
+	make -C cmds00/
 
 # Experiment with cpp.
 	make -C cpp00/
@@ -10,6 +10,6 @@ all:
 clean-all:
 	-rm *.o 
 
-	-rm cmds/*.o 
+	-rm cmds00/*.o 
 	-rm cpp00/*.o 
 

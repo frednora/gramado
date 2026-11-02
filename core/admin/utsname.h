@@ -24,7 +24,8 @@
 
 /* Structure describing the system and machine.  */
 
-struct admin_utsname_d { 
+struct admin_utsname_d 
+{ 
     char sysname[_UTSNAME_LENGTH]; 
     char nodename[_UTSNAME_LENGTH]; 
     char release[_UTSNAME_LENGTH]; 

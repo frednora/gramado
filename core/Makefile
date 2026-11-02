@@ -24,25 +24,24 @@ BUILD = $(BASE)/build1
 # The first ring 3 process
 INIT_PROCESS = sysd
 
-
 # =================================
-# L1: Mammal - POSIX-like commands and experiments
+# L1: cmds - POSIX-like commands and experiments
 
-__DEP_L1 = ../sun/mammal
-L1_CMDS  = $(__DEP_L1)/cmds
+__DEP_L1 = ../winsys/cmds
+L1_CMDS  = $(__DEP_L1)/cmds00
 L1_CPP00 = $(__DEP_L1)/cpp00
 
 
 # =================================
-# L2: Reptile UI
+# L2: de - Desktop Environment
 
-__DEP_L2 = ../sun/reptile
+__DEP_L2 = ../winsys/de
 # Display server/compositor
 L2_COMP     = $(__DEP_L2)/comp00
-L2_ASSETS   = $(__DEP_L2)/np/assets
+L2_ASSETS   = $(__DEP_L2)/shell/assets
 # Client-side GUI applications (Nomad Pastors)
-L2_WINSHELL = $(__DEP_L2)/np/winshell
-L2_WINAPPS  = $(__DEP_L2)/np/winapps
+L2_WINSHELL = $(__DEP_L2)/shell/winshell
+L2_WINAPPS  = $(__DEP_L2)/shell/winapps
 # 3D demos
 L2_VELO3D   = $(__DEP_L2)/velo3d
 

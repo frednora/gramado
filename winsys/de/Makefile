@@ -2,7 +2,7 @@
 
 all:
 	make -C comp00/
-	make -C np/
+	make -C shell/
 	make -C velo3d/
 
 clean:

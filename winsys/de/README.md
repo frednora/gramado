@@ -1,6 +1,6 @@
-# reptile - Reptile UI
+# de - Desktop Environment
 
-This is the default GUI for Gramado OS.
+Gramado DE - Gramado Desktop Environment (codename: Reptile)
 
 
 ## comp00 - The compositor / display server

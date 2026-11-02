@@ -8,10 +8,13 @@ extern int os_mode;      // GRAMADO_P1 ...
 extern int server_mode;  // DEMO ...
 
 
-#include "../../../../os/admin/product.h"
-#include "../../../../os/admin/version.h"
-#include "../../../../os/admin/utsname.h"
-#include "../../../../os/admin/u.h"
+// #ps
+// Ugly path
+
+#include "../../../../core/admin/product.h"
+#include "../../../../core/admin/version.h"
+#include "../../../../core/admin/utsname.h"
+#include "../../../../core/admin/u.h"
 
 
 // rtl

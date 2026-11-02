@@ -1,15 +1,16 @@
 
 
 all:
-	make -C sun/
-	make -C os/
-sun:
-	make -C sun/
-os:
-	make -C os/
+	make -C winsys/
+	make -C core/
+
+winsys:
+	make -C winsys/
+core:
+	make -C core/
+
 tools:
 	echo "Build tool"
 run:
-	cd os/ && ./run  
-
+	cd core/ && ./run  
 
