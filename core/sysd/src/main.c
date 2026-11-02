@@ -146,14 +146,17 @@ callback_handler(
     }
 */
 
-// #test: We dont need this anymore ... the libraryis doing it for us
 // Callback restorer.
+// #test: 
+// We dont need this anymore ... the library doing it for us.
+// Its because the ring 3 library has a fixed trampoline entry point for the kernel to call.
+// see: rtl.c 
+
     //printf("Calling the restorer\n");
     //asm ("int $198");
     // If it returns
     //asm ("int $3");
 }
-
 
 // worker_nb_test:
 // Ring3 worker that continuously polls the kernel's RX queue
@@ -583,28 +586,25 @@ static int input_compare_string(void)
         goto exit_cmp;
     }
 
-/*
-    if ( gramado_strncmp(prompt,"callback",8) == 0 )
-    {
-        while(1){
-        // Simply install the handler, do not put the thread into the alertable state.
-        sc82( 44000, &callback_handler, 0, 0);
 
-        // Simply put the thread into the alertable state.
-        sc82( 44001, 0, 0, 0);
-        }
-        goto exit_cmp;
-    }
-*/
 
 /*
+// #test:
+// Putting the thred into alertable state.
+// This way we will receive callbacks
+// Put the thread into the alertable state.
+// The kernel will consume this state, and we will put it again.
+
     if ( gramado_strncmp(prompt,"alert",5) == 0 )
     {
-        // Put the thread into the alertable state.
-        // The kernel will consume this state, and we will put it again.
-        while(1){ sc82( 44001, 0, 0, 0); }
+        if (CONFIG_TEST_CALLBACK == 1)
+        {
+            rtl_enter_alertable_state_for_callback();
+            //sc82( 44001, 0, 0, 0);
+        }
     }
 */
+
 
 /*
 // yes or no.
@@ -1110,6 +1110,7 @@ static int loopSTDIN(void)
         {
             // Put the thread into the alertable state.
             // The kernel will consume this state, and we will set it again.
+            // ps: The kernel turn it of and we turn it on again.
 
             if (CONFIG_TEST_CALLBACK == 1)
             {
@@ -1473,7 +1474,7 @@ Standard Linux Runlevels (0-6)
 
     if (CONFIG_TEST_CALLBACK == 1)
     {
-        rtl_register_callback_handler(&callback_handler);
+        rtl_register_callback_handler( &callback_handler );
         //sc82( 44000, &callback_handler, 0, 0);
     }
 

@@ -24,7 +24,9 @@
 // See: sw2.asm, hw2.asm
 // Globals consumed by assembly; 
 // mark volatile to enforce ordering assumptions
-unsigned long asmflagDoCallbackAfterCR3=0;
+
+unsigned long f_callback_requested = 0;
+unsigned long f_callback_restorer_done=0;
 
 unsigned long ring3_callback_address=0;
 unsigned long ring3_callback_parm1=0;
@@ -32,8 +34,7 @@ unsigned long ring3_callback_parm2=0;
 unsigned long ring3_callback_parm3=0;
 unsigned long ring3_callback_parm4=0;
 
-// #suspended
-unsigned long callback_restorer_done=0;
+
 
 // Not exported to asm.
 int _callback_status=FALSE;
@@ -49,7 +50,8 @@ unsigned long _callback_address_saved=0;
 // into the thread structure.
 // Callback is restored for the current thread.
 // Called by _int198: is sw2.asm
-void callback_is_restored(void)
+
+void callback_finalize(void)
 {
     struct thread_d *t;
 
@@ -66,7 +68,7 @@ void callback_is_restored(void)
     if (t->magic != 1234)
         return;
     if (t->callback_in_progress != TRUE)
-        panic ("callback_is_restored: Not in progress\n");
+        panic ("callback_finalize: Not in progress\n");
 
 // It unsets thf flag, and returns to the restorer,
 // 'cause the work is not done yet. It will return to the 
@@ -149,7 +151,7 @@ void prepare_next_callback(void)
     // Signal assembly to pivot after CR3 switch
     // This flags tells to the assembly that it is time to execute
     // the routine that iretq to the ring 3 procedure.
-    asmflagDoCallbackAfterCR3 = (unsigned long)(0x1234 & 0xFFFF);
+    f_callback_requested = (unsigned long)(0x1234 & 0xFFFF);
 
 //
 // == Reinitializing the c part of the callback support =======
@@ -240,7 +242,7 @@ int callbackInitialize(void)
 // Stage 1 – Waiting for syscalls
     CallbackEventInfo.stage = 1;
 
-    callback_restorer_done = 0;
+    _f_callback_restorer_done = 0;
 */
 
     return 0;

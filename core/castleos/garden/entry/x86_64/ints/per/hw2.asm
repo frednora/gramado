@@ -14,7 +14,7 @@
 ;
 
 ; Flag
-extern _asmflagDoCallbackAfterCR3
+extern _f_callback_requested
 
 ; Context for the function
 extern _ring3_callback_address
@@ -68,7 +68,7 @@ extern _contextR15
 ; ...
 
 ; Flag for the state of callback restorer
-extern _callback_restorer_done
+extern _f_callback_restorer_done
 
 ;------------------------------------------------
 ; Start a routine in ring3.
@@ -93,8 +93,9 @@ extern _callback_restorer_done
 __doRing3Callback:
 
     ;int 3
+
 ; Restorer is not done
-    mov qword [_callback_restorer_done], 0
+    mov qword [_f_callback_restorer_done], 0
 
     ; Valid only for ring 3.
     mov rax, qword [_contextCS]   ; Get CPL
@@ -117,7 +118,7 @@ __doRing3Callback:
     push rbx                  ; rip
 
 ; Clear the pivot flag before iretq: Enforce one-shot delivery.
-    mov qword [_asmflagDoCallbackAfterCR3], 0
+    mov qword [_f_callback_requested], 0
 
 
 ; At this moment we already have the stack frame.
@@ -213,9 +214,9 @@ irq0_release:
 ; o contexto precisa estar salvo.
 ; Se fosse depois, então saltaríamos para outra tarefa
 ; diferente do window server e usaríamos endereços errados.
-    mov rax, qword [_asmflagDoCallbackAfterCR3]
+    mov rax, qword [_f_callback_requested]
     and  rax, 0xFFFF
-; Callback ring3 procedure.
+; Callback ring3 procedure
     cmp rax, 0x1234
     je __doRing3Callback
 
@@ -333,7 +334,6 @@ irq0_release:
     push qword [_contextRIP]     ; rip
     jmp .stackframe_done
 
-
 ; ------------------------------------------------
 ; Stack frame. (all double)
 ; Stack frame for ring 3 has 5 elements.
@@ -363,7 +363,7 @@ irq0_release:
 ; ------------------------------------------------
 .stackframe_done:
 
-; EOI - Only the first PIC.
+; EOI - Only the first PIC
     mov al, 20h
     out 20h, al  
 
@@ -391,8 +391,8 @@ irq0_release:
     iretq
 
 ; --------------------------------------
+; #todo: Call a fancy worker instead
 .InvalidThread:
-    ; #todo: Call a fancy worker
     cli
     hlt
     jmp .InvalidThread

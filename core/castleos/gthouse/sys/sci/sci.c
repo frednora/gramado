@@ -3261,7 +3261,8 @@ void *sci2 (
         return NULL;
     }
 
-// Put the thread into the alertable state.
+// Put the thread into the alertable state
+// This is necessary for callback to happen
     if (number == 44001)
     {
        tid_t alertable_target_tid = CurrentTID;
@@ -3278,6 +3279,8 @@ void *sci2 (
             return NULL;
         }
         // There is no ring 3 handlers installed yet.
+        // We can't accept the alertable state if there is no
+        // ring 3 callback trampoline registeres.
         if (t->cb_r3_address == 0)
             return NULL;
         // #todo

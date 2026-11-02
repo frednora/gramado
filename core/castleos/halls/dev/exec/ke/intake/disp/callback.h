@@ -4,7 +4,16 @@
 #ifndef __DISP_CALLBACK_H
 #define __DISP_CALLBACK_H    1
 
-extern unsigned long asmflagDoCallbackAfterCR3;
+//
+// Callback flags
+//
+
+extern unsigned long f_callback_requested;
+extern unsigned long f_callback_restorer_done;
+
+//
+// Callback context
+//
 
 // Context for the function
 extern unsigned long ring3_callback_address;
@@ -12,9 +21,6 @@ extern unsigned long ring3_callback_parm1;
 extern unsigned long ring3_callback_parm2;
 extern unsigned long ring3_callback_parm3;
 extern unsigned long ring3_callback_parm4;
-
-// #suspended
-extern unsigned long callback_restorer_done;
 
 
 // Callback event
@@ -48,7 +54,7 @@ struct callback_event_d
 // ==========================================
 //
 
-void callback_is_restored(void);
+void callback_finalize(void);
 
 void 
 setup_callback_parameters(

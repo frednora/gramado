@@ -10,11 +10,11 @@
 ;
 
 ; Flag
-extern _asmflagDoCallbackAfterCR3
+extern _f_callback_requested
 ; Address
 extern _ring3_callback_address
 ; Flag for the state of callback restorer
-extern _callback_restorer_done
+extern _f_callback_restorer_done
 
 ;; ==============================================
 ;; unhandled interrupts
@@ -100,10 +100,11 @@ sw2_initialize_syscall_support:
 
 ; Call the worker to unset the callback_in_progress flag 
 ; into the thread structure.
-extern _callback_is_restored
 
-; Callbacl restorer.
-; int 198 (0xC6)
+extern _callback_finalize
+
+; int 198 (0xC6) - Callback restorer (ring 3 only)
+
 align 4  
 global RequestHall_int198
 RequestHall_int198:
@@ -132,7 +133,7 @@ RequestHall_int198:
 ; chamar o callback novamente.
 
 ; One-shot: ensure callback state is cleared
-    mov qword [_asmflagDoCallbackAfterCR3], 0
+    mov qword [_f_callback_requested], 0
 
 ; The context for the function (reset for the next callback)
     mov qword [_ring3_callback_address], 0
@@ -141,12 +142,13 @@ RequestHall_int198:
     mov qword [_ring3_callback_parm3], 0
     mov qword [_ring3_callback_parm4], 0
 
-    mov qword [_callback_restorer_done], 1
+    mov qword [_f_callback_restorer_done], 1
 
 ; Call the worker to unset the callback_in_progress flag 
 ; into the thread structure.
 ; See: callback.c
-    call _callback_is_restored
+
+    call _callback_finalize
 
 ; #bugbug:
 ; Here we're using the release routine that belongs to the irq0

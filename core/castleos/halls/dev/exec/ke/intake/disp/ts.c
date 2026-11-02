@@ -1162,7 +1162,7 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
     {
         t->is_alertable = FALSE;  //Consume the alertable flag
         // The flag
-        asmflagDoCallbackAfterCR3 = (unsigned long)(0x1234 & 0xFFFF);
+        f_callback_requested = (unsigned long)(0x1234 & 0xFFFF);
         // The handler
         ring3_callback_address = (unsigned long) t->cb_r3_address;
         t->callback_in_progress = TRUE;

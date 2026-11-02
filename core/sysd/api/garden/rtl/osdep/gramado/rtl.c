@@ -34,10 +34,20 @@
 
 #include <pthread.h>
 
+
 // global
 // rtl system events support.
 // Buffer to save a event. (one msg)
 unsigned long RTLEventBuffer[32];
+
+
+static void __rtl_cb_trampoline( 
+    unsigned long param1, 
+    unsigned long param2, 
+    unsigned long param3, 
+    unsigned long param4 );
+static void __rtl_dummy_callback_handler(void);
+
 
 // =========================
 
@@ -115,6 +125,10 @@ void *sc83 (
 
 // =============================================================
 
+//
+// Callback trampoline support
+//
+
 struct cb_trampoline_info_d 
 {
 // It was initialized by the library.
@@ -130,9 +144,19 @@ struct cb_trampoline_info_d
 };
 struct cb_trampoline_info_d  CBTrampolineInfo;
 
+//
+// Callback trampoline
+//
 
-// Fixed trampoline entry: Kernel invokes a single library entry point.
-void __rtl_cb_trampoline( 
+static void __rtl_dummy_callback_handler(void)
+{
+    // NOthing
+}
+
+// Fixed trampoline entry for callback support.
+// Kernel invokes a single library entry point.
+// And this routine will call the user handler if it is registered.
+static void __rtl_cb_trampoline( 
     unsigned long param1, 
     unsigned long param2, 
     unsigned long param3, 
@@ -157,7 +181,8 @@ void __rtl_cb_trampoline(
         goto restore;
 
 // Setup our local caller.
-// Handler indirection: The library decides whether and which user handler runs.
+// Handler indirection: 
+// The library decides whether and which user handler runs.
     handler = (void*) CBTrampolineInfo.__rtl_cb_handler;
 
 // Call the procedure inside the user's program.
@@ -179,7 +204,7 @@ on_reentrancy:
  * rtl_enter_alertable_state_for_callback
  *
  * Purpose:
- *   Put the current thread into alertable state so the kernel can deliver
+ *   Put the current thread into alertable state, so the kernel can deliver
  *   callbacks to the trampoline previously registered by
  *   rtl_initialize_callback_support().
  *
@@ -199,6 +224,7 @@ on_reentrancy:
  * Returns:
  *   0 on success, -1 if not initialized.
  */
+
 int rtl_enter_alertable_state_for_callback(void)
 {
     if (CBTrampolineInfo.initialized != TRUE) {
@@ -279,9 +305,13 @@ void rtl_initialize_callback_support(void)
     CBTrampolineInfo.isRunning = FALSE;
     CBTrampolineInfo.reentrancy_detected = FALSE;
 
-// No handler provided yet.
-    CBTrampolineInfo.__rtl_cb_handler = 0;
-    CBTrampolineInfo.has_handler = FALSE;
+// No handler provided yet
+    // CBTrampolineInfo.__rtl_cb_handler = 0;
+    // CBTrampolineInfo.has_handler = FALSE;
+
+// Initializing it with a dummy handler
+
+    rtl_register_callback_handler( &__rtl_dummy_callback_handler );
 
 // Simply register the trampoline.
 // Fixed trampoline entry: Kernel invokes a single library entry point.

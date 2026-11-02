@@ -460,7 +460,11 @@ struct thread_d
 
 // Handler (procedure)
 // The app can install a handler anytime.
-// Service 44000, simply install the handler
+// Service 44000, simply install the handler.
+// The ring 3 thread normally install a 
+// ring 3 trampoline handler. The trampoline when called 
+// will call the real callback handler.
+
     unsigned long cb_r3_address;
 
 // The thread is in an alertable state
