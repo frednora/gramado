@@ -143,7 +143,28 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 // Check for a thread in standby.
 // In this case, this routine will not return.
 // See: schedi.c
-    schedi_check_for_standby();
+
+    // #ps: Old implementation. Its working fine
+    // schedi_check_for_standby();
+
+    // #ps: Testing new implementation
+    struct thread_d *target_thread;
+    target_thread = (struct thread_d *) schedi_check_for_standby2();
+    if ((void*) target_thread != NULL)
+    {
+        if (target_thread->state == STANDBY)
+        {
+            // Set the current thread
+            // IN: tid, core id
+            set_current_thread(target_thread->tid, 0);
+            // Spawn
+            spawn_thread_by_tid(target_thread->tid);
+            // Not reached
+            panic("ts: on spawn_thread_by_tid()\n");
+        }
+    }
+
+    // No thread in STANDBY state was found
 
 // ---------------------------------------------------------
 

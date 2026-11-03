@@ -71,6 +71,7 @@ unsigned long jiffies=0;  // Total ticks
 //
 
 static int __timerTimer(void);
+static void __pit_initialize8253Controller(unsigned int freq);
 
 // =================================================
 
@@ -331,7 +332,7 @@ void set_pit_count(unsigned count)
 
 
 /*
- * timerInit8253:
+ * __pit_initialize8253Controller:
  *    @todo: Compreender melhor isso.
  * Seta a frequência de funcionamento do 
  * controlador 8253. "3579545 / 3" 
@@ -371,12 +372,13 @@ Bits         Usage
 */
 
 
-// timerInit8253:
+// __pit_initialize8253Controller:
 // VT8237
 // Compativel com Intel 8254.
 // IN> frequence in HZ.
 // see: pit.h
-void timerInit8253 (unsigned int freq)
+
+static void __pit_initialize8253Controller(unsigned int freq)
 {
     unsigned int clocks_per_sec = 0;
 // para 1.1 MHz
@@ -387,8 +389,9 @@ void timerInit8253 (unsigned int freq)
 
     PITInfo.initialized = FALSE;
     clocks_per_sec = (unsigned int) (freq & 0xFFFFFFFF);
-    if (clocks_per_sec == 0){
-        x_panic("timerInit8253:");
+    if (clocks_per_sec == 0)
+    {
+        x_panic("__pit_initialize8253Controller: clocks_per_sec");
     }
     PITInfo.clocks_per_sec = clocks_per_sec;
     // latch
@@ -408,6 +411,10 @@ void timerInit8253 (unsigned int freq)
     out8 ( 0x40, (unsigned char)(period >> 8) & 0xFF );
     io_delay();
 
+
+// OEI is not necessary for now
+    spawn_reset_eoi_state();
+
     PITInfo.initialized = TRUE;
 
     // #debug
@@ -415,18 +422,17 @@ void timerInit8253 (unsigned int freq)
     //    PITInfo.dev_freq,
     //    PITInfo.clocks_per_sec,
     //    PITInfo.period );
-    //refresh_screen();
     //while(1){}
 }
 
 // set_timeout: #todo 
-void set_timeout ( unsigned long ticks )
+void set_timeout(unsigned long ticks)
 {
     time_out = (unsigned long) ticks;
 }
 
 // get_timeout: #todo
-unsigned long get_timeout (void)
+unsigned long get_timeout(void)
 {
     return (unsigned long) time_out;
 }
@@ -487,78 +493,9 @@ void pit_sleep (unsigned long ms)
     };
 }
 
-/*
- * timerInit:
- *     Inicializa o driver de timer.
- *     Inicializa as variáveis do timer.
- * (unsigned long CallBackExemplo); 
- */
-int timerInit(void)
-{
-    panic("timerInit: #deprecated");
-    return 0;
-
-/*
-    int i=0;
-
-    // g_driver_timer_initialized = FALSE;
-// Breaker
-    __breaker_timer_initialized = FALSE;
-    __timerTimer();
-    for ( i=0; i<32; i++ ){
-        timerList[i] = (unsigned long) 0;
-    }
-    // timerLock = 0;
-    //set handler.
-    // @todo: Habilitar esse configuração pois é mais precisa.
-    //config frequências...
-    //@todo: Isso poderia ser por último.
-    //?? Isso pertence a i386 ??
-    //?? Quais máquinas possuem esse controlador ??
-// #importante
-// Começaremos com 100 HZ
-// Mas o timer poderá ser atualizado por chamada.
-// e isso irá atualizar a variável que inicializamos agora.
-    timerInit8253(HZ);
-// #todo:
-// alocar memoria para a estrutura do timer.
-// inicializar algumas variaveis do timer.
-// por enquanto estamos usando variaveis globais.
-// ?? Não se se ja foi configurado o timer.
-// ou devemos chamr init_8253() agora. ou depois.
-    //timerCountSeconds = 0;
-
-// Timeout 
-    set_timeout(0);
-// Whatchdogs
-// Initializing whatchdogs.
-// Eles serão zerados pelas interrupções dos dipositivos e
-// incrementados pelo timer.
-// A condição crítica é alcançar um limite, um timeout.
-
-    ____whatchdog_ps2_keyboard = 0;
-    ____whatchdog_ps2_mouse = 0;
-    //...
-// breaker
-    __breaker_timer_initialized = TRUE;
-// Done
-    g_driver_timer_initialized = TRUE;
-    return 0;
-*/
-}
-
-
-/*
- * early_timer_init:
- *     Inicialização prévia do módulo timer.
- *     Uma outra inicialização mais apurada poderá ser feita
- * posteriormente.
- *     Porém ainda existe uma inicialização feita em Assembly
- * quando o kernel é inicialazado.
- */
+// Early initialization of PIT controller
 // Called by hal.c
-
-int early_timer_init (void)
+int pit_early_initialization(void)
 {
     register int i=0;
 
@@ -575,7 +512,8 @@ int early_timer_init (void)
 // And setup the controler.
 // We can use the default variable. 
 // See: config.h
-    timerInit8253(JIFFY_FREQ);
+
+    __pit_initialize8253Controller(JIFFY_FREQ);
 
 // Timeout
     set_timeout(0);
@@ -590,6 +528,7 @@ int early_timer_init (void)
     // Continua...
 // Breaker
     __breaker_timer_initialized = TRUE;
+
 // Done
     g_driver_timer_initialized = TRUE;
     return 0;

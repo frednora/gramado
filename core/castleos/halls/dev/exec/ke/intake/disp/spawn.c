@@ -29,15 +29,16 @@ static void __spawn_thread_by_tid_imp(tid_t tid);
 
 //=====================
 
-// global
-// used by the taskswitching
+
+// Called by pit.c
+// EOI is necessary because we are 
+// in the middle of a timer IRQ handler.
 void spawn_set_eoi_state(void)
 {
     __spawn_eoi_is_necessary = TRUE;
 }
 
-// global
-// used by the taskswitching
+// EOI is not necessary anymore
 void spawn_reset_eoi_state(void)
 {
     __spawn_eoi_is_necessary = FALSE;
@@ -311,12 +312,6 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
     tid_t TargetTID = (tid_t) (tid & 0xFFFFFFFF);
     struct thread_d *target_thread;
 
-    //PROGRESS("__spawn_thread_by_tid_imp:\n");
-
-    // #debug
-    //printk ("spawn_thread: SPAWN !\n");
-    //refresh_screen();
-
 //
 // Target thread
 //
@@ -560,30 +555,27 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
             TRUE,  // EOI
             (unsigned long) target_thread->context.rip,
             (unsigned long) target_thread->context.rsp );
-    }
 
-    // #debug
-    // show_reg(Target->tid);
-    // refresh_screen();
-    // while(1){}
-    
-    // Target->context.ss     & 0xffff
-    // Target->context.rsp
-    // Target->context.rflags
-    // Target->context.cs     & 0xffff
-    // Target->context.rip
+        goto fail;
+    }
 
 // ===================
 // ring 1
 
-    if ( target_thread->cpl == RING1 )
-        panic("__spawn_thread_by_tid_imp: ring1\n");
+    if (target_thread->cpl == RING1)
+    {
+        printk("__spawn_thread_by_tid_imp: RING1\n");
+        goto fail;
+    }
 
 // ===================
 // ring 2
 
-    if ( target_thread->cpl == RING2 )
-        panic("__spawn_thread_by_tid_imp: ring2\n");
+    if (target_thread->cpl == RING2)
+    {
+        printk("__spawn_thread_by_tid_imp: RING2\n");
+        goto fail;
+    }
 
 // ===================
 // ring 3
@@ -595,11 +587,12 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
             TRUE,  // EOI
             (unsigned long) target_thread->context.rip,
             (unsigned long) target_thread->context.rsp );
+        goto fail;
     }
 
-// The party is over!
-    PROGRESS("-- iretq fail --------\n");
-    panic("__spawn_thread_by_tid_imp: iretq fail\n");
+fail:
+    PROGRESS("__spawn_thread_by_tid_imp: iretq fail\n");
+    panic   ("__spawn_thread_by_tid_imp: iretq fail\n");
 }
 
 // spawn_thread_by_tid:

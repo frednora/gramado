@@ -390,10 +390,9 @@ int halInitialize(void)
     };
 
 
-// #todo:
-// Chamaremos essa inicialização básica nesse momento.
-// A inicialização completa será chamada pelo processo init.
-    early_timer_init();
+// PIT: early initialization
+
+    pit_early_initialization();
 
 // Detecta fabricantes específicos suportados pelo núcleo.  
     hal_hardware_detect();

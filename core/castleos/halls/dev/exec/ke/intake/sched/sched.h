@@ -99,7 +99,9 @@ int do_waitpid (pid_t pid, int *status, int options);
 void schediSelectForExecution(struct thread_d *Thread);
 
 void schedi_drop_quantum(struct thread_d *thread);
-void schedi_check_for_standby(void);
+
+// void schedi_check_for_standby(void);
+struct thread_d *schedi_check_for_standby2(void);
 
 
 tid_t get_current_thread(int lapic_info_id);

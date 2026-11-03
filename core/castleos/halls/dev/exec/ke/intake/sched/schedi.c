@@ -859,6 +859,8 @@ void schedi_drop_quantum(struct thread_d *thread)
  */
 // Called by __on_finished_executing() in ts.c.
 
+/*
+// #suspended
 void schedi_check_for_standby(void)
 {
 
@@ -917,6 +919,33 @@ do_spawn:
 // Not reached
 fail:
     panic("schedi_check_for_standby: fail\n");
+}
+*/
+
+// Probe for a thread in STANDBY state.
+// Called by __on_finished_executing() in ts.c.
+struct thread_d *schedi_check_for_standby2(void)
+{
+    struct thread_d *thread;
+    int i;
+
+    for (i=0; i< THREAD_COUNT_MAX; i++)
+    {
+        thread = (struct thread_d *) threadList[i];
+        if ((void*) thread != NULL)
+        {
+            if ( thread->used == TRUE && 
+                 thread->magic == 1234 && 
+                 thread->state == STANDBY)
+            {
+                // Can't spawn init thread
+                if (thread != InitThread)
+                    return (struct thread_d *) thread;
+            }
+        }
+    };
+
+    return NULL;
 }
 
 /*

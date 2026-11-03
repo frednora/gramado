@@ -176,7 +176,6 @@ unsigned long get_hz(void);
 unsigned long now(void);
 
 void DeviceInterface_PIT(void); 
-void timerInit8253(unsigned int freq);
 
 void set_timeout(unsigned long ticks);
 unsigned long get_timeout(void);
@@ -190,9 +189,7 @@ void pit_sleep(unsigned long ms);
 void pit_speaker_on (void);
 void pit_speaker_off (void);
 
-
-int timerInit(void);
-int early_timer_init(void);
+int pit_early_initialization(void);
 
 struct timer_d *create_timer ( 
     pid_t pid, 
