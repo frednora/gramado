@@ -80,16 +80,9 @@ wink.o
 
 all:
 
-# evi - Event interface.
-	$(CC) -c evi/obroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o obroker.o
-	$(CC) -c evi/output.c   $(KERNEL_INCLUDE) $(CFLAGS) -o output.o
-	$(CC) -c evi/ibroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ibroker.o
-	$(CC) -c evi/input.c    $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
-
 # The display server support
 	$(CC) -c gdi/dispsrv.c     $(KERNEL_INCLUDE) $(CFLAGS) -o dispsrv.o
-
-# gre - Graphics Engine interface.
+# gdi/gre - Graphics Engine interface.
 	$(CC) -c gdi/gre/surface.c  $(KERNEL_INCLUDE) $(CFLAGS) -o surface.o
 	$(CC) -c gdi/gre/pixel.c   $(KERNEL_INCLUDE) $(CFLAGS) -o pixel.o
 	$(CC) -c gdi/gre/line.c    $(KERNEL_INCLUDE) $(CFLAGS) -o line.o
@@ -100,20 +93,25 @@ all:
 	$(CC) -c gdi/gre/char.c    $(KERNEL_INCLUDE) $(CFLAGS) -o char.o
 	$(CC) -c gdi/gre/text.c    $(KERNEL_INCLUDE) $(CFLAGS) -o text.o
 	$(CC) -c gdi/gre/gre.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gre.o
-
-	$(CC) -c gdi/window.c  $(KERNEL_INCLUDE) $(CFLAGS) -o window.o
-
 # gdi - Interface
 	$(CC) -c gdi/gdi.c     $(KERNEL_INCLUDE) $(CFLAGS) -o gdi.o
 
-# osshell support
-	$(CC) -c gdi/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
 
+# window
+	$(CC) -c user/window.c  $(KERNEL_INCLUDE) $(CFLAGS) -o window.o
+# osshell support
+	$(CC) -c user/osshell.c  $(KERNEL_INCLUDE) $(CFLAGS) -o osshell.o
+# evi - Event interface
+	$(CC) -c user/evi/obroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o obroker.o
+	$(CC) -c user/evi/output.c   $(KERNEL_INCLUDE) $(CFLAGS) -o output.o
+	$(CC) -c user/evi/ibroker.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ibroker.o
+	$(CC) -c user/evi/input.c    $(KERNEL_INCLUDE) $(CFLAGS) -o input.o
 # user - User interaction interface.
 	$(CC) -c user/user.c      $(KERNEL_INCLUDE) $(CFLAGS) -o user.o
 
 # Wrapper for all the interfaces in this module
 	$(CC) -c wink.c  $(KERNEL_INCLUDE) $(CFLAGS) -o wink.o
+
 
 # link
 	$(LD) -r -o ex_wink.o  $(OBJS)

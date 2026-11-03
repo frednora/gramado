@@ -109,22 +109,6 @@ unsigned long ipc_broadcast_system_message(
 
 // Worker
 void *ipc_get_message(unsigned long ubuf);
-// Service 111.
-// Get a message from the current thread and 
-// put it into the given buffer.
-// The message has 6 standard elements.
-// See: thread.c
-void *sys_get_message(unsigned long ubuf);
-// Service 120
-void *sys_get_message2(unsigned long ubuf, int index, int restart);
-
-// Service 112
-unsigned long sys_post_message_to_tid(int target_tid, unsigned long ubuf);
-
-// #todo
-// Broadcast system message to all the threads.
-// IN: Buffer
-unsigned long sys_broadcast_system_message(unsigned long ubuf);
 
 #endif    
 

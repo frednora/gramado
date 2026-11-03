@@ -76,8 +76,8 @@ extern unsigned long usessionList[USER_SESSION_COUNT_MAX];
  */
 
 
-#define USER_COUNT_MAX     16    //User count.
-#define GROUP_COUNT_MAX    4     //Group count.
+#define USER_COUNT_MAX     16    // User count
+#define GROUP_COUNT_MAX    4     // Group count
 
 
 //
@@ -258,6 +258,24 @@ extern unsigned long userList[USER_COUNT_MAX];
 // == prototypes ===========================
 //
 
+// Service 111.
+// Get a message from the current thread and 
+// put it into the given buffer.
+// The message has 6 standard elements.
+// See: thread.c
+void *sys_get_message(unsigned long ubuf);
+// Service 120
+void *sys_get_message2(unsigned long ubuf, int index, int restart);
+
+// Service 112
+unsigned long sys_post_message_to_tid(int target_tid, unsigned long ubuf);
+
+// #todo
+// Broadcast system message to all the threads.
+// IN: Buffer
+unsigned long sys_broadcast_system_message(unsigned long ubuf);
+
+
 // Initialize the first cgroup.
 int init_first_cgroup(void);
 
@@ -269,7 +287,6 @@ int get_current_cg_id(void);
 int RegisterCG(struct cgroup_d *cg);
 struct cgroup_d *CreateCG(void);
 
-
 int GetCurrentGroupId (void);
 
 uid_t GetCurrentUserId(void);
@@ -277,8 +294,9 @@ void SetCurrentUserId(uid_t user_id);
 
 int is_superuser(void);
 
+
 //
-// syscall services.
+// syscall services
 //
 
 int setreuid(uid_t ruid, uid_t euid);
@@ -289,9 +307,7 @@ int sys_getusername(char *ubuff);
 int sys_setusername(const char *new_username);
 
 struct user_info_d *CreateUser(char *name, int type);
-
 int userCreateRootUser(void);
-
 int user_initialize(void);
 
 #endif    

@@ -290,17 +290,19 @@ extern int system_state;
 #include "../gthouse/wink/gdi/gre/surface.h"
 #include "../gthouse/wink/gdi/gre/gre.h"
 #include "../gthouse/wink/gdi/dispsrv.h"
-#include "../gthouse/wink/gdi/osshell.h"
-#include "../gthouse/wink/gdi/window.h"
 // Top level header for gdi/
 #include "../gthouse/wink/gdi/gdi.h"
 
-// evi - Event Interface
-#include "../gthouse/wink/evi/obroker.h"
-#include "../gthouse/wink/evi/output.h"
-#include "../gthouse/wink/evi/ibroker.h"
-#include "../gthouse/wink/evi/input.h"
 
+// evi - Event Interface
+#include "../gthouse/wink/user/evi/obroker.h"
+#include "../gthouse/wink/user/evi/output.h"
+#include "../gthouse/wink/user/evi/ibroker.h"
+#include "../gthouse/wink/user/evi/input.h"
+// window
+#include "../gthouse/wink/user/window.h"
+// os shell
+#include "../gthouse/wink/user/osshell.h"
 // ===========
 
 // Callback support

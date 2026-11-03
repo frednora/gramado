@@ -26,14 +26,45 @@ struct cgroup_d  *system_cg;
 unsigned long cgroupList[CGROUP_COUNT_MAX];
 int cg_counter=0;
 
+//==================================
+
+// User Environment Manager (UEM)
+// Segue uma lista de operações que poderão ser realizadas para configuração
+// do ambiente gráfico do usuário. Obs: Nesse módulo, apenas chamaremos
+// algumas funções primitivas. Todo o trabalho maior deve ficar para os
+// servidores em user mode.
+
+#define UEM_NULL 0
+#define UEM_CHANGE_BACKGROUND  1
+#define UEM_CHANGE_LOGO        2
+#define UEM_CHANGE_COLORS      3
+// ...
+
+// Se há um usuário configurado 
+// conforme registrado em arquivo de configuração.
+// int userconfig_Status;
+
+
+// see: user.h
+struct user_info_d *RootUser;       // Super user
+struct user_info_d *CurrentUser;    // Current user
+
+// see: user.c
+// user list:
+// root user is the user '0'.
+unsigned long userList[USER_COUNT_MAX];
+
+//=============================================
+
+
 //============================
 
 static void __init_cg_list(void);
 
-// Logon/logoff support.
-static int init_logon_manager (void);
-static int init_logoff (int mode);
-static int register_logoff_process(pid_t pid);
+// Logon/logoff support
+static int __init_logon_manager (void);
+static int __init_logoff (int mode);
+static int __register_logoff_process(pid_t pid);
 
 //============================
 
@@ -46,6 +77,317 @@ static void __init_cg_list(void)
         cgroupList[i] = 0;
         i++; 
     };
+}
+
+
+// sys_get_message:
+// Service 111.
+// Get a message from the current thread and 
+// put it into the given buffer.
+// The message has 6 standard elements.
+// Called by sci.c
+// It is called by the applications.
+// It is also used for ipc.
+void *sys_get_message(unsigned long ubuf)
+{
+// walks the circular queue slot by slot, consuming messages in order.
+
+    if (ubuf == 0)
+        panic ("sys_get_message: ubuf\n");
+// Call the worker
+    return (void*) ipc_get_message(ubuf);
+}
+
+// 120
+// Get a message given the index.
+// With restart support.
+// IN: buffer, index, flag: TRUE=restart the queue at the end.
+
+void *sys_get_message2(
+    unsigned long ubuf, 
+    int index, 
+    int restart)
+{
+// fetches a message by explicit index (with optional restart).
+    register struct thread_d *t;
+    // Get from this TID
+    tid_t FromThisTID = (tid_t) lapic_info[0].current_tid;
+
+    unsigned long *message_address = (unsigned long *) ubuf;
+    register struct msg_d *m;
+    int fBlockOnEmpty = FALSE;
+    int fEmpty = FALSE;
+
+
+// buffer
+// #todo: Check some other invalid address.
+    if (ubuf == 0){ 
+        panic ("sys_get_message2: ubuf\n");
+        //return NULL;
+    }
+
+// Thread
+// Essa é a thread que chamou esse serviço.
+
+    if (FromThisTID < 0 || 
+        FromThisTID >= THREAD_COUNT_MAX)
+    {
+        return NULL;
+    }
+
+// Structure
+    t = (void *) threadList[FromThisTID];
+    if ((void *) t == NULL){
+        panic ("sys_get_message2: t\n");
+    }
+    if ( t->used != TRUE || t->magic != 1234 ){
+        panic ("sys_get_message2: t validation\n");
+    }
+
+    // The thread wants to block on empty queue
+    if (t->msgctl.block_on_empty == TRUE)
+        fBlockOnEmpty = TRUE;
+
+// Get the index
+    if (index<0 || index >= MSG_QUEUE_MAX){
+        goto fail0;
+    }
+    t->MsgQueueHead = (int) (index & 0xFFFFFFFF);
+
+// ===========================================================
+// usando a fila de mensagens com estrutura.
+
+// Get the next head pointer.
+    m = (struct msg_d *) t->MsgQueue[ t->MsgQueueHead ];
+    if ((void*) m == NULL){
+        goto fail0;
+    }
+    if (m->used != TRUE || m->magic != 1234){
+        goto fail0;
+    }
+
+// Invalid message code
+    if (m->msg <= 0)
+    {
+        fEmpty = TRUE;
+        goto fail0;
+    }
+
+// -----------------------------
+// Get standard header
+    message_address[0] = (unsigned long) m->opaque_window;
+    message_address[1] = (unsigned long) (m->msg & 0xFFFFFFFF);
+    message_address[2] = (unsigned long) m->long1;
+    message_address[3] = (unsigned long) m->long2;
+
+// -----------------------------
+// Get extra payload
+    message_address[4] = (unsigned long) m->long3;
+    message_address[5] = (unsigned long) m->long4;
+
+// -----------------------------
+// Get identification field
+    message_address[8] = (unsigned long) m->sender_tid;
+    message_address[9] = (unsigned long) m->receiver_tid;
+    // We also have these elements. 
+    //m->sender_pid
+    //m->receiver_pid
+
+//
+// Jiffies
+//
+
+// -----------------------------
+// Jiffies when the message was posted by the kernel.
+    message_address[10] = (unsigned long) m->long3; 
+
+// -----------------------------
+// Jiffies when gotten by the app.
+    message_address[11] = (unsigned long) jiffies;
+
+// -------------------------------------------------
+// Clear the entry.
+// Consumimos a mensagem. Ela não existe mais.
+// Mas preservamos a estrutura.
+
+    // Standard header
+    m->opaque_window = NULL;
+    m->msg = 0;
+    m->long1 = 0;
+    m->long2 = 0;
+    // Extra payload
+    m->long3 = 0;
+    m->long4 = 0;
+    // Identification field
+    m->sender_tid = 0;
+    m->receiver_tid = 0;
+    m->sender_pid = 0;
+    m->receiver_pid = 0;
+
+// ==================================
+
+// Done
+// It is a valid thread pointer.
+    if (restart == TRUE)
+    {
+        t->MsgQueueHead=0;
+        t->MsgQueueTail=0;
+        return (void*) 1;
+    }
+
+// Yes, We have a message.
+// round
+    t->MsgQueueHead++;
+    if (t->MsgQueueHead >= MSG_QUEUE_MAX){
+        t->MsgQueueHead = 0;
+    }
+    return (void *) 1;
+
+// Is it a valid thread pointer?
+// No message.
+// round
+fail0:
+    // Invalid message pointer
+    if ((void*) m == NULL){
+        return NULL;
+    }
+fail:
+
+    // Block on empty
+    if (fBlockOnEmpty == TRUE && fEmpty == TRUE)
+    {
+        // Deferred block
+        if (t->msgctl.block_on_empty == TRUE)
+            t->msgctl.block_in_progress = TRUE;
+    }
+
+    if (restart == TRUE)
+    {
+        if ((void*) t != NULL){
+            t->MsgQueueHead=0;
+            t->MsgQueueTail=0;
+        }
+        return NULL;
+    }
+    if ((void*) t != NULL){
+        t->MsgQueueHead++;
+        if (t->MsgQueueHead >= MSG_QUEUE_MAX){
+            t->MsgQueueHead = 0;
+        }
+    }
+    return NULL;
+}
+
+// Service 112
+// Post message to tid.
+// (Asynchronous)
+
+unsigned long sys_post_message_to_tid(int target_tid, unsigned long ubuf)
+{
+// TID: Sender and receiver
+    tid_t src_tid = (tid_t) lapic_info[0].current_tid;
+    tid_t dst_tid = (tid_t) target_tid;
+
+// #todo
+// Invalid sender tid
+    //if (src_tid < 0 || src_tid >= THREAD_COUNT_MAX)
+    //{
+    //    return 0;
+    //}
+// Invalid target tid
+    if (dst_tid < 0 || dst_tid >= THREAD_COUNT_MAX)
+    {
+        return 0;
+    }
+
+// Pointer to a ring 3 buffer.
+// #todo
+// Check the validation of this address agaisnt the valid user area,
+// cause this function will be called by the applications.
+// It needs to be abouve the user base area.
+    if (ubuf == 0){
+        return 0;
+    }
+    unsigned long *m = (unsigned long *) ubuf;
+// Get the message code.
+// Only the first 32 bits.
+    int MessageCode = (int) (m[1] & 0xFFFFFFFF);
+
+// Post message.
+// Asynchronous.
+// IN: target tid, opaque struct pointer, msg code, data1, data2.
+// #todo: get the return value?
+
+    // #ps: Old implementation
+    /*
+    post_message_to_tid(
+        (tid_t) src_tid,    // sender tid
+        (tid_t) dst_tid,    // receiver tid
+        (int) MessageCode,
+        (unsigned long) m[2],
+        (unsigned long) m[3] );
+    */
+
+    // #ps: New implementation. Sending more data.
+    ipc_post_message_to_tid2(
+        (tid_t) src_tid,    // sender tid
+        (tid_t) dst_tid,    // receiver tid
+        (int) MessageCode,
+        (unsigned long) m[2],
+        (unsigned long) m[3],
+        (unsigned long) m[4],
+        (unsigned long) m[5] );
+
+// Let's notify the scheduler
+// that we need some priority for the receiver in this case.
+    return 0;
+}
+
+// #todo
+// Not implemented in ring 3 yet.
+// Broadcast system message to all the threads.
+// IN: Buffer
+// OUT: The number of posted messages.
+
+unsigned long sys_broadcast_system_message(unsigned long ubuf)
+{
+// Sender: The current thread for this core
+    tid_t Sender_TID = (tid_t) lapic_info[0].current_tid;
+
+    unsigned long long_rv=0;
+
+
+// #todo: Invalid sender tid
+    //if (Sender_TID < 0 || Sender_TID >= THREAD_COUNT_MAX)
+    //{
+        //return 0;
+    //}
+
+// Pointer to a ring 3 buffer.
+// #todo
+// Check the validation of this address agaisnt the valid user area,
+// cause this function will be called by the applications.
+// It needs to be abouve the user base area.
+    if (ubuf == 0){
+        return 0;
+    }
+    unsigned long *m = (unsigned long *) ubuf;
+// Get the message code.
+// Only the first 32 bits.
+    int MessageCode = (int) (m[1] & 0xFFFFFFFF);
+
+// Call the worker
+    long_rv = 
+    (unsigned long) ipc_broadcast_system_message (
+        (tid_t) Sender_TID,  // The sender is always the current_tid
+        (int) MessageCode,
+        (unsigned long) m[2],
+        (unsigned long) m[3],
+        (unsigned long) m[4],
+        (unsigned long) m[5] 
+    );
+
+    return (unsigned long) long_rv;
 }
 
 // Initialize the first cgroup.
@@ -176,36 +518,6 @@ struct cgroup_d *CreateCG(void)
 
     return NULL;
 }
-
-//==================================
-
-// User Environment Manager (UEM)
-// Segue uma lista de operações que poderão ser realizadas para configuração
-// do ambiente gráfico do usuário. Obs: Nesse módulo, apenas chamaremos
-// algumas funções primitivas. Todo o trabalho maior deve ficar para os
-// servidores em user mode.
-
-#define UEM_NULL 0
-#define UEM_CHANGE_BACKGROUND  1
-#define UEM_CHANGE_LOGO        2
-#define UEM_CHANGE_COLORS      3
-// ...
-
-// Se há um usuário configurado 
-// conforme registrado em arquivo de configuração.
-// int userconfig_Status;
-
-
-// see: user.h
-struct user_info_d *RootUser;       // Super user
-struct user_info_d *CurrentUser;    // Current user
-
-// see: user.c
-// user list:
-// root user is the user '0'.
-unsigned long userList[USER_COUNT_MAX];
-
-//=============================================
 
 int GetCurrentGroupId (void)
 {
@@ -522,16 +834,16 @@ fail:
 }
 
 // See: gpid.h
-static int register_logoff_process (pid_t pid)
+static int __register_logoff_process (pid_t pid)
 {
     if (pid<0 || pid >= PROCESS_COUNT_MAX ){
-        debug_print("register_logoff_process: pid fail\n");
+        debug_print("__register_logoff_process: pid fail\n");
         return -1;
     }
 // ??
 // Global variable.
     if (__gpidLogoff != 0){
-        debug_print("register_logoff_process:\n");
+        debug_print("__register_logoff_process:\n");
         return -1;
     }
 
@@ -540,15 +852,17 @@ static int register_logoff_process (pid_t pid)
     return 0;
 }
 
-static int init_logon_manager (void)
+static int __init_logon_manager (void)
 {
     return 0;
 }
 
-static int init_logoff (int mode)
+static int __init_logoff (int mode)
 {
     return 0;
 }
+
+
 
 //
 // #
@@ -589,9 +903,9 @@ int user_initialize(void)
     //printk ("user_initialize: initializing first cgroup\n");   
     init_first_cgroup();
 
-    init_logon_manager();
-    //init_logoff(...);
-    //register_logoff_process(...);
+    __init_logon_manager();
+    //__init_logoff(...);
+    //__register_logoff_process(...);
 
 // #test
 // At this point we already have almost all we need to 
