@@ -128,11 +128,12 @@ all-c:
 # system deps
 	make -C libos/
 
-# display server routines
+# display server routines - (gdi low level)
 	make -C libds/
+# window manager and drawing routines - (gdi)
+	make -C libgdi/
 
-# window manager and drawing routines
-	make -C libwm/
+# wm - (user)
 	make -C wm/
 
 # desktop composition (core component)
@@ -173,7 +174,7 @@ clean:
 	-rm comp/*.o
 	-rm libds/*.o
 	-rm libos/*.o
-	-rm libwm/*.o
+	-rm libgdi/*.o
 	-rm wm/*.o
 	-rm $(linkTarget)
 
@@ -182,7 +183,7 @@ clean-all:
 	-rm comp/*.o
 	-rm libds/*.o
 	-rm libos/*.o
-	-rm libwm/*.o
+	-rm libgdi/*.o
 	-rm wm/*.o
 	-rm $(linkTarget)
 	-rm bin/*.BIN 

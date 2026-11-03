@@ -1,0 +1,29 @@
+
+Design note: Windows NT (by Copilot)
+
+Historically, the Win32 subsystem was often described as 
+having three major parts:
+
+-----------------------------------------
+1 - Kernel (ntoskrnl.exe)
+Core OS services.
+Scheduling, memory management, synchronization, I/O, security, etc.
+
+-----------------------------------------
+2 - USER
+Window management and the user interface framework.
+Creates and manages windows.
+Processes keyboard and mouse input.
+Maintains message queues.
+Handles focus, menus, cursors, clipboard, and window relationships.
+
+-----------------------------------------
+3 - GDI (Graphics Device Interface)
+Drawing and rendering.
+Lines, text, brushes, fonts, bitmaps, device contexts.
+Provides device-independent graphics output.
+
+===============================
+EXECUTIVE: (lower layer)
+At the bottom we have the Executive, 
+that is mainly related to device intependence.

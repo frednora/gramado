@@ -53,22 +53,25 @@ extern int server_mode;  // DEMO ...
 // Display device library.
 #include <libdisp.h>
 
-#include "libwm/line.h"
-
 #include "wm/wt.h"
 #include "wm/menu.h"
 //#include "zres/grinput.h"   //#test
 #include "wm/metrics.h"
 
+//
+// libgdi
+//
+
+#include "libgdi/line.h"
 // #test: Create a room for rect support.
-#include "libwm/rect.h"
+#include "libgdi/rect.h"
+// Draw inside the windows
+#include "libgdi/char.h"
+#include "libgdi/dtext.h"
+
 
 #include "wm/window.h"
 #include "wm/createw.h"
-
-// Draw inside the windows.
-#include "libwm/char.h"
-#include "libwm/dtext.h"
 
 #include "wm/bar.h"    // Notification bar. (yellow)
 #include "wm/wa.h"     // Working Area
@@ -77,7 +80,7 @@ extern int server_mode;  // DEMO ...
 #include "wm/wm.h"
 #include "wm/wminput.h"
 
-#include "libwm/bitblt.h"
+#include "libgdi/bitblt.h"
 
 // #suspended
 //#include "wm/desktop.h"
@@ -105,10 +108,14 @@ extern int server_mode;  // DEMO ...
 #include <grprim0.h>
 #include <libgr.h>
 
-#include "libwm/transf.h"
-#include "libwm/grprim.h"
-#include "libwm/camera.h"
-#include "libwm/proj.h"
+//
+// libgdi
+//
+
+#include "libgdi/transf.h"
+#include "libgdi/grprim.h"
+#include "libgdi/camera.h"
+#include "libgdi/proj.h"
 
 #include "wm/sprite.h"
 
@@ -163,7 +170,7 @@ struct engine_d
     int quit;
 // Engine status
     int status;
-// graphics support.
+// graphics support
     struct gws_graphics_d *graphics;
     // ...
 };

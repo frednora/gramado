@@ -1,0 +1,267 @@
+// ds.h - Display server header file.
+// Created by Fred Nora.
+
+// Version?
+// See protocol version in api/protocol.h.
+
+extern int os_mode;      // GRAMADO_P1 ...
+extern int server_mode;  // DEMO ...
+
+
+// #ps
+// Ugly path
+
+#include "../../../../core/admin/product.h"
+#include "../../../../core/admin/version.h"
+#include "../../../../core/admin/utsname.h"
+#include "../../../../core/admin/u.h"
+
+
+// rtl
+#include <types.h>
+#include <sys/types.h>
+#include <sys/cdefs.h>
+#include <stddef.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/socket.h>
+#include <rtl/gramado.h>
+
+// #test
+#include <fcntl.h>
+
+
+// Gramado Window System
+#include "wm/gws.h"
+#include "libos/gramado/callback.h"
+
+// Configuration and debug support.
+#include "config/config.h"
+#include "api/protocol.h"
+#include "api/async.h"
+
+#include "libds/dsglob.h"
+#include "comp/compglob.h"
+
+#include "wm/colors.h"
+#include "wm/themes/honey.h"
+
+
+// #imported
+// Display device library.
+#include <libdisp.h>
+
+#include "libgdi/line.h"
+
+#include "wm/wt.h"
+#include "wm/menu.h"
+//#include "zres/grinput.h"   //#test
+#include "wm/metrics.h"
+
+// #test: Create a room for rect support.
+#include "libgdi/rect.h"
+
+#include "wm/window.h"
+#include "wm/createw.h"
+
+// Draw inside the windows.
+#include "libgdi/char.h"
+#include "libgdi/dtext.h"
+
+#include "wm/bar.h"    // Notification bar. (yellow)
+#include "wm/wa.h"     // Working Area
+#include "wm/swamp.h"  // Swamp
+
+#include "wm/wm.h"
+#include "wm/wminput.h"
+
+#include "libgdi/bitblt.h"
+
+// #suspended
+//#include "wm/desktop.h"
+
+#include "wm/painter.h"
+#include "wm/bmp.h"
+
+// h:0.0
+#include "libos/gramado/screen.h"   // X-like
+#include "libos/gramado/display.h"  // X-like
+#include "libos/gramado/host.h"     // X-like h:0.0
+
+#include "libos/gramado/surface.h"
+#include "libos/gramado/gramado.h"
+
+#include "wm/gui.h"
+
+// Compositor
+#include "comp/comp.h"
+
+// view inputs
+#include "wm/event.h"
+
+// #imported
+#include <grprim0.h>
+#include <libgr.h>
+
+#include "libgdi/transf.h"
+#include "libgdi/grprim.h"
+#include "libgdi/camera.h"
+#include "libgdi/proj.h"
+
+#include "wm/sprite.h"
+
+// #demos/
+#include "wm/demos/demos.h"
+#include "wm/demos/cat.h"
+#include "wm/demos/poly00.h"
+#include "wm/demos/lin00.h"
+#include "wm/demos/tri00.h"
+#include "wm/demos/curve00.h"
+
+#include "wm/font.h"
+
+#include "libos/gramado/packet.h"
+#include "libos/gramado/connect.h"
+
+//#include "ui/font.h"
+
+// Client structure.
+// O proprio servidor poderia ser o cliente 0??
+#include "libds/client.h"
+#include "libds/shutdown.h"
+
+// Device Context.
+// This is the structure that is gonna be used by the
+// drawing routines.
+// 'dc->something'
+// It needs to be one of the last includes.
+#include "libos/gramado/dc.h"
+
+// The services called by the dispacher.
+// It needs to be the last one.
+#include "api/service.h"
+
+#include "comp/comploop.h"
+
+
+struct gws_graphics_d
+{
+    int used;
+    int magic;
+    struct gui_d  *gui;
+    // ...
+};
+extern struct gws_graphics_d *Currentgraphics;
+
+struct engine_d
+{
+
+// flag: When to quit the engine.
+// We can quit the engine and reinitialize it again.
+    int quit;
+// Engine status
+    int status;
+// graphics support.
+    struct gws_graphics_d *graphics;
+    // ...
+};
+extern struct engine_d  Engine;
+
+
+// MAIN STRUCTURE
+// This is the main data structure for the display server.
+
+struct display_server_d 
+{
+    int initialized;
+
+// Name, edition and version.
+    char name[64];
+    char edition_name[64];
+    char version_string[16];
+    unsigned long version_major;
+    unsigned long version_minor;
+
+// fd
+    int socket;
+
+// flag: When to quit the display server.
+    int quit;
+
+// display server status
+    int status;
+
+// sinaliza que registramos o servidor no sistema.
+    int registration_status;
+    int graphics_initialization_status;
+    // ...
+
+// Se devemos ou não lançar o primeiro cliente.
+    int launch_first_client;
+
+// graphics engine 
+    struct engine_d *engine;
+    
+    // os info.
+    // input support
+    // ...
+};
+// see: main.c
+extern struct display_server_d  *display_server;
+
+#define STATUS_RUNNING    1
+// ..
+
+//
+// == Prototypes =============================
+//
+
+//
+// Function in main.c
+//
+
+int server_is_accepting_input(void);
+void server_set_input_status(int is_accepting);
+void server_debug_print(char *string);
+void server_enter_critical_section(void);
+void server_exit_critical_section(void);
+void server_quit(void);
+char *gwssrv_get_version(void);
+
+// --------------------------
+
+//
+// Thread
+//
+
+void xxxThread(void);
+void ____test_threads(void);
+
+void *gwssrv_create_thread ( 
+    unsigned long init_eip, 
+    unsigned long init_stack, 
+    char *name );
+
+void gwssrv_start_thread(void *thread);
+
+//
+// Input
+//
+
+void gwssrv_set_keyboard_focus(int window);
+int service_drain_input(void);
+
+unsigned long gws_get_device_width(void);
+unsigned long gws_get_device_height(void);
+
+void gwssrv_broadcast_close(void);
+
+void ServerShutdown(int server_fd);
+
+
+//
+// End
+//
+
