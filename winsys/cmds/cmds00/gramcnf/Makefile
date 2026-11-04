@@ -1,6 +1,11 @@
 # gramcnf:
 # Language Interpreter for Gramado OS.
+# It's a small virtual-machine-based language runtime.
+# At the moment it looks like a declarative metadata language 
+# with script capabilities.
+# Configuration Language + Metadata Language + Scripting Language
 # 2019 - Created by Fred Nora.
+
 
 #VERSION = 0
 #PATCHLEVEL = 0
@@ -47,7 +52,7 @@ LIBCOBJ = ../api/libs/rtl/obj
 # Objects
 myObjects = crt0.o rtl.o \
 ctype.o stdlib.o stdio.o string.o strtol.o unistd.o termios.o ioctl.o fcntl.o \
-globals.o lexer.o parser.o vm.o tree.o compiler.o \
+globals.o lexer.o parser.o vm.o tree.o run.o \
 main.o    
 
 
@@ -58,12 +63,21 @@ all: main.o all-c gramcnf-link finalize clean
 
 main.o:
 	gcc  -c  main.c  -I $(LIBC) $(CFLAGS)  -o  main.o
+
 all-c:
 
-	# rtl
+# core/
+	gcc -c core/lexer.c   -I $(LIBC) $(CFLAGS) -o lexer.o
+	gcc -c core/parser.c  -I $(LIBC) $(CFLAGS) -o parser.o
+	gcc -c core/vm.c      -I $(LIBC) $(CFLAGS) -o vm.o
+
+	gcc -c globals.c  -I $(LIBC) $(CFLAGS) -o globals.o
+	gcc -c tree.c     -I $(LIBC) $(CFLAGS) -o tree.o
+	gcc -c run.c      -I $(LIBC) $(CFLAGS) -o run.o
+
+# rtl
 	cp $(LIBCOBJ)/crt0.o    .
 	cp $(LIBCOBJ)/rtl.o    .
-
 	cp $(LIBCOBJ)/ctype.o   .
 	cp $(LIBCOBJ)/stdio.o   .
 	cp $(LIBCOBJ)/stdlib.o  .
@@ -74,14 +88,6 @@ all-c:
 	cp $(LIBCOBJ)/termios.o .
 	cp $(LIBCOBJ)/ioctl.o   .
 	cp $(LIBCOBJ)/fcntl.o   .
-
-# from gramc
-	gcc  -c  globals.c   -I $(LIBC) $(CFLAGS) -o globals.o
-	gcc  -c  lexer.c     -I $(LIBC) $(CFLAGS) -o lexer.o
-	gcc  -c  parser.c    -I $(LIBC) $(CFLAGS) -o parser.o
-	gcc  -c  vm.c        -I $(LIBC) $(CFLAGS) -o vm.o
-	gcc  -c  tree.c      -I $(LIBC) $(CFLAGS) -o tree.o
-	gcc  -c  compiler.c  -I $(LIBC) $(CFLAGS) -o compiler.o
 
 # Generate the executable file
 gramcnf-link:

@@ -14,19 +14,23 @@
 #include <unistd.h>
 
 // Local
-#include "config.h"
-#include "debug.h"
-#include "globals.h"
-#include "gdef.h"
-#include "token.h"
+#include "include/config.h"
+#include "include/debug.h"
+#include "include/globals.h"
+#include "include/gdef.h"
+#include "include/token.h"
 
 // used by lexer and parser
-#include "object.h"
+#include "include/object.h"
 
-#include "lexer.h"
-#include "parser.h"
-#include "vm.h"
+//
+// Core
+//
 
+#include "include/core/lexer.h"
+#include "include/core/parser.h"
+#include "include/core/vm.h"
 
-#include "tree.h" 
-#include "compiler.h"
+#include "include/tree.h" 
+#include "include/run.h"
+

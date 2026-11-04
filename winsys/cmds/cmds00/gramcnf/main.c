@@ -458,31 +458,8 @@ int main(int argc, char *argv[])
     if (fRunProgram == TRUE) 
     {
         int Status = -1;
-
-        // #test (Not implemented yet)
-        printf ("fRunProgram: Run binary file #todo\n");
-        
-        //if (IsFileLoaded != TRUE){
-            //goto fail;
-        //}
-
-        goto fail;
-
-        // Step 1: Load the target binary (.gir) into memory and 
-        // build the stack of objects needed for execution.
-        // #ps: It was done before.
-        
-        // Step 2: Run the program.
-        Status = (int) vm_initialize();
-        if (Status < 0){ 
-            printf("main: on vm_initialize()\n");
-            goto fail; 
-        }
-        Status = (int) vm_loop();
-        if (Status < 0){ 
-            printf("main: on vm_loop()\n");
-            goto fail; 
-        }
+        // IN: fp (file pointer)
+        //Status = gramcnf_run_program((FILE *)fp);
     }
 
 //=====================================
@@ -507,7 +484,9 @@ int main(int argc, char *argv[])
             goto fail;
         }
         // Compile: (parser loop and vm loop)
-        ____O = (FILE *) compiler(fDumpOutput);
+        // ____O = (FILE *) compiler(fDumpOutput);
+        ____O = (FILE *) gramcnf_run_script(fDumpOutput);
+
         if ((void*) ____O == NULL)
         {
         }

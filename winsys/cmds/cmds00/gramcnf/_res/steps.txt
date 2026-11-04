@@ -1,0 +1,34 @@
+
+--------------------------------------------
+
+Source Code
+     │
+     V
++------------+
+|   Lexer    |   DFA
++------------+
+     │
+     V
+   Tokens
+     │
+     V
++------------+
+|   Parser   |   CFG recognizer
++------------+
+     │
+     V
+ Objects (IR) 
+     │
+     V
++------------+
+|    VM      |
++------------+
+     │
+     V
+  Execution
+
+ ------------------------------------
+
+ ps: 
+In compiler construction, IR almost always means 
+Intermediate Representation (sometimes called Intermediate Code Representation).

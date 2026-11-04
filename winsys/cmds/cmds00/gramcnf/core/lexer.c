@@ -1,10 +1,153 @@
-// lexer.c
+// core/lexer.c
 // The lexer for gramcnf interpreter.
 // #ps: There is a lot o comments for academic purpose.
 // 2018 - Created by Fred Nora.
 
 // Credits:
 // Inspired on gcc 0.9.
+
+/*
+// -------------------------------------------
+1. Alphabet (Sigma)
+For this lexer, the alphabet is essentially:
+
+Letters:     A-Z a-z
+Digits:      0-9
+Specials:    _ + - * / = ! < > & | ...
+Separators:  ( ) { } [ ] ; , . :
+Whitespace:  ' ' '\t' '\n'
+
+Each character coming from:
+    c = getc(finput);
+is a symbol from the alphabet.
+The lexer reads one symbol at a time. 
+Exactly like the theoretical DFA reading symbols sequentially.
+
+// -------------------------------------------
+*/
+
+// 2. Input String
+
+/*
+// -------------------------------------------
+3. Language
+A language is a set of strings accepted by some automaton.
+Identifiers: [A-Za-z_][A-Za-z0-9_]*
+
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+4. Regular Expressions
+Every token class corresponds to a regular expression.
+Identifiers: [A-Za-z_][A-Za-z0-9_]*
+Decimal constant: [0-9]+
+Hexadecimal constant: 0[xX][0-9A-Fa-f]+
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+5. States
+A DFA consists of states.
+Although not explicitly declared, but the states appear implicitly.
+State: Start (white spaces)
+State: Inside Identifier
+State: Inside Number
+State: Inside Comment
+State: Inside String
+State: final state is when a 'word'/sentence is acceped
+       Every time the lexer recognizes a complete token, 
+       it reaches an accepting state.
+
+Separator is not state
+Separator = symbol recognized by a transition
+
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+6. State Transitions
+A transition is triggered by reading a symbol.
+Main function for transition is switch ()
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+8. Token = Accepted Language Instance
+When a DFA accepts a string, the lexer produces a token.
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+9. Longest-Match Principle
+Lexers usually follow: Consume as many characters as possible.
+This is sometimes called the "maximal munch" rule.
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+10. Lookahead
+Lookahead appears when the lexer must see future symbols.
+The first character alone is ambiguous.
+The lexer peeks one symbol ahead.
+The lexer is using lookahead, but the lexer itself 
+is still operating as a deterministic finite automaton (DFA).
+The lexer never branches into multiple concurrent states.
+It simply looks ahead and makes a unique decision.
+NFA (Non-deterministic Finite Automaton)
+// -------------------------------------------
+*/
+
+
+/*
+// -------------------------------------------
+11. Comments as Regular Languages
+The lexer recognizes the comment language and discards it.
+Single-line comment ?: //.*
+Multi-line comment ?:  /\*([^*]|\*+[^/])*\*+/
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+12. Lexical Analysis vs Parsing
+This file performs only lexical analysis.
+It recognizes tokens.
+No syntax checking is performed yet.
+The parser will later verify grammar rules
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+13. Why a DFA?
+The entire lexer is a practical DFA because:
+A DFA needs:
+Q      = States
+sigma  = Alphabet
+?      = Transition function
+q0     = Start state
+F      = Accepting states
+
+So the function:
+    int yylex(void)
+is essentially a hand-written deterministic finite automaton.
+// -------------------------------------------
+*/
+
+/*
+// -------------------------------------------
+14. Where Context-Free Languages Appear
+ps: Matching nested parentheses is normally a parser's 
+job and is associated with context-free grammars.
+// -------------------------------------------
+*/
 
 //
 // Lexer?
@@ -116,7 +259,8 @@ that require multiple input symbols before reaching an accepting state.
 // the lexer rejecting strings not in the defined regular languages.
 
 
-#include "gramcnf.h"
+#include "../gramcnf.h"
+
 
 // ## current ##
 // Usado pelo lexer pra saber qual lugar na lista 
@@ -291,20 +435,25 @@ void error(char *msg)
 // ensuring only meaningful tokens are passed to the parser.
 
 
+// Skip whitespace and comments. 
+// Return the next non-whitespace character.
 static int __skip_white_space(void)
 {
-// Skip whitespace and comments. Return the next non-whitespace character.
-
     register int c=0;
     register int inside=0;
+
 begin:
+
     c = getc (finput);
+
     // #debug
     //printf("%c ",c); 
+
     for (;;)
     {
         switch (c)
         {
+            // Separators
             // ## spaces ##
             // Se encontramos um espaço, 
             // pegamos o próximo e saímos do switch 
@@ -324,6 +473,7 @@ begin:
                 c = getc(finput);
                 break;
 
+            // State: Inside Comment
             // ## comments ##
             // '/' 
             // #importante: Isso pode ser a 
@@ -486,7 +636,10 @@ int yylex(void)
 
 again:
 
+    // State: Start (white spaces)
+    // The lexer begins here.
     // Get a char from the input stream, skipping whitespace and comments.
+
     c = (int) __skip_white_space();
 
     switch (c)
@@ -503,6 +656,7 @@ again:
             break;
 
 
+        // State: Inside Identifier
         // Identifier recognition:
         // Matches the regular expression [A-Za-z_][A-Za-z0-9_]*.
         // - The first character must be a letter or underscore.
@@ -890,6 +1044,7 @@ again:
             goto done;
             break;
 
+        // State: Inside Number
         // Constant recognition:
         // Two disjoint regular languages are implemented:
         //   Decimal:     [0-9]+
@@ -985,6 +1140,7 @@ again:
             //return (int) value;
             break;
 
+        // State: Inside String
         // String recognition:
         // Matches the regular expression "([^"])*"
         // - Begins and ends with double quotes.
@@ -999,7 +1155,7 @@ again:
             // Address
             p = token_buffer;
     
-            //coloca no token_buffer.
+            // coloca no token_buffer.
             while (c != '\"')
             {
 	            //if (c == '\\')

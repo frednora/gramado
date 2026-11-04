@@ -1,0 +1,146 @@
+GRAMCNF Grammar Documentation
+=================================
+
+Overview
+--------
+This document describes the grammar inferred from parser.c.
+It is not a formal specification of the whole language, but a reconstruction
+of the productions currently implemented by the parser.
+
+Lexical Categories
+------------------
+Identifier  ::= [A-Za-z_][A-Za-z0-9_]*
+Constant    ::= DecimalConstant | HexConstant
+String      ::= '"' <chars> '"'
+
+Types
+-----
+box | meta | var | def | let | int | long | short | char | void
+
+Keywords
+--------
+name | content | print | return | exit | break | if | while
+
+Top-Level Grammar
+-----------------
+Program ::= { TopLevelElement } EOF
+
+TopLevelElement ::= BoxDeclaration
+                  | VarDeclaration
+                  | PrintStatement
+                  | ExitStatement
+
+Box Grammar
+-----------
+BoxDeclaration ::= 'box' Identifier '[' BoxBody ']'
+
+BoxBody ::= { BoxElement }
+
+BoxElement ::= MetaDeclaration
+             | FunctionDeclaration
+             | VariableDeclaration
+             | Statement
+             | Separator
+
+Meta Grammar
+------------
+MetaDeclaration ::= 'meta' Identifier
+                    NameStatement
+                    ContentStatement
+                    ReturnStatement
+
+NameStatement ::= 'name' '(' String ')' ';'
+
+ContentStatement ::= 'content' '(' String ')' ';'
+
+Print Grammar
+-------------
+PrintStatement ::= 'print' '(' String ')' ';'
+
+Function Grammar
+----------------
+FunctionDeclaration ::= Identifier '(' ')' ';'
+                      | Identifier '(' ')' FunctionBody
+
+FunctionBody ::= '{' { Statement } '}'
+
+Statements
+----------
+Statement ::= ReturnStatement
+            | ExitStatement
+            | BreakStatement
+            | PrintStatement
+            | IfStatement
+            | WhileStatement
+            | VariableDeclaration
+
+Variable Grammar
+----------------
+VariableDeclaration ::= 'var' Identifier ';'
+                      | 'var' Identifier ':' String ';'
+                      | 'var' Identifier '=' Expression ';'
+
+Return Grammar
+--------------
+ReturnStatement ::= 'return' Expression ';'
+
+ExitStatement ::= 'exit' ';'
+
+BreakStatement ::= 'break' ';'
+
+Conditional Grammar
+-------------------
+IfStatement ::= 'if' Expression '{' '}' ';'
+
+WhileStatement ::= 'while' Expression '{' '}' ';'
+
+Expression Grammar
+------------------
+The current parser delegates expression evaluation to tree_eval().
+Conceptually:
+
+Expression ::= Primary
+             | Expression BinaryOperator Expression
+             | '(' Expression ')'
+
+Primary ::= Constant
+          | Identifier
+          | SizeofExpression
+
+SizeofExpression ::= 'sizeof' '(' Type ')'
+
+BinaryOperator ::= '+' | '-'
+                 | '*' | '/'
+                 | '%'
+                 | '&' | '|'
+                 | '^'
+                 | '<<' | '>>'
+                 | '<=' | '>='
+                 | '==' | '!='
+
+Automata-Theory Mapping
+-----------------------
+Lexer  -> DFA over characters.
+Parser -> CFG recognizer with PDA-like behavior.
+
+Examples of context-free structures handled by the parser:
+
+    ( expression )
+    { statements }
+    box MyBox [ ... ]
+
+The parser maintains counters for:
+
+    parentheses_inside
+    braces_inside
+    square_brackets_inside
+
+These act as a simplified memory mechanism for nested structures,
+serving a role similar to a pushdown automaton stack.
+
+Notes
+-----
+1. This grammar is inferred from parser.c.
+2. Some productions are incomplete or marked TODO.
+3. Expression parsing is currently delegated to tree_eval().
+4. Future parser revisions may extend the grammar.

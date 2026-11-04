@@ -11,13 +11,57 @@
 #include "gramcnf.h"
 
 
+int gramcnf_run_program(FILE *fp)
+{
+    int Status = -1;
+
+    if ((FILE *)fp == NULL)
+        return -1;
+
+
+    // #test (Not implemented yet)
+    printf ("fRunProgram: Run binary file #todo\n");
+        
+    //if (IsFileLoaded != TRUE){
+        //goto fail;
+    //}
+
+//
+// Breakpoint
+//
+
+    goto fail;
+
+
+        // Step 1: Load the target binary (.gir) into memory and 
+        // build the stack of objects needed for execution.
+        // #ps: It was done before.
+        
+        // Step 2: Run the program
+        Status = (int) vm_initialize();
+        if (Status < 0){ 
+            printf("main: on vm_initialize()\n");
+            goto fail; 
+        }
+        Status = (int) vm_loop();
+        if (Status < 0){ 
+            printf("main: on vm_loop()\n");
+            goto fail; 
+        }
+
+    return 0;
+fail:
+    return -1;
+}
+
+
 // Called by main().
 // Routine:
 // + Initialize the lexer.
 // + Parse the tokens.
 // + Return a pointer to the output file.
 // OUT: The output pointer.
-FILE *compiler(int dump_output)
+FILE *gramcnf_run_script(int dump_output)
 {
     int Status = -1;
 

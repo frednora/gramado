@@ -1,5 +1,6 @@
-// parser.c
+// core/parser.c
 // The parser for the gramcnf project.
+// The Parser is Generating Bytecode-like Instructions
 // #ps: There is a lot of comments for academic purpose.
 // 2018 - Created by Fred Nora.
 
@@ -52,7 +53,7 @@ This is the bridge between syntax analysis and code generation.
 */
 
 
-#include "gramcnf.h"
+#include "../gramcnf.h"
 
 
 struct parser_info_d  ParserInfo;

@@ -1,7 +1,7 @@
-// vm.c
+// core/vm.c
 // Created by Fred Nora
 
-#include "gramcnf.h"
+#include "../gramcnf.h"
 
 
 struct vm_info_d  VMInfo;
