@@ -525,7 +525,7 @@ struct thread_d *keCreateThread (
 
 
 // Called by main to execute the first process
-// See: intake/x64init.c
+// See: ke/x64init.c
 // Never returns.
 int ke_x64ExecuteInitialProcess(int cpu_id)
 {

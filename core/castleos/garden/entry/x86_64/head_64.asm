@@ -2889,6 +2889,34 @@ START:
     mov rax, _I_kmain
 	call rax 
 
+; I_kmain() needs to return, 
+; It tells us that the kernel initialization is complete.
+; Call idle_loop that is the final routine 
+; during the kernel initialization. If something fails here, 
+; the initialization safely hangs for ever.
+
+    call idle_loop
+
+; Never reached
+.Ldie:
+    cli
+	hlt
+	jmp .Ldie
+
+;
+; The idle loop
+;
+
+extern _kmain_execute_initial_thread
+; see: kmain.c
+idle_loop:
+
+; It executes the intit thread.
+; Passing the command to the first ring 3 thread.
+
+    call _kmain_execute_initial_thread
+
+; Final point
 ; Never reached
 .Ldie:
     cli

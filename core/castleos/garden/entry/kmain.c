@@ -1856,6 +1856,11 @@ void I_kmain(int arch_type)
 
         PROGRESS("[4] Spawn init thread\n");
         wink_update_progress_bar(100);
+
+        PROGRESS("Return to assembly\n");
+        return;
+
+        /*
         // [4]
         int ok = (int) ke_x64ExecuteInitialProcess(ProcessorNumber);
         if (ok < 0){
@@ -1866,6 +1871,7 @@ void I_kmain(int arch_type)
             system_state = SYSTEM_ABORTED;
             goto L_die;
         }
+        */
 
 // The kernel initialization failed
     } else if (Status == FALSE){
@@ -1879,7 +1885,11 @@ L_die:
     if (system_state == SYSTEM_ABORTED){
         debug_print("SYSTEM_ABORTED\n");
     }
-    x_panic("Error: 0x02");
+
+    // #suspended
+    // x_panic("Error: 0x02");
+
+// Return to assembly and hangs.
 }
 
 // #test Not in use
@@ -1897,6 +1907,31 @@ void x86_64_start_kernel(int arch_type)
     start_kernel((int) arch_type);
 }
 
+void kmain_execute_initial_thread(void)
+{
+    const int ProcessorNumber = 0;  // BSP
+
+    PROGRESS("kmain_execute_initial_thread:\n");
+
+// [4]
+// Spawn the main thread for the init process
+// see: ke.c
+
+    int ok = (int) ke_x64ExecuteInitialProcess(ProcessorNumber);
+    if (ok < 0){
+        debug_print ("on ke_x64ExecuteInitialProcess()\n");
+    }
+
+    //printk ("Couldn't launch init process\n");
+    // #todo:
+    // Maybe we can call the kernel console for debuging purpose.
+    system_state = SYSTEM_ABORTED;
+
+// PANIC:
+// Not reached.
+// This fimction returns to assembly and hangs forever.
+
+}
 
 
 //

@@ -203,6 +203,7 @@ void I_kmain(int arch_type);
 void start_kernel(int arch_type);
 void x86_64_start_kernel(int arch_type);
 
+void kmain_execute_initial_thread(void);
 
 #endif    
 
