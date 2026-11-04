@@ -215,10 +215,12 @@ PeripheralHall_irq0:
 ; ------------------------------------------------
 ; Stackframe for ring 0 has only 3 elements
 .R0Thread:
-    pop rax
     mov qword [_gszLastStackFrame], 3  ; 3 elements
     mov qword [_contextRSP], rsp   ; save current kernel stack pointer
-    mov qword [_contextSS], ss     ; save kernel stack segment
+    xor rax, rax 
+    mov ax, ss
+    mov qword [_contextSS], rax     ; save kernel stack segment
+    pop rax
     jmp .AfterStackFrame
 
 ; ------------------------------------------------
@@ -386,10 +388,12 @@ PeripheralHall_irq1:
 ; Stackframe for ring 0 has only 3 elements.
 .R0Thread:
     ; int 3 ;#debug: A ring 0 thread was interrupted by the keyboard interrupt. 
-    pop rax
     mov qword [_contextRSP], rsp   ; save current kernel stack pointer
-    mov qword [_contextSS], ss     ; save kernel stack segment
+    xor rax, rax 
+    mov ax, ss
+    mov qword [_contextSS], rax     ; save kernel stack segment
     ;mov qword [_gszLastStackFrame], 3  ; 3 elements
+    pop rax
     jmp .AfterStackFrame
 
 ; ------------------------------------------------
@@ -1412,10 +1416,12 @@ PeripheralHall_irq12:
 ; ------------------------------------------------
 ; Stackframe for ring 0 has only 3 elements.
 .R0Thread:
-    pop rax
     mov qword [_contextRSP], rsp   ; save current kernel stack pointer
-    mov qword [_contextSS], ss     ; save kernel stack segment
+    xor rax, rax 
+    mov ax, ss
+    mov qword [_contextSS], rax     ; save kernel stack segment
     ;mov qword [_gszLastStackFrame], 3  ; 3 elements
+    pop rax
     jmp .AfterStackFrame
 
 ; ------------------------------------------------
