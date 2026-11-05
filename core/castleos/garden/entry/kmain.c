@@ -580,8 +580,7 @@ static int earlyinit_SetupBootblock(void)
 
 // -------------------------
 // info:
-// Save the info into a kernel structure
-// defined in mm/globals.c.
+// Save the info into a kernel structure defined in globals.c.
 // See the structure bootblk_d in bootblk.h.
 // #bugbug
 // Actually this is swrong, because the boot info

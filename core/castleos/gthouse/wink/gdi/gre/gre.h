@@ -46,7 +46,7 @@ struct gui_d
 // cgroup spport
     // struct cgroup_d  *cgroup;
 };
-extern struct gui_d  *gui; 
+extern struct gui_d  *gui;
 
 //===========================
 

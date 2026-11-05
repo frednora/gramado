@@ -62,8 +62,6 @@ extern _context_fpu_buffer
 
 ; ...
 
-; extern _string_panic
-
 
 align 16
 __hw_fpu_buffer:

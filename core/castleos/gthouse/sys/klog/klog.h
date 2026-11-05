@@ -10,7 +10,7 @@ void enable_serial_debug(void);
 void disable_serial_debug(void);
 
 //
-// Verbose via serial.
+// Verbose via serial port
 //
 
 void debug_print (const char *data);
@@ -19,7 +19,6 @@ void PROGRESS (const char *string);
 // Send a formated string to the serial port.
 int serial_printk(const char *fmt, ...);
 
-int debug(void);
 void debug_breakpoint (void);
 unsigned long 
 debug_compute_checksum ( 

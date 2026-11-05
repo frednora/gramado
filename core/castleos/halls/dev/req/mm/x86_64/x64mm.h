@@ -6,16 +6,6 @@
 #ifndef __MM_X64MM_H
 #define __MM_X64MM_H    1
 
-// Salvando o último endereço válido de memória ram.
-// usado em head.asm
-// see: globals.c
-extern unsigned long blSavedLastValidAddress;
-extern unsigned long blSavedPhysicalMemoryInKB;
-
-// Kernel pml4. (cr3)
-// The virtual address of the kernel pml4 table.
-// see: pages.c
-extern unsigned long gKernelPML4Address; 
 
 
 /*
@@ -141,9 +131,8 @@ struct page_directory_d *pagedirectoryShared;           // Shared.
 // Lista de diretórios. (Pois cada processo tem um diret�rio).
 //
 
-// Quantidade de diretórios que podem ser 
-// criados na lista.
-#define PAGEDIRECTORY_COUNT_MAX 1024  
+// How many page directories we can create into this list
+#define PAGEDIRECTORY_COUNT_MAX  512  // 1024  
 
 // Lista de estruturas para diretórios de paginas
 extern unsigned long pagedirectoryList[PAGEDIRECTORY_COUNT_MAX]; 
@@ -188,7 +177,6 @@ struct page_table_d
 
 // Quantidade de page tables criadas na lista.
 #define PAGETABLE_COUNT_MAX  1024 
-
 extern unsigned long pagetableList[PAGETABLE_COUNT_MAX]; 
 
 
@@ -405,23 +393,18 @@ struct frame_pool_d
     int magic;
 
     int id;
-
-// Não pode ser modificada
-    int locked;
+    int locked;  // Can't be modified
 
 // Endereço do início do framepool.
 // va ou pa ??
     unsigned long address; 
 
-//Qual processo é o dono desse framepool.
-    struct te_d *process;
-
-// Navigation
-    struct frame_pool_d *next;
+    struct te_d *process;       // owner
+    struct frame_pool_d *next;  // navigation
 };
 
-/*
 
+/*
 // Cada framepool abaixo � o framepool inicial de uma regi�o.
 // Uma regis�o pode ter v�rios framepools.
 
@@ -464,13 +447,6 @@ struct frame_pool_d *framepoolCurrent;
 
 */
 
-//
-//  PAGEABLE AREA
-//
-
-extern unsigned long gPagedPollStart;
-extern unsigned long gPagedPollEnd;
-
 
 //Obs: ISSO � UM TESTE.
 //N�mero m�ximo de framepools na �rea de aloca�ao de frames.
@@ -492,39 +468,9 @@ extern unsigned long gPagedPollEnd;
 //#define PAGEABLE_FRAMEPOOL_MAX  32
 
 
-// Número máximo de índices de framepool que 
-// serão usados nessa área de alocação de frames.
-// Uma certa quantidade de framepools serão usados
-// para alocação de frames para os processos. 
-// Durante a alocação sobre demanda, os frames usados 
-// virão dessa área de memória.
-extern int g_pageable_framepool_index_max;
 
 // List. (1024 framepools)
 extern unsigned long framepoolList[FRAMEPOOL_COUNT_MAX];
-
-// Lista de framepools livres.
-// int framepoolFreeList[FRAMEPOOL_COUNT_MAX]
-// frame_pool_t *framepoolFreeListHead;
-
-// frame pool atual.
-extern int g_current_framepool;
-// O indice do framepool da user space para qualquer tamanho de memória.
-extern int g_user_space_framepool_index;
-// O máximo de framepools possíveis dado o tamanho da memória física.
-extern unsigned long g_framepool_max;
-
-// Contabilidade. kernel(talvez deva fazer uma estrututra) MS.
-// Memória usada pelo kernel.
-// +Paginada. paged
-// +não paginada. nonpaged
-// +fisica paginada
-// +virtual paginada 
-// +paginada limite
-// +não pagianda limite.
-
-extern unsigned long g_kernel_paged_memory;
-extern unsigned long g_kernel_nonpaged_memory;
 
 // -------------------------------------
 // Sobre gerência de memória física:
@@ -621,8 +567,18 @@ struct x64_address_space_d
 
 int x64mm_has_1gb_pages(void);
 
-//unsigned long slab_2mb_extraheap2(void);
-//unsigned long slab_2mb_extraheap3(void);
+void __enable_pae(void);
+void x64mm_enable_paging(void);
+
+void load_pml4_table(void *phy_addr);
+void x64mm_load_pml4_table(unsigned long phy_addr);
+void x64mm_refresh_cr3(void);
+
+// Wrapper
+unsigned long 
+virtual_to_physical ( 
+    unsigned long virtual_address, 
+    unsigned long pml4_va );
 
 // IN:
 // Endereço virtual do diretório de páginas.
@@ -639,30 +595,9 @@ mm_fill_page_table(
     unsigned long region_2mb_pa,
     unsigned long flags );
 
-// Memory info.
-void mmShowMemoryInfo(void);
-void mmShowPML4Entry(int index, unsigned long pml4_va);
-void mmShowPML4EntryForAllProcesses (int entry_number);
-void mmShowMemoryBlocksForTheKernelAllocator(void);
-void mmShowPagedMemoryList(int max);
+//unsigned long slab_2mb_extraheap2(void);
+//unsigned long slab_2mb_extraheap3(void);
 
-// mm support
-void mmTestingPageAlloc(void);
-
-void __enable_pae(void);
-void x64mm_enable_paging(void);
-
-void load_pml4_table(void *phy_addr);
-void x64mm_load_pml4_table(unsigned long phy_addr);
-void x64mm_refresh_cr3(void);
-
-
-// Wrapper
-unsigned long 
-virtual_to_physical ( 
-    unsigned long virtual_address, 
-    unsigned long pml4_va );
 
 #endif    
-
 

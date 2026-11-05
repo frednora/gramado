@@ -7,6 +7,49 @@
 #define __MM_MM_H    1
 
 
+//
+//  PAGEABLE AREA
+//
+
+extern unsigned long gPagedPollStart;
+extern unsigned long gPagedPollEnd;
+
+// Número máximo de índices de framepool que 
+// serão usados nessa área de alocação de frames.
+// Uma certa quantidade de framepools serão usados
+// para alocação de frames para os processos. 
+// Durante a alocação sobre demanda, os frames usados 
+// virão dessa área de memória.
+extern int g_pageable_framepool_index_max;
+
+
+// frame pool atual.
+extern int g_current_framepool;
+// O indice do framepool da user space para qualquer tamanho de memória.
+extern int g_user_space_framepool_index;
+// O máximo de framepools possíveis dado o tamanho da memória física.
+extern unsigned long g_framepool_max;
+
+
+// Lista de framepools livres.
+// int framepoolFreeList[FRAMEPOOL_COUNT_MAX]
+// frame_pool_t *framepoolFreeListHead;
+
+// Contabilidade. kernel(talvez deva fazer uma estrututra) MS.
+// Memória usada pelo kernel.
+// +Paginada. paged
+// +não paginada. nonpaged
+// +fisica paginada
+// +virtual paginada 
+// +paginada limite
+// +não pagianda limite.
+
+extern unsigned long g_kernel_paged_memory;
+extern unsigned long g_kernel_nonpaged_memory;
+
+
+
+
 struct mm_info_d
 {
     int initialized;
@@ -67,6 +110,14 @@ extern unsigned long vaList[32];
 //extern unsigned long shbufferList[2];
 
 // =========================
+
+void mmShowPML4Entry(int index, unsigned long pml4_va);
+void mmShowMemoryInfo(void);
+void mmShowPML4EntryForAllProcesses (int entry_number);
+void mmShowPagedMemoryList(int max);
+void mmShowMemoryBlocksForTheKernelAllocator(void);
+void mmTestingPageAlloc(void);
+
 
 int mm_gc(void);
 

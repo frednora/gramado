@@ -3,7 +3,10 @@
 // Environment: kernel
 // Created by Fred Nora.
 
-#include <kernel.h>  
+#include <kernel.h>
+
+struct gui_d  *gui; 
+
 
 //  Compositor
 int DemoFlag=0;

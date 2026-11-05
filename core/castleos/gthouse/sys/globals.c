@@ -1,4 +1,5 @@
 // globals.c
+// Global definitions
 // Created by Fred Nora.
 
 
@@ -22,21 +23,6 @@ int system_state = SYSTEM_NULL;
 // see: x86init.c
 int has_booted = FALSE;
 
-
-// Salvando o último endereço válido de memória ram.
-// usado em head.asm
-// see: x64mm.h
-// #warning:
-// Actually this address represents the start of the
-// last MB of the physical memory.
-// #todo:
-// Maybe we can put a footer right above
-// this address ... we have 1MB to play with.
-// Tell this to the bootloader team. It's gonna be fun. :)
-// see: last_mb_footer_d in mmsize.h
-unsigned long blSavedLastValidAddress=0;  //pa
-unsigned long blSavedPhysicalMemoryInKB=0;
-
 //
 // System arch
 //
@@ -52,6 +38,8 @@ int current_arch = CURRENT_ARCH_X86_64;
 // GRAMADO_JAIL, GRAMADO_P1 ...
 int current_mode=0;
 
+// Current runlevel. Used in init process.
+int runlevel=0;
 
 // INPUT_MODE_SETUP, INPUT_MODE_WS ...
 //int current_input_mode=0;
@@ -60,8 +48,6 @@ int current_mode=0;
 int current_user=0;
 int current_group=0; 
 
-// Current runlevel. Used in init process.
-int runlevel=0;
 
 // Organização dos discos.
 int current_disk=0;
@@ -83,43 +69,55 @@ int abnt2=FALSE;
 unsigned int g_processor_count=0;
 int g_smp_initialized = FALSE;
 
-// see: window.h
-struct gui_d  *gui; 
 
 // Logon
 int g_logged=FALSE;
 
 int g_redirect_printk_to_serial_during_syscalls=FALSE;
 
+int g_kernel_symbols_available=FALSE;
 
-// Kernel information variables.
+// Salvando o último endereço válido de memória ram.
+// usado em head.asm
+// see: x64mm.h
+// #warning:
+// Actually this address represents the start of the
+// last MB of the physical memory.
+// #todo:
+// Maybe we can put a footer right above
+// this address ... we have 1MB to play with.
+// Tell this to the bootloader team. It's gonna be fun. :)
+// see: last_mb_footer_d in mmsize.h
+unsigned long blSavedLastValidAddress=0;  //pa
+unsigned long blSavedPhysicalMemoryInKB=0;
+
+
+// Kernel information variables
 unsigned long KernelSize=0;
 unsigned long KernelHeapSize=0;
 unsigned long KernelStackSize=0;
 unsigned long KernelPages=0;
 //...
 
-
-int g_kernel_symbols_available=FALSE;
-
 // -------------------------------------------
-// Saving the virtual address for some special areas.
+// Saving the virtual address for some special areas
 unsigned long g_ring0area_va=0;
 unsigned long g_ring3area_va=0;
+unsigned long g_backbuffer_va=0;
 unsigned long g_kernelimage_va=0;
-unsigned long g_pagedpool_va=0;  //pagedpool virtual address
+unsigned long g_frontbuffer_va=0;
+unsigned long g_pagedpool_va=0;      // pagedpool virtual address
 unsigned long g_heappool_va=0;
 unsigned long g_extraheap1_va=0;
 unsigned long g_extraheap2_va=0;
 unsigned long g_extraheap3_va=0;
 
-unsigned long g_frontbuffer_va=0;
-unsigned long g_backbuffer_va=0;
 
 // -------------------------------------------
 // Saving the physical address for some special areas.
-// ...
 
+
+// pa for frontbuffer and backbuffer
 unsigned long g_frontbuffer_pa=0;
 unsigned long g_backbuffer_pa=0;
 

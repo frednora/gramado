@@ -42,11 +42,16 @@ void panic( const char *format, ... )
     keDie();
 }
 
-void string_panic(char *string)
+void panic_string(const char *string)
 {
     if ((void*) string == NULL)
-        panic("string_panic: Invalid string");
+        panic("panic_string: string");
     if (*string == 0)
-        panic("string_panic: Invalid string");
+        panic("panic_string: *string");
+
+//
+// panic
+//
+
     panic(string);
 }

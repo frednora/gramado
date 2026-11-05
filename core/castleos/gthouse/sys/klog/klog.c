@@ -128,10 +128,10 @@ void disable_serial_debug(void)
     __using_serial_debug = FALSE;
 }
 
-void debug_print (const char *data)
+// Verbose via serial port
+// COM1 only.
+void debug_print(const char *data)
 {
-// Verbose via serial.
-
     unsigned int SeriaPortIndex = COM1_PORT;
     register int i=0;
 
@@ -163,7 +163,7 @@ void debug_print (const char *data)
 // the main kernel initialization progress.
 // It will print into the serial port for now.
 
-void PROGRESS (const char *string)
+void PROGRESS(const char *string)
 {
 // Verbose via serial.
 
@@ -185,7 +185,7 @@ void PROGRESS (const char *string)
     debug_print(string);
 }
 
-// Send a formated string to the serial port.
+// Send a formated string to the serial port
 int serial_printk(const char *fmt, ...)
 {
     static char data_buffer[1024];
@@ -208,7 +208,7 @@ int serial_printk(const char *fmt, ...)
 // Print the data buffer into the console.
     // kinguio_puts(data_buffer);
 
-// Send the data buffer to the serial port.
+// Send the data buffer to the serial port
     PROGRESS(data_buffer);
     //debug_print(data_buffer);
 
@@ -216,26 +216,20 @@ int serial_printk(const char *fmt, ...)
 }
 
 /*
- * debug:
- *     Checa por falhas depois de cumpridas as 
- *     três fases de inicialização.
- */
-// #bugbug
-// Será que o output está realmente disponível nesse momento ?!
-
+// #deprecated
+// Called during the initialization for confirming the checkpoints
 int debug(void)
 {
     int Status = -1; 
 
 // Checa inicialização. 
 // Fases, variáveis e estruturas.
-
     Status = (int) __debug_check_inicialization();
     if (Status == TRUE){
-        panic("debug: __debug_check_inicialization fail\n");
+        panic("debug: on __debug_check_inicialization()\n");
     }
 
-// 'processor' struct.
+// processor struct
     if ((void *) processor == NULL){
         panic("debug: processor struct fail\n");
     }
@@ -244,34 +238,20 @@ int debug(void)
 // ( Ver se os principais drivers estão inicializados )
     __debug_check_drivers();
 
-/*
- * @todo: 
- *     Checar se existe componentes do sistema como mbr, root, fat 
- * e arquivos e programas básicos do sistema.
- */ 
-/* 
- * @todo: 
- *     Checar por falhas no sistema de arquivos.
- */ 
-/*
- * @todo:
- *     Checar por falhas nas estruturas de tarefas.
- */
-
-//...
-
-    // printk ("debug: Done\n");
+// @todo: 
+// Checar se existe componentes do sistema como mbr, root, fat 
+// e arquivos e programas básicos do sistema.
+// @todo: Checar por falhas no sistema de arquivos.
+// @todo: Checar por falhas nas estruturas de tarefas.
 
     return 0; 
 }
+*/
 
-// debug_breakpoint:
-//     Para a execução do sistema.
-//     @todo: isso pode ir para o arquivo debug.c.
+// This is gonna show the message if it is possible and hang.
 void debug_breakpoint(void)
 {
     printk("debug_breakpoint:\n");
-// This is gonna show the message if it is possible and hang.
     keDie();
 }
 

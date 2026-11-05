@@ -7,5 +7,7 @@
 void panic( const char *format, ... );
 #define PANIC  panic
 
+void panic_string(const char *string);
+
 #endif   
 

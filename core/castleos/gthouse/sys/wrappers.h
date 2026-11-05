@@ -7,22 +7,9 @@
 #define WRAPPERS_H    1
 
 
-extern unsigned int g_processor_count;
-extern int g_smp_initialized;
-
 //
 // == current ======================================================
 //
-
-// GRAMADO_JAIL, GRAMADO_P1 ...
-extern int current_mode;
-
-
-// x86 ...
-extern int current_arch;
-// Organização de usuários.
-extern int current_user; 
-extern int current_group; 
 
 
 // Organização dos processos
@@ -55,19 +42,7 @@ extern tid_t foreground_thread;  // Input thread.
 extern tid_t special_reader;
 // ------
 
-// Organização dos discos.
-extern int current_disk;
-extern int current_volume;
 
-// Organização dos arquivos.
-extern int current_directory;
-extern int current_file;
-
-// Organização dos terminais
-extern int current_tty;
-extern int current_terminal;
-//extern int current_pty;
-//extern int current_pts;
 
 //se ele esta inicializado ou nao
 // see: kmain.c
@@ -75,10 +50,6 @@ extern int dead_thread_collector_status;
 // Se e' para usalo ou nao
 // see: kmain.c
 extern int dead_thread_collector_flag;
-
-
-// Logon
-extern int g_logged;
 
 // Drivers support
 // Internal modules support.
@@ -108,25 +79,6 @@ extern int g_module_objectmanager_initialized;
 extern int g_module_runtime_initialized;
 extern int g_module_uem_initialized;             //user environment manager.
 //...
-
-
-// Kernel information variables.
-extern unsigned long KernelSize;
-extern unsigned long KernelHeapSize;
-extern unsigned long KernelStackSize;
-extern unsigned long KernelPages;
-//...
-
-// symbol table
-extern int g_kernel_symbols_available;
-
-
-//#bugbug
-//move this to kernel (ring 0) crt support.
-//error support.
-extern unsigned long errno;
-
-
 
 
 // --------------------------

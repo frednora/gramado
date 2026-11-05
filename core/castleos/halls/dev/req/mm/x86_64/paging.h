@@ -85,6 +85,13 @@
 // Since x86_64 page table entries are 64 bits wide, the NX flag is usually defined as the highest bit.
 // #define PAGE_NX    (1ULL << 63)
 
+
+// Kernel pml4. (cr3)
+// The virtual address of the kernel pml4 table.
+// see: pages.c
+extern unsigned long gKernelPML4Address; 
+
+
 // ================================================
 
 //

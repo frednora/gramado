@@ -113,7 +113,6 @@ static unsigned long mm_prev_pointer=0;
 static int __init_kernel_heap(void);
 static int __init_kernel_stack(void);
 
-
 // Local worker
 static struct mmblock_d *__find_reusable_block(unsigned long size);
 
@@ -341,11 +340,13 @@ void memory_destroy_heap (struct heap_d *heap)
  * OUT:
  *   Returns the address of the allocated user area if successful, or 0 on failure.
  */
-unsigned long heapAllocateMemory(unsigned long size)
-{
+
+ // worker
 // This is a worker for kmalloc() and __mm_kmalloc_impl().
 // Allocate memory inside the kernel heap.
 
+unsigned long heapAllocateMemory(unsigned long size)
+{
     struct mmblock_d *Current;
 
 // Calculate sizes for header and user area.

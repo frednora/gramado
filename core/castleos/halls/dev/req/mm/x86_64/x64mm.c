@@ -193,7 +193,7 @@ __virtual_to_physical (
 
 // ==============================
 // pml4
-    //debug_print ("virtual_to_physical2: [pml4]\n");
+    //debug_print ("__virtual_to_physical: [pml4]\n");
     unsigned long *pml4VA = (unsigned long *) pml4_va;
 
     //printk (">> pml4VA[a] %x\n", pml4VA[a]);
@@ -204,7 +204,7 @@ __virtual_to_physical (
 
 // ==============================
 // page directory pointer table.
-    //debug_print ("virtual_to_physical2: [ptpt]\n");
+    //debug_print ("__virtual_to_physical: [ptpt]\n");
     unsigned long *ptpt = (unsigned long *) (tmp & 0xFFFFFFFFF000);
 
     //printk (">> ptpt[d] %x\n", ptpt[b]);
@@ -215,7 +215,7 @@ __virtual_to_physical (
 
 // ==============================
 // page diretory
-    //debug_print ("virtual_to_physical2: [dir]\n");
+    //debug_print ("__virtual_to_physical: [dir]\n");
     unsigned long *dir = (unsigned long *) (tmp & 0xFFFFFFFFF000);
 
     //printk ("dir[d] %x\n", dir[d]);
@@ -225,7 +225,7 @@ __virtual_to_physical (
     tmp = (unsigned long) dir[d];
 
     // Page table.
-    //debug_print ("virtual_to_physical2: [pt]\n");
+    //debug_print ("__virtual_to_physical: [pt]\n");
     unsigned long *pt = (unsigned long *) (tmp & 0xFFFFFFFFF000);
 
     // Encontramos o endereço base do page frame.
@@ -233,7 +233,7 @@ __virtual_to_physical (
 
     address = (tmp & 0xFFFFFFFFF000);
 
-    //debug_print ("virtual_to_physical2: done\n");
+    //debug_print ("__virtual_to_physical: done\n");
 
 // OUT:
 // Physical address.

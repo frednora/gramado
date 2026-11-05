@@ -26,8 +26,6 @@ extern _ring3_callback_parm4
 ; ts
 extern _task_switch_status
 
-; extern _string_panic
-
 ;;
 ;; == Context =============================================
 ;;
