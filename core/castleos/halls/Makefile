@@ -20,17 +20,16 @@ all:
 
 	@echo "halls: all"
 
-# fs
-	$(Q)make -C fs/
+# Devices (exec, per, req)
+	$(Q)make -C dev/
 
 # BUSes
 	$(Q)make -C platform/
 
-# Devices (exec, per, req)
-	$(Q)make -C dev/
-
 # Human-Computer Interfce devices
 	$(Q)make -C hcidev/
 
-clean:
-# ...
+clean-all:
+	-rm dev/*.o
+	-rm hcidev/*.o
+	-rm platform/*.o

@@ -83,7 +83,6 @@ ts.o dispatch.o spawn.o x64cont.o callback.o \
 thread.o tlib.o te.o telib.o ithread.o clone.o \
 ipc.o \
 pit.o \
-x64sc.o \
 x64excep.o x64smp.o \
 apic.o apictim.o ioapic.o \
 cpu.o \
@@ -168,7 +167,6 @@ all:
 # Overview
 	$(CC) -c hal/x86_64/x64.c       $(KERNEL_INCLUDE) $(CFLAGS) -o x64.o
 	$(CC) -c hal/x86_64/x64info.c   $(KERNEL_INCLUDE) $(CFLAGS) -o x64info.o
-	$(CC) -c hal/x86_64/x64sc.c     $(KERNEL_INCLUDE) $(CFLAGS) -o x64sc.o
 	$(CC) -c hal/x86_64/archhal.c   $(KERNEL_INCLUDE) $(CFLAGS) -o archhal.o
 
 	$(CC) -c hal/x86_64/archhal.c   $(KERNEL_INCLUDE) $(CFLAGS) -o archhal.o

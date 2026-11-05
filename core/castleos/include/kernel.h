@@ -360,42 +360,42 @@ extern int system_state;
 
 // (network, protocols and socket)
 // network
-#include "../garden/net/mac.h"
-#include "../garden/net/host.h"
-#include "../garden/net/in.h"
-#include "../garden/net/un.h"
+#include "../gthouse/net/mac.h"
+#include "../gthouse/net/host.h"
+#include "../gthouse/net/in.h"
+#include "../gthouse/net/un.h"
 
 //
 // Protocols
 //
 
 // Ethernet
-#include "../garden/net/ethernet/ethernet.h"
+#include "../gthouse/net/ethernet/ethernet.h"
 
 // Firewall
-#include "../garden/net/firewall/firewall.h"
+#include "../gthouse/net/firewall/firewall.h"
 
 // =================================
 // ipv4/
-#include "../garden/net/ipv4/arp.h"
-#include "../garden/net/ipv4/ipv4.h"
-#include "../garden/net/ipv4/tcp.h"
-#include "../garden/net/ipv4/udp.h"
-#include "../garden/net/ipv4/dhcp.h" 
-#include "../garden/net/ipv4/icmp.h" 
+#include "../gthouse/net/ipv4/arp.h"
+#include "../gthouse/net/ipv4/ipv4.h"
+#include "../gthouse/net/ipv4/tcp.h"
+#include "../gthouse/net/ipv4/udp.h"
+#include "../gthouse/net/ipv4/dhcp.h" 
+#include "../gthouse/net/ipv4/icmp.h" 
 
 // =================================
 // ipv6/
 
 // Network
-#include "../garden/net/nports.h"     //(network) Network Ports  (sw)
-#include "../garden/net/inet.h"
-#include "../garden/net/sockint.h"  //
-#include "../garden/net/socket.h"   // last always
-#include "../garden/net/domain.h"
-#include "../garden/net/ifconfig/netif.h"  // Network interface
+#include "../gthouse/net/nports.h"     //(network) Network Ports  (sw)
+#include "../gthouse/net/inet.h"
+#include "../gthouse/net/sockint.h"  //
+#include "../gthouse/net/socket.h"   // last always
+#include "../gthouse/net/domain.h"
+#include "../gthouse/net/ifconfig/netif.h"  // Network interface
 // Top level header for net/
-#include "../garden/net/net.h"     //(network) Gerenciamento de rede.  
+#include "../gthouse/net/net.h"     //(network) Gerenciamento de rede.  
 
 
 // ----------------------
@@ -408,19 +408,19 @@ extern int system_state;
 // fs/
 // File system (After the devices)
 
-#include "../halls/fs/path.h"
-#include "../halls/fs/fat/fat16.h"
-#include "../halls/fs/fat/fat.h"
-#include "../halls/fs/inode.h"
-#include "../halls/fs/exec_elf.h"
-#include "../halls/fs/pipe.h"
-#include "../halls/fs/files.h"
+#include "../gthouse/fs/path.h"
+#include "../gthouse/fs/fat/fat16.h"
+#include "../gthouse/fs/fat/fat.h"
+#include "../gthouse/fs/inode.h"
+#include "../gthouse/fs/exec_elf.h"
+#include "../gthouse/fs/pipe.h"
+#include "../gthouse/fs/files.h"
 // Top level header for fs/
-#include "../halls/fs/fslib.h"
-#include "../halls/fs/fsbp.h"
-#include "../halls/fs/search.h"
-#include "../halls/fs/fsload.h"
-#include "../halls/fs/fs.h"
+#include "../gthouse/fs/fslib.h"
+#include "../gthouse/fs/fsbp.h"
+#include "../gthouse/fs/search.h"
+#include "../gthouse/fs/fsload.h"
+#include "../gthouse/fs/fs.h"
 
 // ==================================
 #include "../halls/res.h"
@@ -504,12 +504,7 @@ extern int system_state;
 #include "../gthouse/sys/sci/sci3.h"
 // Top level header for sci/
 #include "../gthouse/sys/sci/sci.h" 
-
-// ==================================
-// hal/
-
-// syscall support
-#include "../halls/dev/exec/ke/hal/x86_64/x64sc.h"
+#include "../gthouse/sys/sci/x64sc.h" 
 
 // ==================================
 
@@ -528,10 +523,10 @@ extern int system_state;
 // ==================================
 // gramnet/
 
-#include "../garden/gramnet/http.h"
-#include "../garden/gramnet/gprot.h"
+#include "../gthouse/gramnet/http.h"
+#include "../gthouse/gramnet/gprot.h"
 // ...
-#include "../garden/gramnet/gramnet.h"
+#include "../gthouse/gramnet/gramnet.h"
 
 
 // Core module.

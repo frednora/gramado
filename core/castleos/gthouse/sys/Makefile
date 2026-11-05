@@ -83,6 +83,7 @@ system.o \
 wrappers.o \
 sys.o \
 go.o \
+x64sc.o \
 sci.o \
 mod.o \
 cg.o \
@@ -120,9 +121,9 @@ all:
 # Virtualization routines
 	$(CC) -c virt/hv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o
 
-# System calls suppor
-
-	$(CC) -c sci/sci.c  $(KERNEL_INCLUDE) $(CFLAGS) -o sci.o    
+# Systemcalls support
+	$(CC) -c sci/x64sc.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64sc.o    
+	$(CC) -c sci/sci.c    $(KERNEL_INCLUDE) $(CFLAGS) -o sci.o    
 
 # Wrapper functions
 

@@ -5,10 +5,19 @@ This directory contains the code for the base kernel. It builds the image KERNEL
 # Folders
 
 ```
+garden/  - entrypoint
+gthouse/ - top level wrappers (Interfaces)
+halls/   - hardware abstractions
+```
+
+
+```
+#todo: We need to update this
 kernel/
  ├── garden/      #
- │    ├── arch/   # Architecture-specific boot & interrupt stubs
- ├── gthouse/     # Gatehouse: entry point, stubs, init, wrappers, libk, UI
+ │    ├── entry/  # Architecture-specific boot & interrupt stubs
+ |    |           # entry point
+ ├── gthouse/     # Gatehouse: stubs, init, wrappers, libk, UI
  │    ├── kwrap/  # Kernel wrappers (high-level abstractions)
  │    ├── libk/   # Kernel library (shared utilities)
  │    └── wink/   # User interface (input events, GDI)
