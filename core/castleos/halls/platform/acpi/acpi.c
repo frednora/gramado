@@ -191,7 +191,6 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
         // printk("xsdt pa lx: %lx | xsdt va lu: %lu\n", address_pa, address_pa );
 
         // #debug
-        // refresh_screen();
         // while(1){}
 
         // IN: ps | va
@@ -225,32 +224,26 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
         printk("XSDT: Revision {%c}\n", xsdt->Revision);
         // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
         printk("XSDT: OEMID {%s}\n", xsdt->OEMID);
-        
-        // #debug
-        //refresh_screen();
+
 
         /*
 
         if (gramado_strncmp(xsdt->Signature, "XSDT", 4) == 0)
         {
             printk("XSDT ok\n");
-            refresh_screen();
             return TRUE;
         }
         if (gramado_strncmp(xsdt->Signature, "RSDT", 4) == 0) 
         {
             printk("RSDT ok\n");
-            refresh_screen();
             return TRUE;
         }
         */
-
 
         //#hack
         //return TRUE;
 
         //#debug
-        //refresh_screen();
         //while(1){}
 
         // ------------------------------------------
@@ -271,7 +264,6 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
             printk("XSDT: Revision {%c}\n", xsdt->Revision);
             // OEMID[6] – Manufacturer identifier (e.g., "Intel" or "AMI").
             printk("XSDT: OEMID {%s}\n", xsdt->OEMID);
-            //refresh_screen();
             //while(1){}
 
         } else {
@@ -375,7 +367,6 @@ static int __acpi_rsdp(unsigned long rsdp_pointer)
         // #bugbug
         // We gotta find this table and check the elements.
         //printk("ACPI: Breakpoint\n");
-        //refresh_screen();
         //while(1){}
 
         Status = TRUE;
@@ -405,7 +396,6 @@ valid_revision:
     }
 fail:
     printk("ACPI: Failed probing rsdp info\n");
-    refresh_screen();
     return FALSE;
 }
 
@@ -549,7 +539,6 @@ int acpi_probe(void)
 
     // #debug
     // printk("rsdp ok\n");
-    // refresh_screen();
 
 // == FADT =========================================
     unsigned long va = (unsigned long) xsdt;

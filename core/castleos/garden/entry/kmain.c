@@ -565,13 +565,15 @@ static int earlyinit_SetupBootblock(void)
 // Paint a white screen if magic is ok.
 // Paint a 'colored' screen if magic is not ok.
     register int i=0;
-// WHITE
+
+// WHITE: Signature OK
     if (bootMagic == 1234){
-        for (i=0; i<320*32; i++){ fb[i] = 0xFFFFFFFFFFFFFFFF; };
+        for (i=0; i<320*16; i++){ fb[i] = 0xFFFFFFFFFFFFFFFF; };
     }
-// COLORED
+
+// COLORED: Signature failed
     if (bootMagic != 1234){
-        for (i=0; i<320*32; i++){ fb[i] = 0xFF00FFFFFFF00FFF; };
+        for (i=0; i<320*15; i++){ fb[i] = 0xFF00FFFFFFF00FFF; };
         //#debug
         //while(1){}
     }
@@ -800,6 +802,7 @@ static void earlyinit_Serial(void)
 // see: serial.c
 
     int Status=FALSE;
+
     Status = DDINIT_serial();
     if (Status != TRUE){
         //#bugbug
@@ -807,6 +810,9 @@ static void earlyinit_Serial(void)
     }
     PROGRESS("Welcome!\n");
     PROGRESS("earlyinit_Serial: Serial debug initialized\n");
+
+    // #breakpoint
+    // while(1){};
 }
 
 // ======================
@@ -871,8 +877,14 @@ static int earlyinit(void)
 // Hack Hack
     VideoBlock.useGui = TRUE;
 
+
 // first of all
 // Getting critical boot information.
+// #ps: here is where we have that drawing into the framebuffer
+// as an early debug method
+// #ps: White means 'boot magic' ok, 
+// colored means 'boot magic' failed.
+
     earlyinit_SetupBootblock();
 
 // We do not have serial debug yet
@@ -1662,7 +1674,6 @@ void I_kmain(int arch_type)
 // #test
 // Initialize variable that makes sense only for the BSP,
 // Because APs do not call I_kmain.
-
 
 // System state.
 // It guides the initialization.

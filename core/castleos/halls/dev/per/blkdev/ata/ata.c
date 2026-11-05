@@ -1485,8 +1485,7 @@ static int __ata_probe_boot_disk_signature(void)
             break;
         default:
             // #debug
-            printk ("__ata_probe_boot_disk_signature: Invalid port number\n");
-            refresh_screen();
+            printk("__ata_probe_boot_disk_signature: Invalid port number\n");
             while (1){
                 asm (" cli ");
                 asm (" hlt ");

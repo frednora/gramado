@@ -119,7 +119,6 @@ __virtual_to_physical (
     //#debug
     //printk("virtual_address = %x \n",virtual_address);
     //printk("pml4_va = %x \n",pml4_va);
-    //refresh_screen();
     //while(1){}
 
     if (virtual_address == 0){
@@ -138,7 +137,6 @@ __virtual_to_physical (
     unsigned long address=0;
 
     //printk ("a=%d b=%d d=%d t=%d o=%d \n",a,b,d,t,o);
-    //refresh_screen();
     //while(1){}
 
     //offset limits
@@ -159,7 +157,6 @@ __virtual_to_physical (
         printk("o=%d\n",o); //offset 4096 bytes limit
 
         // #hang
-        refresh_screen();
         while (1){
         };
     }
@@ -171,7 +168,6 @@ __virtual_to_physical (
     // #hackhack
     if (a != 0){
         printk ("__virtual_to_physical: [TODO] a != 0 \n");
-        refresh_screen();
         while (1){
         };
         //return;
@@ -180,7 +176,6 @@ __virtual_to_physical (
     // #hackhack
     if (b != 0){
         printk ("__virtual_to_physical: [TODO] b != 0 \n");
-        refresh_screen();
         while (1){
         };
         //return;
@@ -197,7 +192,6 @@ __virtual_to_physical (
     unsigned long *pml4VA = (unsigned long *) pml4_va;
 
     //printk (">> pml4VA[a] %x\n", pml4VA[a]);
-    //refresh_screen();
 
     // Temos o pdpt junto com suas flags.
     tmp = (unsigned long) pml4VA[a];
@@ -208,7 +202,6 @@ __virtual_to_physical (
     unsigned long *ptpt = (unsigned long *) (tmp & 0xFFFFFFFFF000);
 
     //printk (">> ptpt[d] %x\n", ptpt[b]);
-    //refresh_screen();
 
     // Temos o pd junto com suas flags.
     tmp = (unsigned long) ptpt[b];
@@ -219,7 +212,6 @@ __virtual_to_physical (
     unsigned long *dir = (unsigned long *) (tmp & 0xFFFFFFFFF000);
 
     //printk ("dir[d] %x\n", dir[d]);
-    //refresh_screen();
     
     // Temos o endereço da pt junto com as flags.
     tmp = (unsigned long) dir[d];

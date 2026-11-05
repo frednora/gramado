@@ -879,7 +879,9 @@ int console_scroll_rect(int console_number, int direction)
     CONSOLE_TTYS[console_number].cursor_y = 
         CONSOLE_TTYS[console_number].cursor_bottom - 1;
 
+
     refresh_screen();
+
     return 0;
 }
 
@@ -1257,7 +1259,6 @@ static void DANGER_VGA_clear_screen(void)
 */
 
     printk("done\n");
-    //refresh_screen();
 }
 
 static void __vga_test1(void)
@@ -1352,7 +1353,7 @@ void consolePrompt(void)
     prompt_max = PROMPT_MAX_DEFAULT;  
     printk("\n");
     printk("$ ");
-    refresh_screen();
+    // refresh_screen();
     //invalidate_screen();
 
 //
@@ -1938,8 +1939,9 @@ console_clear_imp (
 // This worker belongs to the display device driver,
 // so we need a name that represents it.
 // IN: color, refresh
+
     debug_print("console_clear_imp: bg\n");
-    bg_initialize(bg_color,TRUE);
+    bg_initialize(bg_color, TRUE);
 
     debug_print("console_clear_imp: done\n");
     return 0;

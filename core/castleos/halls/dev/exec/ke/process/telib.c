@@ -61,7 +61,7 @@ void show_process_information (void)
     // Nothing
     };
 
-    refresh_screen();
+    // refresh_screen();
 }
 
 // Usado pelo comando "current-process" no shell
@@ -117,6 +117,6 @@ void show_currentprocess_info (void)
 
     //...
 
-    refresh_screen();
+    // refresh_screen();
 }
 

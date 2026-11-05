@@ -1339,11 +1339,9 @@ uint32_t storagePCIScanDevice(int class)
     };
 
 // Fail
-    printk ("[ PCI device NOT detected ]\n");
-    //refresh_screen ();
+    printk ("storage: PCI device NOT detected\n");
     return (uint32_t) (-1);
 }
-
 
 // storagePCISetupMassStorageController:
 // Espaço de configuraçao PCI Mass Storage.
@@ -1642,9 +1640,7 @@ The chipset maps these pins to IOAPIC inputs.
 */
 
 /*
-    refresh_screen();
-    while (1)
-    {
+    while (1){
         asm ("hlt\n");
     }
 */
@@ -1760,7 +1756,6 @@ int storageInitialize(void)
         // Abort
         Status = (int) (PCI_MSG_ERROR);
         printk("storage: No Mass Storage Controller found\n");
-        //refresh_screen();
         die();
     }
 
@@ -1780,7 +1775,6 @@ int storageInitialize(void)
     if (__class != PCI_CLASSCODE_MASS)
     {
         printk("storage: Not a PCI_CLASSCODE_MASS\n");
-        //refresh_screen();
         die();
     }
 

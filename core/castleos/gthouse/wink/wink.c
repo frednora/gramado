@@ -218,7 +218,7 @@ void wink_initialize_default_kernel_font(void)
 // see: bg.c
 void wink_initialize_background(void)
 {
-    bg_initialize(COLOR_KERNEL_BACKGROUND,TRUE);
+    bg_initialize(COLOR_KERNEL_BACKGROUND, TRUE);
 }
 
 // See: 

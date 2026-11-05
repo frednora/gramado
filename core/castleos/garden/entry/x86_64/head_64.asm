@@ -28,6 +28,8 @@ LCONFIG_SYSTEM_BOOTING EQU  1
 extern _saved_bootblock_base  ; Variable
 extern _saved_boot_magic      ; Variable 
 extern _system_state          ; Variable 
+extern _bss_begin             ; Address from link.ld
+extern _bss_end               ; Address from link.ld
 extern _I_kmain               ; Function
 
 ;---------------------------------------------
@@ -2638,24 +2640,51 @@ DEBUG_START: db "START"
 align 4
 START:
 
+
 ; Save information that came from the bootloader.
 ; We're in 64bit. But it is a 32bit address.
 
-;
-; Bootblock address
-;
 
+; [r8] Bootblock address
     xor r8, r8
     mov r8d, ebx  ; upper 32 bits of r8 are zeroed automatically
-    mov qword [_saved_bootblock_base], r8
+
+; [r9] Signature value
+    xor r9, r9
+    mov r9d, edx  ; upper 32 bits of r9 are zeroed automatically
+
+; --------------------------------------
+; #test
+; Clear .bss
+; Imported from link.ld
+
+; #important <<<<< 
+; We need to do it early here, 
+; Because we dont wanna erease these variables 
+; we use to store the data that comes from the bootloader.
+
+    ;push rdi 
+	;push rcx 
+	;push rax 
+
+    lea rdi, [_bss_begin]
+    lea rcx, [_bss_end]
+    sub rcx, rdi          ; rcx = size in bytes
+
+    xor rax, rax          ; value to store = 0
+    shr rcx, 3            ; number of qwords
+    rep stosq
+
+    ;pop rax 
+	;pop rcx 
+	;pop rdi 
 
 ;
-; Signature value
+; Save what we got
 ;
 
-    xor r8, r8
-    mov r8d, edx  ; upper 32 bits of r8 are zeroed automatically
-    mov qword [_saved_boot_magic], r8
+    mov qword [_saved_bootblock_base], r8  ; [r8] Bootblock address
+    mov qword [_saved_boot_magic], r9      ; [r9] Signature value
 
 ; Clear some registers.
 ; Load our own 64-bit GDT.
@@ -2869,6 +2898,8 @@ START:
 ; --------------------------------------
 .Ljmp_to_C_code:
 
+
+
 ; Use the calling convention for this compiler.
 ; rdi
 ; No return
@@ -3056,8 +3087,8 @@ _data_start:
 ;     Mas normalmente limpamos essa área.
 
 segment .bss
-global _bss_start
-_bss_start:
+global my_bss_start
+my_bss_start:
     ;db 0x55
     ;db 0xAA
 

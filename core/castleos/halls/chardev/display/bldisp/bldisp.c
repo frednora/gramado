@@ -323,7 +323,9 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 // before this phase.
 // see: __check_refresh_support() in ke.c
 
-    if (refresh_screen_enabled != TRUE){
+    if (refresh_screen_enabled != TRUE)
+    {
+        // #ps: serial?
         debug_print_string("__bldisp_flush_into_lfb: refresh_screen_enabled\n");
         return;
     }
@@ -911,7 +913,7 @@ int bldisp_putpixel0 (unsigned long msg_buf)
     //if (gSavedBPP == 32){ where[offset +3] = a3; };
     if (dc_bpp == 32){ dc_where[offset +3] = a3; };
 
-// Number of changed pixels.
+// Number of changed pixels
     return (int) 1;
 }
 

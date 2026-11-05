@@ -613,7 +613,6 @@ void DeviceInterface_PS2Mouse(void)
     if (_byte == 0xFE){
         //debug_print ("[0xFE]: RESEND\n");
         printk ("DeviceInterface_PS2Mouse: resend\n");
-        refresh_screen();
         //mouse_stage = 0;
         return;
     }

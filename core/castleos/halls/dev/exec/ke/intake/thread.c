@@ -1436,7 +1436,6 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 	show_reg (thread->tid);
 	show_slot (clone->tid);
 	show_reg (clone->tid);
-	refresh_screen();
 	while(1){}
 */
     

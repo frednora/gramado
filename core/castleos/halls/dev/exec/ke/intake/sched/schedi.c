@@ -646,7 +646,6 @@ int wakeup_scan_thread_reason (int reason)
 
     // #debug ??
     // printk ("wakeup_scan_thread_reason: %d", reason);
-    // refresh_screen();
 
     // reason
     if ( reason < 0 || reason >= 10 ){
@@ -663,12 +662,10 @@ int wakeup_scan_thread_reason (int reason)
 //done:
     // #debug
     printk ("wakeup_scan_thread_reason: done\n");
-    refresh_screen();    
     return 0;
 fail:
     // #debug
     printk ("wakeup_scan_thread_reason: fail\n");
-    refresh_screen();
 */
     return (int) 1;
 }

@@ -380,9 +380,7 @@ void *CreateAndIntallPageTable (
     //printk (" pd va   : %x\n",PageDirectory);
     //printk (" pdpt va : %x\n",PageDirectoryPointerTable);
     //printk (" pml4 va : %x\n",PML4);
-    //refresh_screen();
     //while(1){}
-
 
     unsigned long __ptPA = (unsigned long) virtual_to_physical ( 
                                              PageTable, 
@@ -407,7 +405,6 @@ void *CreateAndIntallPageTable (
     //printk (" pt pa   : %x\n",__ptPA);
     //printk (" pd pa   : %x\n",__pdPA);
     //printk (" pdpt pa : %x\n",__pdptPA);
-    //refresh_screen();
     //while(1){}
  
     if ( __ptPA == 0 ){
@@ -907,7 +904,7 @@ void pages_calc_mem(void)
         }
     };
 
-    refresh_screen();
+    // refresh_screen();
 }
 
 /*
