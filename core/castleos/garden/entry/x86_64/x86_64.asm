@@ -37,10 +37,10 @@
 ; + 0xEF00 (if you ever use it) → syscalls, user‑callable, interrupts stay enabled.
 
 
-align 16
+align 8
 __sw_local_fpu_buffer_apic_timer:
     times 512 db 0
-align 16
+align 8
 
 
 ; See: apic.c

@@ -2,7 +2,7 @@
 # Makefile for the kernel device drivers.
 
 
-INCLUDE = ../../../include
+INCLUDE = ../../include
 
 AS	= as
 LD	= ld
@@ -113,7 +113,7 @@ $(KERNEL_INCLUDE) $(CFLAGS) -o qemudisp.o
 
 # link
 	$(LD) -r -o ex_cdev.o  $(OBJS)
-	cp ex_cdev.o  ../../../
+	cp ex_cdev.o  ../../
 	rm *.o
 
 clean:

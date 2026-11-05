@@ -9,7 +9,7 @@ but each hall governs a different *group of interrupts*.
 
 ----------------------------------------------
 user-driven interrupts:
- + hcidev/chardev/
+ + chardev/
 
 ----------------------------------------------
 application-driven interrupts:

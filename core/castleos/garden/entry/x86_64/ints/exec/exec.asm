@@ -177,7 +177,7 @@ all_faults:
 ;----------------------------
 ; Building trampolines for the faults.
 
-align 8
+align 4
 
 ; int 0
 ; Se ocorrer em ring 0 o sistema tem que terminar,
@@ -376,5 +376,5 @@ ExecutionHall_fault_N31:
     mov qword [_save_fault_number], qword 31
     jmp all_faults
 
-align 8
+align 4
 

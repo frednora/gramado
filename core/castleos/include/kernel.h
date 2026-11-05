@@ -245,26 +245,31 @@ extern int system_state;
 // ==================================
 // Devices
 // primeiro char, depois block, depois network.
-// tty
-#include "../halls/hcidev/chardev/tty/ttyldisc.h"
-#include "../halls/hcidev/chardev/tty/ttydrv.h"
-#include "../halls/hcidev/chardev/tty/tty.h"
-#include "../halls/hcidev/chardev/tty/pty.h"
 
-#include "../halls/hcidev/chardev/console/console.h"
+//
+// Character devices
+//
+
+// tty
+#include "../halls/chardev/tty/ttyldisc.h"
+#include "../halls/chardev/tty/ttydrv.h"
+#include "../halls/chardev/tty/tty.h"
+#include "../halls/chardev/tty/pty.h"
+
+#include "../halls/chardev/console/console.h"
 
 // hw stuff - display device
-#include "../halls/hcidev/chardev/display/dc.h"
-#include "../halls/hcidev/chardev/display/rop.h"
+#include "../halls/chardev/display/dc.h"
+#include "../halls/chardev/display/rop.h"
 
 // display device support
-#include "../halls/hcidev/chardev/display/display.h"
+#include "../halls/chardev/display/display.h"
 
 // bootloader display device
-#include "../halls/hcidev/chardev/display/bldisp/bldisp.h"
+#include "../halls/chardev/display/bldisp/bldisp.h"
 
 // qemu display device
-#include "../halls/hcidev/chardev/display/qemudisp/qemudisp.h"
+#include "../halls/chardev/display/qemudisp/qemudisp.h"
 
 // ==================================
 // dev/per/
@@ -310,21 +315,21 @@ extern int system_state;
 
 // ==================================
 
-// hcidev/chardev/
+// chardev/
 // Serial port. (COM).
-#include "../halls/hcidev/chardev/serial/serial.h"
+#include "../halls/chardev/serial/serial.h"
 
-#include "../halls/hcidev/chardev/vk.h"
-#include "../halls/hcidev/chardev/kbdmaps/kbdmaps.h"
-#include "../halls/hcidev/chardev/kbdmaps/ptbr/mapabnt2.h"
+#include "../halls/chardev/vk.h"
+#include "../halls/chardev/kbdmaps/kbdmaps.h"
+#include "../halls/chardev/kbdmaps/ptbr/mapabnt2.h"
 // ...
 
 // i8042 (PS/2)
-#include "../halls/hcidev/chardev/i8042/keyboard.h"
-#include "../halls/hcidev/chardev/i8042/ps2kbd.h"
-#include "../halls/hcidev/chardev/i8042/mouse.h"
-#include "../halls/hcidev/chardev/i8042/ps2mouse.h"
-#include "../halls/hcidev/chardev/i8042/i8042.h"
+#include "../halls/chardev/i8042/keyboard.h"
+#include "../halls/chardev/i8042/ps2kbd.h"
+#include "../halls/chardev/i8042/mouse.h"
+#include "../halls/chardev/i8042/ps2mouse.h"
+#include "../halls/chardev/i8042/i8042.h"
 
 // blkdev/
 // Block devices

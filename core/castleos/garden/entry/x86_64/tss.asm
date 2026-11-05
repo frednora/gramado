@@ -1,7 +1,7 @@
 ; See:
 ; head_64.asm for the stack.
 
-align 8
+align 4
 tss0:
     dd 0 ;reserved
     dq _rsp0Stack ;rsp0        #todo
@@ -23,7 +23,7 @@ tss0:
 tss0_end:
 
 
-align 8
+align 4
 tss1:
     dd 0 ;reserved
     dq _rsp0Stack ;rsp0        #todo

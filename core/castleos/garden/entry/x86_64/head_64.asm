@@ -19,16 +19,16 @@ __HEAD
 
 [bits 64]
 
-; See: kmain.c
-extern _saved_bootblock_base
-extern _magic
-extern _I_kmain
 
-; See:
-; kernel.h
+; For system state
+; See:kernel.h
 LCONFIG_SYSTEM_BOOTING EQU  1
-extern _system_state
 
+; See: kmain.c
+extern _saved_bootblock_base  ; Variable
+extern _saved_boot_magic      ; Variable 
+extern _system_state          ; Variable 
+extern _I_kmain               ; Function
 
 ;---------------------------------------------
 ; Function table
@@ -2655,7 +2655,7 @@ START:
 
     xor r8, r8
     mov r8d, edx  ; upper 32 bits of r8 are zeroed automatically
-    mov qword [_magic], r8
+    mov qword [_saved_boot_magic], r8
 
 ; Clear some registers.
 ; Load our own 64-bit GDT.

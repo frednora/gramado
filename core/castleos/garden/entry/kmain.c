@@ -18,6 +18,16 @@
 
 #include <kernel.h>
 
+// Saving the bootblock address passed by the blgram.
+// But we already know it. 
+// See: BootBlockVA in bootblk.h
+unsigned long saved_bootblock_base=0;
+
+// head_64.asm is given us these two values.
+// See: head_64.asm.
+unsigned long saved_boot_magic=0;
+
+
 // see: kmain.h
 struct admin_utsname_d  kernel_utsname;
 
@@ -96,15 +106,6 @@ int dead_thread_collector_flag=0;
 //int current_dead_thread;
 
 //char InitialUserProcessName[32] = "INIT.BIN"
-
-// --------------------------------------
-// head_64.asm is given us these two values.
-// See: head_64.asm.
-unsigned long magic=0;
-// Saving the bootblock address passed by the blgram.
-// But we already know it. 
-// See: BootBlockVA in bootblk.h
-unsigned long saved_bootblock_base=0;
 
 
 // ================================
@@ -558,7 +559,7 @@ static int earlyinit_SetupBootblock(void)
 // #bugbug: Explain it better.
 // We got this number in head_64.asm givem from the boot loader.
     unsigned long bootMagic = 
-        (unsigned long) (magic & 0x00000000FFFFFFFF); 
+        (unsigned long) (saved_boot_magic & 0x00000000FFFFFFFF); 
 
 // Check magic
 // Paint a white screen if magic is ok.

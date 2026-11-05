@@ -20,16 +20,18 @@ all:
 
 	@echo "halls: all"
 
+# Character devices.
+# mainly HCI (Human-Computer Interface) devices
+	$(Q)make -C chardev/
+
 # Devices (exec, per, req)
 	$(Q)make -C dev/
 
 # BUSes
 	$(Q)make -C platform/
 
-# Human-Computer Interfce devices
-	$(Q)make -C hcidev/
-
 clean-all:
+	-rm chardev/*.o
 	-rm dev/*.o
-	-rm hcidev/*.o
 	-rm platform/*.o
+

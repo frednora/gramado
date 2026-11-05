@@ -2,16 +2,20 @@
 // Kernel initialization support
 // 2015 - Created by Fred Nora.
 
-#ifndef __KMAIN_H
-#define __KMAIN_H    1
-
-
-// see: kmain.c
-extern struct admin_utsname_d  kernel_utsname;
+#ifndef __ENTRY_KMAIN_H
+#define __ENTRY_KMAIN_H    1
 
 
 // Saving the bootblock address passed by the blgram.
 extern unsigned long saved_bootblock_base;
+
+// head_64.asm is given us these two values.
+// See: head_64.asm.
+extern unsigned long saved_boot_magic;
+
+// see: kmain.c
+extern struct admin_utsname_d  kernel_utsname;
+
 
 //
 // 1
