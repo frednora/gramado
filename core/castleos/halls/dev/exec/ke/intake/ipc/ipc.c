@@ -943,6 +943,8 @@ void *ipc_get_message(unsigned long ubuf)
 // Jiffies when gotten by the app.
     message_address[11] = (unsigned long) jiffies;
 
+    t->quantum = QUANTUM_MAX;
+
 // ----------------------------
 // Clear the entry
 // Consumimos a mensagem. Ela não existe mais.

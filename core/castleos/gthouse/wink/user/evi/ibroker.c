@@ -278,6 +278,9 @@ ibroker_post_message_to_fg_thread (
     if (SendIt != TRUE)
         return (int) -1;
 
+
+    fg_thread->quantum = QUANTUM_MAX;
+
 // Send it
     rv = 
     (int) ipc_post_message_to_tid(

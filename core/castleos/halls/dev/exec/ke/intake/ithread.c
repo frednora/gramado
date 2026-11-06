@@ -52,6 +52,8 @@ struct thread_d *create_init_thread(void)
 // The init thread is a system thread
     t->type = THREAD_TYPE_SYSTEM;
 
+    t->_class = THREAD_CLASS_NULL;
+
 // THREAD IDENTIFIERS
     t->tid = (tid_t) (TID & 0xFFFF);
 

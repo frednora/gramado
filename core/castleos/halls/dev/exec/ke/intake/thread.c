@@ -1623,6 +1623,7 @@ static struct thread_d *create_thread_imp (
         Thread->type = THREAD_TYPE_NORMAL;
     };
 
+    Thread->_class = THREAD_CLASS_NULL;
 
 // The thread is been created, but the structure is not 
 // fully initialized yet.

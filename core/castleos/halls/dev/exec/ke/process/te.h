@@ -100,6 +100,12 @@ typedef enum {
     PROCESS_TYPE_NORMAL   // Low priority
 }process_type_t;
 
+typedef enum {
+    PROCESS_CLASS_NULL,
+    PROCESS_CLASS_CONSOLE,
+    PROCESS_CLASS_GUI
+} process_class_t;
+
 // The possible states for a process or a process structure.
 // #ps: This is a work in progress.
 typedef enum {
@@ -244,12 +250,6 @@ struct terminal_connection_d
     int _is_terminal;           // Father process
     int _is_child_of_terminal;  // Child process
 };
-
-typedef enum {
-    PROCESS_CLASS_NULL,
-    PROCESS_CLASS_CONSOLE,
-    PROCESS_CLASS_GUI
-} process_class_t;
 
 
 // Thread Environment structure. (fka process_d)
