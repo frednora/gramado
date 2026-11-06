@@ -24,8 +24,16 @@ static unsigned long __CurrentBackbufferPA = 0;
 static unsigned long __CurrentBackbufferVA = 0;
 
 
-
 // -----------------------------------------------
+
+// see: bldisp.c
+void refresh_screen(void)
+{
+    // #todo:
+    // It will depend on the current display device driver.
+
+    bldisp_flush(0);
+}
 
 // Set the primary display device
 // 'System display device'

@@ -5,7 +5,7 @@
 #ifndef __GDI_GDI_H
 #define __GDI_GDI_H    1
 
-// ...
+void gdi_refresh_screen(void);
 
 #endif 
 

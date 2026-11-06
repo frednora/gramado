@@ -401,6 +401,7 @@ static void __bldisp_flush_into_lfb(unsigned long flags)
 }   
 
 // Flush the content of the backbuffer into the LFB
+// Called by refresh_screen()
 void bldisp_flush(unsigned long flags)
 {
     __bldisp_flush_into_lfb(flags);

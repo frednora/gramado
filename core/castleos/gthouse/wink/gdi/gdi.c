@@ -4,5 +4,11 @@
 
 #include <kernel.h>
 
-int dummygdixxx;
+
+void gdi_refresh_screen(void)
+{
+    refresh_screen();
+}
+
+
 

@@ -136,6 +136,8 @@ struct video_d  VideoBlock;
 // == prototypes =================================
 //
 
+void refresh_screen(void);
+
 int display_set_primary_display_device(struct display_device_d *dev);
 
 int 
