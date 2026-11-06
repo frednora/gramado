@@ -496,6 +496,9 @@ network_register_ring3_display_server(
     {
         panic("network_register_ring3_display_server: current_process\n");
     }
+
+// Process
+
     p = (struct te_d *) teList[current_process];
     if ((void*) p == NULL)
         panic("network_register_ring3_display_server: p\n");
@@ -507,6 +510,8 @@ network_register_ring3_display_server(
     if (caller_pid != current_process){
         panic("network_register_ring3_display_server: caller_pid\n");
     }
+
+    p->_class = PROCESS_CLASS_GUI;
 
 //
 // Save
@@ -588,6 +593,8 @@ network_register_ring3_display_server(
 
 // #test
     t->pe_mode = PE_MODE_PERFORMANCE;
+
+    t->_class = THREAD_CLASS_GUI;
 
 // Change the input authority
 // Who will be able to setup the current foreground thread.

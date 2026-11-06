@@ -1135,6 +1135,7 @@ struct thread_d *copy_thread_struct(struct thread_d *thread)
 
 // Type, class, base priority and priority.
     clone->type = father->type;
+    clone->_class = father->_class;
     clone->base_priority = father->base_priority; 
     clone->priority = father->priority;
 
