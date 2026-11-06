@@ -104,7 +104,7 @@ struct button_info_d
 static struct button_info_d   Btn[BTN_COUNT];
 static struct ui_component_d *Uic[BTN_COUNT];
 static const char *BtnLabel[BTN_COUNT] = {
-    "Clear", "Pen", "Eraser", "Fill", "Size -", "Size +"
+    "Clear", "Pen", "Eraser", "Fill", "Size-", "Size+"
 };
 
 // Palette swatches (relative to the client area)

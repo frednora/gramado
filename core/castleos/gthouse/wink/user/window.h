@@ -30,16 +30,14 @@
 // Thread/Desktop related with this window.
 struct WND_OWNER_d 
 {
-    struct process_d *process;
-    struct thread_d  *thread;
-    // ...
+
+    // pid_t pid;  // #todo
 
 // This is the thread id for the thread that owns the window.
 // This is the target thread for sending messages when the 
 // hit-test is successful.
 
     tid_t tid;   // #bugbug: It sounds redundant now
-
 };
 
 // Header for information about the structure itself.
@@ -70,11 +68,11 @@ struct WND_d
     int used;
     int magic;
 
-// Thread/Desktop related with this window.
-    struct WND_OWNER_d  owner;
-
 // Header for information about the structure itself.
     struct WND_HEADER_d  header;
+
+// Thread/Desktop related with this window.
+    struct WND_OWNER_d  owner;
 
 // The same id used in the display server. 
 // It is used to identify the window in the display server.
