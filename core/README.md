@@ -45,17 +45,16 @@ Some extra features are:
 ## Core System  (Pride)
 
 ```
-boot/      - Gramado OS bootloader.
-kernel/    - Gramado OS kernel.
-m1/dungeon - Ring 0 loadable kernel modules. (Not dynlinked).
-luna/      - The init process.
+core/boot/      - Gramado OS bootloader.
+core/castleos   - Gramado OS kernel.
+modules/dungeon - Ring 0 loadable kernel modules. (Not dynlinked).
+sysd/           - The init process.
 ```
 
 ```
 This creates a very clear startup flow:
-    boot → kernel → m1/dungeon → luna (init)
+    boot → castleos → dungeon → sysd (init)
 ```
-
 
 ## Mammal
 
@@ -95,7 +94,7 @@ boot/
 
 ## 2. Where is the kernel?
 
-kernel/
+castleos/
 
 ## 3. Where are the ring 0 kernel modules?
 
@@ -103,11 +102,11 @@ modules/
 
 ## 4. Where is the Init Process?
 
-moon/
+sysd/
 
 ## Where is the compositor? (display server)
 
-native/hunter/comp/comp00/
+winsys/de/comp00/
 
 ```
 The compositor is also the display server.
@@ -117,7 +116,7 @@ It is part of the Native UI, the Graphical User Interface.
 
 ## Where are the client-side GUI applications?
 
-native/farmer/winshell/
+winsys/shell/
 
 ```
 These are the client-side GUI applications for the Native UI.
@@ -127,7 +126,7 @@ It is part of the Native UI, the Graphical User Interface.
 
 ## Where are the POSIX-like command programs?
 
-np/cmds/
+winsys/cmds/
 
 ```
 These are the basic posix commands.

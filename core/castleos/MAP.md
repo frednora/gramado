@@ -5,37 +5,37 @@
 ## CPU
 
 ```
-gthouse/arch/
-halls/exec/
+garden/entry/
+halls/dev/exec/
 ```
 
 ## Memory
 
 ```
-halls/req/
+halls/dev/req/
 ```
 
 ## Legacy
 
 ```
-halls/exec/ke/hal/x86_64/pic.c
-halls/exec/ke/hal/x86_64/pit.c
-halls/exec/ke/hal/x86_64/rtc.c
-halls/per/chardev/display/bldisp/
-halls/per/chardev/i8042/
-halls/per/chardev/serial/
+halls/dev/exec/ke/hal/x86_64/pic.c
+halls/dev/exec/ke/hal/x86_64/pit.c
+halls/dev/exec/ke/hal/x86_64/rtc.c
+halls/chardev/display/bldisp/
+halls/chardev/i8042/
+halls/chardev/serial/
+halls/per/blkdev/ata/
 ```
 
 ## PCI
 
 ```
-halls/per/bus/pci/
-halls/per/blkdev/ata/
+halls/platform/bus/pci/
 halls/per/netdev/e1000/
 ```
 
 ## USB
 
 ```
-halls/per/bus/usb/
+halls/platform/bus/usb/
 ```

@@ -57,16 +57,16 @@ halls/dev/exec/ke/intake/:
 + Scheduler
 + Low-level synchronization primitives
 
-garden/bsp/x86_64/ints/:
+garden/entry/x86_64/ints/:
 + Interrupt and exception handling
 ```
 
 ```
 (System service interface)
 
++ gthouse/sys/sci/sci.c
 + gthouse/sys/sys.c
 ```
-
 
 
 ## Kernel initialization
@@ -111,16 +111,22 @@ garden/bsp/x86_64/ints/:
 
 ```
 garden/          - Entries
+    entry/
 
 gthouse/
-  gthouse/kwrap/ - Main initialization routine and wrappers.
-  gthouse/libk/  - The kernel library.
-  gthouse/wink/  - Interface for the graphics device and the user interaction manager.
+    fs/
+    gramnet/
+    libk/  - The kernel library.
+    net/
+    sys/
+    wink/  - Interface for the graphics device and the user interaction manager.
+    ...
 
 halls/ - Kernel resources for containers.
   The core of the kernel; the primary processing unit.
-  exec/arch   - Entry point and initialization.
-  exec/ke     - Task manager.
+    chardev/
+    dev/
+    platform/
 
 include/:
   Main header files for the kernel.

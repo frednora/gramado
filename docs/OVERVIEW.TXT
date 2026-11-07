@@ -1,0 +1,191 @@
+GRAMADO OS — SYSTEM OVERVIEW
+============================
+
+WHAT IT IS
+----------
+
+Gramado is a 64-bit graphical hobby operating system built from scratch
+for x86_64. The project brings together a custom bootloader, a kernel,
+a first user-mode process, a ring-3 display server, GUI clients,
+POSIX-like commands, and experimental demos.
+
+The repository is organized around two main parts:
+
+  core/    Bootloader, kernel, init, modules, and distribution build.
+  winsys/  Ring-3 commands, desktop environment, GUI applications, and demos.
+
+The OS is documented as pre-alpha and intended primarily for development
+and experimentation. Its documentation and directory names are still
+being refined.
+
+
+SYSTEM COMPONENTS
+-----------------
+
+1. Bootloader
+   Location: core/boot/
+
+   Architecture-specific boot code loads the kernel image. The documented
+   x86 boot path is divided into MBR/boot-sector code, a boot manager,
+   and a loader that loads KERNEL.BIN.
+
+2. Kernel
+   Location: core/castleos/
+
+   The kernel image is KERNEL.BIN. Its source is organized into three
+   major areas:
+
+     garden/  Entry points and startup code, including architecture-
+              specific entry and interrupt support.
+
+     gthouse/ Kernel-facing interfaces and shared support, including
+              system services, syscall-related code, kernel utilities,
+              graphics/input support, filesystem, and networking code.
+
+     halls/   Built-in kernel subsystems and hardware support, including
+              execution, memory management, peripherals, character
+              devices, and platform/bus support.
+
+   The kernel documentation describes support for processes and threads,
+   scheduling, syscalls, IPC, virtual consoles and terminals, FAT16, and
+   basic networking. Feature completeness varies; consult the source and
+   current build configuration for implementation status.
+
+3. Kernel modules
+   Location: core/modules/
+
+   This area contains ring-0 modules as well as work on user-mode drivers
+   and servers. The module named dungeon is documented as the main
+   loadable ring-0 module.
+
+4. Init process
+   Location: core/sysd/
+
+   sysd is documented as the first ring-3 process. It is the starting
+   point for userland and can launch the display server or command-line
+   programs.
+
+5. Display server and desktop
+   Location: winsys/de/
+
+   comp00 is the ring-3 display server, compositor, and window manager.
+   It manages the graphical session: client requests, input/events,
+   windows, and desktop composition.
+
+   Client-side desktop programs are under shell/, including the desktop,
+   taskbar, terminal, browser, and other GUI applications. velo3d/
+   contains a 3D demo/graphics experiment.
+
+6. POSIX-like commands
+   Location: winsys/cmds/
+
+   These are user-mode command programs and shell experiments intended
+   for the virtual terminal or kernel console.
+
+7. Build and distribution staging
+   Location: core/base/
+
+   The core build stages the boot artifacts, kernel, modules, init, and
+   selected user programs here while assembling the bootable disk image.
+
+8. Documentation and host tools
+   Locations: docs/ and tools/
+
+   docs/ contains build/run guidance, manuals, design notes, and TODOs.
+   tools/ contains utilities and experiments that run on the host machine.
+
+
+ARCHITECTURAL MODEL
+------------------
+
+Gramado is split between a privileged kernel and user-mode programs:
+
+  Ring 0
+    Kernel and kernel modules.
+    Responsible for low-level resource management, execution, memory,
+    device support, and system interfaces.
+
+  Ring 3
+    Init, commands, display server, GUI clients, and demos.
+    These programs use kernel-provided interfaces to access system
+    services and, where applicable, communicate with one another.
+
+The display server is a user-mode component, not the kernel's desktop
+implementation. GUI applications are clients of that server. The
+command-line programs are also userland programs, but are intended to
+run through the virtual terminal or kernel console.
+
+
+STARTUP FLOW
+------------
+
+  core/boot/
+      |
+      | Loads KERNEL.BIN
+      v
+  core/castleos/  (kernel)
+      |
+      | Initializes kernel subsystems and starts the first user process
+      v
+  core/sysd/      (init, ring 3)
+      |
+      +------------------------+
+      |                        |
+      v                        v
+  Command-line programs    winsys/de/comp00/
+  winsys/cmds/             (display server / compositor)
+                                |
+                                | Serves graphical clients
+                                v
+                         winsys/de/shell/
+                         (desktop and GUI applications)
+
+
+KERNEL INITIALIZATION — CONCEPTUAL ORDER
+----------------------------------------
+
+The kernel's documented initialization sequence is:
+
+  early setup
+      -> memory manager, phase 0
+      -> memory manager, phase 1
+      -> kernel executive, phases 0-2
+      -> architecture initialization
+      -> device initialization
+      -> late initialization and userland startup
+
+The source names these stages earlyinit(), mmInitialize(), keInitialize(),
+archinit(), deviceinit(), and lateinit(). The architecture entry code
+then proceeds to execute the initial user-mode process.
+
+
+BUILD AND RUN
+-------------
+
+From the repository root, the top-level Makefile builds winsys/ and core/.
+The core Makefile builds/stages the OS image and provides VM run scripts.
+
+Typical documented commands:
+
+  make
+  cd core
+  ./run
+
+For a clean rebuild:
+
+  cd core
+  make clean-all
+
+The full disk-image build has mount/copy steps and may require sudo.
+The project documentation recommends not using parallel make (-j) for
+now.
+
+
+DOCUMENTATION NOTE
+------------------
+
+Some older documentation uses earlier directory names or conceptual
+project names. For the current source layout, use the repository tree
+and Makefiles as the references for paths. In particular, the active
+paths described here are core/castleos/, core/sysd/, core/modules/,
+winsys/de/, and winsys/cmds/.
