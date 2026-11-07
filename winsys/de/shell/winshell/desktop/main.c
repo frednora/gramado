@@ -23,7 +23,7 @@
 //    helpers, the unused pump(), the commented-out socket init).
 //
 // The input loop is the same as before:
-//   start_jiffie; shared-flags blit check; if (rtl_get_event()) tbProcedure();
+//   start_jiffie; shared-flags blit check; if (rtl_get_event()) desktopProcedure();
 //   timing / yield.
 // The only additions are two cheap assignments (last_x/last_y) and one
 // integer compare that dispatches the clock tick to the procedure.
@@ -78,14 +78,15 @@
 // #bugbug: valid only if the timer fires 1000 times a second.
 #define TB_JIFFIES_PER_SECOND  1000
 
-static unsigned long __sh_flags = 0;
 
 struct gws_display_d *Display;
 
 struct dccanvas_d *dc_desktop;  // shared dc for desktop window
-struct dccanvas_d *dc_taskbar;  // shared dc for taskbar
+struct dccanvas_d *dc_taskbar;  // shared dc for taskbar window
 
-// Device Info.
+static unsigned long __sh_flags = 0;
+
+// Device Info
 struct device_info_d 
 {
     unsigned long width;
@@ -227,7 +228,7 @@ static void draw_taskbar_areas(void);
 static void update_clients(int fd);
 
 static int 
-tbProcedure(
+desktopProcedure(
     int fd, 
     int event_window, 
     int event_type, 
@@ -584,7 +585,7 @@ static void update_clients(int fd)
 // The procedure
 // ====================================================
 static int 
-tbProcedure(
+desktopProcedure(
     int fd, 
     int event_window, 
     int event_type, 
@@ -752,9 +753,10 @@ tbProcedure(
         // in Windows. We can't simply close it.
         // #todo
         // It only can happen when in certain situations.
+
         case MSG_CLOSE:
             TB_LOG("taskbar: Closing ...\n");
-            isTimeToQuit = TRUE;  // Let's leave the main loop
+            // isTimeToQuit = TRUE;  // Let's leave the main loop
             return 0;
             break;
 
@@ -1237,7 +1239,7 @@ int main(int argc, char *argv[])
             last_x = (unsigned long) RTLEventBuffer[4];
             last_y = (unsigned long) RTLEventBuffer[5];
 
-            tbProcedure(
+            desktopProcedure(
                 client_fd,
                 (int) RTLEventBuffer[0],   // window id
                 (int) RTLEventBuffer[1],   // event type (MSG_SYSKEYDOWN, MSG_SYSKEYUP, etc.)
@@ -1252,7 +1254,7 @@ int main(int argc, char *argv[])
         if (start_jiffie >= next_clock_jiffie)
         {
             next_clock_jiffie = start_jiffie + TB_CLOCK_INTERVAL_MS;
-            tbProcedure(
+            desktopProcedure(
                 client_fd,
                 taskbar_window,
                 TB_MSG_CLOCK_TICK,

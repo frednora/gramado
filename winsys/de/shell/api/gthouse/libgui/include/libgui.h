@@ -179,6 +179,13 @@ libgui_blit_canvas_to_canvas(
 
 int lingui_initialize_canvas_list(void);
 
+
+void 
+libgui_simple_fill_rect(
+    struct dccanvas_d *dc,
+    long x, long y, long w, long h,
+    unsigned int color );
+
 // #test
 // Drawing a rectangle inside a given canvas,
 // given its device context.

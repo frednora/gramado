@@ -2389,6 +2389,68 @@ libgui_frontbuffer_draw_rectangle0 (
     return;  // Done
 }
 
+// Fill a rectangle, clipped against the dc. ROP_COPY only.
+// Much cheaper than lingui_draw_rectangle0_dc(), which goes
+// through the ROP chain for every single pixel.
+// Valid only for 24bpp and 32bpp
+void 
+libgui_simple_fill_rect(
+    struct dccanvas_d *dc,
+    long x, long y, long w, long h,
+    unsigned int color )
+{
+    long x2, y2, yy, xx;
+    long dw, dh;
+    unsigned char *row;
+    unsigned int c = (color & 0x00FFFFFF);
+    unsigned char b = (unsigned char)( c        & 0xFF);
+    unsigned char g = (unsigned char)((c >> 8)  & 0xFF);
+    unsigned char r = (unsigned char)((c >> 16) & 0xFF);
+
+    if ((void*) dc == NULL || (void*) dc->data == NULL)
+        return;
+    if (w <= 0 || h <= 0)
+        return;
+
+    dw = (long) dc->device_width;
+    dh = (long) dc->device_height;
+
+    x2 = x + w;
+    y2 = y + h;
+    if (x  < 0)  x  = 0;
+    if (y  < 0)  y  = 0;
+    if (x2 > dw) x2 = dw;
+    if (y2 > dh) y2 = dh;
+    if (x >= x2 || y >= y2)
+        return;
+
+    for (yy = y; yy < y2; yy++)
+    {
+        row = (unsigned char *) dc->data + ((unsigned long) yy * dc->pitch);
+
+        if (dc->bpp == 32)
+        {
+            unsigned int *p = (unsigned int *) (row + ((unsigned long) x << 2));
+            for (xx = x; xx < x2; xx++)
+                *p++ = c;
+        }
+        else if (dc->bpp == 24)
+        {
+            unsigned char *p = row + ((unsigned long) x * 3);
+            for (xx = x; xx < x2; xx++)
+            {
+                p[0] = b;
+                p[1] = g;
+                p[2] = r;
+                p += 3;
+            }
+        }
+
+        // #bugbug
+        // No more options here.
+    }
+}
+
 // Drawing a rectangle inside a given canvas,
 // given its device context.
 void
