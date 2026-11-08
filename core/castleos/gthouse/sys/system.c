@@ -43,10 +43,9 @@ void die(void)
 
 // doGetSystemMetrics:
 // Get system information
+// Called by sys_get_system_metrics() in sys.c
 unsigned long doGetSystemMetrics(int index)
 {
-// Called by sys_get_system_metrics() in sys.c
-
     // unsigned long ul_value=0;
 
     // We are trying to have more system calls. sc80 sc81 sc82.
@@ -122,17 +121,17 @@ unsigned long doGetSystemMetrics(int index)
             // return (unsigned long) g_frontbuffer_pa;
             break;
 
-        // lfb va
-        // #todo: We need a method for this.
-        // #ps virtual
+        // frontbuffer va (LFB)
+        // #bugbug: Sensitive content. Needs special premission.
         case 11:
-            return (unsigned long) g_frontbuffer_va;
+            // #todo: Check permission here
+            return (unsigned long) display_get_frontbuffer_va();
             break;
 
-        // main backbuffer va
-        // #todo: We need a method for this.
+        // backbuffer va
+        // #bugbug: Sensitive content. Needs special premission.
         case 12:
-            // return (unsigned long) g_backbuffer_va;
+            // #todo: Check permission here
             return (unsigned long) display_get_backbuffer_va();
             break;
 

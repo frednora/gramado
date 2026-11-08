@@ -103,9 +103,7 @@ unsigned long KernelPages=0;
 // Saving the virtual address for some special areas
 unsigned long g_ring0area_va=0;
 unsigned long g_ring3area_va=0;
-unsigned long g_backbuffer_va=0;
 unsigned long g_kernelimage_va=0;
-unsigned long g_frontbuffer_va=0;
 unsigned long g_pagedpool_va=0;      // pagedpool virtual address
 unsigned long g_heappool_va=0;
 unsigned long g_extraheap1_va=0;
@@ -115,11 +113,6 @@ unsigned long g_extraheap3_va=0;
 
 // -------------------------------------------
 // Saving the physical address for some special areas.
-
-
-// pa for frontbuffer and backbuffer
-unsigned long g_frontbuffer_pa=0;
-unsigned long g_backbuffer_pa=0;
 
 
 // Endereço virtual do pool de heaps.

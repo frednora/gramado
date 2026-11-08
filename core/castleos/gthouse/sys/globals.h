@@ -97,20 +97,12 @@ extern unsigned long KernelPages;
 // see: globals.c
 extern unsigned long g_ring0area_va;
 extern unsigned long g_ring3area_va;
-extern unsigned long g_backbuffer_va;
 extern unsigned long g_kernelimage_va;
-extern unsigned long g_frontbuffer_va;   
 extern unsigned long g_pagedpool_va;  //pagedpool virtual address
 extern unsigned long g_heappool_va;
 extern unsigned long g_extraheap1_va;
 extern unsigned long g_extraheap2_va;
 extern unsigned long g_extraheap3_va;
-
-
-// pa for frontbuffer and backbuffer
-// see: video.c
-extern unsigned long g_frontbuffer_pa; 
-extern unsigned long g_backbuffer_pa;
 
 //
 // Heap support

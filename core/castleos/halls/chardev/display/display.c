@@ -19,12 +19,31 @@ int gKernelOwnsDisplay = TRUE;
 struct dc_d *dc_backbuffer;
 struct dc_d *dc_frontbuffer;
 
-// Local
+// Local (Private)
 static unsigned long __CurrentBackbufferPA = 0;
 static unsigned long __CurrentBackbufferVA = 0;
+static unsigned long __CurrentFrontbufferPA = 0;
+static unsigned long __CurrentFrontbufferVA = 0;
 
 
 // -----------------------------------------------
+
+// Print video info
+void display_print_video_info(void)
+{
+    printk("\n");
+
+// Backbuffer
+    printk ("Backbuffer PA: {%x} | Backbuffer VA: {%x}\n", 
+        __CurrentBackbufferPA, __CurrentBackbufferVA );
+
+// Frontbuffer
+    printk ("Frontbuffer PA: {%x} | Frontbuffer VA: {%x}\n", 
+        __CurrentFrontbufferPA, __CurrentFrontbufferVA );
+
+    // ...
+}
+
 
 // see: bldisp.c
 void refresh_screen(void)
@@ -111,8 +130,10 @@ fail:
 
 
 
-
+//
 // backbuffer pa
+//
+
 void display_set_backbuffer_pa(unsigned long address)
 {
     __CurrentBackbufferPA = (unsigned long) address;
@@ -122,7 +143,10 @@ unsigned long display_get_backbuffer_pa(void)
     return (unsigned long) __CurrentBackbufferPA;
 }
 
+//
 // backbuffer va
+//
+
 void display_set_backbuffer_va(unsigned long address)
 {
     __CurrentBackbufferVA = (unsigned long) address;
@@ -131,6 +155,40 @@ unsigned long display_get_backbuffer_va(void)
 {
     return (unsigned long) __CurrentBackbufferVA;
 }
+
+//
+// frontbuffer pa
+//
+
+void display_set_frontbuffer_pa(unsigned long address)
+{
+    __CurrentFrontbufferPA = (unsigned long) address;
+}
+unsigned long display_get_frontbuffer_pa(void)
+{
+    return (unsigned long) __CurrentFrontbufferPA;
+}
+
+//
+// frontbuffer va
+//
+
+void display_set_frontbuffer_va(unsigned long address)
+{
+    __CurrentFrontbufferVA = (unsigned long) address;
+}
+unsigned long display_get_frontbuffer_va(void)
+{
+    return (unsigned long) __CurrentFrontbufferVA;
+}
+
+
+
+
+
+//
+//
+//
 
 
 //

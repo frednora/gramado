@@ -136,6 +136,9 @@ struct video_d  VideoBlock;
 // == prototypes =================================
 //
 
+void display_print_video_info(void);
+
+
 void refresh_screen(void);
 
 int display_set_primary_display_device(struct display_device_d *dev);
@@ -161,6 +164,13 @@ unsigned long display_get_backbuffer_pa(void);
 void display_set_backbuffer_va(unsigned long address);
 unsigned long display_get_backbuffer_va(void);
 
+
+// frontbuffer pa
+void display_set_frontbuffer_pa(unsigned long address);
+unsigned long display_get_frontbuffer_pa(void);
+
+void display_set_frontbuffer_va(unsigned long address);
+unsigned long display_get_frontbuffer_va(void);
 
 int displayInitialize(void);
 

@@ -103,7 +103,6 @@ void *get_2mb_user_heap_page(void);
 
 
 void pages_print_info(int system_type);
-void pages_print_video_info(void);
 
 void *CreateAndIntallPageTable (
     unsigned long pml4_va,   // page map level 4

@@ -131,11 +131,9 @@ static long __rel_mouse_y=0;
 
 
 // private:
-// We gotta build methods to get these values
-// from outside.
+// We gotta build methods to get these values from outside
 
-static unsigned long __frontbuffer_va=0;
-static unsigned long __frontbuffer_pa=0;
+
 static unsigned long __cga_va=0;
 static unsigned long __cga_pa=0;
 
@@ -1211,16 +1209,6 @@ static int __videoInit(void)
     }
     VideoBlock.useGui = TRUE;
 
-
-// Frontbuffer (LFB)
-    __frontbuffer_pa = (unsigned long) gSavedLFB;
-    __frontbuffer_va = (unsigned long) FRONTBUFFER_VA;
-    g_frontbuffer_pa = (unsigned long) __frontbuffer_pa; 
-    g_frontbuffer_va = (unsigned long) __frontbuffer_va;
-
-// Backbuffer
-    //g_backbuffer_va  = (unsigned long) BACKBUFFER_VA;
-    g_backbuffer_va  = (unsigned long) display_get_backbuffer_va();
 
 // Device screen sizes. 
 // (herdadas do boot loader.)

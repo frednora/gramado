@@ -246,15 +246,7 @@ void pages_print_info(int system_type)
     printk("paged memory pool PA: %xH \n", paList[MM_COMPONENT_PAGEDPOOL_PA] );
 }
 
-void pages_print_video_info(void)
-{
-// Video info
-    printk("\n\n");
-    printk ("Frontbuffer PA: {%x} | Frontbuffer VA: {%x}\n", 
-        SMALL_frontbuffer_pa, g_frontbuffer_va );
-    printk ("Backbuffer PA: {%x} | Backbuffer VA: {%x}\n", 
-        SMALL_backbuffer_pa, g_backbuffer_va );
-}
+
 
 // Vamos criar uma pagetable com 512 entradas
 // para mapearmos uma região da memória física.
@@ -1390,17 +1382,14 @@ static void __initialize_frontbuffer(void)
 // pa
 // Saving the physical address into a global variable.
     paList[MM_COMPONENT_FRONTBUFFER_PA] = (unsigned long) SMALL_frontbuffer_pa;
-    g_frontbuffer_pa = 
-        (unsigned long) SMALL_frontbuffer_pa;
-    // Local variable.
-    unsigned long framebuffer_pa = 
-        (unsigned long) SMALL_frontbuffer_pa;
+
+    // Local variable
+    //unsigned long framebuffer_pa = (unsigned long) SMALL_frontbuffer_pa;
 
 // -----------------------------------------
 // va
 // Saving the virtual address into a global variable.
     vaList[MM_COMPONENT_FRONTBUFFER_VA] = (unsigned long) FRONTBUFFER_VA;
-    g_frontbuffer_va = (unsigned long) FRONTBUFFER_VA;
 
 // -----------------------------------------
 // pd index
@@ -1434,6 +1423,10 @@ static void __initialize_frontbuffer(void)
 static void __initialize_new_frontbuffer(void)
 {
 
+    display_set_frontbuffer_pa(SMALL_frontbuffer_pa);
+    display_set_frontbuffer_va(FRONTBUFFER_VA);
+ 
+ 
     // First 2MB
     mm_map_2mb_region_in_pd0_imp(
         (SMALL_frontbuffer_pa + 0), 
@@ -1460,17 +1453,11 @@ static void __initialize_new_frontbuffer(void)
 // pa
 // Saving the physical address into a global variable.
     paList[MM_COMPONENT_FRONTBUFFER_PA] = (unsigned long) SMALL_frontbuffer_pa;
-    g_frontbuffer_pa = 
-        (unsigned long) SMALL_frontbuffer_pa;
-    // Local variable.
-    unsigned long framebuffer_pa = 
-        (unsigned long) SMALL_frontbuffer_pa;
 
 // -----------------------------------------
 // va
 // Saving the virtual address into a global variable.
     vaList[MM_COMPONENT_FRONTBUFFER_VA] = (unsigned long) FRONTBUFFER_VA;
-    g_frontbuffer_va = (unsigned long) FRONTBUFFER_VA;
 
 // -----------------------------------------
 
@@ -1487,10 +1474,7 @@ static void __initialize_new_frontbuffer(void)
     unsigned long CurrentBackbufferVA = display_get_backbuffer_va();
 
     paList[MM_COMPONENT_BACKBUFFER_PA] = (unsigned long) CurrentBackbufferPA;
-    g_backbuffer_pa = (unsigned long) CurrentBackbufferPA; 
-
     vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) CurrentBackbufferVA;
-    g_backbuffer_va = (unsigned long) CurrentBackbufferVA; 
 
     // size
     //mm_used_backbuffer = (1024 * 2); // 2MB
@@ -1547,9 +1531,8 @@ static void __initialize_backbuffer(void)
 // pa
 // Saving the physical address into a global variable.
     paList[MM_COMPONENT_BACKBUFFER_PA] = (unsigned long) SMALL_backbuffer_pa;
-    g_backbuffer_pa = (unsigned long) SMALL_backbuffer_pa; 
     // Local variable.
-    unsigned long backbuffer_pa = (unsigned long) SMALL_backbuffer_pa; 
+    //unsigned long backbuffer_pa = (unsigned long) SMALL_backbuffer_pa; 
 
 // ----------------------------
 // va
@@ -1557,7 +1540,6 @@ static void __initialize_backbuffer(void)
     unsigned long CurrentBackbufferVA = (unsigned long) display_get_backbuffer_va();
 
     vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) CurrentBackbufferVA; //BACKBUFFER_VA;
-    g_backbuffer_va = (unsigned long) CurrentBackbufferVA;  //BACKBUFFER_VA;
 
 // ----------------------------
 // pd index
@@ -1594,8 +1576,8 @@ static void __initialize_new_backbuffer_in_512mb_mark(void)
 
     // 512mb mark - free
 
-    display_set_backbuffer_pa(0x20000000);  //NEW_BACKBUFFER_PA
-    display_set_backbuffer_va(0x20000000);  //NEW_BACKBUFFER_VA
+    display_set_backbuffer_pa(0x20000000);  // NEW_BACKBUFFER_PA
+    display_set_backbuffer_va(0x20000000);  // NEW_BACKBUFFER_VA
 
     mm_map_2mb_region_in_pd0_imp(0x20000000,0x20000000,0x1F);
     mm_map_2mb_region_in_pd0_imp(0x20200000,0x20200000,0x1F);
@@ -1609,14 +1591,8 @@ static void __initialize_new_backbuffer_in_512mb_mark(void)
 // Setup the new backbuffer globals
 //
 
-    unsigned long CurrentBackbufferPA = display_get_backbuffer_pa();
-    unsigned long CurrentBackbufferVA = display_get_backbuffer_va();
-
-    paList[MM_COMPONENT_BACKBUFFER_PA] = (unsigned long) CurrentBackbufferPA;
-    g_backbuffer_pa = (unsigned long) CurrentBackbufferPA; 
-
-    vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) CurrentBackbufferVA;
-    g_backbuffer_va = (unsigned long) CurrentBackbufferVA; 
+    paList[MM_COMPONENT_BACKBUFFER_PA] = (unsigned long) 0x20000000;  //CurrentBackbufferPA;
+    vaList[MM_COMPONENT_BACKBUFFER_VA] = (unsigned long) 0x20000000;  // CurrentBackbufferVA;
 
     // size
     //mm_used_backbuffer = (1024 * 2); // 2MB

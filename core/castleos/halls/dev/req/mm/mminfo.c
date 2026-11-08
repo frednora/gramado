@@ -254,9 +254,8 @@ void mmShowMemoryInfo(void)
 
 //==================================
 // Video info
-    pages_print_video_info();
 
-
+    display_print_video_info();
 
     // ...
 }
