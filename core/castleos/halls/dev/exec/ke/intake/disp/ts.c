@@ -20,6 +20,8 @@ unsigned long task_switch_status=0; // locked
 static void __tsOnFinishedExecuting(struct thread_d *t);
 static void __tsCry(unsigned long flags);
 
+static void __dispatch_current(int lapic_info_id);
+
 // The thread switching implementation
 static unsigned long __thread_switch(int lapic_info_id);
 
@@ -321,6 +323,155 @@ static void __tsOnFinishedExecuting(struct thread_d *t)
 
 }
 
+// #test
+// Called by __thread_switch when we decided to dispatch the 
+// current thread for a given core.
+
+static void __dispatch_current(int lapic_info_id)
+{
+    int __lapic_info_id = lapic_info_id;
+
+// Target
+    struct thread_d  *TargetThread;
+    struct te_d *TargetProcess;
+
+// tid
+    if ( lapic_info[__lapic_info_id].current_tid < 0 || 
+         lapic_info[__lapic_info_id].current_tid >= THREAD_COUNT_MAX )
+    {
+        panic ("ts-dispatch_current: lapic_info[__lapic_info_id].current_tid\n");
+    }
+
+// structure
+    TargetThread = (void *) threadList[ lapic_info[__lapic_info_id].current_tid ];
+    if ((void *) TargetThread == NULL){
+        panic ("ts-dispatch_current: TargetThread\n");
+    }
+    if ( TargetThread->used != TRUE || TargetThread->magic != 1234 ){
+        panic ("ts-dispatch_current: validation\n");
+    }
+// Not ready?
+    if (TargetThread->state != READY)
+    {
+        //panic ("ts-dispatch_current: Not ready\n");
+        TargetThread = InitThread;
+        TargetThread->state = READY;
+        TargetThread->next = NULL;
+    }
+
+// The target thread is in a sleep routine
+    if (TargetThread->Deferred.sleep_in_progress == TRUE) 
+    {
+        // The idle thread can't sleep
+        if (TargetThread == InitThread)
+            panic("__thread_switch: Init thread [idle] is sleeping #test\n");
+
+        TargetThread = InitThread;
+        TargetThread->state = READY;
+        TargetThread->next = NULL;
+    }
+
+    // #todo
+    //UPProcessorBlock.CurrentThread = 
+    //    (struct thread_d *) TargetThread;
+    //UPProcessorBlock.NextThread = 
+    //    (struct thread_d *) TargetThread->next;
+
+// Counters
+// Clean
+// The spawn routine will do something more.
+
+    TargetThread->standbyCount = 0;
+    TargetThread->standbyCount_ms = 0;
+    TargetThread->runningCount = 0;
+    TargetThread->runningCount_ms = 0;
+    TargetThread->readyCount = 0;
+    TargetThread->readyCount_ms = 0;
+    TargetThread->waitingCount = 0;
+    TargetThread->waitingCount_ms = 0;
+    TargetThread->blockedCount = 0;
+    TargetThread->blockedCount_ms = 0;
+
+// Base Priority
+    if (TargetThread->base_priority > PRIORITY_MAX){
+        TargetThread->base_priority = PRIORITY_MAX;
+    }
+// Priority
+    if (TargetThread->priority > PRIORITY_MAX){
+        TargetThread->priority = PRIORITY_MAX;
+    }
+// Credits limit
+    if (TargetThread->quantum > QUANTUM_MAX){
+        TargetThread->quantum = QUANTUM_MAX;
+    }
+
+// Call dispatcher.
+// #bugbug
+// Talvez aqui devemos indicar que a current foi selecionada. 
+    IncrementDispatcherCount(SELECT_DISPATCHER_COUNT);
+
+
+//
+// Dispatch
+//
+
+// MOVEMENT 4 (Ready --> Running).
+// It also restores the context.
+
+    dispatcher(DISPATCHER_CURRENT); 
+
+//done:
+// We will return in the end of this function.
+
+// Validate Thread group id.
+// Also known as 'thread environment id' (fka PID)
+    pid_t targetthread_OwnerPID = (pid_t) TargetThread->tgid;
+    if ( targetthread_OwnerPID < 0 || 
+         targetthread_OwnerPID >= THREAD_COUNT_MAX )
+    {
+       printk ("ts: targetthread_OwnerPID ERROR\n", targetthread_OwnerPID);
+       die();
+    }
+
+// Target process 
+    TargetProcess = (void *) teList[targetthread_OwnerPID];
+    if ((void *) TargetProcess == NULL){
+        printk ("ts: TargetProcess %s struct fail\n", TargetProcess->name );
+        die();
+    }
+    if ( TargetProcess->used != TRUE || TargetProcess->magic != 1234 ){
+        printk ("ts: TargetProcess %s validation\n", 
+            TargetProcess->name );
+        die();
+    }
+
+// pid
+    if (TargetProcess->pid != targetthread_OwnerPID){
+        panic("ts: TargetProcess->pid != targetthread_OwnerPID\n");
+    }
+
+// Set current process.
+// Update global variable.
+
+    // IN: pid, cpu id    
+    set_current_process(TargetProcess->pid, 0);
+
+// check pml4_PA
+    if ((unsigned long) TargetProcess->pml4_PA == 0){
+        printk ("ts: Process %s pml4 fail\n", TargetProcess->name);
+        die();
+    }
+
+
+    // #test: The last frame was 3 and the next thread is ring 3
+    // Good. It means that we are trying to restore a ring 3 thread
+    // right after a ring 0 thread consumed all its quatum.
+    //if (gszLastStackFrame == 3 && TargetThread->cpl == 3)
+    //{
+    //    panic("break point\n");
+    //}
+}
+
 
 //
 // $
@@ -350,7 +501,7 @@ static unsigned long __thread_switch(int lapic_info_id)
 
 // Target
     struct thread_d  *TargetThread;
-    struct te_d *TargetProcess;
+    //struct te_d *TargetProcess;
 
     //unsigned long rv = 0;
 
@@ -703,6 +854,7 @@ static unsigned long __thread_switch(int lapic_info_id)
 // We couldn't reach this point.
 // Let's try to run the current thread.
     //panic ("ts.c: Crazy fail");
+
     goto dispatch_current; 
 
 // =============================================================
@@ -715,7 +867,7 @@ static unsigned long __thread_switch(int lapic_info_id)
 // At this point we don't have a thread to run and
 // the old thread already have its context saved.
 
-// Try next thread.
+// Try next thread
 ZeroGravity:
 // try_next: 
 
@@ -791,6 +943,7 @@ ZeroGravity:
 
 // Not reached.
 // This is the end of our options when trying to select a thread.
+
     panic("ts: Unexpected error\n");
 
 // ==============================================
@@ -836,6 +989,7 @@ next_from_queue:
 
 // Its not valid
 // #debug: Not reached
+
     panic("ts: Unexpected error\n");
 
 
@@ -856,148 +1010,12 @@ next_from_queue:
 
 dispatch_current:
 
-// tid
-    if ( lapic_info[__lapic_info_id].current_tid < 0 || 
-         lapic_info[__lapic_info_id].current_tid >= THREAD_COUNT_MAX )
-    {
-        panic ("ts-dispatch_current: lapic_info[__lapic_info_id].current_tid\n");
-    }
-
-// structure
-    TargetThread = (void *) threadList[ lapic_info[__lapic_info_id].current_tid ];
-    if ((void *) TargetThread == NULL){
-        panic ("ts-dispatch_current: TargetThread\n");
-    }
-    if ( TargetThread->used != TRUE || TargetThread->magic != 1234 ){
-        panic ("ts-dispatch_current: validation\n");
-    }
-// Not ready?
-    if (TargetThread->state != READY)
-    {
-        //panic ("ts-dispatch_current: Not ready\n");
-        TargetThread = InitThread;
-        TargetThread->state = READY;
-        TargetThread->next = NULL;
-    }
-
-// The target thread is in a sleep routine
-    if (TargetThread->Deferred.sleep_in_progress == TRUE) 
-    {
-        // The idle thread can't sleep
-        if (TargetThread == InitThread)
-            panic("__thread_switch: Init thread [idle] is sleeping #test\n");
-
-        TargetThread = InitThread;
-        TargetThread->state = READY;
-        TargetThread->next = NULL;
-    }
-
-    // #todo
-    //UPProcessorBlock.CurrentThread = 
-    //    (struct thread_d *) TargetThread;
-    //UPProcessorBlock.NextThread = 
-    //    (struct thread_d *) TargetThread->next;
-
-// Counters
-// Clean
-// The spawn routine will do something more.
-
-    TargetThread->standbyCount = 0;
-    TargetThread->standbyCount_ms = 0;
-    TargetThread->runningCount = 0;
-    TargetThread->runningCount_ms = 0;
-    TargetThread->readyCount = 0;
-    TargetThread->readyCount_ms = 0;
-    TargetThread->waitingCount = 0;
-    TargetThread->waitingCount_ms = 0;
-    TargetThread->blockedCount = 0;
-    TargetThread->blockedCount_ms = 0;
-
-// Base Priority
-    if (TargetThread->base_priority > PRIORITY_MAX){
-        TargetThread->base_priority = PRIORITY_MAX;
-    }
-// Priority
-    if (TargetThread->priority > PRIORITY_MAX){
-        TargetThread->priority = PRIORITY_MAX;
-    }
-// Credits limit
-    if (TargetThread->quantum > QUANTUM_MAX){
-        TargetThread->quantum = QUANTUM_MAX;
-    }
-
-// Call dispatcher.
-// #bugbug
-// Talvez aqui devemos indicar que a current foi selecionada. 
-    IncrementDispatcherCount(SELECT_DISPATCHER_COUNT);
-
-// MOVEMENT 4 (Ready --> Running).
-// It also restores the context.
-    dispatcher(DISPATCHER_CURRENT); 
-
-//done:
-// We will return in the end of this function.
-
-// Validate Thread group id.
-// Also known as 'thread environment id' (fka PID)
-    pid_t targetthread_OwnerPID = (pid_t) TargetThread->tgid;
-    if ( targetthread_OwnerPID < 0 || 
-         targetthread_OwnerPID >= THREAD_COUNT_MAX )
-    {
-       printk ("ts: targetthread_OwnerPID ERROR\n", targetthread_OwnerPID);
-       die();
-    }
-
-// Target process 
-    TargetProcess = (void *) teList[targetthread_OwnerPID];
-    if ((void *) TargetProcess == NULL){
-        printk ("ts: TargetProcess %s struct fail\n", TargetProcess->name );
-        die();
-    }
-    if ( TargetProcess->used != TRUE || TargetProcess->magic != 1234 ){
-        printk ("ts: TargetProcess %s validation\n", 
-            TargetProcess->name );
-        die();
-    }
-
-// pid
-    if (TargetProcess->pid != targetthread_OwnerPID){
-        panic("ts: TargetProcess->pid != targetthread_OwnerPID\n");
-    }
-
-// Set current process.
-// Update global variable.
-
-    // IN: pid, cpu id    
-    set_current_process(TargetProcess->pid, 0);
-
-// check pml4_PA
-    if ((unsigned long) TargetProcess->pml4_PA == 0){
-        printk ("ts: Process %s pml4 fail\n", TargetProcess->name);
-        die();
-    }
-
-/*
-    // #test: The last frame was 3 and the next thread is ring 3
-    // Good. It means that we are trying to restore a ring 3 thread
-    // right after a ring 0 thread consumed all its quatum.
-    if (gszLastStackFrame == 3 && TargetThread->cpl == 3)
-    {
-        panic("break point\n");
-    }
-*/
-
-// #bugug
-// #todo
-    // current_process_pagedirectory_address = (unsigned long) P->DirectoryPA;
-    // ?? = (unsigned long) P->pml4_PA;
+    __dispatch_current(__lapic_info_id);
 
 // We had a taskswitching.
 // Let's return the flags with all bits unset.
-    return (unsigned long) 0;
 
-fail:
-    panic ("ts: Unspected error\n");
+    return (unsigned long) 0;
 }
 
 /*
