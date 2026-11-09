@@ -249,6 +249,8 @@ struct thread_d *create_init_thread(void)
 // que mudam seu iopl para 0. int 199.
 
     t->cpl = (unsigned int) RING3;
+    t->previous_cpl = (unsigned int) RING3;
+
     t->rflags_initial_iopl = (unsigned int) 3; 
     t->rflags_current_iopl = (unsigned int) 3; 
 

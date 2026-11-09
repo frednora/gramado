@@ -602,13 +602,31 @@ struct thread_d
 // Page Fault information
     struct pf_info_d  PF;
 
-// cpl
-// The initial privilege level.
-// The current privilege level.
+//
+// CPL
+//
 
+// cpl: The thread was created with this CPL
     unsigned int cpl;
+
+// previous cpl:
+// The thread's CPL during the execption. Captured 
+// from the stack frame.
+// To remember whether the current kernel operation 
+// originated from trusted kernel code or untrusted user code.
+// More security checks when it comes from ring 3.
+    unsigned int previous_cpl;
+
+//
+// IOPL in rflags
+//
+
+// The initial privilege level
     unsigned int rflags_initial_iopl;
+
+// The current privilege level
     unsigned int rflags_current_iopl;
+
 
 // The thread is running in the ring0 phase
 // after the isr request.

@@ -222,15 +222,27 @@ void arch_save_context(int lapic_info_id)
 // Maybe it is not the same in the actual cs register
 // in the moment of the irq handler routine.
 
-    int cpl = -1;
-    unsigned long tmp_cpl = (unsigned long) context_cpl[0];
+    //unsigned long tmp_cpl = (unsigned long) context_cpl[0];
+    // int cpl = -1;
 
 // 2 bits
 // The first 2 bits of cs.
-    cpl = (int) (tmp_cpl & 3);
+    
+    // cpl = (int) (tmp_cpl & 3);
 
-    if (cpl != t->cpl)
-        panic("arch_save_context: cpl != t->cpl\n");
+// Save the previous CPL into the structure
+    unsigned long __tmp_cpl = (unsigned long) context_cpl[0];
+    t->previous_cpl = (unsigned int) (__tmp_cpl & 3);
+
+//
+// Not allowed for now.
+// It only can be called from the same mode.
+//
+
+    if (t->previous_cpl != t->cpl)
+    {
+        panic("arch_save_context: t->previous_cpl != t->cpl\n");
+    }
 
 // Ja temos o valor do current process nesse momento?
     // Get PID for the current process for a given core.
@@ -238,18 +250,21 @@ void arch_save_context(int lapic_info_id)
 
     //pid_t current_process = (pid_t) get_current_process(0);
     
-    if ( cpl != 0 && cpl != 1 && cpl != 2 && cpl != 3 )
+// Not a valid one
+    if ( t->previous_cpl != 0 && 
+         t->previous_cpl != 1 && 
+         t->previous_cpl != 2 && 
+         t->previous_cpl != 3 )
     {
-        panic("arch_save_context: cpl\n");
+        panic("arch_save_context: Invalid t->previous_cpl\n");
     }
 
 // It doesn't run ring 0 threads yet.
 // That’s why ring 0 threads aren’t fully supported yet: 
 // the code explicitly refuses to save them.
 
-// Isso significa que um thread que estava rodando em ring0,
-// foi interrompida e teve seu contexto salvo por essa rotina.
-    if (cpl == 0)
+
+    if (t->previous_cpl == 0)
     {
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE == 1)
         {
@@ -257,7 +272,7 @@ void arch_save_context(int lapic_info_id)
             //printk("step %d\n", t->step);
         }
         if (CONFIG_ALLOW_RING0_CONTEXT_SAVE != 1){
-            panic("arch_save_context: cpl 0\n");
+            panic("arch_save_context: t->previous_cpl 0\n");
         }
         // #todo: Maybe here we need to introduce the idea of previous mode.
         t->transition_counter.to_supervisor++;
@@ -265,15 +280,15 @@ void arch_save_context(int lapic_info_id)
         // #ps: We are also doing this in hw1.asm
         gszLastStackFrame = 3;
     }
-    if (cpl == 1){
-        panic("arch_save_context: cpl 1\n");
+    if (t->previous_cpl == 1){
+        panic("arch_save_context: t->previous_cpl 1\n");
     }
-    if (cpl == 2){
-        panic("arch_save_context: cpl 2\n");
+    if (t->previous_cpl == 2){
+        panic("arch_save_context: t->previous_cpl 2\n");
     }
 // It means that a thread that was running in ring3, 
 // was interrupted and had its context saved by this routine.
-    if (cpl == 3)
+    if (t->previous_cpl == 3)
     {
 
         // #bugbug: Not accurate
@@ -358,6 +373,8 @@ void arch_restore_context(int lapic_info_id)
     unsigned long *contextr13 = (unsigned long *) &contextR13;
     unsigned long *contextr14 = (unsigned long *) &contextR14;
     unsigned long *contextr15 = (unsigned long *) &contextR15;
+
+    unsigned long *context_cpl = (unsigned long *) &contextCPL;
 
     if ( CurrentTID < 0 || CurrentTID >= THREAD_COUNT_MAX )
     {
@@ -459,6 +476,23 @@ void arch_restore_context(int lapic_info_id)
         // #todo: Maybe here we need to introduce the idea of previous mode.
         t->transition_counter.to_user++;  // (restore path)  
     }
+
+    // #test: 
+    // Restoring it for the case the assembly want to know
+    // where we are going now.
+    context_cpl[0] = (unsigned long) (t->cpl & 3);
+
+// #todo
+// Maybe here we need to restore only if the 
+// previous mode is the same we are using to restore the context.
+// But for now lets simply reinitialize the previous cpl.
+
+
+// Reinitialize the value for the previous CPL.
+// It's similar what we de when we are gonna launch the thread 
+// for the first time.
+
+    t->previous_cpl = t->cpl;
 
 // Restore CR3 and flush TLB
     load_pml4_table((unsigned long) t->pml4_PA);

@@ -513,25 +513,13 @@ static void __spawn_thread_by_tid_imp(tid_t tid)
 // cpl
 //
 
-// It doesn't run ring 0 threads yet.
-// That’s why ring 0 threads aren’t fully supported yet: 
-// the code explicitly refuses to spawn them.
 
-/*
-    if( target_thread->cpl != RING0 && 
-        target_thread->cpl != RING3)
-    {
-        panic("spawn_thread: Invalid cpl\n");
-    }
-*/
+// Reinitialize the value for the previous CPL.
+// It's similar what we de when we are gonna launch the thread 
+// for the first time.
 
+    target_thread->previous_cpl = target_thread->cpl;
 
-/*
-    if (target_thread->cpl != RING3){
-        debug_print("__spawn_thread_by_tid_imp: Invalid cpl\n");
-        panic      ("__spawn_thread_by_tid_imp: Invalid cpl\n");
-    }
-*/
 
 // ===================
 // ring 0
