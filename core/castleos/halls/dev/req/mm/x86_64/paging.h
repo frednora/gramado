@@ -97,7 +97,7 @@ extern unsigned long gKernelPML4Address;
 //
 // Shared heap support
 //
-void shmm_user_heap_initialize(unsigned long base_address);
+void shmm_user_heap_initialize(unsigned long base_address, unsigned long end_address);
 void *get_2mb_user_heap_page(void);
 
 
@@ -116,8 +116,11 @@ void *CreateAndIntallPageTable (
 unsigned long get_new_frame(void);
 unsigned long alloc_frame(void);
 
-// #danger
+// Get a 4KB frame to build a paging structure.
+// The returned address is identity mapped (va == pa) and zeroed.
 unsigned long get_table_pointer_va(void);
+unsigned long table_pool_get_used(void);
+unsigned long table_pool_get_total(void);
 
 // Clone the kernel's pd0. (Page Directory 0).
 void *CloneKernelPD0(void);

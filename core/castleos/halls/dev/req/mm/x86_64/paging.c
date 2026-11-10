@@ -102,6 +102,7 @@ static void __initialize_canonical_physical_regions(void);
 static void __initialize_canonical_kernel_pagetables(void);
 
 static void __initialize_ring0area(void);
+static void __initialize_table_pool(void);
 static void __initialize_ring3area(void);
 static void __initialize_kernelimage_region(void);
 
@@ -132,21 +133,18 @@ static void __mmSetupMemoryUsage(void);
 struct shmm_user_heap_d
 {
     int initialized;
-    // Base of the pre-mapped user region
-    //unsigned long user_heap_base;
     unsigned long next_address;
-
-    // #todo
-    // Track the limit
+    unsigned long end_address;
 };
 static struct shmm_user_heap_d  shmm_user_heap;
+// 2MB user canvases identity mapped from 0x00400000. They must stay below TABLE_POOL_VA.
+#define USER_CANVAS_SLOTS  100
 
-
-void shmm_user_heap_initialize(unsigned long base_address)
+void shmm_user_heap_initialize(unsigned long base_address, unsigned long end_address)
 {
     shmm_user_heap.initialized = FALSE;
     shmm_user_heap.next_address = (unsigned long) base_address;
-    // ...
+    shmm_user_heap.end_address  = (unsigned long) end_address;
     shmm_user_heap.initialized = TRUE;
 }
 
@@ -154,18 +152,14 @@ void shmm_user_heap_initialize(unsigned long base_address)
 // See: service 55 in sc80 in sci.c
 void *get_2mb_user_heap_page(void)
 {
+    unsigned long va=0;
+
     if (shmm_user_heap.initialized != TRUE)
         return NULL;
-
-    // #todo
-    // Track the limit
-
-    unsigned long va = shmm_user_heap.next_address;
-
-    // Advance cursor by 2MB for next call
-    shmm_user_heap.next_address += 0x200000;
-
-    // Return pointer into already mapped region
+    va = shmm_user_heap.next_address;
+    if ( (va + 0x200000) > shmm_user_heap.end_address )
+        return NULL;
+    shmm_user_heap.next_address = (unsigned long) (va + 0x200000);
     return (void *) va;
 }
 
@@ -471,80 +465,103 @@ unsigned long alloc_frame(void)
 }
 
 // ===================================================================
-//
-// #important: DANGER !!!
-//
-// get_table_pointer_va:
-// #bugbug
-// Isso eh um improviso, precisamos de outro endereço.
-// >>>> 0x1000
-// O sistema esta usando esse endereço como inicio de um heap
-// onde pegamos paginas (frames?) de memoria para criarmos diretorios de paginas.
-// Isso porque precisamos de endereços que terminem com pelo menos 
-// 12 bits zerados.
-// #todo: 
-// Precisamos encontrar outro lugar para esse heap, 
-// tendo em vista que o numero de diretorios criados sera grande 
-// e o heap invadir outras areas.
-// #bugbug
-// Vamos improvisar um limite por enquanto.
-// See: mm/gpa.h
-// 0x1000
+// Page tables heap.
+// get_table_pointer_va() hands out the 4KB frames used as page tables,
+// page directories, pdpts and pml4s. They must be identity mapped
+// (va == pa) because mm_fill_page_table() stores the table's va in the
+// directory entry. The bootstrap pool serves while the kernel still runs
+// on the boot loader's page tables. The main pool is mapped by
+// __initialize_table_pool() but only usable after pagesInitializePaging()
+// loads the kernel's pml4, which is when table_pool_activate() runs.
 
-unsigned long table_pointer_heap_base = 
-    ____DANGER_TABLE_POINTER_HEAP_BASE;
-
-// ======================================================
-
-// Isso serve pra pegarmos um endereço físico
-// que servira de base para criarmos uma pagetable.
-// Mas endereço físico e virtual são iguais nessa região.
-// Identidade 1:1.
-
-/*
- #bugbug
- # very important
- The function get_table_pointer_va() uses the address 0x1000 as bae address 
- for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
- exceeding its limits.
-
- See:
- + get_table_pointer_va() in paging.c 
- + ____DANGER_TABLE_POINTER_HEAP_BASE in x64gpa.h 
-
-*/
-
-// Very dangerous hack
-unsigned long get_table_pointer_va(void)
+struct table_pool_d
 {
-    //debug_print ("get_table_pointer_va:\n");
+    int active;
+    unsigned long next_va;
+    unsigned long end_va;
+    unsigned long frames_total;
+    unsigned long frames_used;
+};
+static struct table_pool_d  TablePool;
 
-// Incrementa 4KB.
-    table_pointer_heap_base = 
-        (unsigned long) (table_pointer_heap_base + 0x1000);
+static unsigned long bootstrap_pool_next_va = 
+    TABLE_POINTER_BOOTSTRAP_POOL_BASE;
 
-// #todo
-// Precisamos de uma nova origem.
-// Os primeiros 12bits precisam ser '0'.
-// VM_BASE = 0x000B8000.
-// #bugbug
-// Todo o espaço entre 0x1000 e 0x000B8000 esta livre ?
-// Onde estao a fat e o root dir?
-// MBR_ADDRESS = 0x20000. /
-// Esse o o endereço mais baixo entre os endereços usados
-// pelo sistema de arquivos.
+static unsigned long __get_table_pointer_from_bootstrap_pool(void)
+{
+    unsigned long va = bootstrap_pool_next_va;
 
+    if ( (va + 0x1000) > TABLE_POINTER_BOOTSTRAP_POOL_END ){
+        panic ("get_table_pointer_va: Bootstrap pool exhausted\n");
+    }
+    bootstrap_pool_next_va = (unsigned long) (va + 0x1000);
 
-// Reach the max limit.
-// 0x20000
-    //if (table_pointer_heap_base >= MBR_ADDRESS)
-    if (table_pointer_heap_base >= FAT_ADDRESS)
-    {
-        //0x00030000
-        panic ("get_table_pointer_va: [FIXME] Limits\n");
+    return (unsigned long) va;
+}
+
+static unsigned long __get_table_pointer_from_main_pool(void)
+{
+    unsigned long va = TablePool.next_va;
+
+    if ( (va + 0x1000) > TablePool.end_va ){
+        panic ("get_table_pointer_va: Main pool exhausted\n");
+    }
+    TablePool.next_va = (unsigned long) (va + 0x1000);
+    TablePool.frames_used++;
+
+    return (unsigned long) va;
+}
+
+static void __initialize_table_pool(void)
+{
+    int map_status = -1;
+
+    map_status = 
+        (int) mm_map_2mb_region_in_pd0_imp( 
+                  (unsigned long) TABLE_POOL_PA, 
+                  (unsigned long) TABLE_POOL_VA,
+                  (unsigned long) (PAGE_WRITE | PAGE_PRESENT) );
+    if (map_status != 0){
+        panic ("__initialize_table_pool: mm_map_2mb_region_in_pd0_imp\n");
     }
 
-    return (unsigned long) table_pointer_heap_base;
+    TablePool.next_va = (unsigned long) TABLE_POOL_VA;
+    TablePool.end_va  = (unsigned long) (TABLE_POOL_VA + TABLE_POOL_SIZE);
+    TablePool.frames_total = (unsigned long) (TABLE_POOL_SIZE / 0x1000);
+    TablePool.frames_used  = 0;
+    mm_used_table_pool = (unsigned long) (TABLE_POOL_SIZE / 1024);
+}
+
+static void table_pool_activate(void)
+{
+    if (TablePool.end_va == 0){
+        panic ("table_pool_activate: The pool was not mapped\n");
+    }
+    TablePool.active = TRUE;
+}
+
+unsigned long table_pool_get_used(void)
+{
+    return (unsigned long) TablePool.frames_used;
+}
+
+unsigned long table_pool_get_total(void)
+{
+    return (unsigned long) TablePool.frames_total;
+}
+
+unsigned long get_table_pointer_va(void)
+{
+    unsigned long va=0;
+
+    if (TablePool.active == TRUE){
+        va = (unsigned long) __get_table_pointer_from_main_pool();
+    } else {
+        va = (unsigned long) __get_table_pointer_from_bootstrap_pool();
+    }
+    memset( (void*) va, 0, 0x1000 );
+
+    return (unsigned long) va;
 }
 
 // CloneKernelPD0:
@@ -778,7 +795,8 @@ static void __mmSetupMemoryUsage(void)
         mm_used_extraheap2 + 
         mm_used_extraheap3 +
         mm_used_frame_table + 
-        mm_used_module0 
+        mm_used_module0 + 
+        mm_used_table_pool 
     );
 
 // free memory
@@ -1076,6 +1094,7 @@ void __initialize_ram_usage_varables(void)
     mm_used_frame_table = 0;
 
     mm_used_module0 = 0;  // Loadable module
+    mm_used_table_pool = 0;
 }
 
 static void __initialize_canonical_physical_regions(void)
@@ -2119,6 +2138,9 @@ static void __initialize_canonical_kernel_pagetables(void)
 // va=0x00200000 | Ring 3 area.
     __initialize_ring3area();
 
+// Main pool for page tables. Usable after table_pool_activate().
+    __initialize_table_pool();
+
 
 // 0x00400000 → 0x0FFFFFFF → free gap (~252 MB, prime candidate for new mappings)
 // There are some free virtual addresses here
@@ -2142,7 +2164,7 @@ static void __initialize_canonical_kernel_pagetables(void)
 // that can be used as canvases for the compositor.
 // 252/2 = 126
     int CanvasSlot = 0;
-    for (CanvasSlot=0; CanvasSlot<100; CanvasSlot++)
+    for (CanvasSlot=0; CanvasSlot<USER_CANVAS_SLOTS; CanvasSlot++)
     {
         map_user_va_2mb(
             0x00400000 + (0x200000 * CanvasSlot),    // va
@@ -2152,7 +2174,9 @@ static void __initialize_canonical_kernel_pagetables(void)
 
     // Initialization:
     // Set the base pointer for the heap used by our new allocator.
-    shmm_user_heap_initialize(0x00400000);
+    shmm_user_heap_initialize(
+        0x00400000,
+        0x00400000 + (0x200000 * USER_CANVAS_SLOTS) );
 // ------------------------
 
 
@@ -2687,6 +2711,7 @@ int pagesInitializePaging(void)
 
     //load_pml4_table( (void *) &kernel_pml4[0] );
     load_pml4_table(kernel_mm_data.pml4_pa);
+    table_pool_activate();
 
 //-----------------------------------------------------
 

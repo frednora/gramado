@@ -32,6 +32,7 @@ extern unsigned long mm_used_lfb;
 
 //#test
 extern unsigned long mm_used_module0; 
+extern unsigned long mm_used_table_pool;
 
 
 #endif   

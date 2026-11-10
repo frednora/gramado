@@ -57,51 +57,12 @@
 
 // ===================================================
 
-// #importante: PERIGO !!!
-// >>>> 0x1000
-// O sistema está usando esse endereço como início de um heap
-// onde pegamos páginas de memória para criarmos diretórios de páginas.
-// Isso porque precisamos de endereços que terminem com pelo menos 
-// 12bits zerados.
-// #todo: 
-// Podemos fazer uma contagem de alocaçao possivel nesse heap
-// #todo: 
-// Precisamos encontrar outro lugar para esse heap, tendo em vista que
-// o número de diretórios criados será grande e o heap invadirá 
-// outras áreas.
-// me parece que o próximo endereço usado é o MBR em 0x00020000. 
-// #todo: Possivelmente podemos mudar o MBR de lugar usando o alocador.
-// #OBS: Os endereços físico e virtual são iguais.
-// See: mm/pages.c
-
-// #todo
-// Define min and max.
-// Quantos diretórios podemos alocar aqui?
-// 31KB. (31 alocações)
-
-// This is the base address of a pre-alocated heap of pagetables.
-// 31KB. (31 alocações)
-
-/*
- #bugbug
- # very important
- The function get_table_pointer_va() uses the address 0x1000 as bae address 
- for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
- exceeding its limits.
-
- See:
- + get_table_pointer_va() in paging.c 
- + ____DANGER_TABLE_POINTER_HEAP_BASE in x64gpa.h 
-
-*/
-
-#define ____DANGER_TABLE_POINTER_HEAP_BASE  0x1000
-
-// Essa tabela é bem longa
-// Vai até o MBR.
-// #bugbug
-// We're gonna use this area to put the AP trampoline code.
-// >>>> The AP's trampoline is overlaying these tables. <<<<
+// Bootstrap pool of page tables.
+// Frames handed out by get_table_pointer_va() while the kernel still
+// runs on the boot loader's page tables, where only the first 2MB are
+// identity mapped. It ends where the AP trampoline begins. 30 frames.
+#define TABLE_POINTER_BOOTSTRAP_POOL_BASE  0x2000
+#define TABLE_POINTER_BOOTSTRAP_POOL_END   ____DANGER_TRAMPOLINE_CODE_BASE
 
 //
 // == 128 KB ==================================================
@@ -444,6 +405,23 @@ See: https://wiki.osdev.org/Memory_Map_(x86)
 // End
 #define __256MB_MARK_PA      (0x10000000)
 #define FRAMETABLE_END_PA    (__256MB_MARK_PA - 0x800000)
+
+// ----------------------------------
+// Table pool
+// 248MB mark, 2MB, 512 frames. Main pool for get_table_pointer_va().
+// Identity mapped with kernel-only pages by __initialize_table_pool().
+#define TABLE_POOL_PA      FRAMETABLE_END_PA
+#define TABLE_POOL_SIZE    0x200000
+#define TABLE_POOL_END_PA  (TABLE_POOL_PA + TABLE_POOL_SIZE)
+#if (TABLE_POOL_PA & 0x1FFFFF) != 0
+#error "TABLE_POOL_PA must be 2MB aligned"
+#endif
+#if TABLE_POOL_SIZE != 0x200000
+#error "mm_map_2mb_region_in_pd0_imp() maps exactly 2MB"
+#endif
+#if TABLE_POOL_END_PA > (250 * 1024 * 1024)
+#error "The table pool must fit in the 250MB minimum checked by I_initialize_frame_table()"
+#endif
 
 // #warning
 // When the system has 256MB installed
