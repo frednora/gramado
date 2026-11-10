@@ -13,6 +13,8 @@ struct taskswitch_info_d  TaskSwitchInfo;
 //Status do mecanismo de task switch. 
 unsigned long task_switch_status=0; // locked
 
+static unsigned int __pitWhatToDoNow = 1000;  // Regular timer interrupt
+
 //
 // =============================================
 //
@@ -1158,7 +1160,30 @@ unsigned long tsThreadSwitch(void)
 // Call the thread switching worker
 // IN: core id
 
-    rv = (unsigned long) __thread_switch( __lapic_info_id );
+    // rv = (unsigned long) __thread_switch( __lapic_info_id );
+
+    unsigned int What = (unsigned int) __pitWhatToDoNow;
+    switch (What)
+    {
+        // INTERRUPT: Regular timer interrupt
+        case 1000:
+            rv = (unsigned long) __thread_switch( __lapic_info_id );
+            break;
+
+        // DPF: Defered Procedure Call
+        // Let's execute some procedure during the timer interrupt.
+        case 2000:
+
+            // #todo: Not implemented yet
+            // call_defered_procedure_call(...)
+            
+            panic("What: 2000\n");
+            break;
+
+        default:
+            rv = (unsigned long) __thread_switch( __lapic_info_id );
+            break;
+    };
 
 
 /*
@@ -1248,11 +1273,14 @@ so you don’t get duplicate deliveries. The thread can re‑arm later if it wan
 // INITIALIZATION
 //
 
+// CAlled in ke.c
 int init_ts(void)
 {
     TaskSwitchInfo.initialized = FALSE;
 
     taskswitch_lock();
+
+    __pitWhatToDoNow = 1000;  // Regular timer interrupt
 
     TaskSwitchInfo.initialized = TRUE;
     return 0;

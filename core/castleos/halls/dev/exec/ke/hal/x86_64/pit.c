@@ -7,7 +7,7 @@
 // https://en.wikipedia.org/wiki/Intel_8253
 
 
-#include <kernel.h>  
+#include <kernel.h>
 
 
 /*
@@ -251,6 +251,7 @@ unsigned long irq0_TIMER(void)
 // See: disp/ts.c
 
     rv = (unsigned long) tsThreadSwitch();
+
 
 // Reset the EOI state flag. 
 // After task switching, the spawn routine no longer needs to send EOI. 
