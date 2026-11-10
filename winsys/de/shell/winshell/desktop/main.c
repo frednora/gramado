@@ -1274,7 +1274,7 @@ int main(int argc, char *argv[])
                 // We are still implementing the sleep() support.
                 // rtl_sleep(MainLoopIntervalMS - delta_jiffie);
 
-                //#test
+                // #test
                 rtl_yield();
             }    
         }
