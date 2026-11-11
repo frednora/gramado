@@ -1,9 +1,6 @@
-/*
- * File: host.h
- * 
- *     This header should be included by including "gws.h".
- */
-
+// host.h
+// This header should be included by including "gws.h".
+// Created by Fred Nora
 
 #ifndef __LIBGWS_HOST_H
 #define __LIBGWS_HOST_H  1

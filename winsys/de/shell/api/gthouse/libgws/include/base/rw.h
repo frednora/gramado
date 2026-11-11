@@ -1,8 +1,7 @@
-/*
- * File: rw.h
- *     Read and write from socket.
- *     This header should be included by including "gws.h".
- */
+// rw.h
+// Read and write from socket.
+// This header should be included by including "gws.h".
+// Created by Fred Nora
 
 #ifndef __LIBGWS_RW_H
 #define __LIBGWS_RW_H  1
@@ -14,6 +13,4 @@ ssize_t gws_write_to_server(int fd, const void *buf, size_t count);
 ssize_t gws_read_from_server(int fd, const void *buf, size_t count);
 
 #endif    
-
-
 

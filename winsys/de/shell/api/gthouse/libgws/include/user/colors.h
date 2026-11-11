@@ -1,5 +1,8 @@
 // colors.h
-// Client-side colors.
+// Client-side colors
+// #todo: The plan is using the same definitions of 
+// the display server/compositor
+// Created by Fred Nora.
 
 #ifndef __LIBGWS_COLORS_H
 #define __LIBGWS_COLORS_H  1
@@ -383,6 +386,4 @@
 #define COLOR_SOFT_WHITE  0x00FFFBF0
 
 #endif    
-
-
 

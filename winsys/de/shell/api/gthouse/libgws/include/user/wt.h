@@ -1,5 +1,7 @@
 // File: wt.h
+// Window types
 // This header should be included by including "gws.h".
+// Created by Fred Nora
 
 #ifndef __LIBGWS_WT_H
 #define __LIBGWS_WT_H    1

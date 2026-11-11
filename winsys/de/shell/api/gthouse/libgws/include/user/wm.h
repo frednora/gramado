@@ -1,6 +1,7 @@
-
 // wm.h
+// Window manager support
 // This header should be included by including "gws.h".
+// Createdby Fred Nora
 
 #ifndef  __LIBGWS_WM_H
 #define  __LIBGWS_WM_H    1
@@ -10,7 +11,7 @@
 // We need to change it in the whole system.
 
 //
-// Window messages.
+// Window messages
 //
 
 //window (1-19)  

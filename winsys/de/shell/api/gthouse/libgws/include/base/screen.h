@@ -1,7 +1,7 @@
-/*
- * File: screen.h
- *     This header should be included by including "gws.h".
- */
+// screen.h
+// Screen support
+// This header should be included by including "gws.h".
+// Created by Fred Nora
 
 #ifndef __LIBGWS_SCREEN_H
 #define __LIBGWS_SCREEN_H  1

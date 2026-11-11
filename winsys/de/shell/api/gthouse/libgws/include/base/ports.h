@@ -1,5 +1,7 @@
-
+// ports.h
+// Port support
 // This header should be included by including "gws.h".
+// Created by Fred Nora
 
 #ifndef __LIBGWS_PORTS_H
 #define __LIBGWS_PORTS_H   1

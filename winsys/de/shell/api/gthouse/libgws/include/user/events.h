@@ -1,7 +1,7 @@
 // events.h
 // Event support for libgws.
 // This header is include in the gws.h
-// Created by Fred Nora.
+// Created by Fred Nora
 
 
 #ifndef __LIBGWS_EVENTS_H

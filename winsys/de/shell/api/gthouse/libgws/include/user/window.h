@@ -1,9 +1,12 @@
 // window.h
+// Window support.
+// #ps: It needs have the same definitions of display server/compositor.
 // This header should be included by including "gws.h".
-// Created by Fred Nora.
+// Created by Fred Nora
 
 #ifndef  __LIBGWS_WINDOW_H
 #define  __LIBGWS_WINDOW_H    1
+
 
 //
 // Window Flags
