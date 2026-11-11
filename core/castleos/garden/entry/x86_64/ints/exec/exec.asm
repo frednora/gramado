@@ -31,9 +31,9 @@ _AllFaultsHang:
     jmp _AllFaultsHang
 
 
-; Salva aqui o número da fault.	
-global _save_fault_number
-_save_fault_number: 
+; Save the exception number here
+global _save_exception_number
+_save_exception_number: 
     dq 0
 
 ;---------------------------------------
@@ -50,7 +50,7 @@ _save_fault_number:
 extern _x64excep_all_exceptions
 
 align 4  
-all_faults:
+x86_64_exception_handler:
 
 ; Save context
     cli
@@ -104,7 +104,7 @@ all_faults:
 
 
 ; Call c routine in x64fault.c.
-    mov rax, qword [_save_fault_number]
+    mov rax, qword [_save_exception_number]
     mov rdi, rax 
     call _x64excep_all_exceptions 
 
@@ -182,199 +182,199 @@ align 4
 ; int 0
 ; Se ocorrer em ring 0 o sistema tem que terminar,
 ; e se for em ring3, fechamos o aplicativo.
-global ExecutionHall_fault_N0
-ExecutionHall_fault_N0:
-    mov qword [_save_fault_number], qword 0
-    jmp all_faults
+global ExecutionHall_exception_N0
+ExecutionHall_exception_N0:
+    mov qword [_save_exception_number], qword 0
+    jmp x86_64_exception_handler
 
 ; int 1 
-global ExecutionHall_fault_N1
-ExecutionHall_fault_N1:
-    mov qword [_save_fault_number], qword 1
-    jmp all_faults
+global ExecutionHall_exception_N1
+ExecutionHall_exception_N1:
+    mov qword [_save_exception_number], qword 1
+    jmp x86_64_exception_handler
 
 ; int 2 
-global ExecutionHall_fault_N2
-ExecutionHall_fault_N2:
-    mov qword [_save_fault_number], qword 2
-    jmp all_faults
+global ExecutionHall_exception_N2
+ExecutionHall_exception_N2:
+    mov qword [_save_exception_number], qword 2
+    jmp x86_64_exception_handler
 
 ; int 3 
-global ExecutionHall_fault_N3
-ExecutionHall_fault_N3:
-    mov qword [_save_fault_number], qword 3
-    jmp all_faults
+global ExecutionHall_exception_N3
+ExecutionHall_exception_N3:
+    mov qword [_save_exception_number], qword 3
+    jmp x86_64_exception_handler
 
 ; int 4 
-global ExecutionHall_fault_N4
-ExecutionHall_fault_N4:
-    mov qword [_save_fault_number], qword 4
-    jmp all_faults
+global ExecutionHall_exception_N4
+ExecutionHall_exception_N4:
+    mov qword [_save_exception_number], qword 4
+    jmp x86_64_exception_handler
 
 ; int 5 
-global ExecutionHall_fault_N5
-ExecutionHall_fault_N5:
-     mov qword [_save_fault_number], qword 5
-    jmp all_faults
+global ExecutionHall_exception_N5
+ExecutionHall_exception_N5:
+     mov qword [_save_exception_number], qword 5
+    jmp x86_64_exception_handler
 
 ; int 6: Invalid opcode
-global ExecutionHall_fault_INVALID_OPCODE
-ExecutionHall_fault_INVALID_OPCODE:
-    mov qword [_save_fault_number], qword 6
-    jmp all_faults
+global ExecutionHall_exception_INVALID_OPCODE
+ExecutionHall_exception_INVALID_OPCODE:
+    mov qword [_save_exception_number], qword 6
+    jmp x86_64_exception_handler
 
 ; int 7
-global ExecutionHall_fault_N7
-ExecutionHall_fault_N7:
-    mov qword [_save_fault_number], qword 7
-    jmp all_faults
+global ExecutionHall_exception_N7
+ExecutionHall_exception_N7:
+    mov qword [_save_exception_number], qword 7
+    jmp x86_64_exception_handler
 
 ; int 8 - double fault
-global ExecutionHall_fault_DOUBLE
-ExecutionHall_fault_DOUBLE:
-    mov qword [_save_fault_number], qword 8
-    jmp all_faults
+global ExecutionHall_exception_DOUBLE
+ExecutionHall_exception_DOUBLE:
+    mov qword [_save_exception_number], qword 8
+    jmp x86_64_exception_handler
 
 ; int 9 
-global ExecutionHall_fault_N9
-ExecutionHall_fault_N9:
-    mov qword [_save_fault_number], qword 9
-    jmp all_faults
+global ExecutionHall_exception_N9
+ExecutionHall_exception_N9:
+    mov qword [_save_exception_number], qword 9
+    jmp x86_64_exception_handler
 
 ; int 10 
-global ExecutionHall_fault_N10
-ExecutionHall_fault_N10:
-    mov qword [_save_fault_number], qword 10
-    jmp all_faults
+global ExecutionHall_exception_N10
+ExecutionHall_exception_N10:
+    mov qword [_save_exception_number], qword 10
+    jmp x86_64_exception_handler
 
 ; int 11
-global ExecutionHall_fault_N11
-ExecutionHall_fault_N11:
-    mov qword [_save_fault_number], qword 11
-    jmp all_faults
+global ExecutionHall_exception_N11
+ExecutionHall_exception_N11:
+    mov qword [_save_exception_number], qword 11
+    jmp x86_64_exception_handler
 
 ; int 12 - Falha de pilha (interrupção 12).
-global ExecutionHall_fault_STACK
-ExecutionHall_fault_STACK:
-    mov qword [_save_fault_number], qword 12
-    jmp all_faults
+global ExecutionHall_exception_STACK
+ExecutionHall_exception_STACK:
+    mov qword [_save_exception_number], qword 12
+    jmp x86_64_exception_handler
 
 ; int 13 - general protection fault (GPF).
-global ExecutionHall_fault_GP
-ExecutionHall_fault_GP:   
-    mov qword [_save_fault_number], qword 13
-    jmp all_faults
+global ExecutionHall_exception_GP
+ExecutionHall_exception_GP:   
+    mov qword [_save_exception_number], qword 13
+    jmp x86_64_exception_handler
 
 ; int 14 - Page Fault (PF).
 ; #todo:
 ; The hardware pushes a stack frame with the context and generate
 ; an error code describing the error.
-global ExecutionHall_fault_N14
-ExecutionHall_fault_N14:
-    mov qword [_save_fault_number], qword 14
-    jmp all_faults
+global ExecutionHall_exception_N14
+ExecutionHall_exception_N14:
+    mov qword [_save_exception_number], qword 14
+    jmp x86_64_exception_handler
 
 ; int 15 
-global ExecutionHall_fault_N15
-ExecutionHall_fault_N15:
-    mov qword [_save_fault_number], qword 15
-    jmp all_faults
+global ExecutionHall_exception_N15
+ExecutionHall_exception_N15:
+    mov qword [_save_exception_number], qword 15
+    jmp x86_64_exception_handler
 
 ; int 16 
-global ExecutionHall_fault_N16
-ExecutionHall_fault_N16:
-    mov qword [_save_fault_number], qword 16
-    jmp all_faults
+global ExecutionHall_exception_N16
+ExecutionHall_exception_N16:
+    mov qword [_save_exception_number], qword 16
+    jmp x86_64_exception_handler
 
 ; int 17 
-global ExecutionHall_fault_N17
-ExecutionHall_fault_N17:
-    mov qword [_save_fault_number], qword 17
-    jmp all_faults
+global ExecutionHall_exception_N17
+ExecutionHall_exception_N17:
+    mov qword [_save_exception_number], qword 17
+    jmp x86_64_exception_handler
 
 ; int 18
-global ExecutionHall_fault_N18
-ExecutionHall_fault_N18:
-    mov qword [_save_fault_number], qword 18
-    jmp all_faults
+global ExecutionHall_exception_N18
+ExecutionHall_exception_N18:
+    mov qword [_save_exception_number], qword 18
+    jmp x86_64_exception_handler
 
 ; int 19 - Intel reserved.
-global ExecutionHall_fault_N19
-ExecutionHall_fault_N19:
-    mov qword [_save_fault_number], qword 19
-    jmp all_faults
+global ExecutionHall_exception_N19
+ExecutionHall_exception_N19:
+    mov qword [_save_exception_number], qword 19
+    jmp x86_64_exception_handler
 
 ; int 20 - Intel reserved. 
-global ExecutionHall_fault_N20
-ExecutionHall_fault_N20:
-    mov qword [_save_fault_number], qword 20
-    jmp all_faults
+global ExecutionHall_exception_N20
+ExecutionHall_exception_N20:
+    mov qword [_save_exception_number], qword 20
+    jmp x86_64_exception_handler
 
 ; int 21 - Intel reserved.
-global ExecutionHall_fault_N21
-ExecutionHall_fault_N21:
-    mov qword [_save_fault_number], qword 21
-    jmp all_faults
+global ExecutionHall_exception_N21
+ExecutionHall_exception_N21:
+    mov qword [_save_exception_number], qword 21
+    jmp x86_64_exception_handler
 
 ; int 22 - Intel reserved.
-global ExecutionHall_fault_N22
-ExecutionHall_fault_N22:
-    mov qword [_save_fault_number], qword 22
-    jmp all_faults
+global ExecutionHall_exception_N22
+ExecutionHall_exception_N22:
+    mov qword [_save_exception_number], qword 22
+    jmp x86_64_exception_handler
 
 ; int 23 - Intel reserved. 
-global ExecutionHall_fault_N23
-ExecutionHall_fault_N23:
-    mov qword [_save_fault_number], qword 23
-    jmp all_faults
+global ExecutionHall_exception_N23
+ExecutionHall_exception_N23:
+    mov qword [_save_exception_number], qword 23
+    jmp x86_64_exception_handler
 
 ; int 24 - Intel reserved. 
-global ExecutionHall_fault_N24
-ExecutionHall_fault_N24:
-    mov qword [_save_fault_number], qword 24
-    jmp all_faults
+global ExecutionHall_exception_N24
+ExecutionHall_exception_N24:
+    mov qword [_save_exception_number], qword 24
+    jmp x86_64_exception_handler
 
 ; int 25 - Intel reserved. 
-global ExecutionHall_fault_N25
-ExecutionHall_fault_N25:
-    mov qword [_save_fault_number], qword 25
-    jmp all_faults
+global ExecutionHall_exception_N25
+ExecutionHall_exception_N25:
+    mov qword [_save_exception_number], qword 25
+    jmp x86_64_exception_handler
 
 ; int 26 - Intel reserved. 
-global ExecutionHall_fault_N26
-ExecutionHall_fault_N26:
-    mov qword [_save_fault_number], qword 26
-    jmp all_faults
+global ExecutionHall_exception_N26
+ExecutionHall_exception_N26:
+    mov qword [_save_exception_number], qword 26
+    jmp x86_64_exception_handler
 
 ; int 27 - Intel reserved. 
-global ExecutionHall_fault_N27
-ExecutionHall_fault_N27:
-    mov qword [_save_fault_number], qword 27
-    jmp all_faults
+global ExecutionHall_exception_N27
+ExecutionHall_exception_N27:
+    mov qword [_save_exception_number], qword 27
+    jmp x86_64_exception_handler
 
 ; int 28 - Intel reserved. 
-global ExecutionHall_fault_N28
-ExecutionHall_fault_N28:
-    mov qword [_save_fault_number], qword 28
-    jmp all_faults
+global ExecutionHall_exception_N28
+ExecutionHall_exception_N28:
+    mov qword [_save_exception_number], qword 28
+    jmp x86_64_exception_handler
 
 ; int 29 - Intel reserved.
-global ExecutionHall_fault_N29
-ExecutionHall_fault_N29:
-    mov qword [_save_fault_number], qword 29
-    jmp all_faults
+global ExecutionHall_exception_N29
+ExecutionHall_exception_N29:
+    mov qword [_save_exception_number], qword 29
+    jmp x86_64_exception_handler
 
 ; int 30 - Intel reserved.
-global ExecutionHall_fault_N30
-ExecutionHall_fault_N30:
-    mov qword [_save_fault_number], qword 30
-    jmp all_faults
+global ExecutionHall_exception_N30
+ExecutionHall_exception_N30:
+    mov qword [_save_exception_number], qword 30
+    jmp x86_64_exception_handler
 
 ; int 31 - Intel reserved. 
-global ExecutionHall_fault_N31
-ExecutionHall_fault_N31:
-    mov qword [_save_fault_number], qword 31
-    jmp all_faults
+global ExecutionHall_exception_N31
+ExecutionHall_exception_N31:
+    mov qword [_save_exception_number], qword 31
+    jmp x86_64_exception_handler
 
 align 4
 

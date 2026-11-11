@@ -3,17 +3,17 @@
 
 | Vector (Decimal) | Vector (Hex) | Type          | Handler Function                              | Description |
 |------------------|--------------|---------------|-----------------------------------------------|-----------|
-| 0                | 0x00         | Fault         | ExecutionHall_fault_N0                        | Divide by zero |
-| 1                | 0x01         | Fault         | ExecutionHall_fault_N1                        | Debug |
-| 2                | 0x02         | NMI           | ExecutionHall_fault_N2                        | Non-maskable interrupt |
-| 3                | 0x03         | Fault         | ExecutionHall_fault_N3                        | Breakpoint |
-| 4                | 0x04         | Fault         | ExecutionHall_fault_N4                        | Overflow |
-| 5                | 0x05         | Fault         | ExecutionHall_fault_N5                        | Bound range exceeded |
-| 6                | 0x06         | Fault         | ExecutionHall_fault_INVALID_OPCODE            | Invalid opcode |
-| 7                | 0x07         | Fault         | ExecutionHall_fault_N7                        | Device not available |
-| 8                | 0x08         | Fault         | ExecutionHall_fault_DOUBLE                    | Double fault |
-| 12               | 0x0C         | Fault         | ExecutionHall_fault_STACK                     | Stack-segment fault |
-| 13               | 0x0D         | Fault         | ExecutionHall_fault_GP                        | General protection fault |
+| 0                | 0x00         | Fault         | ExecutionHall_exception_N0                        | Divide by zero |
+| 1                | 0x01         | Fault         | ExecutionHall_exception_N1                        | Debug |
+| 2                | 0x02         | NMI           | ExecutionHall_exception_N2                        | Non-maskable interrupt |
+| 3                | 0x03         | Fault         | ExecutionHall_exception_N3                        | Breakpoint |
+| 4                | 0x04         | Fault         | ExecutionHall_exception_N4                        | Overflow |
+| 5                | 0x05         | Fault         | ExecutionHall_exception_N5                        | Bound range exceeded |
+| 6                | 0x06         | Fault         | ExecutionHall_exception_INVALID_OPCODE            | Invalid opcode |
+| 7                | 0x07         | Fault         | ExecutionHall_exception_N7                        | Device not available |
+| 8                | 0x08         | Fault         | ExecutionHall_exception_DOUBLE                    | Double fault |
+| 12               | 0x0C         | Fault         | ExecutionHall_exception_STACK                     | Stack-segment fault |
+| 13               | 0x0D         | Fault         | ExecutionHall_exception_GP                        | General protection fault |
 | 32               | 0x20         | IRQ           | unhandled_irq                                 | Timer (provisory) |
 | 33               | 0x21         | IRQ           | PeripheralHall_irq1                           | PS/2 Keyboard |
 | 40               | 0x28         | IRQ           | unhandled_irq                                 | RTC (Clock) |

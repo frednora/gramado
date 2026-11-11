@@ -2815,8 +2815,8 @@ START:
 
 ; Create a common handler, 'unhandled_int'. (0xEE00)
     call setup_idt   
-; Setup vectors for faults and exceptions.  (0xEE00) 
-    call setup_faults
+; Setup vectors for x86_64 exceptions.  (0xEE00) 
+    call x86_64_setup_exceptions
 ; Some new vectors. (sw=0xEE00 hw=0x8E00)
     call setup_vectors
 

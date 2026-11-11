@@ -690,7 +690,7 @@ __address_offset_63_32: dd 0
 
 
 ;=============================================
-; setup_faults:
+; x86_64_setup_exceptions:
 ;    Configura vetores da idt para faults.
 ; hw interrupts:
 ; see: hw1.asm
@@ -725,139 +725,140 @@ __address_offset_63_32: dd 0
 ; Maps CPU faults (0–31) to handlers
 ; ============================================
 
-setup_faults:
 ; We're using 0xEE00: (Permissive)
 ; Standard way: 0x8E00 (Restrict to ring 0)
+
+x86_64_setup_exceptions:
 
     push rax
     push rbx
 
 ;#0
-    mov rax, qword ExecutionHall_fault_N0
+    mov rax, qword ExecutionHall_exception_N0
     mov rbx, qword 0
     call _setup_system_interrupt ; 0xEE00
 ;#1  
-    mov rax, qword ExecutionHall_fault_N1
+    mov rax, qword ExecutionHall_exception_N1
     mov rbx, qword 1
     call _setup_system_interrupt ; 0xEE00
 ;#2  
-    mov rax, qword ExecutionHall_fault_N2
+    mov rax, qword ExecutionHall_exception_N2
     mov rbx, qword 2
     call _setup_system_interrupt ; 0xEE00
 ;#3  debug
-    mov rax, qword ExecutionHall_fault_N3
+    mov rax, qword ExecutionHall_exception_N3
     mov rbx, qword 3
     call _setup_system_interrupt ; 0xEE00
 ;#4  
-    mov rax, qword ExecutionHall_fault_N4
+    mov rax, qword ExecutionHall_exception_N4
     mov rbx, qword 4
     call _setup_system_interrupt ; 0xEE00
 ;#5  
-    mov rax, qword ExecutionHall_fault_N5
+    mov rax, qword ExecutionHall_exception_N5
     mov rbx, qword 5
     call _setup_system_interrupt ; 0xEE00
 ;#6 - Invalid opcode
-    mov rax, qword ExecutionHall_fault_INVALID_OPCODE
+    mov rax, qword ExecutionHall_exception_INVALID_OPCODE
     mov rbx, qword 6
     call _setup_system_interrupt ; 0xEE00
 ;#7  
-    mov rax, qword ExecutionHall_fault_N7
+    mov rax, qword ExecutionHall_exception_N7
     mov rbx, qword 7
     call _setup_system_interrupt ; 0xEE00
 ;#8 - double fault
-    mov rax, qword ExecutionHall_fault_DOUBLE
+    mov rax, qword ExecutionHall_exception_DOUBLE
     mov rbx, qword 8
     call _setup_system_interrupt ; 0xEE00
 ;#9  
-    mov rax, qword ExecutionHall_fault_N9
+    mov rax, qword ExecutionHall_exception_N9
     mov rbx, qword 9
     call _setup_system_interrupt ; 0xEE00
 ;#10  
-    mov rax, qword ExecutionHall_fault_N10
+    mov rax, qword ExecutionHall_exception_N10
     mov rbx, qword 10
     call _setup_system_interrupt ; 0xEE00
 ;#11  
-    mov rax, qword ExecutionHall_fault_N11
+    mov rax, qword ExecutionHall_exception_N11
     mov rbx, qword 11
     call _setup_system_interrupt ; 0xEE00
 ;#12 - stack
-    mov rax, qword ExecutionHall_fault_STACK
+    mov rax, qword ExecutionHall_exception_STACK
     mov rbx, qword 12
     call _setup_system_interrupt ; 0xEE00
 ;#13 - general protection
-    mov rax, qword ExecutionHall_fault_GP
+    mov rax, qword ExecutionHall_exception_GP
     mov rbx, qword 13
     call _setup_system_interrupt ; 0xEE00
 ;#14  
-    mov rax, qword ExecutionHall_fault_N14
+    mov rax, qword ExecutionHall_exception_N14
     mov rbx, qword 14
     call _setup_system_interrupt ; 0xEE00
 ;#15 
-    mov rax, qword ExecutionHall_fault_N15
+    mov rax, qword ExecutionHall_exception_N15
     mov rbx, qword 15
     call _setup_system_interrupt ; 0xEE00
 ;#16 
-    mov rax, qword ExecutionHall_fault_N16
+    mov rax, qword ExecutionHall_exception_N16
     mov rbx, qword 16
     call _setup_system_interrupt ; 0xEE00
 ;#17  
-    mov rax, qword ExecutionHall_fault_N17
+    mov rax, qword ExecutionHall_exception_N17
     mov rbx, qword 17
     call _setup_system_interrupt ; 0xEE00
 ;#18  
-    mov rax, qword ExecutionHall_fault_N18
+    mov rax, qword ExecutionHall_exception_N18
     mov rbx, qword 18
     call _setup_system_interrupt ; 0xEE00
 ;#19 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N19
+    mov rax, qword ExecutionHall_exception_N19
     mov rbx, qword 19
     call _setup_system_interrupt ; 0xEE00
 ;#20 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N20
+    mov rax, qword ExecutionHall_exception_N20
     mov rbx, qword 20
     call _setup_system_interrupt ; 0xEE00
 ;#21 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N21
+    mov rax, qword ExecutionHall_exception_N21
     mov rbx, qword 21
     call _setup_system_interrupt ; 0xEE00
 ;#22 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N22
+    mov rax, qword ExecutionHall_exception_N22
     mov rbx, qword 22
     call _setup_system_interrupt ; 0xEE00
 ;#23 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N23
+    mov rax, qword ExecutionHall_exception_N23
     mov rbx, qword 23
     call _setup_system_interrupt ; 0xEE00
 ;#24 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N24
+    mov rax, qword ExecutionHall_exception_N24
     mov rbx, qword 24
     call _setup_system_interrupt ; 0xEE00
 ;#25 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N25
+    mov rax, qword ExecutionHall_exception_N25
     mov rbx, qword 25
     call _setup_system_interrupt ; 0xEE00
 ;#26 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N26
+    mov rax, qword ExecutionHall_exception_N26
     mov rbx, qword 26
     call _setup_system_interrupt ; 0xEE00
 ;#27 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N27
+    mov rax, qword ExecutionHall_exception_N27
     mov rbx, qword 27
     call _setup_system_interrupt ; 0xEE00
 ;#28 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N28
+    mov rax, qword ExecutionHall_exception_N28
     mov rbx, qword 28
     call _setup_system_interrupt ; 0xEE00
 ;#29 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N29
+    mov rax, qword ExecutionHall_exception_N29
     mov rbx, qword 29
     call _setup_system_interrupt ; 0xEE00
 ;#30 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N30
+    mov rax, qword ExecutionHall_exception_N30
     mov rbx, qword 30
     call _setup_system_interrupt ; 0xEE00
 ;#31 - Intel reserved.
-    mov rax, qword ExecutionHall_fault_N31
+    mov rax, qword ExecutionHall_exception_N31
     mov rbx, qword 31
     call _setup_system_interrupt ; 0xEE00
 

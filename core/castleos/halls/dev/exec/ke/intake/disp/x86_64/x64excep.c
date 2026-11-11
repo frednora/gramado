@@ -186,7 +186,7 @@ fail:
     return (int) -1;
 }
 
-// Called by 'all_faults:' in exec.asm.
+// Called by x86_64_exception_handler() in exec.asm.
 void x64excep_all_exceptions(unsigned long number)
 {
 // Quote: 'You've never failed and You won't start now'.
