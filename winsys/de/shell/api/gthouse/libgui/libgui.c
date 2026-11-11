@@ -3049,7 +3049,9 @@ struct ui_component_d *libgui_create_ui_component(
     // #test: Using (8x16) for now, because we still do not have the char dimensions.
     if (uic->flags & 0x0002)
     {
-        LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
+        // LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
+        LongSize = (unsigned long) (1 * 8 * scale);  // 8px per char
+        LongSize = (unsigned long) (1 * FontInitialization.height * scale);
         if (height > LongSize)
             text_y = top + ((height - LongSize) / 2);
     }
@@ -3256,7 +3258,9 @@ libgui_redraw_ui_component(
     // #test: Using (8x16) for now, because we still do not have the char dimensions.
     if (uic->flags & 0x0002)
     {
-        LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
+        //LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
+        //LongSize = (unsigned long) (1 * 8 * scale);  // 8px per char
+        LongSize = (unsigned long) (1 * FontInitialization.height * scale);
         if (uic->height > LongSize)
             text_y = uic->top + ((uic->height - LongSize) / 2);
     }
