@@ -20,6 +20,9 @@ struct te_d  *TEInitProcess;           // Init process
 struct te_d  *TEDisplayServerProcess;  // Display Server process
 // ...
 
+struct te_d *LastReusableProcess = NULL;
+
+
 // See: kpid.h
 pid_t __gpidBoot=0;
 pid_t __gpidInclude=0;
@@ -1150,6 +1153,35 @@ struct te_d *teObject(void)
     return (struct te_d *) p_obj;
 }
 
+struct te_d *process_alloc(void)
+{
+    struct te_d *p;
+
+    if (LastReusableProcess != NULL)
+    {
+        if (LastReusableProcess->used == TRUE && 
+            LastReusableProcess->magic == PROCESS_STOCK)
+        {
+            p = LastReusableProcess;
+            LastReusableProcess = NULL;
+
+            // Reinitialize
+            memset(p, 0, sizeof(struct te_d));
+            p->used  = TRUE;
+            p->magic = PROCESS_MAGIC;
+
+            printk("process_alloc: REUSING\n");
+
+            return p;
+        }
+    }
+
+    printk("process_alloc: NOT REUSING\n");
+
+    return (struct te_d *) teObject();
+}
+
+
 //
 // $
 // CREATE OBJECT
@@ -1164,7 +1196,8 @@ struct te_d *create_and_initialize_process_object(void)
     register int i=0;
 
 // Process structure
-    new_process = (struct te_d *) teObject();
+    // new_process = (struct te_d *) teObject();
+    new_process = (struct te_d *) process_alloc();
     if ((void *) new_process == NULL){
         printk ("create_and_initialize_process_object: new_process\n");
         goto fail;
@@ -1385,9 +1418,10 @@ static struct te_d *create_process_imp (
 
 // ---- Create process object -------------------------------
 
-    Process = (void *) teObject();
+    // Process = (void *) teObject();
+    Process = (void *) process_alloc();
     if ((void *) Process == NULL){
-        printk("create_process: on teObject()\n");
+        printk("create_process: Process\n");
         return NULL;
     }
     Process->type = PROCESS_TYPE_NULL;     // #todo

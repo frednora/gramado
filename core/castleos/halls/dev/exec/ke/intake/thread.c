@@ -10,6 +10,11 @@ unsigned long threadList[THREAD_COUNT_MAX];
 
 struct thread_d  *InitThread;  // The thread for the Init Process
 
+
+// #test
+struct thread_d *LastReusableThread = NULL;
+
+
 //
 // The current thread global variable.
 //
@@ -49,6 +54,7 @@ static struct thread_d *create_thread_imp (
 // =========================================================
 //
 
+
 // Create thread object
 struct thread_d *threadObject(void)
 {
@@ -62,6 +68,37 @@ struct thread_d *threadObject(void)
 
     return (struct thread_d *) t_obj;
 }
+
+
+struct thread_d *thread_alloc(void)
+{
+    struct thread_d *t;
+
+    if (LastReusableThread != NULL)
+    {
+        if (LastReusableThread->used == TRUE && 
+            LastReusableThread->magic == THREAD_STOCK)
+        {
+            t = LastReusableThread;
+            LastReusableThread = NULL;
+
+            // Reinitialize
+            memset(t, 0, sizeof(struct thread_d));
+            t->used  = TRUE;
+            t->magic = THREAD_MAGIC;
+
+            printk("thread_alloc: REUSING\n");
+
+            return t;
+        }
+    }
+
+    printk("thread_alloc: NOT REUSING\n");
+
+    return (struct thread_d *) threadObject();
+}
+
+
 
 // Worker
 static void __ps_initialize_thread_common_elements(struct thread_d *t)
@@ -1605,9 +1642,10 @@ static struct thread_d *create_thread_imp (
 //
 
 // Create thread structure
-    Thread = (void *) threadObject(); 
+    //Thread = (void *) threadObject();  // #ps old 
+    Thread = (void *) thread_alloc();  // #ps testing
     if ((void *) Thread == NULL){
-        printk("create_thread: on threadObject()\n");
+        printk("create_thread: Thread\n");
         return NULL;
     }
 

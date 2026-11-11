@@ -442,8 +442,9 @@ static void __on_zombie(struct thread_d *thread)
     thread->kobj.is_available_for_reuse = TRUE;
     thread->state = THREAD_STATE_WAITING_FOR_REUSE;
     thread->used = TRUE;
-    thread->magic = 4321;  // Reuse state
+    thread->magic = THREAD_STOCK;  // Reuse state
 
+    LastReusableThread = thread;
 
 // VERY GOOD: Its working!
 // #bugbug
@@ -510,7 +511,9 @@ static void __on_zombie(struct thread_d *thread)
                         tmp->kobj.is_available_for_reuse = TRUE;
                         tmp->state = THREAD_STATE_WAITING_FOR_REUSE;
                         tmp->used = TRUE;
-                        tmp->magic = 4321;  // Reuse state
+                        tmp->magic = THREAD_STOCK;  // Reuse state
+
+                        LastReusableThread = tmp;
                     }
                 }
 
@@ -518,6 +521,7 @@ static void __on_zombie(struct thread_d *thread)
         }
     }
 
+// te is the process structure.
 // Reuse the process?
 // #todo: 
 // We can do the same for the process.
@@ -530,7 +534,9 @@ static void __on_zombie(struct thread_d *thread)
         thread->te->kobj.is_available_for_reuse = TRUE;
         thread->te->state = PROCESS_STATE_WAITING_FOR_REUSE;
         thread->te->used = TRUE;
-        thread->te->magic = 4321;  // Reuse state
+        thread->te->magic = PROCESS_STOCK;  // Reuse state
+
+        LastReusableProcess = thread->te;
     }
 }
 

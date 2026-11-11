@@ -10,8 +10,11 @@
 // --------------------------------
 #define THREAD_MAGIC  1234  // In use
 #define THREAD_STOCK  4321  // Free for reuse
+//#define THREAD_MAGIC_ACTIVE    1234
+//#define THREAD_MAGIC_REUSABLE  4321
 //...
 
+extern struct thread_d *LastReusableThread;
 
 // =================================
 // System threads: (canonical)
@@ -1007,6 +1010,7 @@ extern unsigned long threadList[THREAD_COUNT_MAX];
 
 // Create thread object
 struct thread_d *threadObject(void);
+struct thread_d *thread_alloc(void);
 
 // From tlib.c
 void show_slot(tid_t tid);

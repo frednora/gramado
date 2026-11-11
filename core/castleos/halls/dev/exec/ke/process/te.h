@@ -12,6 +12,8 @@
 #define PROCESS_STOCK  4321  // Free for reuse
 //...
 
+extern struct te_d *LastReusableProcess;
+
 
 // #bugbug
 // The 'heap pool' has 2MB in size
@@ -969,6 +971,7 @@ extern unsigned long teList[PROCESS_COUNT_MAX];
 // Create te object. (Thread Environment)
 // fka Process ControlBlock
 struct te_d *teObject(void);
+struct te_d *process_alloc(void);
 
 int destroy_process_structure(struct te_d *process);
 int gc_process_structure(struct te_d *process);
