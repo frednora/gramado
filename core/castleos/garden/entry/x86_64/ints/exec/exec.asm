@@ -1,6 +1,24 @@
 ; Execution Hall (Red) — exec.asm
 ; Created by Fred Nora.
 
+
+; Faults (fixable, returns to the faulting instruction):
+;   Vector 0 (#DE): Divide Error (division by zero)
+;	Vector 5 (#BR): BOUND Range Exceeded
+;	Vector 6 (#UD): Invalid Opcode (undefined instruction)
+;	Vector 13 (#GP): General Protection Fault
+;   Vector 14 (#PF): Page Fault
+;
+; Traps (reported immediately after the execution of the trapping instruction):
+;   Vector 1 (#DB): Debug
+;   Vector 3 (#BP): Breakpoint
+;   Vector 4 (#OF): Overflow
+;
+; Aborts (severe unrecoverable hardware errors):
+;   Vector 8 (#DF): Double Fault
+;   Vector 18 (#MC): Machine Check
+
+
 unhandled_irq:
     ;cli ;#bugbug
     push rax
@@ -175,97 +193,126 @@ x86_64_exception_handler:
     iretq
 
 ;----------------------------
-; Building trampolines for the faults.
+; Building trampolines for the exveptions
 
 align 4
 
-; int 0
-; Se ocorrer em ring 0 o sistema tem que terminar,
-; e se for em ring3, fechamos o aplicativo.
+; int 0 - (FAULT)
+; 0 (#DE) Divide Error. Occurs when dividing by zero or when a division 
+; result exceeds the destination register's capacity.
 global ExecutionHall_exception_N0
 ExecutionHall_exception_N0:
     mov qword [_save_exception_number], qword 0
     jmp x86_64_exception_handler
 
-; int 1 
+; int 1 - (TRAP)
+; 1 (#DB) Debug. Triggered by hardware breakpoints, 
+; single-stepping instructions, or debug register conditions.
 global ExecutionHall_exception_N1
 ExecutionHall_exception_N1:
     mov qword [_save_exception_number], qword 1
     jmp x86_64_exception_handler
 
 ; int 2 
+; 2 (NMI) Non-Maskable Interrupt. Signals critical, unignorable hardware events such as 
+; memory parity errors or watchdog timeouts.
 global ExecutionHall_exception_N2
 ExecutionHall_exception_N2:
     mov qword [_save_exception_number], qword 2
     jmp x86_64_exception_handler
 
-; int 3 
+; int 3 - (TRAP)
+; 3 (#BP) Breakpoint. Generated intentionally by software executing 
+; the INT3 instruction for debugging.
 global ExecutionHall_exception_N3
 ExecutionHall_exception_N3:
     mov qword [_save_exception_number], qword 3
     jmp x86_64_exception_handler
 
-; int 4 
+; int 4 - (TRAP)
+; 4 (#OF) Overflow. Triggered when the INTO instruction executes 
+; while the CPU's overflow flag (OF) is set.
 global ExecutionHall_exception_N4
 ExecutionHall_exception_N4:
     mov qword [_save_exception_number], qword 4
     jmp x86_64_exception_handler
 
-; int 5 
+; int 5 - (FAULT)
+; 5 (#BR) BOUND Range Exceeded. Occurs when the BOUND instruction detects an array index 
+; outside its specified lower or upper limits.
 global ExecutionHall_exception_N5
 ExecutionHall_exception_N5:
      mov qword [_save_exception_number], qword 5
     jmp x86_64_exception_handler
 
-; int 6: Invalid opcode
+; int 6: Invalid opcode - (FAULT)
+; 6 (#UD) Invalid Opcode. Fires when the processor tries to decode an 
+; unrecognized, undefined, or unsupported instruction.
 global ExecutionHall_exception_INVALID_OPCODE
 ExecutionHall_exception_INVALID_OPCODE:
     mov qword [_save_exception_number], qword 6
     jmp x86_64_exception_handler
 
 ; int 7
+; 7 (#NM) Device Not Available. Happens when executing x87 FPU or SIMD instructions while 
+; the math coprocessor is disabled or marked unavailable.
 global ExecutionHall_exception_N7
 ExecutionHall_exception_N7:
     mov qword [_save_exception_number], qword 7
     jmp x86_64_exception_handler
 
-; int 8 - double fault
+; int 8 - double fault (ABORT)
+; 8 (#DF) Double Fault. An unrecoverable abort triggered when a second exception occurs while 
+; trying to invoke the handler for a first exception.
 global ExecutionHall_exception_DOUBLE
 ExecutionHall_exception_DOUBLE:
     mov qword [_save_exception_number], qword 8
     jmp x86_64_exception_handler
 
 ; int 9 
+; 9 Coprocessor Segment Overrun. A legacy 386-era fault caused when an 
+; external math coprocessor operand crossed a segment boundary.
 global ExecutionHall_exception_N9
 ExecutionHall_exception_N9:
     mov qword [_save_exception_number], qword 9
     jmp x86_64_exception_handler
 
 ; int 10 
+; 10 (#TS) Invalid TSS. Occurs during a task switch when the Task State Segment (TSS) 
+; contains invalid selectors or limits.
 global ExecutionHall_exception_N10
 ExecutionHall_exception_N10:
     mov qword [_save_exception_number], qword 10
     jmp x86_64_exception_handler
 
 ; int 11
+; 11 (#NP) Segment Not Present. Fires when loading a segment register whose 
+; descriptor has its "present" bit cleared to zero.
 global ExecutionHall_exception_N11
 ExecutionHall_exception_N11:
     mov qword [_save_exception_number], qword 11
     jmp x86_64_exception_handler
 
-; int 12 - Falha de pilha (interrupção 12).
+; int 12 - stack
+; 12 (#SS) Stack-Segment Fault. Triggered by stack limit violations or 
+; when loading a non-present stack segment selector.
 global ExecutionHall_exception_STACK
 ExecutionHall_exception_STACK:
     mov qword [_save_exception_number], qword 12
     jmp x86_64_exception_handler
 
-; int 13 - general protection fault (GPF).
+; int 13 - general protection fault (GPF) - (FAULT)
+; 13 (#GP) General Protection Fault. Catches privilege violations, 
+; null selector dereferences, canonical address errors, and 
+; other memory protection breaches.
 global ExecutionHall_exception_GP
 ExecutionHall_exception_GP:   
     mov qword [_save_exception_number], qword 13
     jmp x86_64_exception_handler
 
-; int 14 - Page Fault (PF).
+; int 14 - Page Fault (PF) - (FAULT)
+; 14 (#PF) Page Fault. Occurs when accessing a virtual memory page that 
+; is unmapped, swapped out, or violates read/write/user permissions.
 ; #todo:
 ; The hardware pushes a stack frame with the context and generate
 ; an error code describing the error.
@@ -275,102 +322,132 @@ ExecutionHall_exception_N14:
     jmp x86_64_exception_handler
 
 ; int 15 
+; 15 Reserved. Permanently reserved by Intel and AMD for internal architecture use.
 global ExecutionHall_exception_N15
 ExecutionHall_exception_N15:
     mov qword [_save_exception_number], qword 15
     jmp x86_64_exception_handler
 
 ; int 16 
+; 16 (#MF) x87 Floating-Point Exception. Signals an unmasked x87 math error, 
+; such as floating-point overflow, underflow, or invalid operation.
 global ExecutionHall_exception_N16
 ExecutionHall_exception_N16:
     mov qword [_save_exception_number], qword 16
     jmp x86_64_exception_handler
 
 ; int 17 
+; 17 (#AC) Alignment Check. Fires when unaligned memory access occurs while 
+; alignment checking is enabled in user mode.
 global ExecutionHall_exception_N17
 ExecutionHall_exception_N17:
     mov qword [_save_exception_number], qword 17
     jmp x86_64_exception_handler
 
-; int 18
+; int 18 - Machine check (ABORT)
+; 18 (#MC) Machine Check. An abort indicating severe internal hardware failures 
+; like CPU cache, bus, or memory controller errors.
 global ExecutionHall_exception_N18
 ExecutionHall_exception_N18:
     mov qword [_save_exception_number], qword 18
     jmp x86_64_exception_handler
 
-; int 19 - Intel reserved.
+; int 19 - Intel reserved
+; 19 (#XM / #XF) SIMD Floating-Point Exception. Reports unmasked floating-point errors 
+; generated by SSE or AVX vector instructions.
 global ExecutionHall_exception_N19
 ExecutionHall_exception_N19:
     mov qword [_save_exception_number], qword 19
     jmp x86_64_exception_handler
 
-; int 20 - Intel reserved. 
+; int 20 - Intel reserved
+; 20 (#VE) Virtualization Exception. Notifies a guest OS of 
+; Extended Page Table (EPT) violations so it can handle 
+; them without a full VM exit.
 global ExecutionHall_exception_N20
 ExecutionHall_exception_N20:
     mov qword [_save_exception_number], qword 20
     jmp x86_64_exception_handler
 
-; int 21 - Intel reserved.
+; int 21 - Intel reserved
+; 21 (#CP) Control Protection Exception. Triggered by 
+; Control-flow Enforcement Technology (CET) when a RET or 
+; indirect jump violates shadow stack or branch tracking rules.
 global ExecutionHall_exception_N21
 ExecutionHall_exception_N21:
     mov qword [_save_exception_number], qword 21
     jmp x86_64_exception_handler
 
-; int 22 - Intel reserved.
+; int 22 - Intel reserved
+; Unassigned vectors reserved by Intel and AMD for future processor features.
 global ExecutionHall_exception_N22
 ExecutionHall_exception_N22:
     mov qword [_save_exception_number], qword 22
     jmp x86_64_exception_handler
 
-; int 23 - Intel reserved. 
+; int 23 - Intel reserved
+; Unassigned vectors reserved by Intel and AMD for future processor features.
 global ExecutionHall_exception_N23
 ExecutionHall_exception_N23:
     mov qword [_save_exception_number], qword 23
     jmp x86_64_exception_handler
 
-; int 24 - Intel reserved. 
+; int 24 - Intel reserved
+; Unassigned vectors reserved by Intel and AMD for future processor features.
 global ExecutionHall_exception_N24
 ExecutionHall_exception_N24:
     mov qword [_save_exception_number], qword 24
     jmp x86_64_exception_handler
 
-; int 25 - Intel reserved. 
+; int 25 - Intel reserved
+; Unassigned vectors reserved by Intel and AMD for future processor features.
 global ExecutionHall_exception_N25
 ExecutionHall_exception_N25:
     mov qword [_save_exception_number], qword 25
     jmp x86_64_exception_handler
 
-; int 26 - Intel reserved. 
+; int 26 - Intel reserved
+; Unassigned vectors reserved by Intel and AMD for future processor features.
 global ExecutionHall_exception_N26
 ExecutionHall_exception_N26:
     mov qword [_save_exception_number], qword 26
     jmp x86_64_exception_handler
 
-; int 27 - Intel reserved. 
+; int 27 - Intel reserved
+; Unassigned vectors reserved by Intel and AMD for future processor features.
 global ExecutionHall_exception_N27
 ExecutionHall_exception_N27:
     mov qword [_save_exception_number], qword 27
     jmp x86_64_exception_handler
 
-; int 28 - Intel reserved. 
+; int 28 - Intel reserved
+; 28 (#HV) Hypervisor Injection Exception. Used by AMD SEV-SNP hypervisors to 
+; safely inject virtual interrupts or events into an encrypted guest VM.
 global ExecutionHall_exception_N28
 ExecutionHall_exception_N28:
     mov qword [_save_exception_number], qword 28
     jmp x86_64_exception_handler
 
-; int 29 - Intel reserved.
+; int 29 - Intel reserved
+; 29 (#VC) VMM Communication Exception. 
+; Triggered on AMD SEV-ES/SNP guests when an instruction requires 
+; hypervisor assistance via the GHCB protocol.
 global ExecutionHall_exception_N29
 ExecutionHall_exception_N29:
     mov qword [_save_exception_number], qword 29
     jmp x86_64_exception_handler
 
-; int 30 - Intel reserved.
+; int 30 - Intel reserved
+; 30 (#SX) Security Exception. Signals security-sensitive events 
+; on AMD processors, such as an external INIT signal attempting to 
+; reset a protected system.
 global ExecutionHall_exception_N30
 ExecutionHall_exception_N30:
     mov qword [_save_exception_number], qword 30
     jmp x86_64_exception_handler
 
-; int 31 - Intel reserved. 
+; int 31 - Intel reserved
+; 31 Reserved. Unassigned vector reserved for future hardware architecture use
 global ExecutionHall_exception_N31
 ExecutionHall_exception_N31:
     mov qword [_save_exception_number], qword 31

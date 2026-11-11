@@ -799,13 +799,22 @@ void x64excep_all_exceptions(unsigned long number)
             x_panic("x64excep_all_exceptions: 19 - SIMD Floating-Point Exception");
             break;
 
-        // 20 - Virtualization Exception
+        // 20 (#VE) Virtualization Exception. Notifies a guest OS of 
+        // Extended Page Table (EPT) violations so it can handle 
+        // them without a full VM exit.
         case 20: 
             x_panic("x64excep_all_exceptions: 20 Virtualization Exception"); 
             break;
 
-        // 21 - Control Protection Exception
-        case 21: x_panic("x64excep_all_exceptions: 21"); break;
+        // int 21 - Intel reserved
+        // 21 (#CP) Control Protection Exception. Triggered by 
+        // Control-flow Enforcement Technology (CET) when a RET or 
+        // indirect jump violates shadow stack or branch tracking rules.
+        case 21: 
+            x_panic("x64excep_all_exceptions: 21"); 
+            break;
+
+        // 22~27 - Intel Reserved
         case 22: x_panic("x64excep_all_exceptions: 22"); break;
         case 23: x_panic("x64excep_all_exceptions: 23"); break;
         case 24: x_panic("x64excep_all_exceptions: 24"); break;
@@ -813,19 +822,31 @@ void x64excep_all_exceptions(unsigned long number)
         case 26: x_panic("x64excep_all_exceptions: 26"); break;
         case 27: x_panic("x64excep_all_exceptions: 27"); break;
 
-        // 28 - Hypervisor Injection Exception
+        // 28 (#HV) Hypervisor Injection Exception. 
+        // Used by AMD SEV-SNP hypervisors to safely inject 
+        // virtual interrupts or events into an encrypted guest VM.
         case 28: 
             x_panic("x64excep_all_exceptions: 28 - Hypervisor Injection Exception");
             break;
 
-        // 29 - VMM Communication Exception
+        // 29 (#VC) VMM Communication Exception. 
+        // Triggered on AMD SEV-ES/SNP guests when an instruction requires 
+        // hypervisor assistance via the GHCB protocol.
         case 29:
             x_panic("x64excep_all_exceptions: 29 - VMM Communication Exception");
             break;
 
-        // 30 - Security Exception
-        case 30: x_panic("x64excep_all_exceptions: 30"); break;
-        case 31: x_panic("x64excep_all_exceptions: 31"); break;
+        // 30 (#SX) Security Exception. Signals security-sensitive events 
+        // on AMD processors, such as an external INIT signal attempting to 
+        // reset a protected system.
+        case 30: 
+            x_panic("x64excep_all_exceptions: 30"); 
+            break;
+
+        // 31 - Intel reserved
+        case 31: 
+            x_panic("x64excep_all_exceptions: 31"); 
+            break;
 
         default:
             x_panic("x64excep_all_exceptions: Unknown"); 
