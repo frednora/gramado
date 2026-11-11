@@ -1,3 +1,0 @@
-	Talvez o parser usando switch seja mais indicado
-	para linguagens de registro e não para linguagens
-	de lógica.

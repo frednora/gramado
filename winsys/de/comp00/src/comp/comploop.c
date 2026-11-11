@@ -176,6 +176,7 @@ const char *cmd_shutdown = "shutdown.bin";  // Shutdown command.
 const char *app_terminal = "#terminal.bin";  // Desktop GUI app
 const char *app_gdm      = "#gdm.bin";       // Display manager GUI app
 const char *app_launch   = "#launch.bin";    // Launcher GUI app
+const char *app_calc     = "#calc.bin";      // Calc GUI app
 const char *app_desktop  = "#desktop.bin";   // Desktop GUI app
 const char *app_taskbar  = "#taskbar.bin";   // Taskbar GUI apo
 // ...
@@ -4511,6 +4512,7 @@ static int ServerLoop(int client_index)
         default:
             //LaunchStatus = (int) rtl_clone_and_execute(app_taskbar);
             LaunchStatus = (int) rtl_clone_and_execute(app_launch);
+            //LaunchStatus = (int) rtl_clone_and_execute(app_calc);
             // ...
             break;
         };

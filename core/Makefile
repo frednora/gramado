@@ -229,6 +229,7 @@ build-extras:
 	@echo "Installing L2"
 
 
+# Compositor
 	@-cp $(L2_COMP)/src/bin/COMP00.BIN  $(BUILD)/DE
 
 # winshell
@@ -238,15 +239,14 @@ build-extras:
 	@-cp $(L2_WINSHELL)/bin/TERMINAL.BIN  $(BUILD)/DE/
 
 # winapps
-#	@-cp $(L2_WINAPPS)/bin/DOC.BIN      $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/CALC.BIN   $(BUILD)/DE/
+
 	@-cp $(L2_WINAPPS)/bin/EDITOR.BIN   $(BUILD)/DE/
-#	@-cp $(L2_WINAPPS)/bin/GWS.BIN      $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/LAUNCH.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/MEMORY.BIN   $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/PAINT.BIN    $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/POWER.BIN    $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/SYSINFO.BIN  $(BUILD)/DE/
-
-	@-cp $(L2_WINAPPS)/bin/PAINT.BIN  $(BUILD)/DE/
 
 
 # assets

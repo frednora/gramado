@@ -1,8 +1,25 @@
 // main.c
-// Gramado OS client-side GUI app: Launch
+// Gramado OS client-side GUI app: Launch (v2)
 // Launches #power.bin, #memory.bin or #sysinfo.bin.
-// Respects the same event loop, pump, DC, shared flags and
-// interaction pattern used by the Power Manager example.
+//
+// Rebuilt on the same routines as the Power Manager example:
+//  - on_button_pressed / on_button_released / on_button_clicked
+//  - hover tracking on MSG_MOUSEMOVE
+//  - press effect on MSG_MOUSEPRESSED, action on MSG_MOUSERELEASED
+//  - keyboard: press effect on MSG_KEYDOWN, action on MSG_KEYUP
+//  - the same event loop: shared-flags blit check, then rtl_get_event()
+//    handing the event to the procedure. No display-server pump.
+//
+// What is new compared to the old Launch:
+//  - Mouse effects: the button looks pressed while the mouse button is down.
+//  - A click only launches if the pointer is still over the pressed button.
+//  - Hover frame around the button under the pointer.
+//  - Keyboard focus (arrows move it, Enter launches) drawn as a black frame.
+//  - Keys P/M/I show the pressed effect on key down and launch on key up.
+//  - Footer shows what was launched.
+//  - Table-driven buttons: add a program by adding one line to ItemList[].
+//  - No printf in the event path (enable with LAUNCH_DEBUG).
+//  - The title text is scaled down when it does not fit in the window.
 
 // rtl
 #include <types.h>
@@ -26,7 +43,19 @@
 
 #include "launch.h"
 
-static int toggle_flag = 0;
+// Set to 1 to get messages on the console.
+#define LAUNCH_DEBUG  0
+#if LAUNCH_DEBUG
+#define LAUNCH_LOG(...)  printf(__VA_ARGS__)
+#else
+#define LAUNCH_LOG(...)  ((void)0)
+#endif
+
+// Frame colors (drawn just outside the button)
+#define FRAME_THICKNESS   2
+#define FRAME_HOVER_COLOR  0x000060C0
+#define FRAME_FOCUS_COLOR  0x00000000
+#define FRAME_NONE_COLOR   COLOR_WHITE   // same as the window background
 
 static int isTimeToQuit = FALSE;
 
@@ -37,10 +66,6 @@ struct dccanvas_d *dc00;  // shared dc
 
 static unsigned long __sh_flags = 0;
 
-
-struct ui_component_d *uic_button_power;
-struct ui_component_d *uic_button_memory;
-struct ui_component_d *uic_button_sysinfo;
 struct ui_component_d *uic_footer;
 
 struct button_info_d
@@ -65,306 +90,402 @@ struct button_info_d
 // (running, minimized, etc.).
     int state;
 };
-static struct button_info_d  MyButton_Power;
-static struct button_info_d  MyButton_Memory;
-static struct button_info_d  MyButton_Sysinfo;
 
-static int __hover_button_id = -1; // Invalidate.
+// ----------------------------------------------------
+// The buttons
+// ----------------------------------------------------
+// button_id = index + 1. 
+// To add a program, add a line here. The layout adapts.
+struct launch_item_d
+{
+    struct button_info_d info;
+    struct ui_component_d *uic;
+    const char *label;     // text on the button
+    const char *program;   // program image
+    char key;              // shortcut (lowercase)
+};
 
+static struct launch_item_d  ItemList[] = {
+    { {0}, NULL, "Power",   "#power.bin",   'p' },
+    { {0}, NULL, "Memory",  "#memory.bin",  'm' },
+    { {0}, NULL, "Sysinfo", "#sysinfo.bin", 'i' }
+};
+#define ITEM_COUNT  (int)(sizeof(ItemList)/sizeof(ItemList[0]))
+
+static const char *TitleText = "p=Power m=Memory i=Sysinfo q=Quit";
+
+// ----------------------------------------------------
+// State
+// ----------------------------------------------------
+static int __hover_button_id = -1;   // Invalidate.
+static int __mouse_pressed_id = -1;  // Pressed with the mouse
+static int __key_pressed_id = -1;    // Pressed with the keyboard
+static int __focus_button_id = -1;   // Keyboard focus
+
+// Position of the pointer at the time of the event.
+// Filled by the input loop from the event buffer.
+static unsigned long last_x = 0;
+static unsigned long last_y = 0;
 
 struct bmp_cache_d *icon00_cache;
 
-// -----------------
-
 // Window IDs
-static int main_window     = -1;
+static int main_window = -1;
 
-static int __paint_is_needed = FALSE;
+// -----------------
+static void on_button_pressed(int button_id);
+static void on_button_released(int button_id);
+static void on_button_clicked(int button_id);
 
-// Default responder (button to trigger on Enter)
-static int default_responder = -1;
-
-static void set_default_responder(int wid);
-static void switch_responder(int fd);
-static void trigger_default_responder(int fd);
-
-static void on_button_clicked(int id);
-static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
+static int  __hit_test_button(unsigned long rel_mx, unsigned long rel_my);
+static void layout_items(struct gws_window_info_d *wi);
 static void update_children(int fd);
 
 // =====================================================
+// Drawing helper
+// =====================================================
 
-
-/**
- * Generic syscall stub for x86_64.
- * num   The syscall number (placed in rax)
- * arg1  First argument (placed in rdi)
- * arg2  Second argument (placed in rsi)
- * arg3  Third argument (placed in rdx)
- * return      Result from the kernel (returned in rax)
- */
-
-// "a"(num)  → RAX = syscall number
-// "D"(arg1) → RDI = first argument
-// "S"(arg2) → RSI = second argument
-// "d"(arg3) → RDX = third argument
-
-/*
-unsigned long 
-syscall3 (
-    unsigned long num, 
-    unsigned long arg1, 
-    unsigned long arg2, 
-    unsigned long arg3 ) 
+// Fill a rectangle, clipped against the dc. ROP_COPY only.
+static void 
+launch_fill_rect(
+    long x, long y, long w, long h,
+    unsigned int color )
 {
-    unsigned long ret=0;
+    long x2, y2, yy, xx;
+    long dw, dh;
+    unsigned char *row;
+    unsigned int c = (color & 0x00FFFFFF);
+    unsigned char b = (unsigned char)( c        & 0xFF);
+    unsigned char g = (unsigned char)((c >> 8)  & 0xFF);
+    unsigned char r = (unsigned char)((c >> 16) & 0xFF);
 
-    asm volatile (
-        "syscall \n"
-        : "=a" (ret)                    // Output: rax contains the return value
-        : "a" (num),                    // Input: rax = syscall number
-          "D" (arg1),                   // Input: rdi = arg1
-          "S" (arg2),                   // Input: rsi = arg2
-          "d" (arg3)                    // Input: rdx = arg3
-        : "rcx", "r11", "memory"        // Clobbers: syscall changes rcx and r11
-    );
-
-    return (unsigned long) ret;
-}
-*/
-
-
-// Handle click events for components
-static void on_button_clicked(int id)
-{
-    if (id < 0)
+    if ((void*) dc00 == NULL || (void*) dc00->data == NULL)
+        return;
+    if (w <= 0 || h <= 0)
         return;
 
-    switch (id)
+    dw = (long) dc00->device_width;
+    dh = (long) dc00->device_height;
+
+    x2 = x + w;
+    y2 = y + h;
+    if (x  < 0)  x  = 0;
+    if (y  < 0)  y  = 0;
+    if (x2 > dw) x2 = dw;
+    if (y2 > dh) y2 = dh;
+    if (x >= x2 || y >= y2)
+        return;
+
+    for (yy = y; yy < y2; yy++)
     {
-        case 1:  // MyButton_Power
-            printf("Button %d clicked! Launching #power.bin\n", id);
-            rtl_clone_and_execute("#power.bin");
-            // Do not exit — keep the launcher alive so the user can
-            // launch more programs if desired.
-            break;
+        row = (unsigned char *) dc00->data + ((unsigned long) yy * dc00->pitch);
 
-        case 2:  // MyButton_Memory
-            printf("Button %d clicked! Launching #memory.bin\n", id);
-            rtl_clone_and_execute("#memory.bin");
-            break;
-
-        case 3:  // MyButton_Sysinfo
-            printf("Button %d clicked! Launching #sysinfo.bin\n", id);
-            rtl_clone_and_execute("#sysinfo.bin");
-            break;
-
-        default:
-            printf("Unknown button clicked: %d\n", id);
-            break;
-    };
+        if (dc00->bpp == 32)
+        {
+            unsigned int *p = (unsigned int *) (row + ((unsigned long) x << 2));
+            for (xx = x; xx < x2; xx++)
+                *p++ = c;
+        }
+        else if (dc00->bpp == 24)
+        {
+            unsigned char *p = row + ((unsigned long) x * 3);
+            for (xx = x; xx < x2; xx++)
+            {
+                p[0] = b;
+                p[1] = g;
+                p[2] = r;
+                p += 3;
+            }
+        }
+    }
 }
 
+// =====================================================
+// Frames: hover (blue) and keyboard focus (black)
+// =====================================================
 
-// Hit-test for our fake buttons in LaunchApp
+// Redraw the frame around one button, given its id.
+// The color depends on the state: hover wins over focus.
+static void draw_item_frame(int button_id)
+{
+    struct launch_item_d *it;
+    unsigned int color = FRAME_NONE_COLOR;
+    long x, y, w, h, t = FRAME_THICKNESS;
+
+    if (button_id < 1 || button_id > ITEM_COUNT)
+        return;
+    if ((void*) dc00 == NULL)
+        return;
+
+    it = &ItemList[button_id - 1];
+
+    if (button_id == __focus_button_id)
+        color = FRAME_FOCUS_COLOR;
+    if (button_id == __hover_button_id)
+        color = FRAME_HOVER_COLOR;
+
+    x = (long) it->info.left   - t;
+    y = (long) it->info.top    - t;
+    w = (long) it->info.width  + (t * 2);
+    h = (long) it->info.height + (t * 2);
+
+    launch_fill_rect(x,         y,         w, t,         color);  // top
+    launch_fill_rect(x,         y + h - t, w, t,         color);  // bottom
+    launch_fill_rect(x,         y + t,     t, h - (t*2), color);  // left
+    launch_fill_rect(x + w - t, y + t,     t, h - (t*2), color);  // right
+}
+
+static void set_hover(int button_id)
+{
+    int old = __hover_button_id;
+
+    if (button_id == old)
+        return;
+
+    __hover_button_id = button_id;
+    draw_item_frame(old);
+    draw_item_frame(button_id);
+}
+
+static void move_focus(int delta)
+{
+    int old = __focus_button_id;
+    int n;
+
+    if (old < 1)
+        n = (delta > 0) ? 1 : ITEM_COUNT;
+    else
+        n = old + delta;
+
+    if (n < 1) n = ITEM_COUNT;
+    if (n > ITEM_COUNT) n = 1;
+
+    __focus_button_id = n;
+    draw_item_frame(old);
+    draw_item_frame(n);
+}
+
+// =====================================================
+// Footer
+// =====================================================
+
+// "Launching <name>"
+static void set_footer_launching(const char *name)
+{
+    const char *prefix = "Launching ";
+    char text[32];
+    int n = 0;
+    const char *s;
+
+    if ((void*) uic_footer == NULL || (void*) dc00 == NULL)
+        return;
+    if (uic_footer->magic != 1234)
+        return;
+    if (sizeof(uic_footer->label) < sizeof(text))
+        return;
+
+    for (s = prefix; *s && n < 31; s++)
+        text[n++] = *s;
+    for (s = name; s && *s && n < 31; s++)
+        text[n++] = *s;
+    text[n] = '\0';
+
+    memcpy(uic_footer->label, text, sizeof(text));
+    uic_footer->label_size = n;
+
+    libgui_redraw_ui_component(uic_footer, dc00);
+}
+
+// =====================================================
+// Button handlers (same roles as in the Power example)
+// =====================================================
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_pressed(int button_id)
+{
+    if (button_id < 1 || button_id > ITEM_COUNT)
+        return;
+
+    libgui_on_button_pressed(ItemList[button_id - 1].uic, dc00);
+}
+
+// For visual effects
+// #todo: We need to implement this kind of worker inside the library
+static void on_button_released(int button_id)
+{
+    if (button_id < 1 || button_id > ITEM_COUNT)
+        return;
+
+    libgui_on_button_released(ItemList[button_id - 1].uic, dc00);
+}
+
+// Handle click events for components
+static void on_button_clicked(int button_id)
+{
+    struct launch_item_d *it;
+
+    if (button_id < 1 || button_id > ITEM_COUNT)
+        return;
+
+    it = &ItemList[button_id - 1];
+
+    LAUNCH_LOG("launch: Launching %s\n", it->program);
+    rtl_clone_and_execute(it->program);
+
+    // Do not exit — keep the launcher alive so the user can
+    // launch more programs if desired.
+    set_footer_launching(it->label);
+}
+
+// Hit-test for the buttons of the Launch app
 static int __hit_test_button(unsigned long rel_mx, unsigned long rel_my) 
 {
+    int i;
+    struct button_info_d *b;
 
-// Button Power
-    if ( rel_mx >= MyButton_Power.left && 
-         rel_mx <= MyButton_Power.left + MyButton_Power.width &&
-         rel_my >= MyButton_Power.top  && 
-         rel_my <= MyButton_Power.top + MyButton_Power.height )
+    for (i = 0; i < ITEM_COUNT; i++)
     {
-        return (int) MyButton_Power.button_id;
-    }
+        b = &ItemList[i].info;
 
-// Button Memory
-    if ( rel_mx >= MyButton_Memory.left && 
-         rel_mx <= MyButton_Memory.left + MyButton_Memory.width &&
-         rel_my >= MyButton_Memory.top  && 
-         rel_my <= MyButton_Memory.top + MyButton_Memory.height )
-    {
-        return (int) MyButton_Memory.button_id;
-    }
-
-// Button Sysinfo
-    if ( rel_mx >= MyButton_Sysinfo.left && 
-         rel_mx <= MyButton_Sysinfo.left + MyButton_Sysinfo.width &&
-         rel_my >= MyButton_Sysinfo.top  && 
-         rel_my <= MyButton_Sysinfo.top + MyButton_Sysinfo.height )
-    {
-        return (int) MyButton_Sysinfo.button_id;
+        if ( rel_mx >= b->left && 
+             rel_mx <  b->left + b->width &&
+             rel_my >= b->top  && 
+             rel_my <  b->top  + b->height )
+        {
+            return (int) b->button_id;
+        }
     }
 
     return -1;
 }
 
+// Which button does this key activate? (-1 = none)
+static int __key_to_button_id(unsigned long key)
+{
+    int i;
+    char c = (char) key;
+
+    if (key == VK_RETURN)
+        return __focus_button_id;   // may be -1
+
+    if (c >= 'A' && c <= 'Z')
+        c = (char)(c + 32);
+
+    for (i = 0; i < ITEM_COUNT; i++)
+    {
+        if (ItemList[i].key == c)
+            return ItemList[i].info.button_id;
+    }
+
+    return -1;
+}
+
+// =====================================================
+// Layout and painting
+// =====================================================
+
+// Compute the position and dimension of every button
+// from the client area. Evenly spaced on the middle of the window.
+static void layout_items(struct gws_window_info_d *wi)
+{
+    int i;
+    unsigned long button_w = wi->cr_width / 5;
+    unsigned long button_h = wi->cr_height / 8;
+    unsigned long button_y = (wi->cr_height - button_h) / 2;
+    unsigned long center_x;
+
+    for (i = 0; i < ITEM_COUNT; i++)
+    {
+        // Centers at 1/6, 3/6, 5/6 ... of the width (for three buttons)
+        center_x = (((2 * i) + 1) * wi->cr_width) / (2 * ITEM_COUNT);
+
+        ItemList[i].info.button_id = i + 1;
+
+        // Relative values
+        ItemList[i].info.left   = center_x - (button_w / 2);
+        ItemList[i].info.top    = button_y;
+        ItemList[i].info.width  = button_w;
+        ItemList[i].info.height = button_h;
+
+        // Absolute values
+        ItemList[i].info.absolute_left = 
+            wi->left + wi->cr_left + ItemList[i].info.left;
+        ItemList[i].info.absolute_top = 
+            wi->top  + wi->cr_top  + ItemList[i].info.top;
+    }
+}
+
+// The title uses scale 2 when it fits, otherwise scale 1.
+static void draw_title(unsigned long cr_width)
+{
+    unsigned long len = (unsigned long) strlen(TitleText);
+    unsigned long scale = 2;
+
+    if ((len * 8 * scale) + 16 > cr_width)
+        scale = 1;
+
+    libgui_drawstringblock_dc(
+        dc00, 8, 8, COLOR_BLACK, TitleText, scale );
+}
+
 static void update_children(int fd)
 {
     struct gws_window_info_d  wi;
+    int i;
 
     // Get window info
     gws_get_window_info(fd, main_window, &wi);
-
-    unsigned long button_w = wi.cr_width / 5;
-    unsigned long button_h = wi.cr_height / 8;
-
-    unsigned long button_y = (wi.cr_height - button_h) / 2;
-
-    // Three buttons evenly spaced
-    unsigned long power_x   = (wi.cr_width / 6)     - (button_w / 2);
-    unsigned long memory_x  = (wi.cr_width / 2)     - (button_w / 2);
-    unsigned long sysinfo_x = (5 * wi.cr_width / 6) - (button_w / 2);
-
-
-// #test: We are still thinking about the bits configuration
-//#define FLAG_DIRTY  0x0001  // client started drawing
-//#define FLAG_READY  0x0002  // client finished drawing
-//#define FLAG_ACK    0x0004  // server acknowledged
-
-
-// -----------------
 
     if ((void*)dc00 == NULL)
         return;
 
 // The background for the client area
-    lingui_draw_rectangle0_dc (
-        dc00,
-        0, 0, wi.cr_width, wi.cr_height,
-        COLOR_WHITE,
-        0  // ROP
-    );
+    launch_fill_rect( 0, 0, wi.cr_width, wi.cr_height, COLOR_WHITE );
 
-// ------------------------------------------
 // String
+    draw_title(wi.cr_width);
 
-    libgui_drawstringblock_dc(
-        dc00,
-        8,
-        8,
-        COLOR_BLACK,
-        "p=Power m=Memory i=Sysinfo q=Quit",
-        2
-    );
+// Buttons: position, dimension and redraw.
+// The component keeps its status, so a pressed button stays pressed.
+    layout_items(&wi);
 
-//
-// Support for button positions and dimensions
-//
+    for (i = 0; i < ITEM_COUNT; i++)
+    {
+        libgui_set_ui_component_position(
+            ItemList[i].uic, 
+            ItemList[i].info.left, 
+            ItemList[i].info.top );
+        libgui_set_ui_component_dimension(
+            ItemList[i].uic,
+            ItemList[i].info.width,
+            ItemList[i].info.height );
+        libgui_set_ui_component_flags(ItemList[i].uic, (0x0001 | 0x0002) );
+        libgui_redraw_ui_component(ItemList[i].uic, dc00);
+    }
 
-// -------------------------------------------------
-// Redraw the Power button
-
-    // Relative values
-    MyButton_Power.left = power_x;
-    MyButton_Power.top  = button_y;
-
-    // Update absolute values.
-    MyButton_Power.absolute_left = 
-        wi.left + wi.cr_left + MyButton_Power.left;
-    MyButton_Power.absolute_top = 
-        wi.top + wi.cr_top + MyButton_Power.top;
-
-    libgui_set_ui_component_position(
-        uic_button_power, 
-        MyButton_Power.left, 
-        MyButton_Power.top );
-    libgui_set_ui_component_dimension(
-        uic_button_power,
-        button_w,
-        button_h );
-    libgui_set_ui_component_flags(uic_button_power, (0x0001 | 0x0002) );
-    libgui_redraw_ui_component(uic_button_power, dc00);
-
-// -------------------------------------------------
-// Redraw the Memory button
-
-    // Relative values
-    MyButton_Memory.left = memory_x;
-    MyButton_Memory.top  = button_y;
-
-    // Update absolute values
-    MyButton_Memory.absolute_left = 
-        wi.left + wi.cr_left + MyButton_Memory.left;
-    MyButton_Memory.absolute_top = 
-        wi.top + wi.cr_top + MyButton_Memory.top;
-
-    libgui_set_ui_component_position(
-        uic_button_memory, 
-        MyButton_Memory.left, 
-        MyButton_Memory.top );
-    libgui_set_ui_component_dimension(
-        uic_button_memory,
-        button_w,
-        button_h );
-    libgui_set_ui_component_flags(uic_button_memory, (0x0001 | 0x0002) );
-    libgui_redraw_ui_component(uic_button_memory, dc00);
-
-// -------------------------------------------------
-// Redraw the Sysinfo button
-
-    // Relative values
-    MyButton_Sysinfo.left = sysinfo_x;
-    MyButton_Sysinfo.top  = button_y;
-
-    // Update absolute values
-    MyButton_Sysinfo.absolute_left = 
-        wi.left + wi.cr_left + MyButton_Sysinfo.left;
-    MyButton_Sysinfo.absolute_top = 
-        wi.top + wi.cr_top + MyButton_Sysinfo.top;
-
-    libgui_set_ui_component_position(
-        uic_button_sysinfo, 
-        MyButton_Sysinfo.left, 
-        MyButton_Sysinfo.top );
-    libgui_set_ui_component_dimension(
-        uic_button_sysinfo,
-        button_w,
-        button_h );
-    libgui_set_ui_component_flags(uic_button_sysinfo, (0x0001 | 0x0002) );
-    libgui_redraw_ui_component(uic_button_sysinfo, dc00);
-
-//
 // bmp
-//
 // zoom=2
-
     if (icon00_cache && icon00_cache->loaded) 
     {
         bmp_decode_bmp_image(icon00_cache, dc00, 40, 40, 2);
     }
 
-//
 // footer
-//
-
     libgui_set_ui_component_position(
         uic_footer, 0, wi.cr_height - 24 );
     libgui_set_ui_component_dimension(
         uic_footer, wi.cr_width, 24 );
     libgui_set_ui_component_flags(uic_footer, (0x0001 | 0x0002));
     libgui_redraw_ui_component(uic_footer, dc00);
-}
 
-static void set_default_responder(int wid)
-{
-    if (wid >= 0)
-        default_responder = wid;
-}
-
-static void switch_responder(int fd)
-{
-    // Placeholder — can cycle focus among the three buttons later.
-}
-
-static void trigger_default_responder(int fd) 
-{
-    // Placeholder for Enter key.
+// Frames (hover and focus) go on top
+    for (i = 0; i < ITEM_COUNT; i++)
+        draw_item_frame(ItemList[i].info.button_id);
 }
 
 // ----------------------------------------------------
-// Procedure: handles events sent by the display server
+// Procedure: handles the events
 // ----------------------------------------------------
 static int 
 launchProcedure(
@@ -397,100 +518,111 @@ launchProcedure(
         return 0;
         break;
 
+    // Keyboard: the press effect on key down,
+    // the action on key up. Just like the Power example.
     case MSG_KEYDOWN:
-        switch (long1){
-
-        case VK_RETURN:
-            //trigger_default_responder(fd);
-            break;
-
-        case 'P':
-        case 'p':
-            printf("launch: P >> Power\n");
-            rtl_clone_and_execute("#power.bin");
-            break;
-
-        case 'M':
-        case 'm':
-            printf("launch: M >> Memory\n");
-            rtl_clone_and_execute("#memory.bin");
-            break;
-
-        case 'I':
-        case 'i':
-            printf("launch: I >> Sysinfo\n");
-            rtl_clone_and_execute("#sysinfo.bin");
-            break;
 
         // Quit the launcher itself
-        case 'Q':
-        case 'q':
+        if (long1 == 'Q' || long1 == 'q')
+        {
             isTimeToQuit = TRUE;   // Quit the application
             // #test: This call quit the server
             // gws_async_command(fd,88,0,0);
-            break;
-        };
+            return 0;
+        }
+
+        ButtonId = __key_to_button_id(long1);
+        // Ignore the auto-repeat: only the first key down counts.
+        if (ButtonId > 0 && __key_pressed_id != ButtonId)
+        {
+            __key_pressed_id = ButtonId;
+            on_button_pressed(ButtonId);  // Visual effect
+        }
+        return 0;
+        break;
+
+    case MSG_KEYUP:
+        ButtonId = __key_to_button_id(long1);
+        if (ButtonId > 0 && __key_pressed_id == ButtonId)
+        {
+            __key_pressed_id = -1;
+            on_button_released(ButtonId);  // Visual effect
+            on_button_clicked(ButtonId);   // Action
+        }
+        return 0;
         break;
 
     case MSG_SYSKEYDOWN:
         switch (long1) {
-            case VK_F1:
-                printf("LaunchApp: VK_F1 >> Power\n");
-                rtl_clone_and_execute("#power.bin");
-                return 0;
-            case VK_F2:
-                printf("LaunchApp: VK_F2 >> Memory\n");
-                rtl_clone_and_execute("#memory.bin");
-                return 0;
-            case VK_F3:
-                printf("LaunchApp: VK_F3 >> Sysinfo\n");
-                rtl_clone_and_execute("#sysinfo.bin");
-                return 0;
+            case VK_F1:  on_button_clicked(1);  return 0;
+            case VK_F2:  on_button_clicked(2);  return 0;
+            case VK_F3:  on_button_clicked(3);  return 0;
+
             case VK_F11:
                 // Should not appear — broker intercepts fullscreen toggle
-                printf("LaunchApp: VK_F11 (unexpected)\n");
                 return 0;
 
+            // Move the keyboard focus. Enter activates it.
             case VK_ARROW_LEFT: 
+                move_focus(-1);
+                return 0;
             case VK_ARROW_RIGHT: 
-                switch_responder(fd); 
-                break;
+                move_focus(+1);
+                return 0;
 
             // reserved for future
             case VK_ARROW_UP: 
             case VK_ARROW_DOWN: 
-                printf("LaunchApp: Arrow up/down pressed (no action yet)\n"); 
-                break;
+                return 0;
         };
         break;
 
     case GWS_MouseClicked:
         break;
 
-    // #test
     case MSG_MOUSEMOVE:
-        // #bugbug
-        // Kernel is sending us absolute values
-        // instead of relative values.
+        // long1/long2: pointer position, relative to the client area.
         ButtonId = (int) __hit_test_button(long1, long2);
-        if (ButtonId > 0)
-            __hover_button_id = ButtonId;
-        if (ButtonId <= 0)
-            __hover_button_id = -1;
+        set_hover(ButtonId);   // Frame effect
+        return 0;
         break;
 
     case MSG_MOUSEPRESSED:
+        // The pointer position is in last_x/last_y
+        // (saved by the input loop from RTLEventBuffer[4]/[5]).
+        ButtonId = (int) __hit_test_button(last_x, last_y);
+        if (ButtonId < 0)
+            ButtonId = __hover_button_id;
+
+        __mouse_pressed_id = ButtonId;
+        if (ButtonId > 0)
+            on_button_pressed(ButtonId);  // Visual effect
+        return 0;
         break;
 
     case MSG_MOUSERELEASED:
-        printf("launch: Button released: %d\n", __hover_button_id);
-        on_button_clicked(__hover_button_id);
+        if (__mouse_pressed_id > 0)
+        {
+            on_button_released(__mouse_pressed_id);  // Visual effect
+
+            // A click only counts if the pointer is still
+            // over the button that was pressed.
+            ButtonId = (int) __hit_test_button(last_x, last_y);
+            if (ButtonId < 0)
+                ButtonId = __hover_button_id;
+
+            if (ButtonId == __mouse_pressed_id)
+                on_button_clicked(ButtonId);  // Action
+
+            __mouse_pressed_id = -1;
+        }
+        return 0;
         break;
 
     case MSG_CLOSE:
         isTimeToQuit = TRUE;  // #test
+        return 0;
         break;
-
 
     // Unknown event
     default:
@@ -502,35 +634,11 @@ launchProcedure(
     return (int) -1;
 }
 
-// ----------------------------------------------------
-// Pump: fetches events from the server and dispatches
-// ----------------------------------------------------
-static void pump(int fd)
-{
-    struct gws_event_d event;
-    event.used = FALSE;
-    event.magic = 0;
-    event.type = 0;
-
-    struct gws_event_d *e;
-    e = (struct gws_event_d *) gws_get_next_event(
-        fd, (int) main_window, (struct gws_event_d *) &event );
-
-    if ((void*) e == NULL)
-        return;
-    if (e->magic != 1234 || e->used != TRUE) 
-        return;
-    if (e->type <= 0)
-        return;
-
-    launchProcedure(fd, e->window, e->type, e->long1, e->long2);
-}
-
-
 int main(int argc, char *argv[])
 {
     const char *display_name = "display:name.0";
     int client_fd = -1;
+    int i;
 
     isTimeToQuit = FALSE;
 
@@ -560,7 +668,6 @@ int main(int argc, char *argv[])
         printf("launch_app: on libgui_initialize()\n");
         exit(1);
     }
-
 
 // =========================================
 // Main window
@@ -619,7 +726,6 @@ int main(int argc, char *argv[])
 
     sc80( 48, &m[0], &m[0], &m[0] );
 
-
 // ============================================================
 // Getting the flag earlier. This way we can use it in the loop.
 
@@ -642,118 +748,34 @@ int main(int argc, char *argv[])
     }
 
 // bg for the client area
-    lingui_draw_rectangle0_dc (
-        dc00,
-        0, 0, wi.cr_width, wi.cr_height,
-        COLOR_WHITE,
-        0  // ROP
-    );
+    launch_fill_rect( 0, 0, wi.cr_width, wi.cr_height, COLOR_WHITE );
 
 // String
-
-    libgui_drawstringblock_dc(
-        dc00,
-        8,
-        8,
-        COLOR_BLACK,
-        "p=Power m=Memory i=Sysinfo q=Quit",
-        2
-    );
+    draw_title(wi.cr_width);
 
 // ============================================================
+// Create the buttons.
+// The layout gives the position and dimension of each one.
 
-//
-// Support for button positions and dimensions
-//
+    layout_items(&wi);
 
-    unsigned long button_w = wi.cr_width / 5;
-    unsigned long button_h = wi.cr_height / 8;
-    unsigned long button_y = (wi.cr_height - button_h) / 2;
-
-    unsigned long power_x   = (wi.cr_width / 6)     - (button_w / 2);
-    unsigned long memory_x  = (wi.cr_width / 2)     - (button_w / 2);
-    unsigned long sysinfo_x = (5 * wi.cr_width / 6) - (button_w / 2);
-
-// ============================================================
-// Create Power button
-
-    MyButton_Power.button_id = 1;
-
-    // Relative values
-    MyButton_Power.left = power_x;
-    MyButton_Power.top  = button_y;
-
-    // Absolute coordinates (relative to screen)
-    MyButton_Power.absolute_left = wi.left + wi.cr_left + MyButton_Power.left;
-    MyButton_Power.absolute_top  = wi.top + wi.cr_top + MyButton_Power.top;
-    MyButton_Power.width         = button_w;
-    MyButton_Power.height        = button_h;
-
-// Create a button
-    uic_button_power = libgui_create_ui_component (
-        dc00, 
-        UI_COMPONENT_BUTTON,   // type 1 = button 
-        MyButton_Power.left, 
-        MyButton_Power.top, 
-        MyButton_Power.width, 
-        MyButton_Power.height,
-        "Power",
-        (0x0001 | 0x0002)
-    );
-
-// ============================================================
-// Create Memory button
-
-    MyButton_Memory.button_id = 2;
-
-    // Relative values
-    MyButton_Memory.left = memory_x;
-    MyButton_Memory.top  = button_y;
-
-    // Absolute coordinates (relative to screen)
-    MyButton_Memory.absolute_left = wi.left + wi.cr_left + MyButton_Memory.left;
-    MyButton_Memory.absolute_top  = wi.top + wi.cr_top + MyButton_Memory.top;
-    MyButton_Memory.width         = button_w;
-    MyButton_Memory.height        = button_h;
-
-// Create a button
-    uic_button_memory = libgui_create_ui_component (
-        dc00, 
-        UI_COMPONENT_BUTTON,   // type 1 = button 
-        MyButton_Memory.left, 
-        MyButton_Memory.top, 
-        MyButton_Memory.width, 
-        MyButton_Memory.height,
-        "Memory",
-        (0x0001 | 0x0002)
-    );
-
-// ============================================================
-// Create Sysinfo button
-
-    MyButton_Sysinfo.button_id = 3;
-
-    // Relative values
-    MyButton_Sysinfo.left = sysinfo_x;
-    MyButton_Sysinfo.top  = button_y;
-
-    // Absolute coordinates (relative to screen)
-    MyButton_Sysinfo.absolute_left = wi.left + wi.cr_left + MyButton_Sysinfo.left;
-    MyButton_Sysinfo.absolute_top  = wi.top + wi.cr_top + MyButton_Sysinfo.top;
-    MyButton_Sysinfo.width         = button_w;
-    MyButton_Sysinfo.height        = button_h;
-
-// Create a button
-    uic_button_sysinfo = libgui_create_ui_component (
-        dc00, 
-        UI_COMPONENT_BUTTON,   // type 1 = button 
-        MyButton_Sysinfo.left, 
-        MyButton_Sysinfo.top, 
-        MyButton_Sysinfo.width, 
-        MyButton_Sysinfo.height,
-        "Sysinfo",
-        (0x0001 | 0x0002)
-    );
+    for (i = 0; i < ITEM_COUNT; i++)
+    {
+        ItemList[i].uic = libgui_create_ui_component (
+            dc00, 
+            UI_COMPONENT_BUTTON,   // type 1 = button 
+            ItemList[i].info.left, 
+            ItemList[i].info.top, 
+            ItemList[i].info.width, 
+            ItemList[i].info.height,
+            ItemList[i].label,
+            (0x0001 | 0x0002)
+        );
+        if ((void*) ItemList[i].uic == NULL){
+            printf("launch: on button %d\n", i);
+            exit(1);
+        }
+    }
 
 // -----------------------------------------------------
 // #test: BMP image
@@ -785,12 +807,14 @@ int main(int argc, char *argv[])
 // Main window: Activate and show.
     gws_set_active( client_fd, main_window );
 
-
-    int nSysMsg = 0;
-
 //
 // Event loop
 //
+
+// #ps:
+// The purpose of this loop is only get system events,
+// not to get events from the display server.
+// We do this for performance reasons.
 
     while (1){
 
@@ -810,16 +834,12 @@ int main(int argc, char *argv[])
             }
         }
 
-        // 1. Pump events from Display Server
-        // #bugbug:
-        // This pump is very slow, affecting the responsivity
-        // for the other pump that gets events from the system.
-        // pump(client_fd);
-
-        // 2. Pump events from Input Broker (system events)
-        //for (nSysMsg=0; nSysMsg<32; nSysMsg++){
+        // Pump events from Input Broker (system events)
         if (rtl_get_event() == TRUE)
         {
+            last_x = (unsigned long) RTLEventBuffer[4];
+            last_y = (unsigned long) RTLEventBuffer[5];
+
             // IN: wid, event type, VK, scancode.
             launchProcedure(
                 client_fd,
@@ -829,7 +849,6 @@ int main(int argc, char *argv[])
                 (unsigned long) RTLEventBuffer[3] );
             RTLEventBuffer[1] = 0;  // Clear after dispatch
         }
-        //};
     };
 
     if (isTimeToQuit == TRUE){

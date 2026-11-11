@@ -130,7 +130,8 @@ static const struct app_entry_d AppList[] = {
     { "#paint.bin",    "P" },
     { "#editor.bin",   "E" },
     { "#terminal.bin", "T" },
-    { "#browser.bin",  "B" }
+    { "#calc.bin",     "C" }
+//    { "#browser.bin",  "B" }
 };
 #define APP_COUNT  (int)(sizeof(AppList)/sizeof(AppList[0]))
 
