@@ -1,3 +1,7 @@
+// rop.h
+// ROP support for libgui library
+// Created by Fred Nora
+
 #ifndef __ROP_H
 #define __ROP_H 1
 
@@ -36,7 +40,6 @@
 #define ROP_AVERAGE    40  // Average of src and dst
 #define ROP_DIFF       41  // Absolute difference
 #define ROP_BRIGHTEN   42  // Brighten destination
-
 
 
 // Reserved ranges

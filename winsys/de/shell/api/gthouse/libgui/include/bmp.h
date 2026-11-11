@@ -1,10 +1,11 @@
+// bmp.h
+// BMP file support.
+// Created by Fred Nora.
+
 // #todo
 // bmp decoder for the libgui.
 // Inporting the routines from another project
 
-// bmp.h
-// BMP file support.
-// Created by Fred Nora.
 
 #ifndef __UI_BMP_H
 #define __UI_BMP_H    1
@@ -80,5 +81,3 @@ struct bmp_cache_d *bmp_load_bmp_image(const char *pathname);
 //
 // End
 //
-
-

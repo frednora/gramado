@@ -1,4 +1,5 @@
 // lt8x8.h
+// Font support
 
 #ifndef __LT8X8_H
 #define __LT8X8_H   1
@@ -55,8 +56,5 @@
 #define CH_SINGLE_BR		0xD9
 #define CH_SOLID		0xDB
 
-
 #endif    
-
-
 

@@ -24,5 +24,3 @@ struct dccanvas_d
 
 
 #endif   
-
-

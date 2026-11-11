@@ -1,5 +1,6 @@
 // ui.h
-// UI components
+// UI component support for libgui library
+// Created by Fred Nora
 
 #ifndef __LIBGUI_UI_H
 #define __LIBGUI_UI_H    1
@@ -124,12 +125,17 @@ struct libgui_node_d
 };
 
 
+//
+// UI component
+//
+
+// UI component flags
 #define UIC_FLAG_CENTER_H  0x0001
 #define UIC_FLAG_CENTER_V  0x0002
 
+// UI component label
 #define UIC_LABEL_PADDING  8
 #define UIC_LABEL_COLOR    0x00101010
-
 
 // UI component types
 #define UI_COMPONENT_BUTTON   1
@@ -144,11 +150,14 @@ struct libgui_node_d
 // Generic ui component for the apps.
 // (it's like a window, but for client side inside the client area)
 // The plain is reuse this kind of structure for webpages components.
+
 struct ui_component_d 
 {
     int used;
     int magic;
     int id;
+
+// type = 
     int type;
 
 // status = interaction state
@@ -184,6 +193,7 @@ struct ui_component_d
 //
 // Viewport
 //
+
 // A viewport is the rectangular region of a rendering surface
 // (such as a canvas, buffer, or screen) that defines the visible
 // portion of the content. 

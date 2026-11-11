@@ -249,9 +249,5 @@
 #define VK_RBUTTON   0xFB  // Right mouse button
 #define VK_MBUTTON   0xFC  // Middle mouse button
 
-
-
 #endif    
-
-
 

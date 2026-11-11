@@ -1,7 +1,8 @@
 // font.c
+// Font support for libgui library
+// Created by Fred Nora
 
 #include "include/font.h"
-
 
 
 struct libgui_font_initialization_d  FontInitialization;

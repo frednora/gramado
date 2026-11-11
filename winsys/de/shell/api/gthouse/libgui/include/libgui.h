@@ -33,8 +33,6 @@
 #include "direct00.h"
 
 
-#define CANVAS_COUNT_MAX    16
-
 // Each window needs to have an index for one of this structurea.
 // This way the display server will know the information about 
 // the window's canvas.
@@ -68,6 +66,7 @@ struct canvas_information_d
 
 // List of canvases
 // List of pointer for canvas information structures
+#define CANVAS_COUNT_MAX    8
 extern unsigned long libgui_canvasList[CANVAS_COUNT_MAX];
 
 
