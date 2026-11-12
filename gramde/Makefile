@@ -21,7 +21,7 @@ all:
 	$(Q)make -C cmds/
 
 # Desktop Environment
-	$(Q)make -C de/
+	$(Q)make -C winsys/
 
 clean:
 #todo

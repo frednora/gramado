@@ -21,8 +21,8 @@ all:
 	@echo "==== Compiling Gramado OS ===="
 
 	@echo "\n"
-	@echo "==== Compiling winsys ===="
-	make -C winsys/
+	@echo "==== Compiling gramde ===="
+	make -C gramde/
 
 	@echo "\n"
 	@echo "==== Compiling core ===="
@@ -32,8 +32,8 @@ all:
 	@echo "Done."
 
 
-winsys:
-	make -C winsys/
+gramde:
+	make -C gramde/
 core:
 	make -C core/
 

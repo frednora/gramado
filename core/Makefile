@@ -27,15 +27,15 @@ INIT_PROCESS = sysd
 # =================================
 # L1: cmds - POSIX-like commands and experiments
 
-__DEP_L1 = ../winsys/cmds
+__DEP_L1 = ../gramde/cmds
 L1_CMDS  = $(__DEP_L1)/cmds00
 L1_CPP00 = $(__DEP_L1)/cpp00
 
 
 # =================================
-# L2: de - Desktop Environment
+# L2: GUI
 
-__DEP_L2 = ../winsys/de
+__DEP_L2 = ../gramde/winsys
 # Display server/compositor
 L2_COMP     = $(__DEP_L2)/comp00
 L2_ASSETS   = $(__DEP_L2)/shell/assets

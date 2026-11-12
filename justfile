@@ -1,6 +1,6 @@
 # justfile
 
-projects_dir := "winsys"
+projects_dir := "gramde"
 os_dir := "core"
 
 # Default recipe
