@@ -130,10 +130,12 @@ static const struct app_entry_d AppList[] = {
     { "#paint.bin",    "P" },
     { "#editor.bin",   "E" },
     { "#terminal.bin", "T" },
-    { "#calc.bin",     "C" }
+    { "#reversi.bin",  "R" }
+//    { "#calc.bin",     "C" }
 //    { "#browser.bin",  "B" }
 };
 #define APP_COUNT  (int)(sizeof(AppList)/sizeof(AppList[0]))
+
 
 // ----------------------------------------------------
 // Items: everything clickable on the taskbar

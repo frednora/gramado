@@ -240,12 +240,12 @@ build-extras:
 
 # winapps
 	@-cp $(L2_WINAPPS)/bin/CALC.BIN   $(BUILD)/DE/
-
 	@-cp $(L2_WINAPPS)/bin/EDITOR.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/LAUNCH.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/MEMORY.BIN   $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/PAINT.BIN    $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/POWER.BIN    $(BUILD)/DE/
+	@-cp $(L2_WINAPPS)/bin/REVERSI.BIN  $(BUILD)/DE/
 	@-cp $(L2_WINAPPS)/bin/SYSINFO.BIN  $(BUILD)/DE/
 
 
