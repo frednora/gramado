@@ -1,6 +1,6 @@
-# np - Nomad Pastors
+# shell - Gramado Shell
 
-It's a place for client-side GUI applications
+It's a place for client-side GUI applications - (codename: Nomad Pastors)
 
 ## Folders
 
