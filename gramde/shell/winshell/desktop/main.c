@@ -126,13 +126,17 @@ struct app_entry_d
     const char *icon_label;   // 1 or 2 chars. The icon is 24x24.
 };
 
+
 static const struct app_entry_d AppList[] = {
-    { "#paint.bin",    "P" },
-    { "#editor.bin",   "E" },
+    { "#power.bin",    "P" },  // First icon also the start button
+    { "#launch.bin",   "L" },
     { "#terminal.bin", "T" },
+    { "#editor.bin",   "E" },
+    { "#calc.bin",     "C" },
+    { "#paint.bin",    "P" },
+//    { "#browser.bin",  "B" },
     { "#reversi.bin",  "R" }
-//    { "#calc.bin",     "C" }
-//    { "#browser.bin",  "B" }
+
 };
 #define APP_COUNT  (int)(sizeof(AppList)/sizeof(AppList[0]))
 
@@ -682,10 +686,49 @@ desktopProcedure(
                     gws_dock_active_window(fd, 2);   // margin 2 = right
                     break;
 
-                case 'R':  // Refresh
-                case 'r': 
-                    gws_update_desktop(fd); 
+                //case 'R':  // Refresh
+                //case 'r': 
+                    //gws_update_desktop(fd); 
+                    //break;
+
+                //case 'S':  // Start menu
+                //case 's': 
+                    //do_launch_app(1);  // First program
+                    //break;
+
+                // 1..N launch the programs of the icon area
+                //case '1': do_launch_app(1); break;
+                //case '2': do_launch_app(2); break;
+                //case '3': do_launch_app(3); break;
+                //case '4': do_launch_app(4); break;
+
+                default:
                     break;
+            };
+            return 0;
+            break;
+
+
+        case MSG_KEYUP:
+            switch (long1) 
+            {
+                case VK_RETURN:
+                    break;
+
+                //case '<':   // ASCII '<'
+                //case ',':
+                    //gws_dock_active_window(fd, 1);   // margin 1 = left
+                    //break;
+
+                //case '>':   // ASCII '>'
+                //case '.':
+                    //gws_dock_active_window(fd, 2);   // margin 2 = right
+                    //break;
+
+                //case 'R':  // Refresh
+                //case 'r': 
+                    //gws_update_desktop(fd); 
+                    //break;
 
                 case 'S':  // Start menu
                 case 's': 
@@ -703,6 +746,7 @@ desktopProcedure(
             };
             return 0;
             break;
+
 
         // 22 = MSG_SYSKEYDOWN
         case MSG_SYSKEYDOWN:

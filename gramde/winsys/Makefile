@@ -3,7 +3,7 @@
 all:
 	make -C comp00/
 #	make -C shell/
-	make -C velo3d/
+#	make -C velo3d/
 
 clean:
 	-rm -f *.o

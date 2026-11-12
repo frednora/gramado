@@ -23,6 +23,9 @@ all:
 # Shell
 	$(Q)make -C shell/
 
+# 3D demo - (Velociraptor)
+	$(Q)make -C velo3d/
+
 # Desktop Environment
 	$(Q)make -C winsys/
 
