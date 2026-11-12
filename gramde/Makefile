@@ -20,6 +20,9 @@ all:
 # Commands
 	$(Q)make -C cmds/
 
+# Shell
+	$(Q)make -C shell/
+
 # Desktop Environment
 	$(Q)make -C winsys/
 
