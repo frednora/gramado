@@ -6,11 +6,19 @@ Fred Nora: gramado
 
 ```
 admin/  - Administrator stuff
+
 core/   - Gramado Core OS Components
+
 docs/   - Documentation for Gramado 
+
+gramde/ - Gramado Desktop Environment
+        + Posix-like commands
+        + Compositor / display server
+        + Client-side GUI applications
+        + 3D demo
+
 tools/  - Gramado Tools 
-winsys/ - Compositor and client-side GUI applications.
-        - Posix-like commands
+
 ```
 
 # Usage

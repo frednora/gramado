@@ -1,4 +1,4 @@
-# winsys - Windowing system
+# gramde - Gramado Desktop Environment
 
 Ring 3 programs for Gramado OS
 
@@ -6,13 +6,19 @@ Ring 3 programs for Gramado OS
 
 Programs for Virtual Terminal or Kernel Console. (codename: Mammal)
 
-## ds - Desktop Environment
+## shell - Gramado Shell
+
+Client-side GUI applications
+
+## velo3d - Velociraptor
+
+3D demo
+
+## winsys - Windowing System
+
+Compositor / display server
 
 ```
-+ comp00 - Display server (Compositor)
-+ np     - Client-side GUI applications
-+ velo3d - 3D demo
-
 (codename: Reptile)
 ```
 
