@@ -134,6 +134,7 @@ static const struct app_entry_d AppList[] = {
     { "#editor.bin",   "E" },
     { "#calc.bin",     "C" },
     { "#paint.bin",    "P" },
+    { "#pairs.bin",    "p" },
 //    { "#browser.bin",  "B" },
     { "#reversi.bin",  "R" }
 

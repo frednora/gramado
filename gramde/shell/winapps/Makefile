@@ -6,6 +6,7 @@ all:
 	make -C launch/
 	make -C memory/
 	make -C paint/
+	make -C pairs/
 	make -C power/
 	make -C reversi/
 	make -C studio/
