@@ -319,7 +319,7 @@ _asm_load_gdt:
     ret
 
 ;=================================================
-; setup_idt:
+; x86_64_setup_early_idt:
 ; Configura a IDT.
 ; Dado o endereço da IDT, preenche todos os vetores, 
 ; apontando para um só endereço. 'unhandled_int'.
@@ -344,7 +344,8 @@ _asm_load_gdt:
 ; Uses type 0xEE00 (present, DPL=3, interrupt gate, interrupts disabled).
 ; This means even ring 3 can trigger these gates, but interrupts will be 
 ; masked during handling.
-setup_idt:
+
+x86_64_setup_early_idt:
 ; Using 0xEE00
 
     ;pushad

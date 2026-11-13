@@ -19,7 +19,8 @@ extern _f_callback_restorer_done
 ;; ==============================================
 ;; unhandled interrupts
 ;; We use EOI only for IRQs.
-;; called by setup_idt in headlib.asm
+;; called by x86_64_setup_early_idt in head_64.asm
+
 align 4  
 unhandled_int:
 ; #bugbug: 
@@ -27,6 +28,7 @@ unhandled_int:
 ; #todo: 
 ; Criar um contador para isso.
     iretq
+
 
 ; #ps: We already have another routine in sw1.asm
 align 4
