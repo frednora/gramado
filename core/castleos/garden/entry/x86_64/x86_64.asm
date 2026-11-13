@@ -868,7 +868,7 @@ x86_64_setup_exceptions:
     ret  
 
 ;=====================================
-; setup_vectors:
+; x86_64_setup_vectors:
 ; Setup some hw and sw IDT vectors.
 ; see: hw1.asm
 
@@ -878,7 +878,7 @@ x86_64_setup_exceptions:
 ; LAPIC LVT block (220–225): Timer, Perf, LINT0, LINT1, Error, Thermal.
 ; Spurious (255): safe handler with no EOI.
 
-setup_vectors:
+x86_64_setup_vectors:
 
     push rax
     push rbx 

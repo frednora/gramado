@@ -2820,7 +2820,7 @@ START:
     call x86_64_setup_exceptions
 
 ; Some new vectors. (sw=0xEE00 hw=0x8E00)
-    call setup_vectors
+    call x86_64_setup_vectors
 
 ; Loading an early IDT for the BSP core
     lidt [_IDT_register] 
