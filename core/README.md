@@ -56,27 +56,39 @@ This creates a very clear startup flow:
     boot → castleos → dungeon → sysd (init)
 ```
 
-## Mammal
+## gramde/cmds/
 
 ```
-mammal/   - Posix-like commands and experiments.
+gramde/cmds/ - Posix-like commands and experiments.
 ```
 
-## Reptile UI
+## gramde/winsys/
 
 ```
-reptile/  - Reptile UI
-            Compositor and client-side GUI applications.
-            3D demos.
+gramde/winsys/ - Compositor / display server
 ```
+
+## gramde/shell/
+
+```
+gramde/shell/ - Client-side GUI application
+```
+
+## gramde/velo3d/
+
+```
+gramde/velo3d/ - 3D demo
+```
+
+
 
 
 ## Other folders
 
 ```
-base/         - Complete distributions are built here.
-../docs/      - Documentation.
-../tools/     - Gramado Tools.
+docs/      - Documentation.
+tools/     - Gramado Tools.
+core/base/ - Complete distributions are built here.
 ```
 
 ## Key artifacts produced
