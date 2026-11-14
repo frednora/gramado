@@ -2954,6 +2954,9 @@ struct ui_component_d *libgui_create_ui_component(
 
     unsigned int  bg_color = 0x00E0E0E0;
     int has_borders = FALSE;   // button-like components
+    unsigned int  text_color = 0x00101010;
+    int is_editbox  = FALSE;   // sunken border, white background
+
 
     if ((void*) dc == NULL)
 	    return NULL;
@@ -3031,6 +3034,14 @@ struct ui_component_d *libgui_create_ui_component(
         text_x = left + 8;
         text_y = top  + 8;
         break;
+    case UI_COMPONENT_EDITBOX:
+        scale = 1;
+        bg_color = LIBGUI_COLOR_EDITBOX_BG;      // 0x00FFFFFF
+        text_color = LIBGUI_COLOR_EDITBOX_TEXT;  // 0x00101010
+        is_editbox = TRUE;
+        text_x = left + 4;                       // inner padding
+        text_y = top  + 4;
+        break;
     default:
         // Unknown type: keep the old behavior (nothing is drawn).
         return (struct ui_component_d *) uic;
@@ -3039,18 +3050,19 @@ struct ui_component_d *libgui_create_ui_component(
 // ====================================
 
     // Center horizontally based on the component width
-    if (uic->flags & 0x0001)
+    if ((uic->flags & 0x0001) && is_editbox == FALSE)
     {
         LongSize = (unsigned long) (uic->label_size * 8 * scale);  // 8px per char
         if (width > LongSize)
             text_x = left + ((width - LongSize) / 2);
     }
     // Center vertically based on the component height
+    // (the editbox is always centered vertically)
     // #test: Using (8x16) for now, because we still do not have the char dimensions.
-    if (uic->flags & 0x0002)
+    if ((uic->flags & 0x0002) || is_editbox == TRUE)
     {
         // LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
-        LongSize = (unsigned long) (1 * 8 * scale);  // 8px per char
+        // LongSize = (unsigned long) (1 * 8 * scale);  // 8px per char
         LongSize = (unsigned long) (1 * FontInitialization.height * scale);
         if (height > LongSize)
             text_y = top + ((height - LongSize) / 2);
@@ -3085,14 +3097,46 @@ struct ui_component_d *libgui_create_ui_component(
         );
     }
 
+// Sunken (editbox): same routine, sunken colors.
+    if (is_editbox == TRUE)
+    {
+        uic->status = BS_DEFAULT;
+        __draw_button_borders_dc(
+            dc,
+            uic,
+            LIBGUI_COLOR_BEVEL_SUNKEN_TL_2,
+            LIBGUI_COLOR_BEVEL_SUNKEN_TL_1,
+            LIBGUI_COLOR_BEVEL_SUNKEN_BR_2,
+            LIBGUI_COLOR_BEVEL_SUNKEN_BR_1,
+            0x00101010   // outer
+        );
+    }
+
+
 // =====================================
 
 // Label (drawn once, on top of everything)
 
     if (uic->label_size > 0)
     {
+        const char *str = uic->label;
+
+        // Editbox: if the text doesn't fit, show the tail.
+        if (is_editbox == TRUE)
+        {
+            unsigned long char_w = FontInitialization.width * scale;
+            unsigned long inner_w = (width > 8) ? (width - 8) : 0;  // 4px padding each side
+            unsigned long max_chars = (char_w > 0) ? (inner_w / char_w) : 0;
+
+            if (max_chars == 0)
+                return (struct ui_component_d *) uic;
+
+            if (uic->label_size > max_chars)
+                str = uic->label + (uic->label_size - max_chars);
+        }
+
         libgui_drawstringblock_dc(
-            dc, text_x, text_y, 0x00101010, uic->label, scale );
+            dc, text_x, text_y, text_color, uic->label, scale );
     }
 
     return (struct ui_component_d *) uic;
@@ -3121,9 +3165,11 @@ libgui_redraw_ui_component(
     unsigned long scale = 1;  // default
 
     unsigned int bg_color = 0x00E0E0E0;
-    int has_borders = FALSE;   // button-like components
+    unsigned int text_color = 0x00101010;
+    int has_borders = FALSE;   // raised, button-like components
+    int is_editbox  = FALSE;   // sunken border, white background
 
-    // Border colors (only used when has_borders == TRUE)
+    // Border colors (used when has_borders == TRUE or is_editbox == TRUE)
     unsigned int tl1_color = 0;  // tl 1 most inner
     unsigned int tl2_color = 0;  // tl 2 inner
     unsigned int br1_color = 0;  // br 1 most inner
@@ -3183,6 +3229,14 @@ libgui_redraw_ui_component(
         bg_color = LIBGUI_COLOR_PANEL_FACE; //0x00E0E0E0;
         text_x = uic->left + 8;
         text_y = uic->top  + 8;
+        break;
+    case UI_COMPONENT_EDITBOX:
+        scale = 1;
+        bg_color = LIBGUI_COLOR_EDITBOX_BG;
+        text_color = LIBGUI_COLOR_EDITBOX_TEXT;
+        is_editbox = TRUE;
+        text_x = uic->left + 4;   // inner padding
+        text_y = uic->top  + 4;
         break;
     default:
         // Unknown type: nothing to draw.
@@ -3244,19 +3298,30 @@ libgui_redraw_ui_component(
     }
 
 
+// Editbox: always sunken, whatever the status
+    if (is_editbox == TRUE)
+    {
+        tl1_color = LIBGUI_COLOR_BEVEL_SUNKEN_TL_1;
+        tl2_color = LIBGUI_COLOR_BEVEL_SUNKEN_TL_2;
+        br1_color = LIBGUI_COLOR_BEVEL_SUNKEN_BR_1;
+        br2_color = LIBGUI_COLOR_BEVEL_SUNKEN_BR_2;
+    }
+
 // ====================================
 // Label position (computed once for all types)
 
     // Center horizontally based on the component width
-    if (uic->flags & 0x0001)
+    // Center horizontally (not used by the editbox)
+    if ((uic->flags & 0x0001) && is_editbox == FALSE )
     {
         LongSize = (unsigned long) (uic->label_size * 8 * scale);  // 8px per char
         if (uic->width > LongSize)
             text_x = uic->left + ((uic->width - LongSize) / 2);
     }
     // Center vertically based on the component height
+    // Center vertically (the editbox is always centered)
     // #test: Using (8x16) for now, because we still do not have the char dimensions.
-    if (uic->flags & 0x0002)
+    if ((uic->flags & 0x0002) || is_editbox == TRUE)
     {
         //LongSize = (unsigned long) (1 * 16 * scale);  // 16px per char
         //LongSize = (unsigned long) (1 * 8 * scale);  // 8px per char
@@ -3280,7 +3345,7 @@ libgui_redraw_ui_component(
 // Borders (only for button-like components)
 // Do not touch uic->status here. Redraw must keep the current status.
 
-    if (has_borders == TRUE)
+    if (has_borders == TRUE || is_editbox == TRUE)
     {
         __draw_button_borders_dc(
             dc,
@@ -3294,9 +3359,50 @@ libgui_redraw_ui_component(
     }
 
 
+    if (is_editbox == TRUE)
+    {
+        const char *str = uic->label;
+        unsigned long char_w = FontInitialization.width * scale;
+        unsigned long inner_w = (uic->width > 8) ? (uic->width - 8) : 0;
+        unsigned long max_chars = (char_w > 0) ? (inner_w / char_w) : 0;
+        unsigned long len = (unsigned long) uic->label_size;
+        unsigned long shown = 0;
+        int focused = (uic->status == BS_FOCUS) ? TRUE : FALSE;
+
+        // Reserve one cell for the caret when focused
+        if (focused == TRUE && max_chars > 0)
+            max_chars--;
+
+        if (max_chars > 0 && len > 0)
+        {
+            // Show the tail if the text doesn't fit
+            shown = (len > max_chars) ? max_chars : len;
+            str = uic->label + (len - shown);
+
+            libgui_drawstringblock_dc(
+                dc, text_x, text_y, text_color, str, scale );
+        }
+
+        // Caret: 1px wide line right after the visible text
+        if (focused == TRUE)
+        {
+            lingui_draw_rectangle0_dc(
+                dc,
+                text_x + (shown * char_w),
+                text_y,
+                1,
+                FontInitialization.height * scale,
+                text_color,
+                0   // rop
+            );
+        }
+
+        return 0;
+    }
+
+
 // =====================================
 // Label (drawn once, on top of everything)
-
 
     if (uic->label_size > 0)
     {

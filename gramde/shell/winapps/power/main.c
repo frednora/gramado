@@ -39,6 +39,7 @@ static unsigned long __sh_flags = 0;
 struct ui_component_d *uic_button_restart;    // id 0
 struct ui_component_d *uic_button_shutdown;   // id 1
 struct ui_component_d *uic_footer;            // id 2
+struct ui_component_d *uic_eb;                // id 
 
 
 struct button_info_d
@@ -403,6 +404,18 @@ static void update_children(int fd)
     {
         bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
     }
+
+
+//
+// eb
+//
+
+    libgui_set_ui_component_position(
+        uic_eb, 20, 40 );
+    libgui_set_ui_component_dimension(
+        uic_eb, 200, 20 );
+    libgui_set_ui_component_flags(uic_eb, (0x0001 | 0x0002));
+    libgui_redraw_ui_component(uic_eb, dc00);
 
 //
 // footer
@@ -1039,6 +1052,16 @@ int main(int argc, char *argv[])
     //printf("Shutdown button id = %d\n", shutdown_button);
 
 // ================================================================================
+
+ // 3. Create the editbox (x=20, y=40, 200x20, initial text "hello")
+    uic_eb = libgui_create_ui_component(
+            dc00,
+            UI_COMPONENT_EDITBOX,
+            20, 40, 200, 20,
+            "hello",
+            0 );
+    //if (uic_eb == NULL)
+        //return -1;
 
 // Create footer component
     uic_footer =

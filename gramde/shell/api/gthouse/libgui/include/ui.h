@@ -143,9 +143,13 @@ struct libgui_node_d
 #define UI_COMPONENT_LABEL    3
 #define UI_COMPONENT_HEADER   4
 #define UI_COMPONENT_FOOTER   5
-
+#define UI_COMPONENT_EDITBOX  6 
 // ...
 
+
+// Optional: editbox colors
+#define LIBGUI_COLOR_EDITBOX_BG    0x00FFFFFF
+#define LIBGUI_COLOR_EDITBOX_TEXT  0x00101010
 
 // Generic ui component for the apps.
 // (it's like a window, but for client side inside the client area)
