@@ -160,8 +160,10 @@ ap_pm32_entry:
     mov gs, ax
     mov ss, ax
 
-    ; Set stack to the TOP of the buffer
-    ;mov esp, stack_begin
+    ; Same stack as in real mode, right before the signature.
+    ; Without this ESP stays 0x8FF0 and the AP runs on the
+    ; kernel's page tables in low memory.
+    mov esp, 0x28FF0
 
     ; Optional: mark we reached PM
     mov dword [0x29000], 0xA0A0A0A0

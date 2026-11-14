@@ -28,5 +28,6 @@ unsigned long mm_used_frame_table=0;
 unsigned long mm_used_lfb=0;
 //#test
 unsigned long mm_used_module0 = 0; 
+unsigned long mm_used_table_pool = 0;
 
 
