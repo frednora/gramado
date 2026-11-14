@@ -171,6 +171,7 @@ Optional flags that indicates case information of the SFN.
 // Always zero on the FAT12/16 volume.
 // For fat32 
     unsigned short Reserved2;
+
 // Modification time
     unsigned short LastWriteTime;  
 // Modification date

@@ -16,6 +16,13 @@ struct fat_d  *bootvolume_fat;
 
 static int __check_address_validation(unsigned long address);
 
+static int
+__fat16_initialize_directory(
+    void *buffer,
+    unsigned short self_cluster,
+    unsigned short parent_cluster );
+
+
 //
 // == Cluster list ===============================
 //
@@ -662,6 +669,121 @@ fail:
     return (int) -1;
 }
 
+
+/*
+ * __fat16_initialize_directory()
+ *
+ * Initialize a newly allocated FAT16 directory.
+ *
+ * IN:
+ *     buffer          = directory data buffer
+ *     self_cluster    = cluster of the new directory
+ *     parent_cluster  = cluster of the parent directory
+ *
+ * OUT:
+ *     0 = success
+ *    -1 = fail
+ */
+
+static int
+__fat16_initialize_directory(
+    void *buffer,
+    unsigned short self_cluster,
+    unsigned short parent_cluster )
+{
+    struct fat16_directory_entry_d Dot;
+    struct fat16_directory_entry_d DotDot;
+
+    char *p;
+
+    if (buffer == NULL)
+        return -1;
+
+    memset(&Dot,    0, sizeof(Dot));
+    memset(&DotDot, 0, sizeof(DotDot));
+
+
+//
+// "."
+//
+
+memcpy(Dot.FileName, ".          ", 11);
+
+Dot.Attributes      = FAT_FILE_FLAG_DIRECTORY;
+
+Dot.Reserved1       = 0;
+
+Dot.CreationMS      = 0x97;
+Dot.CreationTime    = 0xBAD3;
+Dot.CreationDate    = 0x58E2;
+
+Dot.LastAccessDate  = 0x58E2;
+
+Dot.Reserved2       = 0;
+
+Dot.LastWriteTime   = 0xBAD3;
+Dot.LastWriteDate   = 0x58E2;
+
+Dot.StartingCluster = self_cluster;
+
+Dot.FileSize        = 0;
+
+
+//
+// ".."
+//
+
+memcpy(DotDot.FileName, "..         ", 11);
+
+DotDot.Attributes      = FAT_FILE_FLAG_DIRECTORY;
+
+DotDot.Reserved1       = 0;
+
+DotDot.CreationMS      = 0x97;
+DotDot.CreationTime    = 0xBAD3;
+DotDot.CreationDate    = 0x58E2;
+
+DotDot.LastAccessDate  = 0x58E2;
+
+DotDot.Reserved2       = 0;
+
+DotDot.LastWriteTime   = 0xBAD3;
+DotDot.LastWriteDate   = 0x58E2;
+
+DotDot.StartingCluster = parent_cluster;
+
+DotDot.FileSize        = 0;
+
+
+    //
+    // Clear directory sector.
+    //
+
+    memset(buffer, 0, 512);
+
+    p = (char *) buffer;
+
+    //
+    // Entry #0
+    //
+
+    memcpy(
+        p,
+        &Dot,
+        sizeof(struct fat16_directory_entry_d) );
+
+    //
+    // Entry #1
+    //
+
+    memcpy(
+        p + FAT16_ENTRY_SIZE,
+        &DotDot,
+        sizeof(struct fat16_directory_entry_d) );
+
+    return 0;
+}
+
 // fat16SaveFile:
 // Salva um arquivo no disco.
 // Somente no diretório raiz.
@@ -714,7 +836,7 @@ fat16SaveFile (
     // + At some point in this routine we need to 
     //   inject two entries in our new directory. The '.' and '..'.
 
-    // struct fat16_directory_entry_d entry;
+    struct fat16_directory_entry_d entry;
 
     int Status = 0;
 
@@ -734,7 +856,7 @@ fat16SaveFile (
     //struct fat16_directory_entry_d entry_fat16;
 
 // Directory entry buffer
-    char DirEntry[32];
+    // char DirEntry[32];
 
 //Entry size in words.
     int EntrySize = 0;
@@ -821,7 +943,8 @@ fat16SaveFile (
 
 
 // Clean the buffer
-    memset(DirEntry, 0, 32);
+    memset(&entry, 0, sizeof(struct fat16_directory_entry_d));
+    // memset(DirEntry, 0, 32);
 
 
 // Load root dir and FAT.
@@ -919,6 +1042,8 @@ save_file:
 // Create directory entry
 // Name/ext 8.3
 
+    memcpy(entry.FileName, file_name, 11);
+
     //entry.FileName[0]  = (char) file_name[0];
     //entry.FileName[1]  = (char) file_name[1];
     //entry.FileName[2]  = (char) file_name[2];
@@ -928,14 +1053,14 @@ save_file:
     //entry.FileName[6]  = (char) file_name[6];
     //entry.FileName[7]  = (char) file_name[7];
 
-    DirEntry[0]  = (char) file_name[0];
-    DirEntry[1]  = (char) file_name[1];
-    DirEntry[2]  = (char) file_name[2];
-    DirEntry[3]  = (char) file_name[3];
-    DirEntry[4]  = (char) file_name[4];
-    DirEntry[5]  = (char) file_name[5];
-    DirEntry[6]  = (char) file_name[6];
-    DirEntry[7]  = (char) file_name[7];
+    //DirEntry[0]  = (char) file_name[0];
+    //DirEntry[1]  = (char) file_name[1];
+    //DirEntry[2]  = (char) file_name[2];
+    //DirEntry[3]  = (char) file_name[3];
+    //DirEntry[4]  = (char) file_name[4];
+    //DirEntry[5]  = (char) file_name[5];
+    //DirEntry[6]  = (char) file_name[6];
+    //DirEntry[7]  = (char) file_name[7];
 
 // extension
     // Use extension or files.
@@ -944,20 +1069,20 @@ save_file:
     //entry.FileName[9]  = (char) file_name[9];
     //entry.FileName[10] = (char) file_name[10];
 
-    DirEntry[8]  = (char) file_name[8];
-    DirEntry[9]  = (char) file_name[9];
-    DirEntry[10] = (char) file_name[10];
+    //DirEntry[8]  = (char) file_name[8];
+    //DirEntry[9]  = (char) file_name[9];
+    //DirEntry[10] = (char) file_name[10];
     // No extension for directories. Using spaces. I guess. 
     if (flag == 0x10)
     {
 
-        //entry.FileName[8]  = (char) 0x20;
-        //entry.FileName[9]  = (char) 0x20;
-        //entry.FileName[10] = (char) 0x20;
+        entry.FileName[8]  = (char) 0x20;
+        entry.FileName[9]  = (char) 0x20;
+        entry.FileName[10] = (char) 0x20;
 
-        DirEntry[8]  = (char) 0x20;
-        DirEntry[9]  = (char) 0x20;
-        DirEntry[10] = (char) 0x20;
+        //DirEntry[8]  = (char) 0x20;
+        //DirEntry[9]  = (char) 0x20;
+        //DirEntry[10] = (char) 0x20;
     }
 
     /*
@@ -977,7 +1102,9 @@ save_file:
 // 0x40: Unused
 // 0x80: Unused
 
-    DirEntry[11] = (char) flag;
+    entry.Attributes = (unsigned char) flag;
+
+    //DirEntry[11] = (char) flag;
 
     // #todo
     //if (IsReadOnly)
@@ -990,32 +1117,47 @@ save_file:
     //    DirEntry[11] = (char) DirEntry[11] | 0x08;
 
 // Reserved
-    DirEntry[12] = 0; 
+    entry.Reserved1 = (unsigned char) 0;
+    //DirEntry[12] = 0; 
 
 // Creation time. 14 15 16
-    DirEntry[13] = 0x97;  // Create Time (ms)
-    //
-    DirEntry[14] = 0xD3;  // Create Time (Hrs/Mins/Secs)
-    DirEntry[15] = 0xBA;
+
+    entry.CreationMS = (unsigned char) 0x97;
+    //DirEntry[13] = 0x97;  // Create Time (ms)
+
+    entry.CreationTime = (unsigned short) 0xBAD3;
+    //DirEntry[14] = 0xD3;  // Create Time (Hrs/Mins/Secs)
+    //DirEntry[15] = 0xBA;
+
 // Creation date
-    DirEntry[16] = 0xE2;
-    DirEntry[17] = 0x58;
+    entry.CreationDate = (unsigned short) 0x58E2;
+    //DirEntry[16] = 0xE2;
+    //DirEntry[17] = 0x58;
+
 // Access date
-    DirEntry[18] = 0xE2;
-    DirEntry[19] = 0x58;
+    entry.LastAccessDate = (unsigned short) 0x58E2;
+    //DirEntry[18] = 0xE2;
+    //DirEntry[19] = 0x58;
 
 // First cluster. (16 bits)
 // Only used in FAT32 Systems
 // 0 para fat12 ou 16
-    DirEntry[20] = 0;  // File/Folder Start Cluster (High)
-    DirEntry[21] = 0;
+
+    entry.Reserved2 = (unsigned short) 0;
+    //DirEntry[20] = 0;  // File/Folder Start Cluster (High)
+    //DirEntry[21] = 0;
+
 
 // Modifield time
-    DirEntry[22] = 0xD3;
-    DirEntry[23] = 0xBA;
+    entry.LastWriteTime = (unsigned short) 0xBAD3;
+    //DirEntry[22] = 0xD3;
+    //DirEntry[23] = 0xBA;
+
+
 // Modifield date
-    DirEntry[24] = 0xE2;
-    DirEntry[25] = 0x58;
+    entry.LastWriteDate = (unsigned short) 0x58E2;
+    //DirEntry[24] = 0xE2;
+    //DirEntry[25] = 0x58;
 
 // #test
 // First cluster. (Low word)
@@ -1024,31 +1166,53 @@ save_file:
 // first = Index in the fat16ClustersToSave[] list.
    //int fIndex = first;  //=0.
     unsigned short OurFirstCluster = (unsigned short) fat16ClustersToSave[0];
-    char *p = (char *) &OurFirstCluster;
-    DirEntry[26] = (char) (*p);  // File/Folder Start Cluster (Low)
-    p++;
-    DirEntry[27] = (char) (*p);
+    //char *p = (char *) &OurFirstCluster;
+    //DirEntry[26] = (char) (*p);  // File/Folder Start Cluster (Low)
+    //p++;
+    //DirEntry[27] = (char) (*p);
+
+    entry.StartingCluster = (unsigned short) OurFirstCluster;
 
 // File size in bytes. (32 bits)
 // 4 bytes: (28,29,30,31)
 // (for files)
-    DirEntry[28] = (char) size_in_bytes;
-    size_in_bytes = (size_in_bytes >> 8);
-    DirEntry[29] = (char) size_in_bytes;
-    size_in_bytes = (size_in_bytes >> 8);
-    DirEntry[30] = (char) size_in_bytes;
-    size_in_bytes = (size_in_bytes >> 8);
-    DirEntry[31] = (char) size_in_bytes;
+
+    //DirEntry[28] = (char) size_in_bytes;
+    //size_in_bytes = (size_in_bytes >> 8);
+    //DirEntry[29] = (char) size_in_bytes;
+    //size_in_bytes = (size_in_bytes >> 8);
+    //DirEntry[30] = (char) size_in_bytes;
+    //size_in_bytes = (size_in_bytes >> 8);
+    //DirEntry[31] = (char) size_in_bytes;
+
+    entry.FileSize = (unsigned int) size_in_bytes;
 
 // Folders will have a File Size of 0x0000
 // (for folders)
 
     if (flag == 0x10)
     {
-        DirEntry[28] = (char) 0;
-        DirEntry[29] = (char) 0;
-        DirEntry[30] = (char) 0;
-        DirEntry[31] = (char) 0;
+        entry.FileSize = (unsigned int) 0;
+
+        //DirEntry[28] = (char) 0;
+        //DirEntry[29] = (char) 0;
+        //DirEntry[30] = (char) 0;
+        //DirEntry[31] = (char) 0;
+    }
+
+
+
+//
+// Initialize the contents of a new directory.
+// The first cluster will contain "." and ".." entries.
+//
+
+    if (flag == FAT_FILE_FLAG_DIRECTORY)
+    {
+        __fat16_initialize_directory(
+            (void *) file_address,
+            (unsigned short) OurFirstCluster,
+            (unsigned short) 0 );   // parent = root for now
     }
 
 // #importante:
@@ -1097,7 +1261,8 @@ save_file:
     Offset = (int) (FreeIndex * EntrySize);
 
 // FAT16_DIRENTRY_SIZE = 32
-    memcpy ( &__dir[Offset], DirEntry, 32 );
+    //memcpy ( &__dir[Offset], DirEntry, 32 );
+    memcpy ( &__dir[Offset], &entry, 32 );
 
 // reset
 // Reiniciamos o controlador antes de usarmos.
@@ -1256,6 +1421,7 @@ fail:
     printk     ("fat16SaveFile: fail\n");
     return (int) -1;
 }
+
 
 // #test
 // #bugbug
