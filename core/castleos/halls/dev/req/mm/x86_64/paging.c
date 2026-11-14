@@ -486,9 +486,10 @@ unsigned long alloc_frame(void)
 // Precisamos encontrar outro lugar para esse heap, 
 // tendo em vista que o numero de diretorios criados sera grande 
 // e o heap invadir outras areas.
+
 // #bugbug
 // Vamos improvisar um limite por enquanto.
-// See: mm/gpa.h
+// See: x64gpa.h
 // 0x1000
 
 unsigned long table_pointer_heap_base = 
@@ -504,7 +505,7 @@ unsigned long table_pointer_heap_base =
 /*
  #bugbug
  # very important
- The function get_table_pointer_va() uses the address 0x1000 as bae address 
+ The function get_table_pointer_va() uses the address 0x1000 as base address 
  for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
  exceeding its limits.
 
@@ -514,7 +515,9 @@ unsigned long table_pointer_heap_base =
 
 */
 
+// #bugbug:
 // Very dangerous hack
+
 unsigned long get_table_pointer_va(void)
 {
     //debug_print ("get_table_pointer_va:\n");
@@ -535,8 +538,9 @@ unsigned long get_table_pointer_va(void)
 // pelo sistema de arquivos.
 
 
-// Reach the max limit.
+// Reach the max limit
 // 0x20000
+
     //if (table_pointer_heap_base >= MBR_ADDRESS)
     if (table_pointer_heap_base >= FAT_ADDRESS)
     {

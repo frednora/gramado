@@ -3,9 +3,16 @@
 
  #bugbug
  # very important
- The function get_table_pointer_va() uses the address 0x1000 as bae address 
+ see: halls/dev/req/mm/x86_64/paging.c 
+
+ The function get_table_pointer_va() uses the address 0x1000 as base address 
  for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
  exceeding its limits.
+
+ ps:
+ + The function The function get_table_pointer_va() is implemented in paging.c.
+ + The global table_pointer_heap_base is also defined in paging.c
+ + ____DANGER_TABLE_POINTER_HEAP_BASE was defined as 0x1000 in mm/x86_64/x64gpa.h
 
  See:
  + get_table_pointer_va() in paging.c 

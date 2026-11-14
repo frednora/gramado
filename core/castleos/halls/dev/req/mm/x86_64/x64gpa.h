@@ -107,6 +107,10 @@
 // == 128 KB ==================================================
 //
 
+// #bugbug
+// Here is the problem. The table above can overlay out trampoline area.
+// We gotta fix it, probably moving the table above to another place.
+
 //#define __128KBMARK  0x00020000
 // #imortant:
 // AP tranpoline code area.
