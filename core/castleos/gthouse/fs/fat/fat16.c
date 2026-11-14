@@ -709,6 +709,13 @@ fat16SaveFile (
 // >>> Used to save/create a file or a directory,
 // depending on the flag.
 
+    // #todo:
+    // + Use the structure for directory entry.
+    // + At some point in this routine we need to 
+    //   inject two entries in our new directory. The '.' and '..'.
+
+    // struct fat16_directory_entry_d entry;
+
     int Status = 0;
 
     unsigned long i = 0; 
@@ -911,6 +918,16 @@ save_file:
 
 // Create directory entry
 // Name/ext 8.3
+
+    //entry.FileName[0]  = (char) file_name[0];
+    //entry.FileName[1]  = (char) file_name[1];
+    //entry.FileName[2]  = (char) file_name[2];
+    //entry.FileName[3]  = (char) file_name[3];
+    //entry.FileName[4]  = (char) file_name[4];
+    //entry.FileName[5]  = (char) file_name[5];
+    //entry.FileName[6]  = (char) file_name[6];
+    //entry.FileName[7]  = (char) file_name[7];
+
     DirEntry[0]  = (char) file_name[0];
     DirEntry[1]  = (char) file_name[1];
     DirEntry[2]  = (char) file_name[2];
@@ -919,14 +936,25 @@ save_file:
     DirEntry[5]  = (char) file_name[5];
     DirEntry[6]  = (char) file_name[6];
     DirEntry[7]  = (char) file_name[7];
-// extension.
+
+// extension
     // Use extension or files.
+
+    //entry.FileName[8]  = (char) file_name[8];
+    //entry.FileName[9]  = (char) file_name[9];
+    //entry.FileName[10] = (char) file_name[10];
+
     DirEntry[8]  = (char) file_name[8];
     DirEntry[9]  = (char) file_name[9];
     DirEntry[10] = (char) file_name[10];
     // No extension for directories. Using spaces. I guess. 
     if (flag == 0x10)
     {
+
+        //entry.FileName[8]  = (char) 0x20;
+        //entry.FileName[9]  = (char) 0x20;
+        //entry.FileName[10] = (char) 0x20;
+
         DirEntry[8]  = (char) 0x20;
         DirEntry[9]  = (char) 0x20;
         DirEntry[10] = (char) 0x20;
