@@ -126,6 +126,14 @@ static void __initialize_extraheap3(void);
 
 static void __mmSetupMemoryUsage(void);
 
+
+//
+// Table pools
+//
+
+static void __initialize_early_table_pool(void);
+static void __initialize_permanent_table_pool(void);
+
 // ==================================================
 
 
@@ -140,6 +148,57 @@ struct shmm_user_heap_d
     // Track the limit
 };
 static struct shmm_user_heap_d  shmm_user_heap;
+
+
+
+
+static void __initialize_early_table_pool(void)
+{
+// Table pool used during the bootstrap.
+// We will get tables from this reagion.
+
+    // Base
+    BootstrapTablePoll.next_table_va = 
+        ____DANGER_TABLE_POINTER_HEAP_BASE;
+
+    // Limit
+    // #ps: 
+    // As the first mb is 1:1 identity mapped by the bootloder
+    // we can find this address at x64gpa.h (for physical addresses)
+    BootstrapTablePoll.limit_va = 
+        ____DANGER_TRAMPOLINE_CODE_BASE;
+
+    BootstrapTablePoll.initialized = TRUE;
+}
+
+// #test
+static void __initialize_permanent_table_pool(void)
+{
+    int i;
+
+    // Map the physical frames that will back the pool
+    // (identity or any free physical range you prefer)
+    //unsigned long pa = 0x32000000;   // choose a free physical region
+    //unsigned long va = 0x32000000;
+    unsigned long pa = PERMANENT_TABLE_POOL_PA;
+    unsigned long va = PERMANENT_TABLE_POOL_VA;
+
+    // 8 × 2 MB = 16 MB
+    for (i=0; i < 8; i++) 
+    {   
+        mm_map_2mb_region_in_pd0_imp(
+            pa + (i * 0x200000),
+            va + (i * 0x200000),
+            0x1B    // kernel R/W, present, cache-disable optional 
+        );
+    }
+
+    PermanentTablePool.base_va     = va;
+    PermanentTablePool.next_table_va = va;
+    PermanentTablePool.limit_va    = va + (16 * 1024 * 1024);
+    PermanentTablePool.base_pa     = pa;
+    PermanentTablePool.initialized = TRUE;
+}
 
 
 void shmm_user_heap_initialize(unsigned long base_address)
@@ -326,7 +385,7 @@ void *CreateAndIntallPageTable (
 // Page table
 //
 
-    unsigned long ptVA = (unsigned long) get_table_pointer_va();  //ok
+    unsigned long ptVA = (unsigned long) early_get_table_pointer_va();  //ok
     if ( ptVA == 0 ){
         panic ("CreateAndIntallPageTable: [FAIL] ptVA\n");
     }
@@ -474,7 +533,7 @@ unsigned long alloc_frame(void)
 //
 // #important: DANGER !!!
 //
-// get_table_pointer_va:
+// early_get_table_pointer_va:
 // #bugbug
 // Isso eh um improviso, precisamos de outro endereço.
 // >>>> 0x1000
@@ -487,13 +546,8 @@ unsigned long alloc_frame(void)
 // tendo em vista que o numero de diretorios criados sera grande 
 // e o heap invadir outras areas.
 
-// #bugbug
-// Vamos improvisar um limite por enquanto.
-// See: x64gpa.h
-// 0x1000
-
-unsigned long table_pointer_heap_base = 
-    ____DANGER_TABLE_POINTER_HEAP_BASE;
+struct bootstrap_table_pool_d BootstrapTablePoll;
+struct permanent_table_pool_d PermanentTablePool;
 
 // ======================================================
 
@@ -505,12 +559,12 @@ unsigned long table_pointer_heap_base =
 /*
  #bugbug
  # very important
- The function get_table_pointer_va() uses the address 0x1000 as base address 
+ The function early_get_table_pointer_va() uses the address 0x1000 as base address 
  for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
  exceeding its limits.
 
  See:
- + get_table_pointer_va() in paging.c 
+ + early_get_table_pointer_va() in paging.c 
  + ____DANGER_TABLE_POINTER_HEAP_BASE in x64gpa.h 
 
 */
@@ -518,13 +572,37 @@ unsigned long table_pointer_heap_base =
 // #bugbug:
 // Very dangerous hack
 
-unsigned long get_table_pointer_va(void)
-{
-    //debug_print ("get_table_pointer_va:\n");
+// #ps:
+// We are using this one only for the tables we need
+// at the early stages of kernel initialization.
+// #todo: We need to create another function to get 
+// the tables the ring 3 process are gonna need.
 
-// Incrementa 4KB.
-    table_pointer_heap_base = 
-        (unsigned long) (table_pointer_heap_base + 0x1000);
+// #ps:
+// The current early_get_table_pointer_va() is deliberately 
+// restricted to a small, early bootstrap pool 
+// (the region between ____DANGER_TABLE_POINTER_HEAP_BASE and 
+// the trampoline / 0x20000). That is intentional for the tables 
+// created during the very first mapping of the canonical 1 GB region.
+// #todo: 
+// We need a second allocator for all later page tables 
+// (process page tables, extra mappings, compositor canvases, etc.).
+
+// Early pool (BootstrapTablePoll + early_get_table_pointer_va())
+// Used only while building the canonical 1 GB kernel mappings.
+// Still lives in the dangerous low region (____DANGER_TABLE_POINTER_HEAP_BASE → trampoline).
+// Correctly kept isolated.
+
+unsigned long early_get_table_pointer_va(void)
+{
+    debug_print ("early_get_table_pointer_va:    <<<< ==== EARLY ====\n");
+
+// 
+// Increment 4KB
+//
+
+    BootstrapTablePoll.next_table_va = 
+        (unsigned long) (BootstrapTablePoll.next_table_va + 0x1000);
 
 // #todo
 // Precisamos de uma nova origem.
@@ -538,22 +616,50 @@ unsigned long get_table_pointer_va(void)
 // pelo sistema de arquivos.
 
 
-// Reach the max limit
-// 0x20000
+// Reach the max limit.
+// 0x20000 (where the trampoline is)
 
-    //if (table_pointer_heap_base >= MBR_ADDRESS)
-    if (table_pointer_heap_base >= FAT_ADDRESS)
+    if (BootstrapTablePoll.next_table_va >= BootstrapTablePoll.limit_va )
     {
-        //0x00030000
-        panic ("get_table_pointer_va: [FIXME] Limits\n");
+        debug_print ("early_get_table_pointer_va: Limits\n");
+        x_panic ("early_get_table_pointer_va: Limits");
     }
 
-    return (unsigned long) table_pointer_heap_base;
+    return (unsigned long) BootstrapTablePoll.next_table_va;
 }
+
+// Permanent pool (PermanentTablePool + get_table_pointer_va())
+// Initialized at the very end of __initialize_canonical_kernel_pagetables().
+// 16 MB (8 × 2 MB) identity-mapped with flags 0x1B.
+// All cloning paths (CloneKernelPML4, CloneKernelPDPT0, CloneKernelPD0, clone_pml4) 
+// now correctly use the permanent worker.
+
+// from permanent area
+unsigned long get_table_pointer_va(void)
+{
+
+    debug_print ("get_table_pointer_va:    <<<< ==== PERMANENT ====\n");
+
+    if (PermanentTablePool.initialized != TRUE) {
+        x_panic("get_table_pointer_va: pool not initialized");
+    }
+
+    // Advance by 4 KB
+    PermanentTablePool.next_table_va += 0x1000;
+
+    if (PermanentTablePool.next_table_va >= PermanentTablePool.limit_va) {
+        x_panic("get_table_pointer_va: pool exhausted");
+    }
+
+    // Tables must be 4 KB aligned (they already are)
+    return PermanentTablePool.next_table_va;
+}
+
 
 // CloneKernelPD0:
 // Clone the kernel's pd0. (Page Directory 0).
 // OUT: The virtual address for the new directory.
+
 void *CloneKernelPD0(void)
 {
     register int i=0;
@@ -563,6 +669,7 @@ void *CloneKernelPD0(void)
 // criarmos um pd.
 // Identidade 1:1.
 
+    //destAddressVA = (unsigned long) early_get_table_pointer_va();
     destAddressVA = (unsigned long) get_table_pointer_va();
     if ( destAddressVA == 0 ){
         panic ("CloneKernelPD0: destAddressVA\n");
@@ -580,7 +687,7 @@ void *CloneKernelPD0(void)
         dst[i] = (unsigned long) src[i];
     };
 
-// The virtual address of the new pml4. 
+// The virtual address of the new pml4
     return (void *) destAddressVA;
 }
 
@@ -596,6 +703,7 @@ void *CloneKernelPDPT0(void)
 // criarmos um pdpt.
 // Identidade 1:1.
 
+    //destAddressVA = (unsigned long) early_get_table_pointer_va(); 
     destAddressVA = (unsigned long) get_table_pointer_va(); 
     if ( destAddressVA == 0 ){
         panic ("CloneKernelPDPT0: destAddressVA\n");
@@ -631,6 +739,7 @@ void *CloneKernelPML4(void)
 // Mas endereço físico e virtual são iguais nessa região.
 // Identidade 1:1.
 
+    //destAddressVA = (unsigned long) early_get_table_pointer_va(); 
     destAddressVA = (unsigned long) get_table_pointer_va(); 
     if (destAddressVA == 0){
         panic ("CloneKernelPML4: destAddressVA\n");
@@ -682,6 +791,7 @@ void *clone_pml4(unsigned long pml4_va)
 // criarmos um pml4.
 // Identidade 1:1.
 
+    //destAddressVA = (unsigned long) early_get_table_pointer_va();
     destAddressVA = (unsigned long) get_table_pointer_va();
     if (destAddressVA == 0){
         panic ("clone_pml4: destAddressVA\n");
@@ -1158,7 +1268,7 @@ static void __initialize_ring0area(void)
     unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
     unsigned long *pt_ring0area = 
-        (unsigned long *) get_table_pointer_va();  //PAGETABLE_RING0AREA; 
+        (unsigned long *) early_get_table_pointer_va();  //PAGETABLE_RING0AREA; 
 
 // kernel_address_pa: 
 // Início da memória RAM.
@@ -1241,7 +1351,7 @@ static void __initialize_ring3area(void)
     unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
     unsigned long *pt_ring3area = 
-        (unsigned long *) get_table_pointer_va();
+        (unsigned long *) early_get_table_pointer_va();
 
 // pa
 // user_address_pa:   
@@ -1303,7 +1413,7 @@ static void __initialize_kernelimage_region(void)
     unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
     unsigned long *pt_kernelimage = 
-        (unsigned long *) get_table_pointer_va();  //PAGETABLE_KERNELIMAGE; 
+        (unsigned long *) early_get_table_pointer_va();  //PAGETABLE_KERNELIMAGE; 
 
 // pa
 // kernel_base_pa:    
@@ -1380,7 +1490,7 @@ static void __initialize_frontbuffer(void)
 // #warning: 
 // It has 512 entries, given us 2MB, using 4KB pages.
     unsigned long *pt_frontbuffer = 
-        (unsigned long *) get_table_pointer_va();  //PAGETABLE_FRONTBUFFER;
+        (unsigned long *) early_get_table_pointer_va();  //PAGETABLE_FRONTBUFFER;
 
 // -----------------------------------------
 // pa
@@ -1526,7 +1636,7 @@ static void __initialize_backbuffer(void)
 // #warning: 
 // It has 512 entries, given us 2MB, using 4KB pages.
     unsigned long *pt_backbuffer = 
-        (unsigned long *) get_table_pointer_va();
+        (unsigned long *) early_get_table_pointer_va();
 
 // #warning:
 // SMALL_backbuffer_pa points to BACKBUFFER_PA.
@@ -1621,7 +1731,7 @@ static void __initialize_pagedpool(void)
     unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
     unsigned long *pt_pagedpool = 
-        (unsigned long *) get_table_pointer_va();  //PAGETABLE_PAGEDPOOL;
+        (unsigned long *) early_get_table_pointer_va();  //PAGETABLE_PAGEDPOOL;
 
 // pa
     paList[MM_COMPONENT_PAGEDPOOL_PA] = (unsigned long) SMALL_pagedpool_pa;
@@ -1683,7 +1793,7 @@ static void __initialize_heappool(void)
 
 // The pagetable.
     unsigned long *pt_heappool = 
-        (unsigned long *) get_table_pointer_va();  //PAGETABLE_HEAPPOOL; 
+        (unsigned long *) early_get_table_pointer_va();  //PAGETABLE_HEAPPOOL; 
 
 // pa.
     paList[MM_COMPONENT_HEAPPOOL_PA] = (unsigned long) SMALL_heappool_pa;
@@ -1740,7 +1850,7 @@ static void __initialize_extraheap1(void)
     unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
     unsigned long *pt_extraheap1 = 
-        (unsigned long *) get_table_pointer_va();
+        (unsigned long *) early_get_table_pointer_va();
 
 // pa: ?
     paList[MM_COMPONENT_EXTRAHEAP1_PA] = (unsigned long) SMALL_extraheap1_pa;
@@ -1784,7 +1894,7 @@ static void __initialize_extraheap2(void)
     unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
     unsigned long *pt_extraheap2 = 
-        (unsigned long *) get_table_pointer_va();
+        (unsigned long *) early_get_table_pointer_va();
 
 // pa
     paList[MM_COMPONENT_EXTRAHEAP2_PA] = (unsigned long) SMALL_extraheap2_pa;
@@ -1828,7 +1938,7 @@ static void __initialize_extraheap3(void)
     unsigned long target_pd_va = (unsigned long) KERNEL_PD_PA;
 
     unsigned long *pt_extraheap3 = 
-        (unsigned long *) get_table_pointer_va();
+        (unsigned long *) early_get_table_pointer_va();
 
 // pa
     paList[MM_COMPONENT_EXTRAHEAP3_PA] = (unsigned long) SMALL_extraheap3_pa;
@@ -1893,7 +2003,7 @@ mm_map_2mb_region_in_pd0_imp (
 
 // pt
 // 0x00088000
-    unsigned long *_pt = (unsigned long *) get_table_pointer_va();
+    unsigned long *_pt = (unsigned long *) early_get_table_pointer_va();
     if ((void*) _pt == NULL){
         goto fail;
     }
@@ -2107,6 +2217,27 @@ static void __initialize_canonical_kernel_pagetables(void)
 // Called by pagesInitializePaging().
 // Install some pagetables into the 
 // kernel page directory 0.
+
+// Table pool used during the bootstrap.
+// We will get tables from this reagion.
+
+/*
+    // Base
+    BootstrapTablePoll.next_table_va = 
+        ____DANGER_TABLE_POINTER_HEAP_BASE;
+
+    // Limit
+    // #ps: 
+    // As the first mb is 1:1 identity mapped by the bootloder
+    // we can find this address at x64gpa.h (for physical addresses)
+    BootstrapTablePoll.limit_va = 
+        ____DANGER_TRAMPOLINE_CODE_BASE;
+
+    BootstrapTablePoll.initialized = TRUE;
+*/
+
+    __initialize_early_table_pool();
+
 
 //
 // 0 - 0mb mark - VA
@@ -2380,6 +2511,9 @@ static void __initialize_canonical_kernel_pagetables(void)
     }
 */
 
+
+
+    __initialize_permanent_table_pool();
 }
 
 

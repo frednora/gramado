@@ -386,7 +386,9 @@ void ioapic_initialize(void)
 // que servira de base para criarmos uma pagetable.
 // Mas endereço físico e virtual são iguais nessa região.
 // Identidade 1:1.
-    unsigned long *pt_ioapic = (unsigned long *) get_table_pointer_va();
+
+    unsigned long *pt_ioapic = (unsigned long *) early_get_table_pointer_va();
+    // unsigned long *pt_ioapic = (unsigned long *) get_table_pointer_va();
 
 // -------------
 // pa

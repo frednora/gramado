@@ -22,7 +22,7 @@
 /*
  #bugbug
  # very important
- The function get_table_pointer_va() uses the address 0x1000 as bae address 
+ The function get_table_pointer_va() uses the address 0x1000 as base address 
  for a set of tables. These tables are been overlayed by the AP's trampoline code or/and 
  exceeding its limits.
 
@@ -32,7 +32,7 @@
 
 */
 
-// See: x64goa.h because the it has 1:1 identity for the first mega.
+// See: x64gpa.h because the it has 1:1 identity for the first mega.
 
 
 // fat
@@ -92,6 +92,14 @@
 // Warning:
 // Here we have big not used espace of virtual address.
 //
+
+#define PERMANENT_TABLE_POOL_VA  0x04000000 
+
+//
+// Warning:
+// Here we have big not used espace of virtual address.
+//
+
 
 // #todo
 // These two main addresses are free.

@@ -91,6 +91,30 @@
 // see: pages.c
 extern unsigned long gKernelPML4Address; 
 
+// ================================================
+
+// Table pool used during the bootstrap.
+struct bootstrap_table_pool_d 
+{
+    int initialized;  // The structure was initialized
+
+    unsigned long next_table_va;
+    unsigned long limit_va
+};
+extern struct bootstrap_table_pool_d BootstrapTablePoll;
+
+// Permanent table pool – used after early initialization
+struct permanent_table_pool_d
+{
+    int initialized;
+    unsigned long next_table_va;
+    unsigned long limit_va;
+    unsigned long base_va;          // for accounting / debug
+    unsigned long base_pa;          // optional, if you want identity
+};
+extern struct permanent_table_pool_d PermanentTablePool;
+
+
 
 // ================================================
 
@@ -117,7 +141,9 @@ unsigned long get_new_frame(void);
 unsigned long alloc_frame(void);
 
 // #danger
+unsigned long early_get_table_pointer_va(void);
 unsigned long get_table_pointer_va(void);
+
 
 // Clone the kernel's pd0. (Page Directory 0).
 void *CloneKernelPD0(void);

@@ -1243,7 +1243,9 @@ copy_process00(
 // Create new page table for the child
 
 // Allocating a virtual address where we area gonna put our pt.
-    unsigned long ptVA = (unsigned long) get_table_pointer_va();
+    //unsigned long ptVA = (unsigned long) early_get_table_pointer_va();
+    unsigned long ptVA = (unsigned long) get_table_pointer_va(); // from permanent
+
     if (ptVA == 0){
         panic("copy_process00: [FAIL] ptVA\n");
     }

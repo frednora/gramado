@@ -431,6 +431,9 @@ See: https://wiki.osdev.org/Memory_Map_(x86)
 //#define BACKBUFFER_PA  0x04000000 
 
 
+#define PERMANENT_TABLE_POOL_PA  0x04000000 
+
+
 // Here is a big space reserved for the backbuffer.
 
 //
