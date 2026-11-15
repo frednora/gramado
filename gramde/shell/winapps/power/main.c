@@ -39,7 +39,7 @@ static unsigned long __sh_flags = 0;
 struct ui_component_d *uic_button_restart;    // id 0
 struct ui_component_d *uic_button_shutdown;   // id 1
 struct ui_component_d *uic_footer;            // id 2
-struct ui_component_d *uic_eb;                // id 
+// struct ui_component_d *uic_eb;                // id 
 
 
 struct button_info_d
@@ -70,10 +70,17 @@ struct button_info_d
 static struct button_info_d  MyButton_Restart;
 static struct button_info_d  MyButton_Shutdown;
 
-static int __hover_button_id = -1; // Invalidate.
+static int __hover_button_id = -1;  // Invalidate
 
+//
+// BMP
+//
 
 struct bmp_cache_d *icon00_cache;
+#define BMP_X  32
+#define BMP_Y  32
+#define BMP_SCALE_FACTOR  5
+const char *bmp_path = "#folder.bmp";
 
 // -----------------
 
@@ -402,7 +409,8 @@ static void update_children(int fd)
 
     if (icon00_cache && icon00_cache->loaded) 
     {
-        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
+        bmp_decode_bmp_image(
+            icon00_cache, dc00, BMP_X, BMP_Y, BMP_SCALE_FACTOR);
     }
 
 
@@ -410,12 +418,15 @@ static void update_children(int fd)
 // eb
 //
 
+/*
+// #test: Its working fine
     libgui_set_ui_component_position(
         uic_eb, 20, 40 );
     libgui_set_ui_component_dimension(
         uic_eb, 200, 20 );
     libgui_set_ui_component_flags(uic_eb, (0x0001 | 0x0002));
     libgui_redraw_ui_component(uic_eb, dc00);
+*/
 
 //
 // footer
@@ -577,12 +588,12 @@ powerProcedure(
             // exit(0);
             break;
 
-        // #test: Shut display server down
+        // Quit the application
         case 'Q':
         case 'q':
-            printf("power: Q >> Send QUIT message\n");
+            printf("power: Q\n");
             
-            gws_async_command(fd,88,0,0);  // Send quit message
+            // gws_async_command(fd,88,0,0);  // Send quit message
             isTimeToQuit = TRUE;  // #test
             
             // #todo: Close our windows.
@@ -1025,10 +1036,11 @@ int main(int argc, char *argv[])
 // -----------------------------------------------------
 // #test: BMP image
 
-    icon00_cache = (struct bmp_cache_d*) bmp_load_bmp_image("#folder.bmp");
+    icon00_cache = (struct bmp_cache_d*) bmp_load_bmp_image(bmp_path);
     if (icon00_cache && icon00_cache->loaded) 
     {
-        bmp_decode_bmp_image(icon00_cache, dc00, 50, 50, 4); // zoom=4
+        bmp_decode_bmp_image(
+            icon00_cache, dc00, BMP_X, BMP_Y, BMP_SCALE_FACTOR);
     }
 
 
@@ -1053,7 +1065,9 @@ int main(int argc, char *argv[])
 
 // ================================================================================
 
- // 3. Create the editbox (x=20, y=40, 200x20, initial text "hello")
+/*
+// #test: Its working fine
+// Create the editbox (x=20, y=40, 200x20, initial text "hello")
     uic_eb = libgui_create_ui_component(
             dc00,
             UI_COMPONENT_EDITBOX,
@@ -1062,6 +1076,7 @@ int main(int argc, char *argv[])
             0 );
     //if (uic_eb == NULL)
         //return -1;
+*/
 
 // Create footer component
     uic_footer =
@@ -1160,7 +1175,8 @@ int main(int argc, char *argv[])
         // };
     };
 
-    if (isTimeToQuit == TRUE){
+    if (isTimeToQuit == TRUE)
+    {
         printf("PowerApp: Close window\n");
         gws_destroy_window(client_fd, main_window);
     }
