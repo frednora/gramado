@@ -656,14 +656,10 @@ memoryProcedure(
         return 0;
         break;
 
+    // Quit application.
+    // When pressing the key.
     case 'Q':
-    case 'q':
-        // #test: Shut display server down
-        // printf("memory: Send QUIT message\n");
-        // gws_async_command(fd,88,0,0);  // Send quit message
-        
-        // Quit application
-        //isTimeToQuit = TRUE;
+    case 'q':       
         return 0;
         break;
     }
@@ -690,12 +686,9 @@ memoryProcedure(
         break;
 
 
+    // Quit the application
     case 'Q':
     case 'q':
-        // #test: Shut display server down
-        // printf("memory: Send QUIT message\n");
-        // gws_async_command(fd,88,0,0);  // Send quit message
-
         isTimeToQuit = TRUE;
         return 0;
         break;
