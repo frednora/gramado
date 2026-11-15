@@ -24,31 +24,33 @@ BUILD = $(BASE)/build1
 # The first ring 3 process
 INIT_PROCESS = sysd
 
+
+# Desktop Environment
+__CURRENT_DE = ../gramde
+# __CURRENT_DE = ../xxxde
+
 # =================================
 # L1: cmds - POSIX-like commands and experiments
 
-__DEP_L1 = ../gramde/cmds
-L1_CMDS  = $(__DEP_L1)/cmds00
-L1_CPP00 = $(__DEP_L1)/cpp00
+L1_CMDS  = $(__CURRENT_DE)/cmds/cmds00
+L1_CPP00 = $(__CURRENT_DE)/cmds/cpp00
 
 
 # =================================
 # L2: GUI
 
-__DEP_L2 = ../gramde
-
-# comp00: Display server/compositor
-L2_COMP     = $(__DEP_L2)/winsys/comp00
+# comp00: Display server / compositor
+L2_COMP     = $(__CURRENT_DE)/winsys/comp00
 
 # assets: Assets for shell
-L2_ASSETS   = $(__DEP_L2)/shell/assets
-# Client-side GUI applications (Nomad Pastors)
-L2_WINAPPS  = $(__DEP_L2)/shell/winapps
-L2_WINSHELL = $(__DEP_L2)/shell/winshell
+L2_ASSETS   = $(__CURRENT_DE)/shell/assets
 
+# Client-side GUI applications (Nomad Pastors)
+L2_WINAPPS  = $(__CURRENT_DE)/shell/winapps
+L2_WINSHELL = $(__CURRENT_DE)/shell/winshell
 
 # velo3d: 3D demo
-L2_VELO3D   = $(__DEP_L2)/velo3d
+L2_VELO3D   = $(__CURRENT_DE)/velo3d
 
 
 
@@ -69,12 +71,20 @@ PYTHON3 = python3
 # MYMAKE_FLAGS = -j4
 
 # --------------------------------------
-# == Start ====
-# build: User command.
+# The script starts here.
+#
+# The six steps:
+# + We build the core components and install them into the base folder.
+# + We also install the pre-built desktop environment componets.
+# + We mount the virtual disk.
+# + We copy the base folder into the virtual disk.
+# + We unmount the virtual disk.
+#
+
 PHONY := all
 all:  \
-build-gramado-os \
-build-extras \
+build-core \
+build-de \
 $(BASE)/gramvd \
 vhd-mount \
 vhd-copy-files \
@@ -90,9 +100,9 @@ clean
 	@echo "Done?"
 
 # ===================================
-#::0 Build Gramado OS
-PHONY := build-gramado-os  
-build-gramado-os:     
+# Step 1) Build and install core components
+PHONY := build-core  
+build-core:     
 	@echo ":: [] Building VHD, bootloaders and kernel image."
 # options: 
 # main.asm and main2.asm
@@ -114,7 +124,6 @@ build-gramado-os:
 
 # Copy the virtual disk into the rootdir.
 	@cp boot/arch/GRAMHV.VHD  .
-
 
 # Copy the bootloader into the rootdir
 	@cp boot/arch/x86/bin/MIAMI.BIN   $(BUILD)/
@@ -171,23 +180,14 @@ build-gramado-os:
 #	@-cp modules/servers/vgad/bin/VGAD.BIN  $(BUILD)/GRAMADO
 
 
-	@echo "~build-gramado-os end?"
+	@echo "~build-core end?"
 
 # ===================================
-#::1
-# Build extras
-PHONY := build-extras
-build-extras:
-
-	@echo "build-extras"
-
-# ----------------------------------
-# Compile layers
-# suspended
-
-#	@echo "Compiling L1 and L2"
-#	@make -C $(__DEP_L1)/
-#	@make -C $(__DEP_L2)/
+# Step 2) Importing the Desktop Environment.
+# ps: It was previously built by another project.
+PHONY := build-de
+build-de:
+	@echo "build-de"
 
 # ----------------------------------
 # L1: Install binaries
@@ -263,31 +263,27 @@ build-extras:
 	@-cp $(L2_VELO3D)/bin/ENG00.BIN   $(BUILD)/DE/
 
 
-	@echo "~ build-extras"
+	@echo "~build-de"
 
 # ===================================
-#::2
-# Step 2: $(BASE)/gramvd  - Creating the directory to mount the VHD.
+# Step 3: Creating the directory where we're gonna mount the VHD
 $(BASE)/gramvd:
-	@echo "========================="
 	@echo "Build: Creating the directory to mount the VHD ..."
 	@sudo mkdir $(BASE)/gramvd
 
-# --------------------------------------
-#::3
-# ~ Step 3: vhd-mount - Mounting the VHD.
-# mounts the disk, depends on the directory existing
+# ===================================
+# Step 4: Mounting the VHD
+# ps: It depends on the directory we already created
 vhd-mount: $(BASE)/gramvd
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
 	@-sudo umount $(BASE)/gramvd
 	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(BASE)/gramvd/
 
-# --------------------------------------
-#::4
-# ~ Step 4 vhd-copy-files - Copying files into the mounted VHD.
+# ===================================
+# Step 5: Copying files into the mounted VHD
 # Copying the $(BUILD)/ folder into the mounted VHD.
-# copies files, depends on the disk being mounted
+# The files been copied depends on the disk being mounted.
 vhd-copy-files: vhd-mount
 	@echo "========================="
 	@echo "Build: Copying files into the mounted VHD ..."
@@ -296,9 +292,7 @@ vhd-copy-files: vhd-mount
 	@sudo cp -r $(BUILD)/*  $(BASE)/gramvd
 
 # --------------------------------------
-#:::5
-# ~ Step 5 vhd-unmount  - Unmounting the VHD.
- # unmounts, depends on files being copied
+# Step 6: Unmounting the VHD
 vhd-unmount: vhd-copy-files
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
@@ -337,7 +331,7 @@ test-vhd-unmount:
 PHONY := install
 install: do_install
 do_install: \
-build-gramado-os  
+build-core  
 
 # --------------------------------------
 # build: Developer comand 2.
