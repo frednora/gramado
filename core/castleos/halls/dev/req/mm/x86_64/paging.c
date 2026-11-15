@@ -91,6 +91,43 @@ static unsigned long LARGE_extraheap1_pa=0;
 static unsigned long LARGE_extraheap2_pa=0;
 static unsigned long LARGE_extraheap3_pa=0;
 
+
+// ===================================================================
+//
+// #important: DANGER !!!
+//
+// early_get_table_pointer_va:
+// #bugbug
+// Isso eh um improviso, precisamos de outro endereço.
+// >>>> 0x1000
+// O sistema esta usando esse endereço como inicio de um heap
+// onde pegamos paginas (frames?) de memoria para criarmos diretorios de paginas.
+// Isso porque precisamos de endereços que terminem com pelo menos 
+// 12 bits zerados.
+// #todo: 
+// Precisamos encontrar outro lugar para esse heap, 
+// tendo em vista que o numero de diretorios criados sera grande 
+// e o heap invadir outras areas.
+
+struct bootstrap_table_pool_d BootstrapTablePoll;
+struct permanent_table_pool_d PermanentTablePool;
+
+
+
+struct shmm_user_heap_d
+{
+    int initialized;
+    // Base of the pre-mapped user region
+    //unsigned long user_heap_base;
+    unsigned long next_address;
+
+    // #todo
+    // Track the limit
+};
+static struct shmm_user_heap_d  shmm_user_heap;
+
+
+
 // ==================================================
 
 //
@@ -135,21 +172,6 @@ static void __initialize_early_table_pool(void);
 static void __initialize_permanent_table_pool(void);
 
 // ==================================================
-
-
-struct shmm_user_heap_d
-{
-    int initialized;
-    // Base of the pre-mapped user region
-    //unsigned long user_heap_base;
-    unsigned long next_address;
-
-    // #todo
-    // Track the limit
-};
-static struct shmm_user_heap_d  shmm_user_heap;
-
-
 
 
 static void __initialize_early_table_pool(void)
@@ -529,25 +551,6 @@ unsigned long alloc_frame(void)
     return (unsigned long) get_new_frame();
 }
 
-// ===================================================================
-//
-// #important: DANGER !!!
-//
-// early_get_table_pointer_va:
-// #bugbug
-// Isso eh um improviso, precisamos de outro endereço.
-// >>>> 0x1000
-// O sistema esta usando esse endereço como inicio de um heap
-// onde pegamos paginas (frames?) de memoria para criarmos diretorios de paginas.
-// Isso porque precisamos de endereços que terminem com pelo menos 
-// 12 bits zerados.
-// #todo: 
-// Precisamos encontrar outro lugar para esse heap, 
-// tendo em vista que o numero de diretorios criados sera grande 
-// e o heap invadir outras areas.
-
-struct bootstrap_table_pool_d BootstrapTablePoll;
-struct permanent_table_pool_d PermanentTablePool;
 
 // ======================================================
 
