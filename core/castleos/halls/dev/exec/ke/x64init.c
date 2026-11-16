@@ -35,13 +35,20 @@ static int InitialProcessInitialized = FALSE;
 // --reboot = Reboot the machine.
 // --shutdown = Shutdown the machine.
 
-const char *initbin_cmdline_server   = "INIT.BIN: mode=server";
-const char *initbin_cmdline_headless = "INIT.BIN: mode=headless";
-const char *initbin_cmdline_cli      = "INIT.BIN: mode=cli";
-const char *initbin_cmdline_desktop  = "INIT.BIN: mode=desktop";
-const char *initbin_cmdline_reboot   = "INIT.BIN: mode=reboot";
-const char *initbin_cmdline_shutdown = "INIT.BIN: mode=shutdown";
-// ...
+
+// #todo
+// IMPORTANT!
+// The options here can't cause conflict with the run-level options.
+// The kernel cmdline will only do some refinements,
+// respecting the run-level's choices.
+
+//const char *initbin_cmdline_server   = "INIT.BIN: mode=server";
+//const char *initbin_cmdline_desktop  = "INIT.BIN: mode=desktop";
+//const char *initbin_cmdline_reboot   = "INIT.BIN: mode=reboot";
+//const char *initbin_cmdline_shutdown = "INIT.BIN: mode=shutdown";
+//const char *initbin_cmdline_headless = "INIT.BIN: mode=headless";
+//const char *initbin_cmdline_cli      = "INIT.BIN: mode=cli";
+const char *initbin_cmdline_default      = "INIT.BIN: mode=nothing";
 
 //Onde ficam os códigos e arquivos de configuração usados na inicialização.
 //A ideia é que se a inicialização precisar de algum arquivo, deve procurá-lo
@@ -117,7 +124,7 @@ static int __setup_stdin_cmdline(void)
         case PT_GRAMADO_WORKSTATION_HEADLESS:
         case PT_GRAMADO_DESKTOP_HEADLESS:
         case PT_GRAMADO_IOT_HEADLESS:
-            crt_sprintf( cmdline, initbin_cmdline_headless );
+            crt_sprintf( cmdline, initbin_cmdline_default );
             break;
 
         // CLI
@@ -126,7 +133,7 @@ static int __setup_stdin_cmdline(void)
         case PT_GRAMADO_WORKSTATION_CLI:
         case PT_GRAMADO_DESKTOP_CLI:
         case PT_GRAMADO_IOT_CLI:
-            crt_sprintf( cmdline, initbin_cmdline_cli );
+            crt_sprintf( cmdline, initbin_cmdline_default );
             break;
 
         // Desktop experience
@@ -135,13 +142,13 @@ static int __setup_stdin_cmdline(void)
         case PT_GRAMADO_WORKSTATION:
         case PT_GRAMADO_DESKTOP:
         case PT_GRAMADO_IOT:
-            crt_sprintf( cmdline, initbin_cmdline_desktop );
+            crt_sprintf( cmdline, initbin_cmdline_default );
             break;
         // ...
 
         // CLI mode for init process.
         default:
-            crt_sprintf( cmdline, initbin_cmdline_cli );
+            crt_sprintf( cmdline, initbin_cmdline_default );
             break;
     };
 

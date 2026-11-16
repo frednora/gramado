@@ -300,7 +300,7 @@ Standard Linux Runlevels (0-6)
 1 (Single-User Mode): Minimal services, for maintenance or recovery.
 2 (Multi-User, No Network): Multi-user mode, but without network services.
 3 (Full Multi-User): Standard command-line interface (CLI) mode with networking.
-4 (Custom): Unused by default, can be defined by the user.
+4 (Custom): Unused by default, can be defined by the user. (embedded cmdline interpreter in init.bin)
 5 (Graphical): Similar to runlevel 3 but with a graphical user interface (GUI).
 6 (Reboot): Reboots the system.
 */
@@ -309,11 +309,12 @@ Standard Linux Runlevels (0-6)
 #define __RUNLEVEL_SINGLE_USER  1
 #define __RUNLEVEL_MULTI_USER  2
 #define __RUNLEVEL_FULL_MULT_USER  3
-#define __RUNLEVEL_CUSTOM  4
+#define __RUNLEVEL_CUSTOM  4    // init.bin: Embedded cli, not launched shell.
 #define __RUNLEVEL_GRAPHICAL  5
 #define __RUNLEVEL_REBOOT  6
 
-#define CONFIG_CURRENT_RUNLEVEL  __RUNLEVEL_MULTI_USER
+// #define CONFIG_CURRENT_RUNLEVEL  __RUNLEVEL_MULTI_USER
+#define CONFIG_CURRENT_RUNLEVEL  __RUNLEVEL_CUSTOM
 
 // ==================================================
 // ## breack points ##

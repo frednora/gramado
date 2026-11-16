@@ -23,8 +23,9 @@ int fRunEventLoop = FALSE;
 int fHeadlessMode = FALSE;
 // Run the command line. 
 // Getting input from stdin.
-int fRunCommandLine = FALSE;
-int fRunDesktop = FALSE;
+int fRunCommandLine = FALSE;   // embedded cmdline interpreter
+int fRunShell = FALSE;         // launch shell
+int fRunDesktop = FALSE;       // launch display server
 int fReboot = FALSE;
 int fshutdown = FALSE;
 // Was it launched by the kernel?
@@ -801,7 +802,7 @@ static int input_compare_string(void)
             // rtl_sleep(2000);  //2sec
             sc82(10011, shell2_tid, shell2_tid, shell2_tid);
             // #todo:
-            // Actually the puepose is not exit the init process.
+            // Actually the purpose is not exit the init process.
             // Maybe we can keep it alive while running the shell2.
         }
         //while(1){}
@@ -1316,6 +1317,25 @@ Standard Linux Runlevels (0-6)
 */
 
 
+// --------------------------
+
+// Run the event loop. 
+// Getting input from the message queue in the control thread.
+// When the command line exit or fail.
+    fRunEventLoop = FALSE;
+    fHeadlessMode = FALSE;
+// Run the command line. 
+// Getting input from stdin.
+    fRunCommandLine = FALSE;   // embedded cmdline interpreter
+    fRunShell = FALSE;         // launch shell
+    fRunDesktop = FALSE;       // launch display server
+    fReboot = FALSE;
+    fshutdown = FALSE;
+// Was it launched by the kernel?
+    InvalidLauncher = FALSE;
+
+// --------------------------
+
 // #todo
 // ex: struct app_info gui_app_rl3[MAX_GUI_APPS_RL3];
 // This can be a good way to handle the presence of the expected apps
@@ -1327,58 +1347,49 @@ Standard Linux Runlevels (0-6)
     switch (Init.__runlevel)
     {
         case __RUNLEVEL_HALT:
-            rtl_clone_and_execute(cmd_shutdown);
-            exit(0);
+            fshutdown = TRUE;
+            // rtl_clone_and_execute(cmd_shutdown);
+            // exit(0);
             break;
 
         case __RUNLEVEL_SINGLE_USER:
-            Init.__selected_option = 1001;
+            Init.__selected_option = 1002;  // 1002 - shell direct with the kernel console
+            fRunShell = TRUE;
             break;
 
         case __RUNLEVEL_MULTI_USER:
-            Init.__selected_option = 1001;
+            Init.__selected_option = 1002;  // 1002 - shell direct with the kernel console
+            fRunShell = TRUE;
             break;
 
         case __RUNLEVEL_FULL_MULT_USER:
-            Init.__selected_option = 1001;
+            Init.__selected_option = 1002;  // 1002 - shell direct with the kernel console
+            fRunShell = TRUE;
             break;
 
+        // Start the embedded shell
         case __RUNLEVEL_CUSTOM:
-            Init.__selected_option = 1001;
+            Init.__selected_option = 1001;  // 1001 - cli (embedded shell)
+            fRunCommandLine = TRUE;
             break;
 
         case __RUNLEVEL_GRAPHICAL:
-            Init.__selected_option = 1004;
+            Init.__selected_option = 1004;  // 1004 - launch display server
+            fRunDesktop = TRUE;
             break;
 
         case __RUNLEVEL_REBOOT:
-            rtl_clone_and_execute(cmd_reboot);
+            Init.__selected_option = 0;
+            fReboot = TRUE;
+            // rtl_clone_and_execute(cmd_reboot);
             break;
         default:
             break;
     };
 
-// #debug
+    // #debug
     // while(1){  asm (" pause \n");  };
     // asm ("int $3 \n");
-
-// --------------------------
-
-// Run the event loop. 
-// Getting input from the message queue in the control thread.
-// When the command line exit or fail.
-    fRunEventLoop = FALSE;
-    fHeadlessMode = FALSE;
-// Run the command line. 
-// Getting input from stdin.
-    fRunCommandLine = FALSE;
-    fRunDesktop = FALSE;
-    fReboot = FALSE;
-    fshutdown = FALSE;
-// Was it launched by the kernel?
-    InvalidLauncher = FALSE;
-
-// --------------------------
 
 
     //#todo
@@ -1404,6 +1415,13 @@ Standard Linux Runlevels (0-6)
     {
         for (i=1; i < argc; i++)
         {
+
+            // #todo
+            // IMPORTANT!
+            // The options here can't cause conflict with the run-level options.
+            // The kernel cmdline will only do some refinements,
+            // respecting the run-level's choices.
+
             // #todo
             // Ensure that if multiple conflicting flags are given, 
             // the code clearly defines what takes precedence.
@@ -1411,22 +1429,70 @@ Standard Linux Runlevels (0-6)
             // At the end of the routine, based on the flags the system will 
             // decide the precedence.
 
+            /*
             // Run the init process in server mode.
-            if (strcmp("mode=server", argv[i]) == 0)
+            if (strcmp("mode=server", argv[i]) == 0){
+                printf("mode=server\n");
                 fRunEventLoop = TRUE;
+            }
+            */
 
+            /*
             // Headless mode.
-            if (strcmp("mode=headless", argv[i]) == 0)
+            if (strcmp("mode=headless", argv[i]) == 0){
+                printf("mode=headless\n");
                 fHeadlessMode = TRUE;
+            }
+            */
 
+            /*
             // CLI experience
             // Run the embedded cmdline interpreter.
             if (strcmp("mode=cli", argv[i]) == 0)
+            {
+                printf("mode=cli\n");
+
                 fRunCommandLine = TRUE;
-    
-            // FULL Desktop experience
+
+                // Lets respect the runlevel choices
+
+                // No embedded cli in this case
+                if (Init.__selected_option == 1002)
+                    fRunCommandLine = FALSE;
+
+                // No embedded cli in this case
+                if (Init.__selected_option == 1004)
+                    fRunCommandLine = FALSE;
+            }
+            */
+                
+            /*
+            // launch shell
+            if (strcmp("mode=shell", argv[i]) == 0)
+            {
+                printf("mode=shell\n");
+                fRunShell = TRUE;
+                // Lets respect the runlevel choices
+                // run-level dont want this
+                if (Init.__selected_option == 1004)
+                    fRunShell = FALSE;
+            }
+            */
+
+            /*
+            // launch display server - FULL Desktop experience
             if (strcmp("mode=desktop", argv[i]) == 0)
+            {
+                printf("mode=desktop\n");
                 fRunDesktop = TRUE;
+
+                // Lets respect the runlevel choices
+
+                // run-level dont want this
+                if (Init.__selected_option != 1004)
+                    fRunDesktop = FALSE;
+            }
+            */
 
             // #todo
             //if (strcmp("mode=reboot", argv[i]) == 0)
@@ -1443,9 +1509,9 @@ Standard Linux Runlevels (0-6)
 
 
 // TEMPORARY: Force CLI mode so we enter the stdin loop
-    fRunCommandLine = TRUE;
-    printf("INIT: [DEBUG] Forcing CLI mode flag\n");
-    fflush(stdout);
+    // fRunCommandLine = TRUE;
+    // printf("INIT: [DEBUG] Forcing CLI mode flag\n");
+    // fflush(stdout);
 
 /*
     printf("INIT: Flags received:\n");
@@ -1564,40 +1630,53 @@ Standard Linux Runlevels (0-6)
 // 3: interactive CLI/GUI, ensuring stable, non-verbose startup.
 
 
-// Highest priority: Launch server (event loop) mode.
-    if (fRunEventLoop) {
-        goto ServerLoop;
+    if (fRunDesktop) {
+        printf ("init: Desktop\n");
+        do_launch_de();
+        msgloop_RunServer();
+        goto unexpected_exit;
 
-// Next priority: Headless mode.
+    } else if (fRunShell) {
+        printf ("init: Shell2\n");
+        printf("Launching shell.bin #todo\n");
+        do_clear_console();
+        int __shell2_tid = (int) rtl_clone_and_execute_return_tid("#shell2.bin");
+        sc82(10011, __shell2_tid, __shell2_tid, __shell2_tid);
+        msgloop_RunServer();
+        goto unexpected_exit;
+
+// If interactive flag is set: Start the command-line interface.
+    } else if (fRunCommandLine) {
+        printf ("init: Cmdline\n");
+        goto CommandInterpreter;
+
+    } else if (fReboot) {
+        printf ("init: Reboot\n");
+        // rtl_reboot(); // Provisory
+        rtl_clone_and_execute(cmd_reboot);
+        //goto ServerLoop;
+        goto unexpected_exit;
+
+    } else if (fshutdown) {
+        printf ("init: Shutdown\n");
+        // #todo
+        rtl_clone_and_execute(cmd_shutdown);
+        //goto ServerLoop;
+        goto unexpected_exit;
+
+// Headless mode.
 // see: inittask.c
-    } else if (fHeadlessMode) {
+    } else if (fHeadlessMode){
+        printf ("init: Headless\n");
         Init.is_headless = TRUE;
         msgloop_RunServer_HeadlessMode();
         //printf ("init: Unexpected error\n");
         //exit(0);
         goto unexpected_exit;
 
-// If interactive flag is set: Start the command-line interface.
-    } else if (fRunCommandLine) {
-        goto CommandInterpreter;
-
-    } else if (fRunDesktop) {
-        printf ("init: Desktop\n");
-        do_launch_de();
-        msgloop_RunServer();
-        //printf ("init: Unexpected error\n");
-        //exit(0);
-        //goto ServerLoop;
-        goto unexpected_exit;
-
-    } else if (fReboot) {
-        printf ("init: Reboot\n");
-        rtl_reboot(); // Provisory
-        goto ServerLoop;
-
-    } else if (fshutdown) {
-        printf ("init: Shutdown\n");
-        // #todo
+// Launch server (event loop) mode.
+    } else if (fRunEventLoop) {
+        printf ("init: Eventloop\n");
         goto ServerLoop;
 
 // Fallback: 
