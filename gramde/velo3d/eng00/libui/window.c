@@ -159,8 +159,7 @@ void *xxxCreateSurfaceWindow(
 
 	unsigned long message_buffer[12];
 
-
-    gwssrv_debug_print ("xxxCreateSurfaceWindow: \n");
+    gwssrv_debug_print ("xxxCreateSurfaceWindow:\n");
 
 	message_buffer[0]  = (unsigned long) type;
 	message_buffer[1]  = (unsigned long) status;
@@ -185,13 +184,12 @@ void *xxxCreateSurfaceWindow(
                      (unsigned long) &message_buffer[0], 
                      (unsigned long) &message_buffer[0] );
 
-    if ( (void *) wObjectPointer == NULL )
-    {
-        gwssrv_debug_print ("xxxCreateSurfaceWindow: [FAIL] wObjectPointer\n");
+    if ((void *) wObjectPointer == NULL){
+        gwssrv_debug_print("xxxCreateSurfaceWindow: [FAIL] wObjectPointer\n");
         return NULL;
     }
 
-// #teste
+// #test
 // Vamos enviar a mensagem MSG_CREATE para o procedimento de janela.
 // Assim ele pode terminar de pintar nessa mesma janela.
 

@@ -276,7 +276,8 @@ fb_BackBufferPutpixel (
 // #bubug: Não fazer multilicações
 //MaxOffset = (int) (1024*10124*4);
 //MaxOffset = (int) 0x00400000;
-    MaxOffset = (int) 0x00200000;  // 2MB
+    // MaxOffset = (int) 0x00200000;  // 2MB
+    MaxOffset = (int) 0x00400000;    // New limitation
 
     char b, g, r, a;
     b = (color & 0xFF);

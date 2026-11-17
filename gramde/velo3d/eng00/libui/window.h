@@ -1,5 +1,6 @@
 // window.h
-// 2020 - Created by Fred Nora.
+// 2020 - Created by Fred Nora
+
 
 #ifndef __LIBUI_WINDOW_H
 #define __LIBUI_WINDOW_H    1
@@ -39,22 +40,6 @@
 // ...
 
 // ===============================================================
-
-
-// ======
-
-// wm prototypes
-void __set_default_background_color(unsigned int color);
-unsigned int __get_default_background_color(void);
-
-void __set_custom_background_color(unsigned int color);
-unsigned int __get_custom_background_color(void);
-
-int __has_custom_background_color(void);
-int __has_wallpaper(void);
-
-void __init_wm_structure(void);
-
 
 
 // Button state
@@ -1088,14 +1073,16 @@ extern struct gws_window_d *last_window;
 // This is gonna be used to register the windows.
 // These indexes will be returned to the caller.
 
-#define WINDOW_COUNT_MAX  1024
+//#define WINDOW_COUNT_MAX  1024
+#define WINDOW_COUNT_MAX  512
 extern unsigned long windowList[WINDOW_COUNT_MAX];
 
 //
 // == z order list =============================
 //
 
-#define ZORDER_MAX  1024
+//#define ZORDER_MAX  1024
+#define ZORDER_MAX  512
 #define ZORDER_TOP  (ZORDER_MAX-1)
 #define ZORDER_BOTTOM  0
 //...
@@ -1140,14 +1127,25 @@ struct gws_surface_d
     
     struct gws_surface_d *next;
 };
-struct gws_surface_d *rootSurface;
 
 
 //
 // == prototypes ===========================
 //
 
-void set_status_by_id( int wid, int status );
+void __set_default_background_color(unsigned int color);
+unsigned int __get_default_background_color(void);
+
+void __set_custom_background_color(unsigned int color);
+unsigned int __get_custom_background_color(void);
+
+int __has_custom_background_color(void);
+int __has_wallpaper(void);
+
+void __init_wm_structure(void);
+
+
+void set_status_by_id(int wid, int status);
 
 
 //

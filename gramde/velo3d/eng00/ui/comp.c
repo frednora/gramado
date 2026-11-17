@@ -175,9 +175,15 @@ void comp_initialize_mouse(void)
 
     int hotspotx=0;
     int hotspoty=0;
-    if(w>=0 && w<=800)
+
+    //if (w>=0 && w<=800)
+        //hotspotx = (w >> 1);
+    //if (h>=0 && h<=800)
+        //hotspoty = (h >> 1);
+
+    if (w>=0 && w<=1024)
         hotspotx = (w >> 1);
-    if(h>=0 && h<=800)
+    if (h>=0 && h<=1024)
         hotspoty = (h >> 1);
 
     __old_mouse_x = hotspotx;

@@ -1042,9 +1042,9 @@ __drawrectangle0(
     if (back_or_front != 1 && 
         back_or_front != 2 )
     {
-         //panic("__drawrectangle0: back_or_front\n");
-         gwssrv_debug_print("__drawrectangle0: back_or_front\n");
-         return;
+        //panic("__drawrectangle0: back_or_front\n");
+        gwssrv_debug_print("__drawrectangle0: back_or_front\n");
+        return;
     }
 
 //loop
@@ -1097,26 +1097,44 @@ __drawrectangle0(
 // #debug
 // Provisório
 
+/*
     if ( ClippingRect.width > 800 ){
         gwssrv_debug_print("__drawrectangle0: width");
         return;
-    }
-    
+    }   
     if ( ClippingRect.height > 600 ){
         gwssrv_debug_print("__drawrectangle0: height");
         return;
     }
-
     if ( ClippingRect.right > 800 ){
         gwssrv_debug_print("__drawrectangle0: right");
         return;
     }
-    
     if ( ClippingRect.bottom > 600 ){
         gwssrv_debug_print("__drawrectangle0: bottom");
         return;
     }
- 
+*/
+    
+
+    if ( ClippingRect.width > 1024 ){
+        gwssrv_debug_print("__drawrectangle0: width");
+        return;
+    }   
+    if ( ClippingRect.height > 768 ){
+        gwssrv_debug_print("__drawrectangle0: height");
+        return;
+    }
+    if ( ClippingRect.right > 1024 ){
+        gwssrv_debug_print("__drawrectangle0: right");
+        return;
+    }
+    if ( ClippingRect.bottom > 768 ){
+        gwssrv_debug_print("__drawrectangle0: bottom");
+        return;
+    }
+
+
 //
 // == Target rectangle ================
 //
@@ -1265,6 +1283,7 @@ rectBackbufferDrawRectangle0 (
     device_w = (unsigned long) (device_w & 0xFFFF);
     device_h = (unsigned long) (device_h & 0xFFFF);
 
+/*
 // #provisório
 // limites do dispositivo
     if (device_w > 800){
@@ -1275,6 +1294,20 @@ rectBackbufferDrawRectangle0 (
         debug_print("rectBackbufferDrawRectangle0: [FAIL] device_h\n");
         return; 
     }
+*/
+
+// #provisório
+// limites do dispositivo
+    if (device_w > 1024){
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] device_w\n");
+        return; 
+    }
+    if (device_h > 768){
+        debug_print("rectBackbufferDrawRectangle0: [FAIL] device_h\n");
+        return; 
+    }
+
+
 
 // set values
 
