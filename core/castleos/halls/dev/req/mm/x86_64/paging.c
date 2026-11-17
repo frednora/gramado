@@ -246,6 +246,15 @@ void *get_2mb_user_heap_page(void)
     // Advance cursor by 2MB for next call
     shmm_user_heap.next_address += 0x200000;
 
+
+// #bugbug
+// We can't invade the area reserved for the pagetables.
+
+    if (va >= PERMANENT_TABLE_POOL_VA)
+    {
+        panic("get_2mb_user_heap_page: Invalid address\n");
+    }
+
     // Return pointer into already mapped region
     return (void *) va;
 }
@@ -2279,18 +2288,33 @@ static void __initialize_canonical_kernel_pagetables(void)
 // Create a set of user mode 2mb shared buffer
 // that can be used as canvases for the compositor.
 // 252/2 = 126
+
+// #bugbug
+// We are using some address that was already reserved for future use.
+// and if this thing grows it will overlay the area used for tables.
+
     int CanvasSlot = 0;
     for (CanvasSlot=0; CanvasSlot<100; CanvasSlot++)
     {
+
+        //map_user_va_2mb(
+        //    0x00400000 + (0x200000 * CanvasSlot),    // va
+        //    0x00400000 + (0x200000 * CanvasSlot)     // pa
+        //);
+
         map_user_va_2mb(
-            0x00400000 + (0x200000 * CanvasSlot),    // va
-            0x00400000 + (0x200000 * CanvasSlot)     // pa
+            HEAPPOOL_BASE_VA + (0x200000 * CanvasSlot),    // va
+            HEAPPOOL_BASE_PA + (0x200000 * CanvasSlot)     // pa
         );
+
     };
 
     // Initialization:
     // Set the base pointer for the heap used by our new allocator.
-    shmm_user_heap_initialize(0x00400000);
+    
+    // shmm_user_heap_initialize(0x00400000);
+    shmm_user_heap_initialize(HEAPPOOL_BASE_VA);
+
 // ------------------------
 
 

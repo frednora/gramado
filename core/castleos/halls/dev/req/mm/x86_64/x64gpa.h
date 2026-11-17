@@ -301,6 +301,20 @@ See: https://wiki.osdev.org/Memory_Map_(x86)
 // 0x00400000
 // Reserved to extend the area for the kernel image
 
+// 
+// HEAPPOOL
+//
+
+// #bugbug
+// This area was previously reserved for the future expansion of the kernel image.
+
+#define HEAPPOOL_BASE_PA    0x00400000
+
+
+// #bugbug
+// Our pool can't grow too much and overlay our table pool
+
+
 // 6
 // 0x00600000
 // Reserved to extend the area for the kernel image

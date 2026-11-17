@@ -16,4 +16,43 @@
 >>> If a program has a sleep() in ring 3 and some hw interrupt happens,
 like NIC, during the sleep period, maybe the thread stay blocked for ever.
 
+
+-----------------------------------------------------------
+#important:
+Considerações do Gabriel sobre as mudanças.
+
+1) ap_x86.asm: 
+setar ESP depois de entrar em modo protegido. Hoje fica 0x8FF0 com SS flat e a pilha do AP cai em cima das tabelas do pool inicial. É a parte da pilha que você mencionou.
+
+2) paging.c: 
+limite no get_2mb_user_heap_page(). Os slots 30 a 37 dos canvases caem em 0x04000000, que agora é o pool permanente. 
+Na 31ª chamada do serviço 55 o processo recebe um endereço kernel-only.
+
+3) paging.h: 
+falta um ; em limit_va na bootstrap_table_pool_d.
+
+-------------------------------------------------------------------
+
+
+>>>> a própria rotina get_2mb_user_heap_page() não é coisa séria ... 
+porque na verdade a memória alocada aqui esta disponível para todos os processos.
+
+>>> as canvases são criadas com memória compartilhada, isso tá certo 
+mas precisa ser de uma forma que apenas os dois processos consigam ver, e não todos.
+
+>>> o heap dos processos são criados por eles na inicialização usando memória compartilhada 
+ (entre todos os processos) ... isso tá errado ... pois o processo precisa usar apenas aquela
+  área que está na sua área de memoria ... [code data bss]  ... primeiro na inicialização do processo 
+  eu preciso criar as rotinas que gerencia a área de memória do processo, pra depois criar 
+  o heap com base na memória que ja existe disponível para isso, e não pedir pro kernel memória compartilhada,
+   como estamos fazendo agora ... ps: trabalhar nisso vai ser bem legal na verdade.
+
+
+>>> estou criando uma panic pra evitar que get_2mb_user_heap_page() pegue memória da área que criamos para as tabelas. ... 
+é provisório ... mas evita problemas.
+
+
+
+
+
  

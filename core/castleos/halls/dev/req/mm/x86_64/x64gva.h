@@ -88,6 +88,18 @@
 // Lembre-se que o processo vai precisa de um heap.
 #define FLOWERTHREAD_STACK       0x003FFFF0  // stack 
 
+
+
+// 
+// HEAPPOOL
+//
+
+#define HEAPPOOL_BASE_VA    0x00400000
+
+
+// #bugbug
+// Our pool can't grow too much and overlay our table pool
+
 //
 // Warning:
 // Here we have big not used espace of virtual address.
