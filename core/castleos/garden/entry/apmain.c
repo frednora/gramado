@@ -19,6 +19,14 @@ static void __ap_r0_idle_loop(void);
 static void __ap_r0_idle_loop(void)
 {
     printk("AP: Dummy thread for AP core\n");
+
+    // #test
+    // #ps: 
+    // The interruptiong was called from ring 0.
+    // probably the context switch will point that it was called from ring 0 and crash.
+
+    // asm ("int $3");
+
     while(1){
         asm ("cli");
         asm ("hlt");
