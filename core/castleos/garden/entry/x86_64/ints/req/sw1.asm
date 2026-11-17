@@ -165,12 +165,14 @@ RequestHall_int128:
 ; RCX → RDX
 ; RDX → RCX
 
-    mov rdi, rax  ; RDI <-- arg1 service number
-    mov rsi, rbx  ; RSI <-- arg2
-    mov r8, rcx   ; Save arg3
-    mov r9, rdx   ; Save arg4
-    mov rdx, r8  ; RDX <-- arg3
-    mov rcx, r9  ; RCX <-- arg4
+    and rax, 0x00000000FFFFFFFF
+
+    mov rdi,  rax  ; RDI <-- arg1 service number
+    mov rsi,  rbx  ; RSI <-- arg2
+    mov r8,   rcx  ; Save arg3
+    mov r9,   rdx  ; Save arg4
+    mov rdx,  r8   ; RDX <-- arg3
+    mov rcx,  r9   ; RCX <-- arg4
 
 
 ; Current Privilege Level - (CPL)
@@ -326,12 +328,14 @@ RequestHall_int129:
 ; RCX → RDX
 ; RDX → RCX
 
-    mov rdi, rax  ; RDI <-- arg1 service number
-    mov rsi, rbx  ; RSI <-- arg2
-    mov r8, rcx   ; Save arg3
-    mov r9, rdx   ; Save arg4
-    mov rdx, r8  ; RDX <-- arg3
-    mov rcx, r9  ; RCX <-- arg4
+    and rax, 0x00000000FFFFFFFF
+
+    mov rdi,  rax  ; RDI <-- arg1 service number
+    mov rsi,  rbx  ; RSI <-- arg2
+    mov r8,   rcx  ; Save arg3
+    mov r9,   rdx  ; Save arg4
+    mov rdx,  r8   ; RDX <-- arg3
+    mov rcx,  r9   ; RCX <-- arg4
 
 ; Current Privilege Level - (CPL)
 ; Get the first 2 bits of CS.
@@ -475,12 +479,14 @@ RequestHall_int130:
 ; RCX → RDX
 ; RDX → RCX
 
-    mov rdi, rax  ; RDI <-- arg1 service number
-    mov rsi, rbx  ; RSI <-- arg2
-    mov r8, rcx   ; Save arg3
-    mov r9, rdx   ; Save arg4
-    mov rdx, r8  ; RDX <-- arg3
-    mov rcx, r9  ; RCX <-- arg4
+    and rax, 0x00000000FFFFFFFF
+
+    mov rdi,  rax  ; RDI <-- arg1 service number
+    mov rsi,  rbx  ; RSI <-- arg2
+    mov r8,   rcx  ; Save arg3
+    mov r9,   rdx  ; Save arg4
+    mov rdx,  r8   ; RDX <-- arg3
+    mov rcx,  r9   ; RCX <-- arg4
 
 ; Current Privilege Level - (CPL)
 ; Get the first 2 bits of CS.
@@ -625,12 +631,14 @@ RequestHall_int131:
 ; RCX → RDX
 ; RDX → RCX
 
-    mov rdi, rax  ; RDI <-- arg1 service number
-    mov rsi, rbx  ; RSI <-- arg2
-    mov r8, rcx   ; Save arg3
-    mov r9, rdx   ; Save arg4
-    mov rdx, r8  ; RDX <-- arg3
-    mov rcx, r9  ; RCX <-- arg4
+    and rax, 0x00000000FFFFFFFF
+
+    mov rdi,  rax  ; RDI <-- arg1 service number
+    mov rsi,  rbx  ; RSI <-- arg2
+    mov r8,   rcx  ; Save arg3
+    mov r9,   rdx  ; Save arg4
+    mov rdx,  r8   ; RDX <-- arg3
+    mov rcx,  r9   ; RCX <-- arg4
 
 ; Current Privilege Level - (CPL)
 ; Get the first 2 bits of CS.
