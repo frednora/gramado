@@ -605,7 +605,7 @@ static void *__get_system_icon (int n)
         return NULL;
     }
 
-    return (void *) gramado_system_call(9100,n,n,n);
+    return (void *) sc80(9100, n, n, n);
 }
 
 // gwssrv_display_system_icon: 

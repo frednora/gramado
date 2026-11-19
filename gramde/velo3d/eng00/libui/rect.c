@@ -495,9 +495,9 @@ __draw_rectangle_via_kgws (
     Buffer[4] = (unsigned long) (color & 0xFFFFFFFF);
     Buffer[5] = (unsigned long) rop_flags;
 
-// Refresh rectangle using the kernel service number 9.
-    gramado_system_call ( 
-        9, (unsigned long) &Buffer[0], 0, 0 );
+// Refresh rectangle using the kernel service number 9
+
+    sc80(9, (unsigned long) &Buffer[0], 0, 0);
 }
 
 
@@ -517,18 +517,15 @@ setup_surface_rectangle (
     Buffer[3] = (unsigned long) (height & 0xFFFF);
     Buffer[4] = 0; 
 
-    gramado_system_call ( 
-        892, (unsigned long) &Buffer[0], 0, 0 );
+    sc80(892, (unsigned long) &Buffer[0], 0, 0);
 }
 
-
-void invalidate_surface_retangle (void)
+void invalidate_surface_retangle(void)
 {
-    gramado_system_call ( 893, 0, 0, 0 );
+    sc80(893, 0, 0, 0);
 }
 
-
-// Copy a rectangle.
+// Copy a rectangle
 static void 
 __refresh_rectangle0 ( 
     unsigned long x, 
@@ -732,15 +729,14 @@ __refresh_rectangle_via_kgws (
     Buffer[3] = (unsigned long) (height & 0xFFFF);
     Buffer[4] = 0; 
 
-    gramado_system_call ( 
-        10, (unsigned long) &Buffer[0], 0, 0 );
+    sc80(10, (unsigned long) &Buffer[0], 0, 0);
 }
 
 
 /*
  * gws_refresh_rectangle:
  */
-// From backbuffer to frontbuffer.
+// From backbuffer to frontbuffer
 
 void 
 gws_refresh_rectangle ( 

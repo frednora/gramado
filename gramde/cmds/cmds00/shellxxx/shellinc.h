@@ -2,9 +2,6 @@
 #ifndef __SHELL00_SHELLINC_H
 #define __SHELL00_SHELLINC_H    1
 
-// #HACK_HACK
-#define system_call  gramado_system_call 
-
 // #deprecated
 // Deprecated pointers for window structure.
 

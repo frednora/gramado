@@ -37,14 +37,13 @@ int registerDS(void)
 //
 
 // cgroup 
-// Getting pointer for the current cgroup.
+// Getting pointer for the current cgroup
 // #ps: This is a ring0 pointer.
-    __p_cgroup = (void *) gramado_system_call (519,0,0,0);
+    __p_cgroup = (void *) sc80(519, 0, 0, 0);
+
     if ((void *) __p_cgroup == NULL)
     {
-        // #debug
-        gwssrv_debug_print ("registerDS: [FAIL] __p_cgroup\n");
-        printf             ("registerDS: [FAIL] __p_cgroup\n");
+        printf("registerDS: [FAIL] __p_cgroup\n");
         exit(1);
 
         goto fail;
@@ -75,7 +74,7 @@ int registerDS(void)
     int RegStatus = FALSE;
 
     RegStatus = 
-    (int) gramado_system_call ( 
+    (int) sc80 ( 
         513, 
         __p_cgroup, 
         __pid, 
@@ -84,10 +83,7 @@ int registerDS(void)
     if (RegStatus != TRUE)
     {
         __ds_registered = FALSE;
-
-        // #debug
-        gwssrv_debug_print ("registerDS: [FAIL] RegStatus\n");
-        printf             ("registerDS: [FAIL] RegStatus\n");
+        printf ("registerDS: [FAIL] RegStatus\n");
         exit(1);
 
         goto fail;

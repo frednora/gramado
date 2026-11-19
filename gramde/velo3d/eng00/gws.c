@@ -181,28 +181,31 @@ void *gwssrv_create_thread (
 {
     //#define	SYSTEMCALL_CREATETHREAD     72
     gwssrv_debug_print ("gwssrv_create_thread:\n");
-    return (void *) gramado_system_call ( 72, //SYSTEMCALL_CREATETHREAD, 
-                        init_eip, 
-                        init_stack, 
-                        (unsigned long) name );
-}
 
+    return (void *) sc80 ( 
+                    72,
+                    init_eip, 
+                    init_stack, 
+                    (unsigned long) name );
+}
 
 /*
  * gwssrv_start_thread:
  *     Coloca no estado standby para executar pela primeira vez
  */
 
-void gwssrv_start_thread (void *thread)
+void gwssrv_start_thread(void *thread)
 {
 
     //#define	SYSTEMCALL_STARTTHREAD  94 
-    gramado_system_call ( 94, //SYSTEMCALL_STARTTHREAD, 
-        (unsigned long) thread, 
-        (unsigned long) thread, 
-        (unsigned long) thread );
-}
 
+    sc80 ( 
+        94,
+        (unsigned long) thread, 
+        (unsigned long) thread, 
+        (unsigned long) thread 
+    );
+}
 
 int service_drain_input (void)
 {

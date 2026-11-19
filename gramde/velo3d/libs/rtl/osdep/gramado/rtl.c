@@ -41,19 +41,7 @@ unsigned long RTLEventBuffer[32];
 
 // =========================
 
-// System call.
-// Interrupt 0x80.
-void *gramado_system_call ( 
-    unsigned long a, 
-    unsigned long b, 
-    unsigned long c, 
-    unsigned long d )
-{
-// Adapter. System dependent.
-    return (void *) sc80(a,b,c,d);
-}
-
-// System call.
+// System call
 // Interrupt 0x80.
 void *sc80 ( 
     unsigned long a, 

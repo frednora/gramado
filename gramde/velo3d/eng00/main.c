@@ -272,17 +272,19 @@ void gramado_terminate(void)
     IsTimeToQuit = TRUE;
 }
 
-// Print a simple string in the serial port.
+// Print a simple string in the serial port
 void gwssrv_debug_print(char *string)
 {
     if ((void*) string == NULL){
         return;
     }
-    gramado_system_call ( 
+
+    sc80 ( 
         289,
         (unsigned long) string,
         (unsigned long) string,
-        (unsigned long) string );
+        (unsigned long) string 
+    );
 }
 
 // #bugbug
@@ -302,13 +304,14 @@ unsigned long gwssrv_get_system_metrics(int index)
         //gde_debug_print ("gswsrv_get_system_metrics: fail\n");
         //return 0;
     //}
+
     //#define	SYSTEMCALL_GETSYSTEMMETRICS  250 
 
-   return (unsigned long) gramado_system_call( 
-                              250, 
-                              (unsigned long) index, 
-                              (unsigned long) index, 
-                              (unsigned long) index );
+   return (unsigned long) sc80( 
+                            250, 
+                            (unsigned long) index, 
+                            (unsigned long) index, 
+                            (unsigned long) index );
 }
 
 // enter critical section
@@ -325,7 +328,7 @@ void gwssrv_enter_critical_section (void)
     // yield thread if closed.
 
     while (1){
-        S = (int) gramado_system_call ( 226, 0, 0, 0 );
+        S = (int) sc80(226, 0, 0, 0);
         if ( S == 1 ){
             goto done; 
         }
@@ -333,15 +336,15 @@ void gwssrv_enter_critical_section (void)
 
     // Close the gate. turn FALSE.
 done:
-    gramado_system_call ( 227, 0, 0, 0 );
+    sc80(227, 0, 0, 0);
     return;
 }
 
 // exit critical section
 // open the gate.
-void gwssrv_exit_critical_section (void)
+void gwssrv_exit_critical_section(void)
 {
-    gramado_system_call ( 228, 0, 0, 0 );
+    sc80(228, 0, 0, 0);
 }
 
 //
@@ -914,13 +917,15 @@ void ____get_system_message( unsigned long buffer )
 {
     // Get message.
     gwssrv_enter_critical_section();
-    gramado_system_call ( 111,
-            (unsigned long) buffer,
-            (unsigned long) buffer,
-            (unsigned long) buffer );
+    sc80 ( 
+        111,
+        (unsigned long) buffer,
+        (unsigned long) buffer,
+        (unsigned long) buffer );
     gwssrv_exit_critical_section();
 }
 */
+
 
 #define wsMSG_KEYDOWN     20
 #define wsMSG_KEYUP       21

@@ -1752,8 +1752,9 @@ void wm_flush_screen(void)
 
 void gwssrv_show_backbuffer(void)
 {
-    // #todo: Just invalidate root window.
-    gramado_system_call(11,0,0,0);
+    // #todo: Just invalidate root window
+
+    sc80(11, 0, 0, 0);
 }
 
 // Called by the main routine for now.
