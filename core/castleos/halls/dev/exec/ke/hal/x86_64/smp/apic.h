@@ -206,50 +206,7 @@ typedef enum {
 See: apple opensource
 */
 
-// ======================
-// #test
-// Queue feeder (i/o channel)
-// I/O channels are specialized, independent processors that 
-// manage data transfer between peripheral devices and main memory, 
-// largely reducing CPU workload
-struct dpc_queue_d 
-{
-    int on;
 
-    int head;  // >> Get
-    int tail;  // << Put
-
-// 1000: Raw keyboard event
-// 2000: Mouse event
-// ...
-    //int destination[32];
-    int msg[32];
-
-// Registers 1, 2, 3, 4
-    unsigned long long1[32];
-    unsigned long long2[32];
-    unsigned long long3[32];
-    unsigned long long4[32];
-
-// Registers 5, 6, 7, 8
-    unsigned char char1[32];
-    unsigned char char2[32];
-    unsigned char char3[32];
-    unsigned char char4[32];
-
-// ...
-
-//
-// Cache
-//
-
-// Cache for fetched values.
-// Current message
-// Only the loop reads this message
-    int cache_msg[1];
-    unsigned long cache_longs[4];
-    unsigned char cache_chars[4];
-};
 
 // Initialization control.
 // The base address by which each processor accesses its local APIC.
@@ -281,9 +238,6 @@ struct lapic_info_d
 
 // This processor is responsable for scheduling?
 	int is_scheduler;
-
-// This processor is dispatching DPCs?
-    int is_dpc_dispatcher;
 
 // Is it in idle thread?
 	int is_idle;
@@ -347,9 +301,8 @@ struct lapic_info_d
 	int gdt_initialized;
 	int tss_initialized;
 	// ...
-
-    struct dpc_queue_d  DPC_QUEUE;
 };
+
 
 // See: cpu.h
 // One structure per processor

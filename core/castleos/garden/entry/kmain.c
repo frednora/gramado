@@ -220,116 +220,6 @@ static void __kmain_setup_ring0_thread(void)
     //while(1){}
 }
 
-void
-qf_post_message(
-    int msg,
-    unsigned long long1,
-    unsigned long long2,
-    unsigned long long3,
-    unsigned long long4,
-    unsigned char char1,
-    unsigned char char2,
-    unsigned char char3,
-    unsigned char char4 )
-{
-
-// Invalid index
-    if ( lapic_info[0].DPC_QUEUE.tail < 0 || 
-         lapic_info[0].DPC_QUEUE.tail >= 32)
-    {
-        lapic_info[0].DPC_QUEUE.tail = 0;
-    }
-
-// No mesage in the tail slot
-    if (lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.tail ] == 0)
-    {
-
-        lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.tail ] = (int) msg; // We have a new message
-
-        lapic_info[0].DPC_QUEUE.long1[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned long) long1;
-        lapic_info[0].DPC_QUEUE.long2[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned long) long2;
-        lapic_info[0].DPC_QUEUE.long3[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned long) long3;
-        lapic_info[0].DPC_QUEUE.long4[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned long) long4;
-
-        lapic_info[0].DPC_QUEUE.char1[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned char) char1;
-        lapic_info[0].DPC_QUEUE.char2[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned char) char2;
-        lapic_info[0].DPC_QUEUE.char3[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned char) char3;
-        lapic_info[0].DPC_QUEUE.char4[ lapic_info[0].DPC_QUEUE.tail ] = 
-            (unsigned char) char4;
-
-        lapic_info[0].DPC_QUEUE.tail++;
-        if (lapic_info[0].DPC_QUEUE.tail >= 32)
-            lapic_info[0].DPC_QUEUE.tail = 0;
-    }
-}
-
-int qf_get_message(void)
-{
-    int Slot=0;
-
-// Invalid index
-    if ( lapic_info[0].DPC_QUEUE.head < 0 || 
-         lapic_info[0].DPC_QUEUE.head >= 32)
-    {
-        lapic_info[0].DPC_QUEUE.head = 0;
-    }
-
-// No mesage in the head slot
-    if (lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.head ] <= 0)
-    {
-        lapic_info[0].DPC_QUEUE.head++;
-        if (lapic_info[0].DPC_QUEUE.head >= 32)
-            lapic_info[0].DPC_QUEUE.head = 0;
-
-        return (int) -1;  // No message
-    }
-
-// Yes, we have a message in this slot
-    Slot = (int) lapic_info[0].DPC_QUEUE.head;
-
-//
-// Output buffer for the current message
-//
-
-// Put the fetched values into the cache.
-
-    lapic_info[0].DPC_QUEUE.cache_msg[0] = 
-        (int) lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.head ];   // Get the message
-
-    lapic_info[0].DPC_QUEUE.cache_longs[0] = 
-        (unsigned long) lapic_info[0].DPC_QUEUE.long1[ lapic_info[0].DPC_QUEUE.head ];
-    lapic_info[0].DPC_QUEUE.cache_longs[1] = 
-        (unsigned long) lapic_info[0].DPC_QUEUE.long2[ lapic_info[0].DPC_QUEUE.head ];
-    lapic_info[0].DPC_QUEUE.cache_longs[2] = 
-        (unsigned long) lapic_info[0].DPC_QUEUE.long3[ lapic_info[0].DPC_QUEUE.head ];
-    lapic_info[0].DPC_QUEUE.cache_longs[3] = 
-        (unsigned long) lapic_info[0].DPC_QUEUE.long4[ lapic_info[0].DPC_QUEUE.head ];
-
-    lapic_info[0].DPC_QUEUE.cache_chars[0] = 
-        (unsigned char) lapic_info[0].DPC_QUEUE.char1[ lapic_info[0].DPC_QUEUE.head ];
-    lapic_info[0].DPC_QUEUE.cache_chars[1] = 
-        (unsigned char) lapic_info[0].DPC_QUEUE.char2[ lapic_info[0].DPC_QUEUE.head ];
-    lapic_info[0].DPC_QUEUE.cache_chars[2] = 
-        (unsigned char) lapic_info[0].DPC_QUEUE.char3[ lapic_info[0].DPC_QUEUE.head ];
-    lapic_info[0].DPC_QUEUE.cache_chars[3] = 
-        (unsigned char) lapic_info[0].DPC_QUEUE.char4[ lapic_info[0].DPC_QUEUE.head ];
-
-    lapic_info[0].DPC_QUEUE.msg[ lapic_info[0].DPC_QUEUE.head ] = 0;  // No more message in this slot
-
-// Round
-    lapic_info[0].DPC_QUEUE.head++;
-    if (lapic_info[0].DPC_QUEUE.head >= 32)
-        lapic_info[0].DPC_QUEUE.head = 0;
-
-    return (int) Slot;   // Index for the message
-}
 
 //-------------------------------------
 
@@ -1374,12 +1264,6 @@ static int lateinit(void)
         panic("lateinit: on mod_initialize()\n");
 
 
-
-// -------------------------------------
-
-// #test: Using QF (DPC) via zero gravity, not via AP.
-    if ( CONFIG_USE_DPC_VIA_ZEROGRAVITY == 1 )
-        lapic_info[0].DPC_QUEUE.on = TRUE;
 
 
 // -------------------------------------

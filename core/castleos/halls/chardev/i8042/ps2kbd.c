@@ -273,25 +273,9 @@ __ps2kbd_interpret_and_dispatch(
     // For normal keys and
     // For extended keys in Virtualbox, that doesn't use prefix.
     case 0x00:
-
-        // OFF: Do it manually
-        if (lapic_info[0].DPC_QUEUE.on != TRUE){
-
-            wmRawKeyEvent( raw_code_0, 0x00, 0x00, 0x00 );
-
-        // ON: Post the message into the channel
-        } else if (lapic_info[0].DPC_QUEUE.on == TRUE){
-
-            qf_post_message (
-                1000,   // msgcode for raw keyboard
-                0, 0, 0, 0,  // 4 longs
-                raw_code_0, 0, 0, 0  // 4 chars
-            );
-        };
-
+        wmRawKeyEvent(raw_code_0, 0x00, 0x00, 0x00);
         return;
         break;
-
 
     // We gotta send 2 or 3 bytes
     case 0xE0:

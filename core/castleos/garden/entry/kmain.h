@@ -133,63 +133,6 @@ struct initialization_d
 extern struct initialization_d  Initialization;
 
 
-// ======================
-// #test
-// Queue feeder (i/o channel)
-// I/O channels are specialized, independent processors that 
-// manage data transfer between peripheral devices and main memory, 
-// largely reducing CPU workload
-/*
-struct dpc_queue_d 
-{
-    int on;
-
-    int head;  // >> Get
-    int tail;  // << Put
-
-// 1000: Raw keyboard event
-// 2000: Mouse event
-// ...
-    //int destination[32];
-    int msg[32];
-
-// Registers 1, 2, 3, 4
-    unsigned long long1[32];
-    unsigned long long2[32];
-    unsigned long long3[32];
-    unsigned long long4[32];
-
-// Registers 5, 6, 7, 8
-    unsigned char char1[32];
-    unsigned char char2[32];
-    unsigned char char3[32];
-    unsigned char char4[32];
-};
-*/
-//extern struct dpc_queue_d DPC_QUEUE;
-
-// Current message
-// Only the loop reads this message
-//extern int qf_buf_msg[1];
-//extern unsigned long qf_buf_longs[4];
-//extern unsigned char qf_buf_chars[4];
-// ========================
-
-
-void
-qf_post_message(
-    int msg,
-    unsigned long long1,
-    unsigned long long2,
-    unsigned long long3,
-    unsigned long long4,
-    unsigned char char1,
-    unsigned char char2,
-    unsigned char char3,
-    unsigned char char4 );
-
-int qf_get_message(void);
-
 
 // #test: For dialog with APs
 void welcome_ap_hlt(void);

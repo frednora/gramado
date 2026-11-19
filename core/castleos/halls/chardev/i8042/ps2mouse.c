@@ -258,28 +258,9 @@ __processMouseEvent00(
         return (int) -1;
     }
 
-    // OFF: Do it manually
-    // see: ibroker.c
-    if (lapic_info[0].DPC_QUEUE.on != TRUE){
-
-        return (int) wmMouseEvent(event_id, long1, long2, long3, long4);
-
-    // ON: Post the message into the channel
-    // see: kmain.c
-    } else if (lapic_info[0].DPC_QUEUE.on == TRUE){
-
-        // panic("MOUSE: pf");
-
-        qf_post_message (
-            2000,   // msgcode for raw mouse event
-            event_id, long1, long2, 0,  // 4 longs
-            0, 0, 0, 0  // 4 chars
-        );
-    };
-
-    return 0;
+// see: ibroker.c
+    return (int) wmMouseEvent(event_id, long1, long2, long3, long4);
 }
-
 
 // local worker
 // This routine is gonna parse the packet and 

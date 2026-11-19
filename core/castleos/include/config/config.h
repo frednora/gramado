@@ -176,40 +176,6 @@
 // ...
 
 
-
-//
-// == DPC ========
-//
-
-// #test: >>> DPC <<<
-// Queue feeder (deferred work model)
-// interrupt deferral model 
-// IRQ needs to return quickly. 
-// Avoiding to touch sensitive data structures.
-// Using the first AP as dedicated core. 
-// #ps: That is not a good use for an AP.
-// An AP needs to be integrated into the scheduler 
-// in order to make the load balance of thread.
-
-// #todo: Maybe the BSP can to this job 
-// during the ZeroGravity phase, when the context was fully saved.
-// But this idea of using a dedicated AP is kinda fancy. (and dangerous)
-
-// Two possible dispatchers for deferred work (DPC‑style jobs):
-// 1) via AP processor
-// 2) via ZeroGravity (during the timer handler, when the context was fully saved)
-// #ps: >>>> WE CAN'T USE BOTH AT THE SAME TIME. <<<<<
-
-// 1) via AP processor
-// DPC (Deferred Procedure via AP processor)
-#define CONFIG_USE_DPC_VIA_AP  0
-
-
-// 2) via ZeroGravity (during the timer handler, when the context was fully saved)
-// DPC (Deferred Procedure via ZeroGravity)
-#define CONFIG_USE_DPC_VIA_ZEROGRAVITY  0
-
-
 // ------------------------------------------------------
 
 // IDE Interface:
