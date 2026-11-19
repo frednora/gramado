@@ -1800,8 +1800,7 @@ __kgws_adapter_refresh_rectangle (
     buffer[3] = (unsigned long) (height & 0xFFFF);
     buffer[4] = 0; 
 
-    //gramado_system_call ( 10, (unsigned long) buffer, 0, 0 );
-    sc80 ( 10, (unsigned long) buffer, 0, 0 );
+    sc80(10, (unsigned long) buffer, 0, 0);
 }
 
 // #direct
@@ -1845,8 +1844,8 @@ __draw_rectangle_via_kgws (
 
 // Syscall 0x80, service 9.
 // Refresh rectangle using the kernel services.
-    //gramado_system_call ( 9, (unsigned long) Buffer, 0, 0 );
-    sc80 ( 9, (unsigned long) Buffer, 0, 0 );
+
+    sc80(9, (unsigned long) Buffer, 0, 0);
 }
 
 

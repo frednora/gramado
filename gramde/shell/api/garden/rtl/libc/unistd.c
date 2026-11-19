@@ -646,8 +646,9 @@ pid_t getppid(void)
 int gettid(void)
 {
     unsigned long ul_value=0;
-    //ul_value = (unsigned long) gramado_system_call(87, 0, 0, 0);
+
     ul_value = (unsigned long) sc80(87, 0, 0, 0);
+
 // 32bit value
     return (pid_t) (ul_value & 0xFFFFFFFF);
 };
