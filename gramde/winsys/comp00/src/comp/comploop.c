@@ -248,11 +248,13 @@ void server_debug_print(char *string)
     }
     //if (*string == 0)
         //return;
-    gramado_system_call ( 
+
+    sc80 ( 
         289,
         (unsigned long) string,
         (unsigned long) string,
-        (unsigned long) string );
+        (unsigned long) string 
+    );
 }
 
 // We can use the rtl or the library
@@ -267,7 +269,7 @@ unsigned long server_get_system_metrics (int index)
     //#define	SYSTEMCALL_GETSYSTEMMETRICS  250 
 
     rv = 
-        (unsigned long) gramado_system_call ( 
+        (unsigned long) sc80 ( 
                             250, 
                             (unsigned long) index, 
                             (unsigned long) index, 
@@ -289,14 +291,14 @@ void server_enter_critical_section (void)
 // FALSE = CLOSED.
 
     while (1){
-        S = (int) gramado_system_call( 226, 0, 0, 0 );
+        S = (int) sc80(226, 0, 0, 0);
         if (S == 1){
             goto done;
         }
     };
 done:
     // Close the gate. Turn FALSE.
-    gramado_system_call( 227, 0, 0, 0 );
+    sc80(227, 0, 0, 0);
     return;
 }
 
@@ -304,7 +306,7 @@ done:
 // Open the gate.
 void server_exit_critical_section(void)
 {
-    gramado_system_call( 228, 0, 0, 0 );
+    sc80(228, 0, 0, 0);
 }
 
 void server_quit(void)

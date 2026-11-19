@@ -160,7 +160,7 @@ void crt0(unsigned long rdi)
 
     // Stage 1
     // #debug: put char
-    //gramado_system_call(65,'1',0,0); 
+    // sc80(65, '1', 0, 0); 
 
 
 // ---------------------------------------------------------
@@ -180,14 +180,15 @@ void crt0(unsigned long rdi)
 
     int rt_status = -1;  //fail
     rt_status = (int) libcInitRT();
-    if (rt_status != 0){
+    if (rt_status != 0)
+    {
         // #debug: put char
-        gramado_system_call(65,'e',0,0);
+        sc80(65, 'e', 0, 0);
     }
 
     // Stage 2
     // #debug: put char
-    //gramado_system_call(65,'2',0,0);
+    // sc80(65, '2', 0, 0);
 
 // See: 
 // stdio/stdio.c

@@ -459,7 +459,7 @@ gwssrv_get_system_message(void)
 
     // Get message from kernel.
     gde_enter_critical_section();
-    gramado_system_call ( 111,
+    sc80 ( 111,
         (unsigned long) &message_buffer[0],
         (unsigned long) &message_buffer[0],
         (unsigned long) &message_buffer[0] );

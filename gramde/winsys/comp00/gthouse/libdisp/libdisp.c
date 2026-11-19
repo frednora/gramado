@@ -228,8 +228,8 @@ grBackBufferPutpixel2 (
 {
     if (x<0){ return -1; }
     if (y<0){ return -1; }
-// Service number 6.
-    return (int) gramado_system_call ( 6, color, x, y );
+
+    return (int) sc80(6, color, x, y);
 }
 
 /*

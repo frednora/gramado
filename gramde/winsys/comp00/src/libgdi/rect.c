@@ -556,10 +556,10 @@ __draw_rectangle_via_kgws (
     Buffer[4] = (unsigned long) (color & 0xFFFFFFFF);
     Buffer[5] = (unsigned long) rop_flags;
 
-// Syscall 0x80, service 9.
-// Refresh rectangle using the kernel services.
-    gramado_system_call ( 9, (unsigned long) Buffer, 0, 0 );
-    //sc80 ( 9, (unsigned long) Buffer, 0, 0 );
+
+// Refresh rectangle using the kernel services
+
+    sc80(9, (unsigned long) Buffer, 0, 0);
 }
 
 // Atualiza o retângulo da surface da thread.
@@ -578,13 +578,12 @@ setup_surface_rectangle (
     Buffer[3] = (unsigned long) (height & 0xFFFF);
     Buffer[4] = 0; 
 
-    gramado_system_call ( 
-        892, (unsigned long) &Buffer[0], 0, 0 );
+    sc80(892, (unsigned long) &Buffer[0], 0, 0);
 }
 
-void invalidate_surface_retangle (void)
+void invalidate_surface_retangle(void)
 {
-    gramado_system_call ( 893, 0, 0, 0 );
+    sc80(893, 0, 0, 0);
 }
 
 // ======================================
@@ -1006,7 +1005,7 @@ __kgws_adapter_refresh_rectangle (
     buffer[3] = (unsigned long) (height & 0xFFFF);
     buffer[4] = 0; 
 
-    gramado_system_call ( 10, (unsigned long) buffer, 0, 0 );
+    sc80(10, (unsigned long) buffer, 0, 0);
 }
 
 void 

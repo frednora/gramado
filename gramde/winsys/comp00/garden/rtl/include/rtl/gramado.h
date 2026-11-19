@@ -83,13 +83,6 @@ void *sc83 (
     unsigned long c, 
     unsigned long d );
 
-// system call
-// 0x80
-void *gramado_system_call ( 
-    unsigned long a,  //Service number. 
-    unsigned long b, 
-    unsigned long c, 
-    unsigned long d );
 
 // =====================================================
 

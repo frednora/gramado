@@ -114,7 +114,7 @@ int kill (pid_t pid, int sig)
 	/*
 	int ret;
 	
-	ret = (int) gramado_system_call ( ?, ?, ?, ? );
+	ret = (int) sc80 ( ?, ?, ?, ? );
 	
     if (ret < 0)
 	{

@@ -349,7 +349,7 @@ comp_blit_canvas_to_canvas(
 // Using kernel to show the backbuffer
 void gwssrv_show_backbuffer(void)
 {
-    gramado_system_call(11,0,0,0);
+    sc80(11, 0, 0, 0);
 }
 
 int flush_window(struct gws_window_d *window)

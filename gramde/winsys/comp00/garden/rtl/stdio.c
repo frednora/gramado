@@ -1303,20 +1303,23 @@ FILE *fopen2 ( const char *filename, const char *mode )
 // Size
 
     stdio_fntos((char *) filename);
+
 // Get file size
 // #todo: 
 // Use systemcall definition instead of number.
 // Maybe another function. (The other symbol).
+
     size_t s = 
-        (size_t) gramado_system_call ( 
-                     178, 
-                     (unsigned long) filename,
-                      0,
-                      0 );
+        (size_t) sc80 ( 
+                    178, 
+                    (unsigned long) filename,
+                    0,
+                    0 );
 
 // #bugbug
 // 1MB
-    if ( s <= 0 || s > (1024*1024) ){
+    if ( s <= 0 || s > (1024*1024) )
+    {
         printf ("fopen2: size\n");
         return NULL;
     }
@@ -1335,12 +1338,15 @@ FILE *fopen2 ( const char *filename, const char *mode )
 // #todo: 
 // Use systemcall definition instead of number.
 // Maybe another function. (The other symbol).
+
+// #bugbug: Buffer overflow
+
     fd = 
-        (int) gramado_system_call ( 
-                  3, 
-                  (unsigned long) filename, 
-                  (unsigned long) address,  
-                  0 );
+        (int) sc80 ( 
+                3, 
+                (unsigned long) filename, 
+                (unsigned long) address,  
+                0 );
 
     if (fd < 0){
         printf ("fopen2: Couldn't load the file\n");
@@ -1677,10 +1683,10 @@ int prompt_flush (int con_id)
         return -1;
     }
 
-// Finalize.
+// Finalize
     input('\0'); 
     len = strlen( (const char *) prompt );  
-    gramado_system_call ( 66, (unsigned long) prompt, con_id, len );  
+    sc80(66, (unsigned long) prompt, con_id, len);  
     prompt_clean();
 
     return 0;
@@ -2818,7 +2824,7 @@ void _outbyte (int c)
 // printf usa outra coisa (65).
 // #bugbug: size = 8
 
-    gramado_system_call ( 
+    sc80 ( 
         7, 
         (8 * g_cursor_x), 
         (8 * g_cursor_y), 
@@ -3654,7 +3660,7 @@ void debug_print (char *string)
     if ((void*) string == NULL)
         return;
 
-    gramado_system_call ( 
+    sc80 ( 
         289, 
         (unsigned long) string,
         (unsigned long) string,
@@ -3668,9 +3674,9 @@ void debug_print (char *string)
  */
 // 34 - set cursor.
 
-void stdioSetCursor ( unsigned long x, unsigned long y )
+void stdioSetCursor( unsigned long x, unsigned long y )
 {
-    gramado_system_call ( 34, x, y, 0 );
+    sc80(34, x, y, 0);
 }
 
 /*
@@ -3680,9 +3686,9 @@ void stdioSetCursor ( unsigned long x, unsigned long y )
  *     e não dentro do terminal.
  */ 
 
-unsigned long stdioGetCursorX (void)
+unsigned long stdioGetCursorX(void)
 {
-    return (unsigned long) gramado_system_call ( 240, 0, 0, 0 );
+    return (unsigned long) sc80(240, 0, 0, 0);
 }
 
 /*
@@ -3691,17 +3697,16 @@ unsigned long stdioGetCursorX (void)
  *     estamos falando do posicionamento do cursor dentro da janela
  *     e não dentro do terminal. 
  */
-unsigned long stdioGetCursorY (void)
+unsigned long stdioGetCursorY(void)
 {
-    return (unsigned long) gramado_system_call ( 241, 0, 0, 0 );
+    return (unsigned long) sc80(241, 0, 0, 0);
 }
-
 
 //======================================================================
 // scanf support (start)
 //======================================================================
 
-int scanf ( const char *fmt, ... )
+int scanf( const char *fmt, ... )
 {
     va_list ap;
     va_start (ap, fmt);
@@ -4865,15 +4870,18 @@ int snprintf ( char *str, size_t count, const char *fmt, ... )
 
 // ?? #todo
 // inicializa o fluxo padrão para o processo.
+
 int stdio_initialize_standard_streams (void)
 {
     debug_print("stdio_initialize_standard_streams: [FIXME] What is this?\n");
-    return (int) gramado_system_call ( 
-                     700, 
-                     (unsigned long) stdin, 
-                     (unsigned long) stdout, 
-                     (unsigned long) stderr ); 
+
+    return (int) sc80 ( 
+                    700, 
+                    (unsigned long) stdin, 
+                    (unsigned long) stdout, 
+                    (unsigned long) stderr ); 
 }
+
 
 // wtf ... it looks so cool!
 /*
@@ -5030,20 +5038,19 @@ int libcStartTerminal (void)
     // 'Clona' e executa o noraterm como processo filho. 
     //PID = (int) system_call ( 900, (unsigned long) "noraterm.bin", 0, 0 );
 
-    PID = (int) gramado_system_call ( 900, 
-                    (unsigned long) "noraterm.bin", 0, 0 );
+    PID = (int) sc80 ( 900, (unsigned long) "noraterm.bin", 0, 0 );
 
     // Exibe o PID para debug.
     //printf ("PID = %d \n", PID);
 
     //registra o terminal como terminal atual.
-    gramado_system_call ( 1003, PID, 0, 0 ); 
+    sc80 ( 1003, PID, 0, 0 ); 
 
     //invalida a variável.
     PID = -1;
 
     //pega o pid do terminal atual
-    PID = (int) gramado_system_call ( 1004, 0, 0, 0 ); 
+    PID = (int) sc80 ( 1004, 0, 0, 0 ); 
 
     if ( PID <= 0 )
     {
@@ -5113,8 +5120,10 @@ void setbuffer (FILE *stream, char *buf, size_t size)
        debug_print ("setbuffer: buf\n");
        return;
     }
+
 // todo: size.
-    gramado_system_call ( 
+
+    sc80 ( 
         611, 
         (unsigned long) stream, 
         (unsigned long) buf, 
@@ -5125,7 +5134,7 @@ void setbuffer (FILE *stream, char *buf, size_t size)
 //This function is provided for compatibility with old BSD code. 
 //Use setvbuf instead. 
 
-void setlinebuf (FILE *stream)
+void setlinebuf(FILE *stream)
 {
     debug_print ("setlinebuf: [FIXME]\n");
     setvbuf (stream, (char *) 0, _IOLBF, 0);
@@ -5571,7 +5580,7 @@ int Torvalds_printf (const char *fmt, ...)
     // Pegando o id da tty desse processo.
     // #obs: Isso ja foi feito na inicialização da biblioteca.
     // Deltar isso.
-    //this_tty_id = (int) gramado_system_call ( 266, getpid(), 0, 0 );  
+    //this_tty_id = (int) sc80 ( 266, getpid(), 0, 0 );  
 
 
     //escrevendo no virtual console. 0.
@@ -6144,7 +6153,7 @@ int stdioInitialize(void)
 // I don't wanna see error messages everytime we launch a command.
 
     /*
-      gramado_system_call ( 
+      sc80 ( 
           267,
           getpid(),    //master
           getppid(),   //slave pai(terminal)
@@ -6156,8 +6165,9 @@ int stdioInitialize(void)
 //
 
 // This is the tty of this process
+
     pid_t MyPID = (pid_t) getpid();
-    __libc_tty_id = (int) gramado_system_call ( 266, MyPID, 0, 0 ); 
+    __libc_tty_id = (int) sc80(266, MyPID, 0, 0); 
 
 // Clear prompt[] buffer
     prompt_clean();

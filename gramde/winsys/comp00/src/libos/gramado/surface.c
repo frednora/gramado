@@ -139,13 +139,14 @@ void *xxxCreateSurfaceWindow(
 // Maybe we need to use sc82()
 
     wObjectPointer = 
-        (void *) gramado_system_call ( 
-                     118, 
-                     (unsigned long) &message_buffer[0], 
-                     (unsigned long) &message_buffer[0], 
-                     (unsigned long) &message_buffer[0] );
+        (void *) sc80 ( 
+                    118, 
+                    (unsigned long) &message_buffer[0], 
+                    (unsigned long) &message_buffer[0], 
+                    (unsigned long) &message_buffer[0] );
 
-    if ( (void *) wObjectPointer == NULL ){
+    if ((void *) wObjectPointer == NULL)
+    {
         //server_debug_print ("xxxCreateSurfaceWindow: [FAIL] wObjectPointer\n");
         return NULL;  
     }

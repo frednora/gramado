@@ -105,13 +105,14 @@ int openat(int dirfd, const char *pathname, int flags)
 // #bugbug
 // Check this syscall ... the argument dirfd.
 
-// Carrega um arquivo dado o nome e um modo.
+// Carrega um arquivo dado o nome e um modo
+
     value = 
-        (int) gramado_system_call ( 
-                  246, 
-                  (unsigned long) dirfd, 
-                  (unsigned long) pathname, 
-                  (unsigned long) flags ); 
+        (int) sc80 ( 
+                246, 
+                (unsigned long) dirfd, 
+                (unsigned long) pathname, 
+                (unsigned long) flags ); 
 
     if (value < 0){
         errno = (-value);
@@ -159,8 +160,7 @@ int open(const char *pathname, int flags, mode_t mode)
 // Limits: 1MB.
     
     /*
-    FileSize = (size_t) gramado_system_call ( 178, 
-                            (unsigned long) tmp_path, 0, 0 );
+    FileSize = (size_t) sc80 ( 178, (unsigned long) tmp_path, 0, 0 );
 
     if ( FileSize <= 0 || FileSize >= (1024*1024) )
     {
@@ -175,11 +175,11 @@ int open(const char *pathname, int flags, mode_t mode)
 // IN: service, pathname, flags, mode 
 
     value = 
-        (int) gramado_system_call( 
-                  16,  
-                  (unsigned long) tmp_path, 
-                  (unsigned long) flags, 
-                  (unsigned long) mode );
+        (int) sc80( 
+                16,  
+                (unsigned long) tmp_path, 
+                (unsigned long) flags, 
+                (unsigned long) mode );
 
     if (value < 0){
         errno = (-value);

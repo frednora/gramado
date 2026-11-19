@@ -34,12 +34,10 @@ int registerDS(void)
 // Register the display server 
 // as the current display server for this cgroup.
 
-    __p_cgroup = (void *) gramado_system_call (519,0,0,0);
+    __p_cgroup = (void *) sc80(519, 0, 0, 0);
     if ((void *) __p_cgroup == NULL)
     {
-        // #debug
-        //server_debug_print ("registerDS: __p_cgroup\n");
-        printf             ("registerDS: __p_cgroup\n");
+        printf("registerDS: __p_cgroup\n");
         exit(1);
         goto fail;
     }
@@ -65,18 +63,18 @@ int registerDS(void)
 // We need to check the return value.
 // int Status = -1;
 
-    gramado_system_call ( 
+    sc80 ( 
         513, 
         __p_cgroup, 
         __pid, 
-        __pid );
+        __pid 
+    );
 
     // Flag: Now the display server is registered.
     __ds_registered = TRUE;
     Initialization.register_ds_checkpoint = TRUE;
 
-// 0 = OK.
-    return 0;
+    return 0;  // OK
 
 fail:
     return (int) -1;

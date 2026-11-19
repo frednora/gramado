@@ -170,9 +170,9 @@ void *gwssrv_create_thread (
     char *name )
 {
     //#define	SYSTEMCALL_CREATETHREAD     72
-    //server_debug_print ("gwssrv_create_thread:\n");
-    return (void *) gramado_system_call ( 
-                        72,  //SYSTEMCALL_CREATETHREAD, 
+
+    return (void *) sc80 ( 
+                        72, 
                         init_eip, 
                         init_stack, 
                         (unsigned long) name );
@@ -186,7 +186,9 @@ void *gwssrv_create_thread (
 void gwssrv_start_thread (void *thread)
 {
     //#define	SYSTEMCALL_STARTTHREAD  94 
-    gramado_system_call ( 94, //SYSTEMCALL_STARTTHREAD, 
+
+    sc80 (
+        94, 
         (unsigned long) thread, 
         (unsigned long) thread, 
         (unsigned long) thread );
