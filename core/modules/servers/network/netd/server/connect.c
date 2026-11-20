@@ -23,8 +23,11 @@ int register_ns(void)
     __ns_registerd = FALSE;
 
 // cgroup
-    __ns_cgroup = (void *) gramado_system_call(519,0,0,0);
-    if ((void *) __ns_cgroup == NULL){
+
+    __ns_cgroup = (void *) sc80(519, 0, 0, 0);
+
+    if ((void *) __ns_cgroup == NULL)
+    {
         debug_print ("register_ns: __ns_cgroup fail\n");
         goto fail;
     }
@@ -36,16 +39,18 @@ int register_ns(void)
         goto fail;
     }
 
-// Register this pid as ns.
-    gramado_system_call ( 
+// Register this pid as ns
+
+    sc80 ( 
         (unsigned long) 521, 
         (unsigned long) __ns_cgroup, 
         (unsigned long) (__ns_pid & 0xFFFFFFFF), 
-        (unsigned long) (__ns_pid & 0xFFFFFFFF) );
+        (unsigned long) (__ns_pid & 0xFFFFFFFF) 
+    );
 
     __ns_registerd = TRUE;
-// O = OK.
-    return 0;
+    return 0;  // OK
+
 fail:
     return (int) -1;
 }

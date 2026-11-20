@@ -255,7 +255,7 @@ int serviceInitializeNetwork(void)
     // #ps deprecated?
     // Ring0 routine to initialize network infrastructure.
     // #remember: At this moment we are in the user app memory space.
-    // gramado_system_call(968,0,0,0);
+    // sc80(968,0,0,0);
     return 0;
 }
 
@@ -268,8 +268,8 @@ static int ServerShutdown(void)
 
 static void ServerYield(void)
 {
-    gramado_system_call(265,0,0,0); 
-    //  sc82 (265,0,0,0);
+    // #bugbug: is this the correct number?
+    sc80(265, 0, 0, 0); 
 }
 
 //
@@ -521,7 +521,7 @@ ServerProcessRequests (
                 // do gws.    
                 case VK_F2:
                     my_pid = (int) getpid();
-                    gramado_system_call(7008,my_pid,0,0);
+                    sc80(7008, my_pid, 0, 0);
                     break; 
              
                 // Enviar a mensagem para o processo associado

@@ -698,7 +698,8 @@ static int vgad_main(void)
     char *env_user;
     unsigned char good=0;
 
-    //gramado_system_call(65,'3',0,0);
+    //sc80(65,'3',0,0);
+
     printf ("VGAD.BIN:\n");
 
 // #test

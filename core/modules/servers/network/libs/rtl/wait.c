@@ -50,10 +50,11 @@ pid_t waitpid (pid_t pid, int *status, int options)
 
 again:
 
-    __pid = (pid_t) gramado_system_call ( 83, 
-                         (unsigned long) pid, 
-                         (unsigned long) status, 
-                         (unsigned long) options );
+    __pid = (pid_t) sc80 ( 
+                        83, 
+                        (unsigned long) pid, 
+                        (unsigned long) status, 
+                        (unsigned long) options );
 
     if ( __pid > 0 ){
         return (pid_t) __pid;
