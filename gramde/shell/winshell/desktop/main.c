@@ -127,19 +127,30 @@ struct app_entry_d
 };
 
 
+/*
 static const struct app_entry_d AppList[] = {
-    { "#power.bin",    "P" },  // First icon also the start button
-    { "#launch.bin",   "L" },
-    { "#terminal.bin", "T" },
+    { "#power.bin",    "P" },  // [0] Start only. Not an icon.
+    { "#launch.bin",   "L" },  // [1] first icon, key '1'
+    { "#terminal.bin", "T" },  // ...
     { "#editor.bin",   "E" },
     { "#calc.bin",     "C" },
     { "#paint.bin",    "P" },
     { "#pairs.bin",    "p" },
-//    { "#browser.bin",  "B" },
+    { "#browser.bin",  "B" },
     { "#reversi.bin",  "R" }
-
 };
+*/
+
+static const struct app_entry_d AppList[] = {
+    { "#power.bin",    "P" },  // [0] Start only. Not an icon.
+    { "#editor.bin",   "E" },  // [1] First icon
+    { "#calc.bin",     "C" },  // [2]
+    { "#paint.bin",    "P" }
+};
+
 #define APP_COUNT  (int)(sizeof(AppList)/sizeof(AppList[0]))
+#define APP_START       1          // 1-based. Start button only.
+// #define APP_ICON_FIRST  2          // 1-based. First icon.
 
 
 // ----------------------------------------------------
@@ -167,6 +178,13 @@ struct button_info_d
 // (running, minimized, etc.).
     int state;
 };
+
+
+// Preferred size for taskbar icons (squared)
+// #define __ICON_SIZE    28
+#define __ICON_GAP     2    // space between icons
+#define __LEFT_MARGIN  2    // small margin from the left of the area
+
 
 #define TB_ITEM_MAX     16
 #define ID_START_BUTTON 1      // ids 2.. are the app icons
@@ -400,7 +418,13 @@ static int do_launch_app(int app_number)
         return -1;
 
     memset(filename, 0, sizeof(filename));
-    strncpy(filename, AppList[app_number - 1].name, sizeof(filename) - 1);
+
+// Filename
+    strncpy(
+        filename, 
+        AppList[app_number - 1].name, 
+        sizeof(filename) - 1 
+    );
 
     // Launch new process.
     ret_val = (int) rtl_clone_and_execute_return_tid(filename);
@@ -733,14 +757,15 @@ desktopProcedure(
 
                 case 'S':  // Start menu
                 case 's': 
-                    do_launch_app(1);  // First program
+                    //do_launch_app(1);  // First program
+                    do_launch_app(APP_START);
                     break;
 
                 // 1..N launch the programs of the icon area
-                case '1': do_launch_app(1); break;
-                case '2': do_launch_app(2); break;
-                case '3': do_launch_app(3); break;
-                case '4': do_launch_app(4); break;
+                case '1': do_launch_app(2); break;
+                case '2': do_launch_app(3); break;
+                case '3': do_launch_app(4); break;
+                case '4': do_launch_app(5); break;
 
                 default:
                     break;
@@ -856,10 +881,11 @@ static void create_start_button(void)
     if ((void*) dc_taskbar == NULL)
         return;
 
-    left   = TaskbarInfo.launch_area.left + 2;
-    top    = TaskbarInfo.launch_area.top  + 2;
-    width  = (TaskbarInfo.launch_area.width - 4) >> 1;
-    height = TaskbarInfo.launch_area.height - 4;
+    left   = TaskbarInfo.launch_area.left + 1;
+    top    = TaskbarInfo.launch_area.top  + 1;
+    // width  = (TaskbarInfo.launch_area.width * 2) / 3;
+    width  = (TaskbarInfo.launch_area.width - 2) >> 1;
+    height = TaskbarInfo.launch_area.height - 2;
 
     // Create UI component (client-side only)
     uic = libgui_create_ui_component(
@@ -887,25 +913,23 @@ static struct ui_component_d *create_icon_area_icon(
     if ((void*)dc_taskbar == NULL)
         return NULL;
 
-    // Preferred size for taskbar icons (squared)
-    const unsigned long ICON_SIZE   = 24;
-    const unsigned long ICON_GAP    = 2;    // space between icons
-    const unsigned long LEFT_MARGIN = 2;    // small margin from the left of the area
+    // #test
+    unsigned long IconSize = TaskbarInfo.icon_area.height -2;  //__ICON_SIZE;
 
     // Current number of icons already in the area
     int count = TaskbarInfo.icon_area.component_count;
 
     // Calculate next free X position
     unsigned long icon_left = TaskbarInfo.icon_area.left 
-                            + LEFT_MARGIN 
-                            + count * (ICON_SIZE + ICON_GAP);
+                            + __LEFT_MARGIN 
+                            + count * (IconSize + __ICON_GAP);
 
     // Vertical centering inside the icon area
     unsigned long icon_top = TaskbarInfo.icon_area.top 
-                           + (TaskbarInfo.icon_area.height - ICON_SIZE) / 2;
+                           + (TaskbarInfo.icon_area.height - IconSize) / 2;
 
     // Safety: do not overflow the icon area
-    if (icon_left + ICON_SIZE > 
+    if (icon_left + IconSize > 
         TaskbarInfo.icon_area.left + TaskbarInfo.icon_area.width)
     {
         return NULL;
@@ -914,7 +938,7 @@ static struct ui_component_d *create_icon_area_icon(
     icon = libgui_create_ui_component(
         dc_taskbar,
         UI_COMPONENT_ICON,
-        icon_left, icon_top, ICON_SIZE, ICON_SIZE,
+        icon_left, icon_top, IconSize, IconSize,
         label ? label : "",
         flags
     );
@@ -924,7 +948,7 @@ static struct ui_component_d *create_icon_area_icon(
     // ids: 1 is the Start button, icons start at 2.
     if (item_register( 
             ID_START_BUTTON + app_number, icon, 
-            icon_left, icon_top, ICON_SIZE, ICON_SIZE, 
+            icon_left, icon_top, IconSize, IconSize, 
             app_number ) == NULL)
     {
         return NULL;
@@ -1227,6 +1251,7 @@ int main(int argc, char *argv[])
         TaskbarInfo.icon_area.height,
         THEME_TASKBAR_CLIENT_BG );
 
+/*
 // One icon for each program in AppList
     for (i = 0; i < APP_COUNT; i++)
     {
@@ -1235,6 +1260,17 @@ int main(int argc, char *argv[])
             AppList[i].icon_label, 
             (0x0001 | 0x0002) );
     }
+*/
+
+// One icon for each program in AppList
+    for (i = 1; i < APP_COUNT; i++)
+    {
+        create_icon_area_icon(
+            i + 1, 
+            AppList[i].icon_label, 
+            (0x0001 | 0x0002) );
+    }
+
 
 // =======================
 // Event loop
