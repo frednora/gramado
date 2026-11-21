@@ -1,0 +1,12 @@
+
+The display server / compositor:
+
+The display server also acts as a compositor. Each application window 
+has two shared canvases, one for the chrome/frame and another one 
+for the client area. It is a ring 3 process. Client-side GUI applications 
+connects to it via socket.
+
+The server is drawing the chrome/frame and blitting all the canvases 
+to compose the desktop into a backbuffer, than copy it into the frontbuffer. 
+A client-side library handles the drawing within the canvas 
+corresponding to the client area.
