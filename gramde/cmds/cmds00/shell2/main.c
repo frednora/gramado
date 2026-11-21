@@ -117,14 +117,10 @@ static void process_run_command(const char *cmdline, int use_pipes)
         // #bugbug: We need the child's pid here
         // waitpid( pid?, &_status, 0);
 
-        // #test:
-        // 84: join_thread(tid) implementation
-        //sc80 (84, tid, tid, tid);
+        // #test: Wait for a given thread
         rtl_join_thread(tid);
 
         printf("Waked ...\n");
-
-        // rtl_sleep(2000);  //2sec
     
         // Exit the shell right after a positive launch 
         // exit(0);

@@ -198,6 +198,8 @@ build-de:
 	@-cp $(L1_CMDS)/bin/SHUTDOWN.BIN  $(BUILD)/
 	@-cp $(L1_CMDS)/bin/UNAME.BIN     $(BUILD)/
 
+	@-cp $(L1_CMDS)/bin/SYSINF.BIN    $(BUILD)/
+
 #	@-cp $(L1_CMDS)/bin/CAT00.BIN    $(BUILD)/
 #	@-cp $(L1_CMDS)/bin/CMP.BIN      $(BUILD)/
 #	@-cp $(L1_CMDS)/bin/ED00.BIN     $(BUILD)/
@@ -212,6 +214,9 @@ build-de:
 	@-cp $(L1_CMDS)/bin/PUBSH.BIN     $(BUILD)/DE/
 	@-cp $(L1_CMDS)/bin/SHELL.BIN     $(BUILD)/DE/
 	@-cp $(L1_CMDS)/bin/SHELL2.BIN    $(BUILD)/DE/
+	@-cp $(L1_CMDS)/bin/SHELL3.BIN    $(BUILD)/DE/
+
+
 
 #	@-cp $(L1_CMDS)/bin/FALSE.BIN     $(BUILD)/GRAMADO/
 #	@-cp $(L1_CMDS)/bin/TRUE.BIN      $(BUILD)/GRAMADO/
