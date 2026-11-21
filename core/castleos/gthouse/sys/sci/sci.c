@@ -2554,7 +2554,7 @@ void *sci2 (
 // O filho inicia sua execução do início da imagem.
 // #bugbug: Isso às vezes falha na máquina real.
 // #todo: Use more arguments.
-// See: intake/clone.c
+// See: clone.c
 
     // number = syscall number (900)
     // arg2   = file name (string in userland)
@@ -2571,11 +2571,12 @@ void *sci2 (
     pid_t c__parent_pid = (pid_t) current_process;
     unsigned long c__flags = (unsigned long) arg3;
     unsigned long c__extra = (unsigned long) arg4;
+
     if (number == SCI2_COPY_PROCESS)
     {
         //debug_print("sci2: [SCI2_COPY_PROCESS] clone and execute\n");
-        // #debug
         //printk("sci2: copy_process called by pid{%d}\n",current_process);
+
         /*
         return (void *) copy_process( 
                             (const char *)  c__name, 
@@ -2584,7 +2585,14 @@ void *sci2 (
         */
 
         // #test
-        return (void *) copy_process00( 
+        //return (void *) copy_process00( 
+        //                    (const char *)  c__name, 
+        //                    (pid_t)         c__parent_pid, 
+        //                    (unsigned long) c__flags,
+        //                    (unsigned long) c__extra );
+
+        // #test
+        return (void *) sys_copy_process( 
                             (const char *)  c__name, 
                             (pid_t)         c__parent_pid, 
                             (unsigned long) c__flags,

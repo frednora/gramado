@@ -42,7 +42,16 @@ void *sys_create_thread (
 
 // See: sys.c
 int sys_exit_thread(tid_t tid);
+
+pid_t 
+sys_copy_process( 
+    const char *filename, 
+    pid_t pid, 
+    unsigned long clone_flags,
+    unsigned long extra_stuff );
+
 int sys_fork(void);
+
 pid_t sys_getpid(void);
 pid_t sys_getppid(void);
 int sys_initialize_component(int n);

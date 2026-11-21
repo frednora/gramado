@@ -363,6 +363,45 @@ fail:
     return (int) -1;
 }
 
+pid_t 
+sys_copy_process( 
+    const char *filename, 
+    pid_t pid, 
+    unsigned long clone_flags,
+    unsigned long extra_stuff )
+{
+    pid_t parent_pid = (pid_t) pid;
+
+
+// Parameters:
+    if ((void*) filename == NULL)
+    {
+        printk("sys_copy_process: filename\n");
+        goto fail;
+    }
+    if (*filename == 0)
+    {
+        printk("sys_copy_process: *filename\n");
+        goto fail;
+    }
+    // parent pid
+    if (parent_pid < 0 || parent_pid >= PROCESS_COUNT_MAX)
+    {
+        printk("sys_copy_process: parent_pid\n");
+        goto fail;
+    }
+
+// #test
+    return (pid_t) copy_process00( 
+                        (const char *)  filename, 
+                        (pid_t)         pid, 
+                        (unsigned long) clone_flags,
+                        (unsigned long) extra_stuff );
+
+fail:
+    return (pid_t) -1;
+}
+
 // 71
 // #todo:
 // We're working in a helper function for clonning processes.
@@ -381,6 +420,7 @@ int sys_fork(void)
 // that we want to fork the current process using the 
 // unix style, where the child starts at the same RIP of father.
 // for now, copy process launch a child that will start at the entrypoint.
+
     unsigned long LongFlag = F_CLONE_UNIX_STYLE;
 
     debug_print ("sys_fork: \n");
