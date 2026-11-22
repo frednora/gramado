@@ -9,13 +9,26 @@
 // #bugbug #important
 // #todo: We really need to fix up this limits.
 // Current critical sizes:
-// kernel = 423KB
-// ds00   = 225KB
+//
+// kernel.bin
+// + 535KB+ = Image size
+// + 1MB    = code + data + bss
+//
+// comp00.bin
+// + 250KB+ = Image size
+// + 300KB+ = code + data + bss
+//
+// eng00.bin
+// + 255KB+ = Image size
+// + 300KB+ = code + data + bss
+//
 // see: distros/base00/DE/
 // -------------
 // see: 
 //  + intake/te.c
 //  + fs/fsload.c  
+
+//#define CONFIG_IMAGESIZE_LIMIT_IN_KB  320  // 400+
 #define CONFIG_IMAGESIZE_LIMIT_IN_KB  408  // 400+
 // ...
 
@@ -23,8 +36,10 @@
 // See: head_64.asm, x64.c and tss.h
 //#define CONFIG_RING0_STACK_SIZE_IN_KB    8
 
-// See: clone.c process.c and process.h
-#define CONFIG_RING3_STACK_SIZE_IN_KB    64  //32
+// See: 
+// clone.c te.c and te.h
+// 64  //32
+#define CONFIG_RING3_STACK_SIZE_IN_KB (64 + 16)
 
 
 // #test
