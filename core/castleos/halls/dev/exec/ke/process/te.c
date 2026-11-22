@@ -74,7 +74,7 @@ static pid_t __get_new_pid(void);
 // Worker for create_process
 static void __initialize_process_common_elements(struct te_d *p);
 
-static struct te_d *create_process_imp ( 
+static struct te_d *__create_process_imp ( 
     struct cgroup_d *cg,
     unsigned long base_address, 
     unsigned long priority, 
@@ -1203,6 +1203,9 @@ struct te_d *create_and_initialize_process_object(void)
         goto fail;
     }
 
+// Paravirtualization support
+    new_process->runtime = NULL;
+
 // Default personality
     new_process->personality = PERSONALITY_POSIX;
 
@@ -1342,7 +1345,7 @@ fail:
 
 // Worker:
 // Create process (implementation)
-static struct te_d *create_process_imp ( 
+static struct te_d *__create_process_imp ( 
     struct cgroup_d *cg,
     unsigned long base_address, 
     unsigned long priority, 
@@ -1489,6 +1492,11 @@ static struct te_d *create_process_imp (
     Process->priority = Priority;
 
 // ------------
+
+// Paravirtualization support
+    Process->runtime = NULL;
+
+// Personality
     Process->personality = (int) Personality;
 
 // ------------
@@ -1828,7 +1836,7 @@ struct te_d *create_process (
 {
     struct te_d *te;
 
-    te = (struct te_d *) create_process_imp(
+    te = (struct te_d *) __create_process_imp(
         cg,
         base_address,
         priority,

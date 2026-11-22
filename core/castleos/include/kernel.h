@@ -201,6 +201,8 @@ extern int system_state;
 
 // ==================================
 // virt/
+
+#include "../gthouse/sys/virt/runtime.h"
 #include "../gthouse/sys/virt/hv.h"
 
 // ==========================================

@@ -9,6 +9,7 @@
 #define __VIRT_HV_H    1
 
 
+// #todo: Explain it better
 struct vmx_info_d
 {
 // The structure is fully initialized
@@ -29,6 +30,7 @@ struct vmx_info_d
     // ...
 };
 
+// #todo: Explain it better
 struct svm_info_d
 {
 // The structure is fully initialized
@@ -47,6 +49,23 @@ struct svm_info_d
 
     // ...
 };
+
+
+/*
+struct hv_partition_d 
+{
+    // #todo
+    // For // VMX/SVM resources.
+    // It will contain the tables needed to handle the 
+    // partitions via hw virtualization.
+    // Each table will have a pointer here.
+
+    // Maybe this ones
+    // struct ept_d *ept;
+    // struct vmcs_d *vmcs;
+    // struct vcpu_d *vcpu;
+};
+*/
 
 
 // ----------------------------

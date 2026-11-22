@@ -89,6 +89,7 @@ mod.o \
 cg.o \
 ns.o \
 cont.o \
+runtime.o \
 hv.o \
 public.o    
 
@@ -119,7 +120,8 @@ all:
 	$(CC) -c cont/cont.c  $(KERNEL_INCLUDE) $(CFLAGS) -o cont.o
 
 # Virtualization routines
-	$(CC) -c virt/hv.c  $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o
+	$(CC) -c virt/runtime.c  $(KERNEL_INCLUDE) $(CFLAGS) -o runtime.o
+	$(CC) -c virt/hv.c       $(KERNEL_INCLUDE) $(CFLAGS) -o hv.o
 
 # Systemcalls support
 	$(CC) -c sci/x64sc.c  $(KERNEL_INCLUDE) $(CFLAGS) -o x64sc.o    

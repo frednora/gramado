@@ -337,6 +337,11 @@ struct te_d
 
 // --------------------------
 
+// #test
+// Paravirtualization support.
+// see: virt/runtime.h
+    struct runtime_d *runtime;
+
 // Personality types:
 // Based on environment subsystems.
     personality_t personality;
