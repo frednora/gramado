@@ -1287,6 +1287,12 @@ int main( int argc, char **argv)
 
     Init.is_ds_running = FALSE;  // ds is not up yet
 
+// #test
+// hvcall for paravirtualization
+
+    //unsigned int RandomHVService = 100;
+    // rtl_hvcall(RandomHVService, 0, 0, 0);
+
 //
 // Runlevel
 //

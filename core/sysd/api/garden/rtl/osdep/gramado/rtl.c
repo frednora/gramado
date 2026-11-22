@@ -123,6 +123,23 @@ void *sc83 (
     return (void *) __Ret; 
 }
 
+
+// #test
+// hvcall for paravirtualization 
+void *rtl_hvcall ( 
+    unsigned long a, 
+    unsigned long b, 
+    unsigned long c, 
+    unsigned long d )
+{
+    unsigned long __Ret=0;
+
+    __Ret = (unsigned long) sc83(a, b, c, d);
+
+    return (void *) __Ret; 
+}
+
+
 // =============================================================
 
 //

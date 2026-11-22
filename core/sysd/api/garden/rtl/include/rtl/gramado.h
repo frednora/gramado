@@ -61,30 +61,37 @@ void rtl_elegant_exit_on_fail(void);
 // =====================================================
 
 void *sc80 ( 
-    unsigned long a,  //Service number. 
+    unsigned long a,  // Service number
     unsigned long b, 
     unsigned long c, 
     unsigned long d );
 
 void *sc81 ( 
-    unsigned long a,  //Service number. 
+    unsigned long a,  // Service number 
     unsigned long b, 
     unsigned long c, 
     unsigned long d );
 
 void *sc82 ( 
-    unsigned long a,  //Service number. 
+    unsigned long a,  // Service number
     unsigned long b, 
     unsigned long c, 
     unsigned long d );
 
 void *sc83 ( 
-    unsigned long a,  //Service number. 
+    unsigned long a,  // Service number 
     unsigned long b, 
     unsigned long c, 
     unsigned long d );
 
 // =====================================================
+
+void *rtl_hvcall ( 
+    unsigned long a,  // Service number 
+    unsigned long b, 
+    unsigned long c, 
+    unsigned long d );
+
 
 
 /**
@@ -403,7 +410,6 @@ int
 rtl_clone_and_execute_return_tid_ex(
     const char *name,
     const char *cmdline );
-
 
 
 int rtl_spawn_process(const char *path);

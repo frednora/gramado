@@ -3446,6 +3446,12 @@ void *sci3 (
 //
 
 
+// #test
+// hvcall for paravirtualization
+
+    panic("sci83: hvcall for paravirtualization #todo\n");
+
+
 /*
 // 43 - Create an empty file
 // See: fs.c
