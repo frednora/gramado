@@ -72,7 +72,7 @@ LDFLAGS := -m elf_x86_64 -s -x -static
 OBJS = \
 bldisp.o qemudisp.o display.o \
 tty.o console.o pty.o \
-i8042.o mapabnt2.o ps2kbd.o ps2mouse.o keyboard.o mouse.o \
+i8042.o mapabnt2.o ps2khw.o ps2mhw.o ps2kbd.o ps2mouse.o \
 serial.o    
 
 
@@ -92,12 +92,16 @@ $(KERNEL_INCLUDE) $(CFLAGS) -o qemudisp.o
 
 	$(CC) -c display/display.c  $(KERNEL_INCLUDE) $(CFLAGS) -o display.o
 
+# hw support (The pluggable device drivers per se)
+	$(CC) -c i8042/ps2khw/ps2khw.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ps2khw.o
+	$(CC) -c i8042/ps2mhw/ps2mhw.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ps2mhw.o
+
+# interfaces
+	$(CC) -c i8042/ps2kbd.c    $(KERNEL_INCLUDE) $(CFLAGS) -o ps2kbd.o
+	$(CC) -c i8042/ps2mouse.c  $(KERNEL_INCLUDE) $(CFLAGS) -o ps2mouse.o
+
 # i8042 (PS/2)
 	$(CC) -c i8042/i8042.c    $(KERNEL_INCLUDE) $(CFLAGS) -o i8042.o
-	$(CC) -c i8042/keyboard.c $(KERNEL_INCLUDE) $(CFLAGS) -o keyboard.o
-	$(CC) -c i8042/mouse.c    $(KERNEL_INCLUDE) $(CFLAGS) -o mouse.o
-	$(CC) -c i8042/ps2kbd.c   $(KERNEL_INCLUDE) $(CFLAGS) -o ps2kbd.o
-	$(CC) -c i8042/ps2mouse.c $(KERNEL_INCLUDE) $(CFLAGS) -o ps2mouse.o
 
 # Keyboard maps
 	$(CC) -c kbdmaps/ptbr/mapabnt2.c  $(KERNEL_INCLUDE) $(CFLAGS) -o mapabnt2.o

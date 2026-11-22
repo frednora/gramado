@@ -325,11 +325,17 @@ extern int system_state;
 // ...
 
 // i8042 (PS/2)
-#include "../halls/chardev/i8042/keyboard.h"
+
+// hw support
+#include "../halls/chardev/i8042/ps2khw/ps2khw.h"
+#include "../halls/chardev/i8042/ps2mhw/ps2mhw.h"
+
+// interfaces
 #include "../halls/chardev/i8042/ps2kbd.h"
-#include "../halls/chardev/i8042/mouse.h"
 #include "../halls/chardev/i8042/ps2mouse.h"
+
 #include "../halls/chardev/i8042/i8042.h"
+
 
 // blkdev/
 // Block devices
