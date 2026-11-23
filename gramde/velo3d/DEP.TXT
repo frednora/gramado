@@ -1,0 +1,11 @@
+
+
+We need to load the object files needed by the levels.
+The Gramado OS compilation process will install these files into the disk.
+The files are copied from assets/ to the virtual disk.
+
+For now these are the files we need.
+
+OBJ06.TXT
+OBJ07.TXT
+OBJ08.TXT

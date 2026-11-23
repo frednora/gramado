@@ -3344,7 +3344,7 @@ static int InitGraphicsSupport(void)
     return 0;
 }
 
-// Each demos has its own file.
+// Each demos has its own file
 static void engineSetupCurrentDemo(void)
 {
     int CurrentLevel = current_level;

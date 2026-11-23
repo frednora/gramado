@@ -43,7 +43,7 @@ L1_CPP00 = $(__CURRENT_DE)/cmds/cpp00
 L2_COMP     = $(__CURRENT_DE)/winsys/comp00
 
 # assets: Assets for shell
-L2_ASSETS   = $(__CURRENT_DE)/shell/assets
+L2_SHELL_ASSETS = $(__CURRENT_DE)/shell/assets
 
 # Client-side GUI applications (Nomad Pastors)
 L2_WINAPPS  = $(__CURRENT_DE)/shell/winapps
@@ -261,11 +261,15 @@ build-de:
 	@-cp $(L2_WINAPPS)/bin/SYSINFO.BIN  $(BUILD)/DE/
 
 
-# assets
-	@cp $(L2_ASSETS)/themes/theme01/*.BMP  $(BUILD)/DE
+# dependencies
+	@cp $(L2_SHELL_ASSETS)/themes/theme01/*.BMP  $(BUILD)/DE
 
-# velociraptor 3D demo
+# Velociraptor 3D demo
 	@-cp $(L2_VELO3D)/bin/ENG00.BIN   $(BUILD)/DE/
+# dependencies
+	@-cp $(L2_VELO3D)/assets/OBJ06.TXT  $(BUILD)/
+	@-cp $(L2_VELO3D)/assets/OBJ07.TXT  $(BUILD)/
+	@-cp $(L2_VELO3D)/assets/OBJ08.TXT  $(BUILD)/
 
 
 	@echo "~build-de"

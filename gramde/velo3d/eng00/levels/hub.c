@@ -1966,7 +1966,7 @@ static int __load_all_obj_files(void)
         exit(1);
     }
 
-    return 0;  //ok
+    return 0;  // ok
 }
 
 // ground[] — OBJ08.TXT: colored per-face from local vertex height,
