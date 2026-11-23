@@ -3018,7 +3018,7 @@ struct ui_component_d *libgui_create_ui_component(
         break;
     case UI_COMPONENT_ICON:
         scale = 1;
-        bg_color = LIBGUI_COLOR_BUTTON_FACE;  //0x00C0C0C0;
+        bg_color = LIBGUI_COLOR_ICON_FACE;  //0x00C0C0C0;
         has_borders = TRUE;
         text_x = left + 8;
         text_y = top  + 8;
@@ -3214,7 +3214,7 @@ libgui_redraw_ui_component(
         break;
     case UI_COMPONENT_ICON:
         scale = 1;
-        bg_color = LIBGUI_COLOR_BUTTON_FACE; //0x00C0C0C0;
+        bg_color = LIBGUI_COLOR_ICON_FACE; //0x00C0C0C0;
         has_borders = TRUE;
         text_x = uic->left + 8;
         text_y = uic->top  + 8;
