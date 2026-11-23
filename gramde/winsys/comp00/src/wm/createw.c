@@ -45,6 +45,23 @@ static const char *default_window_name = "Untitled window";
 // == private functions: prototypes =============
 //
 
+// #important: 
+// O frame de uma janela deve fazer parte do window manager
+// e não das primitivas do window server.
+// Estamos falando da parte do ws que opera como wm,
+// ou oferece recursos que serão usados pelo wm.
+// In: style = estilo do frame.
+static int __doCreateAndDrawWindowFrame ( 
+    struct gws_window_d *parent,
+    struct gws_window_d *window,
+    unsigned long border_size,
+    unsigned int border_color1,
+    unsigned int border_color2,
+    unsigned int border_color3,
+    unsigned int ornament_color1,
+    unsigned int ornament_color2,
+    int frame_style );
+
 static struct gws_window_d *__create_window_object(void);
 
 // Create the controls given the titlebar.
@@ -358,612 +375,7 @@ void DestroyAllWindows(void)
     };
 }
 
-// Create window structure
-static struct gws_window_d *__create_window_object(void)
-{
-    struct gws_window_d *window;
-
-    window = (void *) malloc( sizeof(struct gws_window_d) );
-    if ((void *) window == NULL){
-        return NULL;
-    }
-    memset( window, 0, sizeof(struct gws_window_d) );
-    window->used = TRUE;
-    window->magic = 1234;
-
-    // Absolute position relative to the screen (global coordinates).
-    window->absolute_x = 0;
-    window->absolute_y = 0;
-    window->absolute_right = 0;
-    window->absolute_bottom = 0;
-
-    // Position and size relative to the parent window (local coordinates).
-    window->left = 0;
-    window->top = 0;
-    window->width = 0;
-    window->height = 0;
-
-    // Minimuns
-    window->min_width = METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH;
-    window->min_height = METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT;
-
-    // l,t,w,h
-    window->full_left = 0;
-    window->full_top = 0;
-    window->full_width = 0;
-    window->full_height = 0;
-    // r,b
-    window->full_right = 0;
-    window->full_bottom = 0;
-
-    // The window can receive input from kbd and mouse.
-    window->enabled = TRUE;
-    window->style = 0;
-
-    // Validate. This way the compositor can't redraw it.
-    window->dirty = FALSE;
-
-    window->rop_bg           = THEME_ROP_WINDOW_BACKGROUND;
-    window->rop_shadow       = THEME_ROP_WINDOW_SHADOW;
-    window->rop_ornament     = THEME_ROP_WINDOW_ORNAMENT;
-
-    window->rop_top_border   = THEME_ROP_TOP_BORDER;
-    window->rop_left_border  = THEME_ROP_LETF_BORDER;
-    window->rop_right_border = THEME_ROP_RIGHT_BORDER;
-    window->rop_bottom_border= THEME_ROP_BOTTOM_BORDER;
-
-    window->titlebar_icon_cache = NULL;  // No icon cache for now
-
-    return (struct gws_window_d *) window;
-}
-
-// Create the controls given the titlebar.
-// min, max, close.
-// Frame controls (stock)
-static int __do_create_controls(struct gws_window_d *w_titlebar)
-{
-    struct gws_window_d *w_minimize;
-    struct gws_window_d *w_maximize;
-    struct gws_window_d *w_close;
-
-    int id = -1;      // ?
-
-// Colors for the button
-    unsigned int bg_color = (unsigned int) get_color(csiButton);
-    //unsigned int bg_color = (unsigned int) get_color(csiButton);
-    // ...
-
-// Parameters:
-    if ((void*)w_titlebar == NULL){
-        goto fail;
-    }
-    if (w_titlebar->magic != 1234){
-        goto fail;
-    }
-    //if(window->isTitleBar!=TRUE)
-    //    return;
-
-    w_titlebar->Controls.initialized = FALSE;
-
-    w_titlebar->Controls.minimize_wid = -1;
-    w_titlebar->Controls.maximize_wid = -1;
-    w_titlebar->Controls.close_wid    = -1;
-
-// Width and height.
-    unsigned long ButtonWidth = 
-        METRICS_TITLEBAR_CONTROLS_DEFAULT_WIDTH;
-    unsigned long ButtonHeight = 
-        METRICS_TITLEBAR_CONTROLS_DEFAULT_HEIGHT;
-
-    unsigned long LastLeft = 0;
-
-    unsigned long TopPadding=METRICS_TITLEBAR_CONTROLS_TOPPAD; // Top margin
-    unsigned long RightPadding=METRICS_TITLEBAR_CONTROLS_RIGHTPAD;  // Right margin
-    
-    unsigned long SeparatorWidth=METRICS_TITLEBAR_CONTROLS_SEPARATOR_WIDTH;
-
-// #test
-// #bugbug
-    //Top=1;
-    //ButtonWidth  = (unsigned long) (w_titlebar->width -4);
-    //ButtonHeight = (unsigned long) (w_titlebar->height -4);
-
-// ================================================
-// minimize
-
-    LastLeft = 
-        (unsigned long)( 
-        w_titlebar->width - 
-        (3*ButtonWidth) - 
-        (2*SeparatorWidth) - 
-        RightPadding );
-
-    // Create a window of button type.
-    w_minimize = 
-        (struct gws_window_d *) CreateWindow ( 
-            WT_BUTTON, 0, 1, 1, 
-            "_",           // String  
-            LastLeft,      // l 
-            TopPadding,    // t 
-            ButtonWidth,   // w
-            ButtonHeight,  // t
-            w_titlebar, 0, bg_color, bg_color );
-
-    if ((void *) w_minimize == NULL){
-        goto fail;
-    }
-    if (w_minimize->magic != 1234){
-        goto fail;
-    }
-    w_minimize->type = WT_BUTTON;
-    w_minimize->isControl = TRUE;
-    w_minimize->isMinimizeControl = TRUE;
-
-    w_minimize->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
-
-    id = (int) RegisterWindow(w_minimize);
-    if (id < 0){
-        goto fail;
-    }
-    w_titlebar->Controls.minimize_wid = (int) id;
-
-// ================================================
-// maximize
-
-    LastLeft = 
-        (unsigned long)(
-        w_titlebar->width - 
-        (2*ButtonWidth) - 
-        (1*SeparatorWidth) - 
-        RightPadding );
-
-    // Create a window of button type.
-    w_maximize = 
-        (struct gws_window_d *) CreateWindow ( 
-            WT_BUTTON, 0, 1, 1, 
-            "M",           // String  
-            LastLeft,      // l 
-            TopPadding,    // t 
-            ButtonWidth,   // w
-            ButtonHeight,  // h
-            w_titlebar, 0, bg_color, bg_color );
-
-    if ((void *) w_maximize == NULL){
-        goto fail;
-    }
-    if (w_maximize->magic != 1234){
-        goto fail;
-    }
-    w_maximize->type = WT_BUTTON;
-    w_maximize->isControl = TRUE;
-    w_maximize->isMaximizeControl = TRUE;
-
-    w_maximize->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
-
-    id = RegisterWindow(w_maximize);
-    if (id<0){
-        goto fail;
-    }
-    w_titlebar->Controls.maximize_wid = (int) id;
-
-// ================================================
-// close
-
-    LastLeft = 
-        (unsigned long)(
-        w_titlebar->width - 
-        (1*ButtonWidth) - 
-        RightPadding );
-
-    // Create a window of button type.
-    w_close = 
-        (struct gws_window_d *) CreateWindow ( 
-            WT_BUTTON, 0, 1, 1, 
-            "X",           // String  
-            LastLeft,      // l 
-            TopPadding,    // t 
-            ButtonWidth,   // w
-            ButtonHeight,  // h
-            w_titlebar, 0, bg_color, bg_color );
-
-    if ((void *) w_close == NULL){
-        goto fail;
-    }
-    if (w_close->magic != 1234){
-        goto fail;
-    }
-    w_close->type = WT_BUTTON;
-    w_close->isControl = TRUE;
-    w_close->isCloseControl = TRUE;
-
-    w_close->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
-
-    id = RegisterWindow(w_close);
-    if (id<0){
-        goto fail;
-    }
-    w_titlebar->Controls.close_wid = (int) id;
-
-    w_titlebar->Controls.initialized = TRUE;
-    return 0;
-
-fail:
-    return (int) -1;
-}
-
-// Create titlebar and controls.
-// It respects the border size of the parent.
-// #ps: This function ca draw inside the canvas.
-struct gws_window_d *do_create_titlebar(
-    struct gws_window_d *parent,
-    unsigned long tb_height,
-    unsigned int color,
-    unsigned int ornament_color,
-    int has_icon,
-    int icon_id,
-    int has_string,
-    unsigned long string_color )
-{
-    struct gws_window_d *tbWindow;
-
-    struct dccanvas_d *dc00;
-    struct canvas_information_d *ci00;
-
-// Titlebar position and size depend on parent’s border and style.
-    unsigned long TitleBarLeft=0; // X offset inside parent
-    unsigned long TitleBarTop=0;  // Y offset inside parent
-    unsigned long TitleBarWidth=0; // Width of titlebar
-    unsigned long TitleBarHeight = tb_height; // Height passed as parameter
-
-    // Colors
-    unsigned int TitleBarColor = color;
-    unsigned int StringColor = string_color;
-
-    int useIcon = FALSE;
-
-// Parameters:
-    if ((void*) parent == NULL)
-        return NULL;
-    if (parent->magic != 1234)
-        return NULL;
-
-    if (parent->type == WT_OVERLAPPED || parent->type == WT_POPUP)
-    {
-        if (Compositor.is_composition_disabled == FALSE)
-        {
-            ci00 = parent->frame_canvas;  // Canvas information
-            dc00 = ci00->dc;              // The dc
-        }
-
-        // #todo: Pointer validation
-    }
-
-// Get parameter
-    useIcon = has_icon;
-
-// Overlapped + fullscreen or maximized: no border offset. 
-    const int is_fullscreen = (parent->state == WINDOW_STATE_FULL); 
-    const int is_maximized = (parent->state == WINDOW_STATE_MAXIMIZED);
-
-// Use parent->border_size (must be set in doCreateAndDrawWindowFrame before this call) 
-    unsigned long b = parent->Border.border_size;
-
-    TitleBarLeft  = b;
-    TitleBarTop   = b;
-    TitleBarWidth = parent->width - (2 * b);
-
-    if (is_fullscreen || is_maximized) 
-    {
-        TitleBarLeft  = 0;
-        TitleBarTop   = 0;
-        TitleBarWidth = parent->width;
-    }
-
-    // Saving
-    parent->titlebar_height = TitleBarHeight;
-    parent->titlebar_width = TitleBarWidth;
-    parent->titlebar_color = (unsigned int) TitleBarColor;
-    parent->titlebar_text_color = 
-        (unsigned int) get_color(csiTitleBarTextColor);
-
-    // ...
-
-//-----------
-
-// #important: 
-// WT_SIMPLE with text.
-// lembre-se estamos relativos à area de cliente
-// da janela mão, seja ela de qual tipo for.
-
-    unsigned long MyStyle = 0;
-
-    if (THEME_USE_TRANSPARENCE_IN_TITLEBAR == 1){
-        MyStyle |= WS_TRANSPARENT;
-    } else {
-    }
-
-    tbWindow = 
-       (void *) doCreateAndDrawWindow ( 
-                WT_TITLEBAR, 
-                MyStyle, 
-                1, 
-                1, "TitleBar", 
-                TitleBarLeft, 
-                TitleBarTop, 
-                TitleBarWidth, 
-                TitleBarHeight, 
-                (struct gws_window_d *) parent, 
-                0, 
-                TitleBarColor,  //frame 
-                TitleBarColor,  //client
-                (unsigned long) 0 );   // rop_flags from the parent 
-
-    if ((void *) tbWindow == NULL){
-        //server_debug_print ("do_create_titlebar: tbWindow\n");
-        return NULL;
-    }
-    tbWindow->type = WT_SIMPLE;
-    tbWindow->isTitleBar = TRUE;
-
-// No room drawing more stuff inside the tb window.
-    if (tbWindow->width == 0)
-        return NULL;
-
-// --------------------------------
-// Icon
-
-// O posicionamento em relação
-// à janela é consistente por questão de estilo.
-// See: bmp.c
-// IN: index, left, top.
-// Icon ID:
-// Devemos receber um argumento do aplicativo,
-// na hora da criação da janela.
-
-// Decode the bmp that is in a buffer
-// and display it directly into the framebuffer. 
-// IN: index, left, top
-// see: bmp.c
-    unsigned long iL=0;
-    unsigned long iT=0;
-    unsigned long iWidth = 16;
-
-    parent->titlebarHasIcon = FALSE; // Now done yet
-    if (useIcon == TRUE)
-    {
-        //printf("useIcon\n"); while(1){}
-
-        /*
-        // Icon ID #todo: No more icon ID for now
-        if (icon_id < 1 || icon_id > 5)
-        {
-            //icon_id = 1;
-            yellow_status("Invalid icon_id");
-            return NULL;
-        }
-        parent->frame.titlebar_icon_id = icon_id;
-        */
-
-        // Icon position relative to the titlebar window
-        iL = (unsigned long) (METRICS_ICON_LEFTPAD);
-        iT = (unsigned long) (METRICS_ICON_TOPPAD);
-
-        if (Compositor.is_composition_disabled == TRUE){
-
-            /*
-            // #suspended
-            // #ps: Drawing directly inside the backbuffer
-            bmp_decode_system_icon ( 
-                (int) icon_id, 
-                (unsigned long) iL, 
-                (unsigned long) iT, 
-                FALSE 
-            );
-            */
-
-        } else {
-
-            // Icon position relative to the titlebar window
-            iL = (unsigned long) (METRICS_ICON_LEFTPAD_USING_COMPOSITOR);
-            iT = (unsigned long) (METRICS_ICON_TOPPAD_USING_COMPOSITOR);
-
-            // #todo: Draw icon when composition is on
-            // #test:  
-            // Loading and decoding it. Only for buttons.
-            struct bmp_cache_d *icon_cache = bmp_load_bmp_image("#app.bmp");
-            if (icon_cache && icon_cache->loaded) 
-            {
-                // Save
-                parent->titlebar_icon_cache = 
-                    (struct bmp_cache_d *) icon_cache;
-                // render
-                bmp_decode_bmp_image( icon_cache, dc00, iL, iT, 1, 0 );
-            
-                //printf("Rendered?\n");while(1){}
-            } 
-        }
-
-        parent->titlebarHasIcon = TRUE;
-    }
-
-// ---------------------------
-// Ornament
-    // int useOrnament = TRUE;
-
-// Ornamento:
-// Ornamento na parte de baixo da title bar.
-// #important:
-// O ornamento é pintado dentro da barra, então isso
-// não afetará o positionamento da área de cliente.
-// border on bottom.
-// Usado para explicitar se a janela é ativa ou não
-// e como separador entre a barra de títulos e a segunda
-// área da janela de aplicativo.
-// Usado somente por overlapped window.
-
-    unsigned int OrnamentColor1 = ornament_color;
-    unsigned long OrnamentHeight = METRICS_TITLEBAR_ORNAMENT_SIZE;
-    parent->frame.ornament_color1   = OrnamentColor1;
-    parent->titlebar_ornament_color = OrnamentColor1;
-
-    unsigned long r0_left = tbWindow->absolute_x;
-    unsigned long r0_top = 
-        ((tbWindow->absolute_y) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE);
-    unsigned long r0_width  = tbWindow->width;
-    unsigned long r0_height = OrnamentHeight;
-    unsigned long r0_color  = OrnamentColor1;
-    unsigned long r0_rop    = 0;
-
-// Draw rectangle (ornament)
-// IN: l, t, w, h, color, rop
-
-    if (Compositor.is_composition_disabled == TRUE){
-
-        // #ps: Drawing directly inside the backbuffer
-        painterFillWindowRectangle ( 
-            r0_left, r0_top, r0_width, r0_height, 
-            r0_color, r0_rop 
-        );
-
-    } else {
-
-        // The titlebar's position relative to the application window
-        r0_left = tbWindow->left;
-        r0_top  = tbWindow->top;
-           
-        // Draw ornament into the canvas
-
-        // Draw a line into the frame canvas
-        dc_draw_horizontal_line( 
-            dc00, 
-            r0_left,   // x1 
-            r0_top,    // y
-            r0_width,  // x2
-            r0_color, 
-            r0_rop
-        );
-
-        // Draw a line into the frame canvas
-        dc_draw_horizontal_line( 
-            dc00, 
-            r0_left,           // x1 
-            tbWindow->height,  // y
-            r0_width,          // x2
-            r0_color,
-            r0_rop
-        );
-    }
-
-//----------------------
-// String
-// Titlebar string support.
-// Using the parent's name.
-
-    int useTitleString = has_string;  //#HACK
-    unsigned long StringLeftPad = 0;
-    unsigned long StringTopPad = 8;  // char size
-    size_t StringSize = (size_t) strlen( (const char *) parent->name );
-    if (StringSize > 64){
-        StringSize = 64;
-    }
-
-// --------------------------------------
-// Left PAD.
-// pad | icon | pad | pad
-    if (useIcon == FALSE){
-        StringLeftPad = (unsigned long) METRICS_ICON_LEFTPAD;
-    }
-    if (useIcon == TRUE){
-        StringLeftPad = 
-            (unsigned long) ( METRICS_ICON_LEFTPAD +iWidth +(2*METRICS_ICON_LEFTPAD));
-    }
-
-// --------------------------------------
-// String support
-
-// Top pad for the string
-    StringTopPad = 
-        ( ( (unsigned long) tbWindow->height - FontInitialization.height ) >> 1 );
-
-//
-// Text support
-//
-
-    // #todo
-    // We already did that before.
-    //parent->titlebar_text_color = 
-        //(unsigned int) get_color(csiTitleBarTextColor);
-
-// #todo
-// Temos que gerenciar o posicionamento da string.
-// #bugbug: Use 'const char *'
-
-    tbWindow->name = (char *) strdup((const char *) parent->name);
-    if ((void*) tbWindow->name == NULL)
-    {
-        // #todo: Recover
-        printf("do_create_titlebar: Invalid name\n");
-        return NULL;
-    }
-
-    unsigned long sL=0;
-    unsigned long sT=0;
-    parent->titlebar_text_left = 0;
-    parent->titlebar_text_top = 0;
-    if (useTitleString == TRUE)
-    {
-        sL = (unsigned long) ((tbWindow->absolute_x) + StringLeftPad);
-        sT = (unsigned long) ((tbWindow->absolute_y) + StringTopPad);
-
-        if (Compositor.is_composition_disabled == TRUE){
-
-            // #ps: Drawing directly into the backbuffer
-            grDrawString ( sL, sT, StringColor, tbWindow->name );
-
-        } else {
-
-            // Draw string into de frame canvas
-            if ((void*)dc00 != NULL)
-            {
-                // #todo: Fix the string position
-                dc_drawstring ( 
-                    dc00, 
-                    tbWindow->left + StringLeftPad, 
-                    tbWindow->top + StringTopPad, 
-                    StringColor, 
-                    COLOR_WHITE,
-                    ROP_COPY, 
-                    tbWindow->name );
-            }
-        }
-
-        // Saving relative position
-        parent->titlebar_text_left = StringLeftPad;
-        parent->titlebar_text_top = StringTopPad;
-    }
-
-// ---------------------------------
-// Controls:
-// Invalidade all the controls only if they were created
-    int controls_ok = FALSE;
-    controls_ok = (int) __do_create_controls(tbWindow);
-    if (controls_ok == 0)
-    {
-        invalidate_window_by_id(tbWindow->Controls.minimize_wid);
-        invalidate_window_by_id(tbWindow->Controls.maximize_wid);
-        invalidate_window_by_id(tbWindow->Controls.close_wid);
-    }
-
-// Now the parent has a valid ponter to the titlebar
-// Invalidate the tb window and return its pointer.
-
-    parent->titlebar = (struct gws_window_d *) tbWindow;
-    tbWindow->dirty = TRUE;
-
-    return (struct gws_window_d *) tbWindow;
-}
-
-// doCreateAndDrawWindowFrame:
+// __doCreateAndDrawWindowFrame:
 // Called by CreateWindow in createw.c
 // #importante:
 // Essa rotina será chamada depois que criarmos uma janela básica,
@@ -992,8 +404,7 @@ struct gws_window_d *do_create_titlebar(
 // < 0 = not ok. something is wrong.
 
 // Creator and drawer.
-int 
-doCreateAndDrawWindowFrame ( 
+static int __doCreateAndDrawWindowFrame ( 
     struct gws_window_d *parent,
     struct gws_window_d *window,
     unsigned long border_size,
@@ -1085,7 +496,7 @@ doCreateAndDrawWindowFrame (
 
 // ---- check parent ---------------
     if ((void*) parent == NULL){
-        //server_debug_print ("doCreateAndDrawWindowFrame: [FAIL] parent\n");
+        //server_debug_print ("__doCreateAndDrawWindowFrame: [FAIL] parent\n");
         goto fail;
     }
     if (parent->used != TRUE || parent->magic != 1234){
@@ -1094,7 +505,7 @@ doCreateAndDrawWindowFrame (
 
 // ---- check window ---------------
     if ((void*) window == NULL){
-        //server_debug_print ("doCreateAndDrawWindowFrame: [FAIL] window\n");
+        //server_debug_print ("__doCreateAndDrawWindowFrame: [FAIL] window\n");
         goto fail;
     }
     if (window->used != TRUE || window->magic != 1234){
@@ -1393,7 +804,7 @@ doCreateAndDrawWindowFrame (
             // Register window
             id = (int) RegisterWindow(tbWindow);
             if (id<0){
-                //server_debug_print ("doCreateAndDrawWindowFrame: Couldn't register window\n");
+                //server_debug_print ("__doCreateAndDrawWindowFrame: Couldn't register window\n");
                 goto fail;
             }
             // Add it to the list of childs
@@ -1471,7 +882,7 @@ doCreateAndDrawWindowFrame (
             window->rcClient.height -= window->statusbar_height;
 
             if ((void *) sbWindow == NULL){
-                //server_debug_print ("doCreateAndDrawWindowFrame: sbWindow fail \n");
+                //server_debug_print ("__doCreateAndDrawWindowFrame: sbWindow fail \n");
                 goto fail;
             }
             sbWindow->type = WT_SIMPLE;
@@ -1480,7 +891,7 @@ doCreateAndDrawWindowFrame (
             // Register window
             id = (int) RegisterWindow(sbWindow);
             if (id<0){
-                //server_debug_print ("doCreateAndDrawWindowFrame: Couldn't register window\n");
+                //server_debug_print ("__doCreateAndDrawWindowFrame: Couldn't register window\n");
                 goto fail;
             }
             // Add it to the list of childs
@@ -1633,6 +1044,611 @@ doCreateAndDrawWindowFrame (
 
 fail:
     return (int) (-1);
+}
+
+// Create window structure
+static struct gws_window_d *__create_window_object(void)
+{
+    struct gws_window_d *window;
+
+    window = (void *) malloc( sizeof(struct gws_window_d) );
+    if ((void *) window == NULL){
+        return NULL;
+    }
+    memset( window, 0, sizeof(struct gws_window_d) );
+    window->used = TRUE;
+    window->magic = 1234;
+
+    // Absolute position relative to the screen (global coordinates).
+    window->absolute_x = 0;
+    window->absolute_y = 0;
+    window->absolute_right = 0;
+    window->absolute_bottom = 0;
+
+    // Position and size relative to the parent window (local coordinates).
+    window->left = 0;
+    window->top = 0;
+    window->width = 0;
+    window->height = 0;
+
+    // Minimuns
+    window->min_width = METRICS_DEFAULT_MINIMUM_WINDOW_WIDTH;
+    window->min_height = METRICS_DEFAULT_MINIMUM_WINDOW_HEIGHT;
+
+    // l,t,w,h
+    window->full_left = 0;
+    window->full_top = 0;
+    window->full_width = 0;
+    window->full_height = 0;
+    // r,b
+    window->full_right = 0;
+    window->full_bottom = 0;
+
+    // The window can receive input from kbd and mouse.
+    window->enabled = TRUE;
+    window->style = 0;
+
+    // Validate. This way the compositor can't redraw it.
+    window->dirty = FALSE;
+
+    window->rop_bg           = THEME_ROP_WINDOW_BACKGROUND;
+    window->rop_shadow       = THEME_ROP_WINDOW_SHADOW;
+    window->rop_ornament     = THEME_ROP_WINDOW_ORNAMENT;
+
+    window->rop_top_border   = THEME_ROP_TOP_BORDER;
+    window->rop_left_border  = THEME_ROP_LETF_BORDER;
+    window->rop_right_border = THEME_ROP_RIGHT_BORDER;
+    window->rop_bottom_border= THEME_ROP_BOTTOM_BORDER;
+
+    window->titlebar_icon_cache = NULL;  // No icon cache for now
+
+    return (struct gws_window_d *) window;
+}
+
+// Create the controls given the titlebar.
+// min, max, close.
+// Frame controls (stock)
+static int __do_create_controls(struct gws_window_d *w_titlebar)
+{
+    struct gws_window_d *w_minimize;
+    struct gws_window_d *w_maximize;
+    struct gws_window_d *w_close;
+
+    int id = -1;      // ?
+
+// Colors for the button
+    unsigned int bg_color = (unsigned int) get_color(csiButton);
+    //unsigned int bg_color = (unsigned int) get_color(csiButton);
+    // ...
+
+// Parameters:
+    if ((void*)w_titlebar == NULL){
+        goto fail;
+    }
+    if (w_titlebar->magic != 1234){
+        goto fail;
+    }
+    //if(window->isTitleBar!=TRUE)
+    //    return;
+
+    w_titlebar->Controls.initialized = FALSE;
+
+    w_titlebar->Controls.minimize_wid = -1;
+    w_titlebar->Controls.maximize_wid = -1;
+    w_titlebar->Controls.close_wid    = -1;
+
+// Width and height.
+    unsigned long ButtonWidth = 
+        METRICS_TITLEBAR_CONTROLS_DEFAULT_WIDTH;
+    unsigned long ButtonHeight = 
+        METRICS_TITLEBAR_CONTROLS_DEFAULT_HEIGHT;
+
+    unsigned long LastLeft = 0;
+
+    unsigned long TopPadding=METRICS_TITLEBAR_CONTROLS_TOPPAD; // Top margin
+    unsigned long RightPadding=METRICS_TITLEBAR_CONTROLS_RIGHTPAD;  // Right margin
+    
+    unsigned long SeparatorWidth=METRICS_TITLEBAR_CONTROLS_SEPARATOR_WIDTH;
+
+// #test
+// #bugbug
+    //Top=1;
+    //ButtonWidth  = (unsigned long) (w_titlebar->width -4);
+    //ButtonHeight = (unsigned long) (w_titlebar->height -4);
+
+// ================================================
+// minimize
+
+    LastLeft = 
+        (unsigned long)( 
+        w_titlebar->width - 
+        (3*ButtonWidth) - 
+        (2*SeparatorWidth) - 
+        RightPadding );
+
+    // Create a window of button type.
+    w_minimize = 
+        (struct gws_window_d *) CreateWindow ( 
+            WT_BUTTON, 0, 1, 1, 
+            "_",           // String  
+            LastLeft,      // l 
+            TopPadding,    // t 
+            ButtonWidth,   // w
+            ButtonHeight,  // t
+            w_titlebar, 0, bg_color, bg_color );
+
+    if ((void *) w_minimize == NULL){
+        goto fail;
+    }
+    if (w_minimize->magic != 1234){
+        goto fail;
+    }
+    w_minimize->type = WT_BUTTON;
+    w_minimize->isControl = TRUE;
+    w_minimize->isMinimizeControl = TRUE;
+
+    w_minimize->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
+
+    id = (int) RegisterWindow(w_minimize);
+    if (id < 0){
+        goto fail;
+    }
+    w_titlebar->Controls.minimize_wid = (int) id;
+
+// ================================================
+// maximize
+
+    LastLeft = 
+        (unsigned long)(
+        w_titlebar->width - 
+        (2*ButtonWidth) - 
+        (1*SeparatorWidth) - 
+        RightPadding );
+
+    // Create a window of button type.
+    w_maximize = 
+        (struct gws_window_d *) CreateWindow ( 
+            WT_BUTTON, 0, 1, 1, 
+            "M",           // String  
+            LastLeft,      // l 
+            TopPadding,    // t 
+            ButtonWidth,   // w
+            ButtonHeight,  // h
+            w_titlebar, 0, bg_color, bg_color );
+
+    if ((void *) w_maximize == NULL){
+        goto fail;
+    }
+    if (w_maximize->magic != 1234){
+        goto fail;
+    }
+    w_maximize->type = WT_BUTTON;
+    w_maximize->isControl = TRUE;
+    w_maximize->isMaximizeControl = TRUE;
+
+    w_maximize->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
+
+    id = RegisterWindow(w_maximize);
+    if (id<0){
+        goto fail;
+    }
+    w_titlebar->Controls.maximize_wid = (int) id;
+
+// ================================================
+// close
+
+    LastLeft = 
+        (unsigned long)(
+        w_titlebar->width - 
+        (1*ButtonWidth) - 
+        RightPadding );
+
+    // Create a window of button type.
+    w_close = 
+        (struct gws_window_d *) CreateWindow ( 
+            WT_BUTTON, 0, 1, 1, 
+            "X",           // String  
+            LastLeft,      // l 
+            TopPadding,    // t 
+            ButtonWidth,   // w
+            ButtonHeight,  // h
+            w_titlebar, 0, bg_color, bg_color );
+
+    if ((void *) w_close == NULL){
+        goto fail;
+    }
+    if (w_close->magic != 1234){
+        goto fail;
+    }
+    w_close->type = WT_BUTTON;
+    w_close->isControl = TRUE;
+    w_close->isCloseControl = TRUE;
+
+    w_close->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
+
+    id = RegisterWindow(w_close);
+    if (id<0){
+        goto fail;
+    }
+    w_titlebar->Controls.close_wid = (int) id;
+
+    w_titlebar->Controls.initialized = TRUE;
+    return 0;
+
+fail:
+    return (int) -1;
+}
+
+// Create titlebar and controls.
+// It respects the border size of the parent.
+// #ps: This function ca draw inside the canvas.
+struct gws_window_d *do_create_titlebar(
+    struct gws_window_d *parent,
+    unsigned long tb_height,
+    unsigned int color,
+    unsigned int ornament_color,
+    int has_icon,
+    int icon_id,
+    int has_string,
+    unsigned long string_color )
+{
+    struct gws_window_d *tbWindow;
+
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+
+// Titlebar position and size depend on parent’s border and style.
+    unsigned long TitleBarLeft=0; // X offset inside parent
+    unsigned long TitleBarTop=0;  // Y offset inside parent
+    unsigned long TitleBarWidth=0; // Width of titlebar
+    unsigned long TitleBarHeight = tb_height; // Height passed as parameter
+
+    // Colors
+    unsigned int TitleBarColor = color;
+    unsigned int StringColor = string_color;
+
+    int useIcon = FALSE;
+
+// Parameters:
+    if ((void*) parent == NULL)
+        return NULL;
+    if (parent->magic != 1234)
+        return NULL;
+
+    if (parent->type == WT_OVERLAPPED || parent->type == WT_POPUP)
+    {
+        if (Compositor.is_composition_disabled == FALSE)
+        {
+            ci00 = parent->frame_canvas;  // Canvas information
+            dc00 = ci00->dc;              // The dc
+        }
+
+        // #todo: Pointer validation
+    }
+
+// Get parameter
+    useIcon = has_icon;
+
+// Overlapped + fullscreen or maximized: no border offset. 
+    const int is_fullscreen = (parent->state == WINDOW_STATE_FULL); 
+    const int is_maximized = (parent->state == WINDOW_STATE_MAXIMIZED);
+
+// Use parent->border_size (must be set in __doCreateAndDrawWindowFrame before this call) 
+    unsigned long b = parent->Border.border_size;
+
+    TitleBarLeft  = b;
+    TitleBarTop   = b;
+    TitleBarWidth = parent->width - (2 * b);
+
+    if (is_fullscreen || is_maximized) 
+    {
+        TitleBarLeft  = 0;
+        TitleBarTop   = 0;
+        TitleBarWidth = parent->width;
+    }
+
+    // Saving
+    parent->titlebar_height = TitleBarHeight;
+    parent->titlebar_width = TitleBarWidth;
+    parent->titlebar_color = (unsigned int) TitleBarColor;
+    parent->titlebar_text_color = 
+        (unsigned int) get_color(csiTitleBarTextColor);
+
+    // ...
+
+//-----------
+
+// #important: 
+// WT_SIMPLE with text.
+// lembre-se estamos relativos à area de cliente
+// da janela mão, seja ela de qual tipo for.
+
+    unsigned long MyStyle = 0;
+
+    if (THEME_USE_TRANSPARENCE_IN_TITLEBAR == 1){
+        MyStyle |= WS_TRANSPARENT;
+    } else {
+    }
+
+    tbWindow = 
+       (void *) doCreateAndDrawWindow ( 
+                WT_TITLEBAR, 
+                MyStyle, 
+                1, 
+                1, "TitleBar", 
+                TitleBarLeft, 
+                TitleBarTop, 
+                TitleBarWidth, 
+                TitleBarHeight, 
+                (struct gws_window_d *) parent, 
+                0, 
+                TitleBarColor,  //frame 
+                TitleBarColor,  //client
+                (unsigned long) 0 );   // rop_flags from the parent 
+
+    if ((void *) tbWindow == NULL){
+        //server_debug_print ("do_create_titlebar: tbWindow\n");
+        return NULL;
+    }
+    tbWindow->type = WT_SIMPLE;
+    tbWindow->isTitleBar = TRUE;
+
+// No room drawing more stuff inside the tb window.
+    if (tbWindow->width == 0)
+        return NULL;
+
+// --------------------------------
+// Icon
+
+// O posicionamento em relação
+// à janela é consistente por questão de estilo.
+// See: bmp.c
+// IN: index, left, top.
+// Icon ID:
+// Devemos receber um argumento do aplicativo,
+// na hora da criação da janela.
+
+// Decode the bmp that is in a buffer
+// and display it directly into the framebuffer. 
+// IN: index, left, top
+// see: bmp.c
+    unsigned long iL=0;
+    unsigned long iT=0;
+    unsigned long iWidth = 16;
+
+    parent->titlebarHasIcon = FALSE; // Now done yet
+    if (useIcon == TRUE)
+    {
+        //printf("useIcon\n"); while(1){}
+
+        /*
+        // Icon ID #todo: No more icon ID for now
+        if (icon_id < 1 || icon_id > 5)
+        {
+            //icon_id = 1;
+            yellow_status("Invalid icon_id");
+            return NULL;
+        }
+        parent->frame.titlebar_icon_id = icon_id;
+        */
+
+        // Icon position relative to the titlebar window
+        iL = (unsigned long) (METRICS_ICON_LEFTPAD);
+        iT = (unsigned long) (METRICS_ICON_TOPPAD);
+
+        if (Compositor.is_composition_disabled == TRUE){
+
+            /*
+            // #suspended
+            // #ps: Drawing directly inside the backbuffer
+            bmp_decode_system_icon ( 
+                (int) icon_id, 
+                (unsigned long) iL, 
+                (unsigned long) iT, 
+                FALSE 
+            );
+            */
+
+        } else {
+
+            // Icon position relative to the titlebar window
+            iL = (unsigned long) (METRICS_ICON_LEFTPAD_USING_COMPOSITOR);
+            iT = (unsigned long) (METRICS_ICON_TOPPAD_USING_COMPOSITOR);
+
+            // #todo: Draw icon when composition is on
+            // #test:  
+            // Loading and decoding it. Only for buttons.
+            struct bmp_cache_d *icon_cache = bmp_load_bmp_image("#app.bmp");
+            if (icon_cache && icon_cache->loaded) 
+            {
+                // Save
+                parent->titlebar_icon_cache = 
+                    (struct bmp_cache_d *) icon_cache;
+                // render
+                bmp_decode_bmp_image( icon_cache, dc00, iL, iT, 1, 0 );
+            
+                //printf("Rendered?\n");while(1){}
+            } 
+        }
+
+        parent->titlebarHasIcon = TRUE;
+    }
+
+// ---------------------------
+// Ornament
+    // int useOrnament = TRUE;
+
+// Ornamento:
+// Ornamento na parte de baixo da title bar.
+// #important:
+// O ornamento é pintado dentro da barra, então isso
+// não afetará o positionamento da área de cliente.
+// border on bottom.
+// Usado para explicitar se a janela é ativa ou não
+// e como separador entre a barra de títulos e a segunda
+// área da janela de aplicativo.
+// Usado somente por overlapped window.
+
+    unsigned int OrnamentColor1 = ornament_color;
+    unsigned long OrnamentHeight = METRICS_TITLEBAR_ORNAMENT_SIZE;
+    parent->frame.ornament_color1   = OrnamentColor1;
+    parent->titlebar_ornament_color = OrnamentColor1;
+
+    unsigned long r0_left = tbWindow->absolute_x;
+    unsigned long r0_top = 
+        ((tbWindow->absolute_y) + (tbWindow->height) - METRICS_TITLEBAR_ORNAMENT_SIZE);
+    unsigned long r0_width  = tbWindow->width;
+    unsigned long r0_height = OrnamentHeight;
+    unsigned long r0_color  = OrnamentColor1;
+    unsigned long r0_rop    = 0;
+
+// Draw rectangle (ornament)
+// IN: l, t, w, h, color, rop
+
+    if (Compositor.is_composition_disabled == TRUE){
+
+        // #ps: Drawing directly inside the backbuffer
+        painterFillWindowRectangle ( 
+            r0_left, r0_top, r0_width, r0_height, 
+            r0_color, r0_rop 
+        );
+
+    } else {
+
+        // The titlebar's position relative to the application window
+        r0_left = tbWindow->left;
+        r0_top  = tbWindow->top;
+           
+        // Draw ornament into the canvas
+
+        // Draw a line into the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            r0_left,   // x1 
+            r0_top,    // y
+            r0_width,  // x2
+            r0_color, 
+            r0_rop
+        );
+
+        // Draw a line into the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            r0_left,           // x1 
+            tbWindow->height,  // y
+            r0_width,          // x2
+            r0_color,
+            r0_rop
+        );
+    }
+
+//----------------------
+// String
+// Titlebar string support.
+// Using the parent's name.
+
+    int useTitleString = has_string;  //#HACK
+    unsigned long StringLeftPad = 0;
+    unsigned long StringTopPad = 8;  // char size
+    size_t StringSize = (size_t) strlen( (const char *) parent->name );
+    if (StringSize > 64){
+        StringSize = 64;
+    }
+
+// --------------------------------------
+// Left PAD.
+// pad | icon | pad | pad
+    if (useIcon == FALSE){
+        StringLeftPad = (unsigned long) METRICS_ICON_LEFTPAD;
+    }
+    if (useIcon == TRUE){
+        StringLeftPad = 
+            (unsigned long) ( METRICS_ICON_LEFTPAD +iWidth +(2*METRICS_ICON_LEFTPAD));
+    }
+
+// --------------------------------------
+// String support
+
+// Top pad for the string
+    StringTopPad = 
+        ( ( (unsigned long) tbWindow->height - FontInitialization.height ) >> 1 );
+
+//
+// Text support
+//
+
+    // #todo
+    // We already did that before.
+    //parent->titlebar_text_color = 
+        //(unsigned int) get_color(csiTitleBarTextColor);
+
+// #todo
+// Temos que gerenciar o posicionamento da string.
+// #bugbug: Use 'const char *'
+
+    tbWindow->name = (char *) strdup((const char *) parent->name);
+    if ((void*) tbWindow->name == NULL)
+    {
+        // #todo: Recover
+        printf("do_create_titlebar: Invalid name\n");
+        return NULL;
+    }
+
+    unsigned long sL=0;
+    unsigned long sT=0;
+    parent->titlebar_text_left = 0;
+    parent->titlebar_text_top = 0;
+    if (useTitleString == TRUE)
+    {
+        sL = (unsigned long) ((tbWindow->absolute_x) + StringLeftPad);
+        sT = (unsigned long) ((tbWindow->absolute_y) + StringTopPad);
+
+        if (Compositor.is_composition_disabled == TRUE){
+
+            // #ps: Drawing directly into the backbuffer
+            grDrawString ( sL, sT, StringColor, tbWindow->name );
+
+        } else {
+
+            // Draw string into de frame canvas
+            if ((void*)dc00 != NULL)
+            {
+                // #todo: Fix the string position
+                dc_drawstring ( 
+                    dc00, 
+                    tbWindow->left + StringLeftPad, 
+                    tbWindow->top + StringTopPad, 
+                    StringColor, 
+                    HONEY_COLOR_TITLEBAR_BG,
+                    ROP_COPY, 
+                    tbWindow->name );
+            }
+        }
+
+        // Saving relative position
+        parent->titlebar_text_left = StringLeftPad;
+        parent->titlebar_text_top = StringTopPad;
+    }
+
+// ---------------------------------
+// Controls:
+// Invalidade all the controls only if they were created
+    int controls_ok = FALSE;
+    controls_ok = (int) __do_create_controls(tbWindow);
+    if (controls_ok == 0)
+    {
+        invalidate_window_by_id(tbWindow->Controls.minimize_wid);
+        invalidate_window_by_id(tbWindow->Controls.maximize_wid);
+        invalidate_window_by_id(tbWindow->Controls.close_wid);
+    }
+
+// Now the parent has a valid ponter to the titlebar
+// Invalidate the tb window and return its pointer.
+
+    parent->titlebar = (struct gws_window_d *) tbWindow;
+    tbWindow->dirty = TRUE;
+
+    return (struct gws_window_d *) tbWindow;
 }
 
 // doCreateAndDrawWindow:
@@ -3678,7 +3694,7 @@ draw_frame:
         //if ((void*) __w != NULL)
         if ((void*) pWindow != NULL && (void*) __w != NULL)
         {
-            doCreateAndDrawWindowFrame ( 
+            __doCreateAndDrawWindowFrame ( 
                 (struct gws_window_d *) pWindow,
                 (struct gws_window_d *) __w, 
                 BorderSize,

@@ -76,15 +76,16 @@ __dc_draw_window_border(
 
 void redraw_text_for_editbox(struct gws_window_d *window);
 
-int redraw_controls(struct gws_window_d *tb_window);
-int redraw_titlebar_window(struct gws_window_d *window);
-
 int 
 redraw_window (
     struct gws_window_d *window, 
     unsigned long flags ); 
 
 int redraw_window_by_id(int wid, unsigned long flags);
+
+int redraw_controls(struct gws_window_d *tb_window);
+int redraw_titlebar_window(struct gws_window_d *window);
+
 
 int clear_window_by_id(int wid, unsigned long flags);
 

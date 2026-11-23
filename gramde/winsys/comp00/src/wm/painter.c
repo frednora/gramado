@@ -1218,361 +1218,6 @@ void redraw_text_for_editbox(struct gws_window_d *window)
     }
 }
 
-// Paint the controls, but do not show them.
-// IN: Titlebar window.
-int redraw_controls(struct gws_window_d *tb_window)
-{
-    struct gws_window_d *parent;
-    register int wid = -1;
-
-    struct dccanvas_d *dc00;
-    struct canvas_information_d *ci00;
-
-    //printf("redraw_controls:\n");
-    //while(1){}
-
-// -- Title bar -------------------------------
-    if ((void*) tb_window == NULL){
-        goto fail;
-    }
-    if (tb_window->magic != 1234){
-        goto fail;
-    }
-
-
-// -- Title bar's parent -----------------------
-    parent = (struct gws_window_d *) tb_window->parent;
-    if ( (void*) parent == NULL )
-        goto fail;
-    if (parent->magic != 1234)
-        goto fail;
-
-    if (Compositor.is_composition_disabled == FALSE)
-    {
-        if (parent->type == WT_OVERLAPPED){
-            ci00 = parent->frame_canvas;
-            dc00 = ci00->dc;
-        }
-    }
-
-// #todo:
-// We gotta change the state of the controls based on the
-// parent window state. And switchback when the parent changes its state.
-
-// #todo
-// Check if its really a taskbar?
-
-// Redraw controls
-
-    /*
-    wid = (int) tb_window->Controls.minimize_wid;
-    redraw_window_by_id(wid,FALSE);
-    wid = (int) tb_window->Controls.maximize_wid;
-    redraw_window_by_id(wid,FALSE);
-    wid = (int) tb_window->Controls.close_wid;
-    redraw_window_by_id(wid,FALSE);
-    */
-
-    // #test
-    // Drawing one control
-    struct gws_window_d* w;
-    int isDarkTheme = FALSE;
-
-    if (Compositor.is_composition_disabled == FALSE)
-    {
-        // -----------------------------------------------------
-        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.minimize_wid);
-        redraw_window(w, FALSE);
-        /*
-        dc_draw_rectangle0 (
-            dc00,
-            w->left, w->top, w->width, w->height,
-            w->bg_color,
-            w->rop_bg
-        );
-        */
-        /*
-        //#test
-        if (isDarkTheme == TRUE) {
-                // Dark theme
-                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_DARK;  //COLOR_RED;    // baseline
-                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_DARK;  //COLOR_BLUE;   // highlight
-        } else {
-                // Light theme
-                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_LIGHT; //COLOR_GREEN;  // baseline
-                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_LIGHT;  //COLOR_YELLOW; // highlight
-        }
-        label_color = window->label_color_when_not_selected;
-        if (ButtonState == BS_PRESSED)
-            label_color = window->label_color_when_selected;
-            // ...
-        */
-
-        // -----------------------------------------------------
-        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.maximize_wid);
-        redraw_window(w, FALSE);
-        /*
-        dc_draw_rectangle0 (
-            dc00,
-            w->left, w->top, w->width, w->height,
-            w->bg_color,
-            w->rop_bg
-        );
-        */
-
-        // -----------------------------------------------------
-        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.close_wid);
-        redraw_window(w, FALSE);
-        /*
-        dc_draw_rectangle0 (
-            dc00,
-            w->left, w->top, w->width, w->height,
-            w->bg_color,
-            w->rop_bg
-        );
-        */
-    }
-
-    return 0;
-
-fail:
-    // printf("fail\n"); while(1){}
-    return (int) -1;
-}
-
-// Repaints the titlebar background, ornament line, icon, and text.
-// IN: Titlebar window
-int redraw_titlebar_window(struct gws_window_d *window)
-{
-    struct gws_window_d *parent;
-    struct gws_window_d *tb_window;
-
-    struct dccanvas_d *dc00;
-    struct canvas_information_d *ci00;
-
-
-// -- Title bar -------------------------------
-    if ( (void*) window == NULL )
-        return -1;
-    if (window->magic != 1234)
-        return -1;
-    tb_window = (struct gws_window_d *) window;
-
-// -- Title bar's parent -----------------------
-    parent = (struct gws_window_d *) tb_window->parent;
-    if ( (void*) parent == NULL )
-        return -1;
-    if (parent->magic != 1234)
-        return -1;
-
-
-    if (Compositor.is_composition_disabled == FALSE)
-    {
-        if (parent->type == WT_OVERLAPPED){
-            ci00 = parent->frame_canvas;
-            dc00 = ci00->dc;
-        }
-    }
-
-// ------------------
-// Parent is active
-    if (parent == WindowManager.active_window)
-    {
-        tb_window->bg_color = 
-            (unsigned int) get_color(csiActiveWindowTitleBar);
-
-        parent->titlebar_color = 
-            (unsigned int) get_color(csiActiveWindowTitleBar);
-        parent->titlebar_ornament_color = xCOLOR_BLACK;
-    }
-
-// ------------------
-// Parent is NOT active
-    if (parent != WindowManager.active_window)
-    {
-        tb_window->bg_color = 
-            (unsigned int) get_color(csiInactiveWindowTitleBar);
-
-        parent->titlebar_color = 
-            (unsigned int) get_color(csiInactiveWindowTitleBar);
-        parent->titlebar_ornament_color = xCOLOR_GRAY2;
-    }
-
-//--------
-
-//
-// Paint
-//
-
-// Update the absolute right and bottom values 
-// for mouse hit test.
-    wm_sync_absolute_dimensions(tb_window);
-
-// ----------------
-// bg
-
-    if (Compositor.is_composition_disabled == TRUE){
-
-        // #ps: Drawing directly into the backbuffer
-        rectBackbufferDrawRectangle ( 
-            tb_window->absolute_x, 
-            tb_window->absolute_y, 
-            tb_window->width, 
-            tb_window->height, 
-            tb_window->bg_color, 
-            TRUE,   // fill
-            (unsigned long) tb_window->rop_bg // rop for this window 
-        );
-    } else {
-        // #todo: 
-        // (maybe) Draw titlebar's bg when the compisition is on 
-    }
-
-
-// ----------------
-// Ornament
-    if (Compositor.is_composition_disabled == TRUE){
-
-        rectBackbufferDrawRectangle ( 
-            tb_window->absolute_x, 
-            ( (tb_window->absolute_y) + (tb_window->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
-            tb_window->width, 
-            METRICS_TITLEBAR_ORNAMENT_SIZE, 
-            parent->titlebar_ornament_color, 
-            TRUE,  // fill
-            (unsigned long) tb_window->rop_ornament  // rop_flags 
-        );  
-
-    } else {
-
-        // Draw ornament into the canvas
-        if ((void*)dc00 == NULL)
-            return -1;
-
-        // Draw a line into the frame canvas
-        dc_draw_horizontal_line( 
-            dc00, 
-            tb_window->left,  // x1 
-            tb_window->top,   // y
-            tb_window->width, // x2
-            parent->titlebar_ornament_color,  
-            tb_window->rop_ornament
-        );
-
-        // Draw a into line the frame canvas
-        dc_draw_horizontal_line( 
-            dc00, 
-            tb_window->left,    // x1 
-            tb_window->height,  // y
-            tb_window->width,   // x2
-            parent->titlebar_ornament_color, 
-            tb_window->rop_ornament
-        );
-    }
-
-// --------------------
-// Icon
-
-    int useIcon = parent->titlebarHasIcon;
-    //int icon_id = (int) parent->frame.titlebar_icon_id;
-
-// Decode the bmp that is in a buffer
-// and display it directly into the framebuffer. 
-// IN: index, left, top
-// see: bmp.c
-    unsigned long iL=0;
-    unsigned long iT=0;
-    unsigned long iWidth = 16;
-
-    //#hack #todo
-    if (useIcon == TRUE)
-    {
-        // Icon position inside the titlebar
-        iL = (unsigned long) (METRICS_ICON_LEFTPAD);
-        iT = (unsigned long) (METRICS_ICON_TOPPAD);
-
-        if (Compositor.is_composition_disabled == TRUE){
-            /*
-            // #suspended
-            // #ps: Drawing directly inside the backbuffer
-            bmp_decode_system_icon( 
-                (int) icon_id, 
-                (unsigned long) iL, 
-                (unsigned long) iT,
-                FALSE 
-            );
-            */
-        } else {
-
-            // Icon position inside the titlebar
-            iL = (unsigned long) (METRICS_ICON_LEFTPAD_USING_COMPOSITOR);
-            iT = (unsigned long) (METRICS_ICON_TOPPAD_USING_COMPOSITOR);
-
-            struct bmp_cache_d *icon_cache = 
-                (struct bmp_cache_d *) parent->titlebar_icon_cache;
-            if (icon_cache && icon_cache->loaded){
-                bmp_decode_bmp_image(icon_cache, dc00, iL, iT, 1, 0);
-            }
-        }
-    }
-
-// ---------------
-
-//
-// Text
-//
-
-    unsigned long sL=0;
-    unsigned long sT=0;
-    unsigned int sColor = (unsigned int) parent->titlebar_text_color;
-
-    int useTitleString = TRUE; //#HACK
-    if (useTitleString == TRUE)
-    {
-        // margin + relative position.
-        sL = 
-            (unsigned long) 
-            ( tb_window->absolute_x + parent->titlebar_text_left);
-        sT = 
-            (unsigned long) 
-            ( tb_window->absolute_y + parent->titlebar_text_top);
-        
-        if ((void*) tb_window->name != NULL)
-        {
-            if (Compositor.is_composition_disabled == TRUE){
-
-                // #ps: Drawing directly inside the backbuffer
-                grDrawString ( sL, sT, sColor, tb_window->name );
-
-            } else {
-
-                // Draw string into de frame canvas
-                if ((void*)dc00 != NULL)
-                {
-                    // #todo: Fix the position for the text
-                    dc_drawstring ( 
-                        dc00, 
-                        tb_window->left + parent->titlebar_text_left, 
-                        tb_window->top + parent->titlebar_text_top, 
-                        sColor, 
-                        COLOR_WHITE,
-                        ROP_COPY, 
-                        tb_window->name );
-                }
-            }
-        }
-    }
-
-// Invalidate
-    window->dirty = TRUE;
-
-// Redraw the controls in the titlebar
-// IN: titlebar
-    redraw_controls(window);
-
-    return 0;
-}
-
 // ------------
 // Central routine that decides what to repaint depending on window type:
 // + WT_BUTTON     > draws button borders + label.
@@ -1922,12 +1567,14 @@ redraw_window (
 
     int ButtonState = BS_DEFAULT;
 
+/*
 // #test: renaming
     unsigned int buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DEFAULT_TL2;  // tl2 inner
     unsigned int buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DEFAULT_TL1;  // tl1 most inner
     unsigned int buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DEFAULT_BR2;  // br2 inner
     unsigned int buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DEFAULT_BR1;  // br1 most inner
     unsigned int buttonBorder_outer_color = HONEY_COLOR_BUTTON_DEFAULT_OUTER;
+*/
 
 // Label
     unsigned int label_color = COLOR_BLACK;
@@ -1940,6 +1587,7 @@ redraw_window (
         //if ((void*) window->parent == NULL)
             //printf("redraw_window: [FAIL] window->parent\n");
 
+        /*
         // Atualiza algumas características da janela.
         switch (ButtonState)
         {
@@ -1995,6 +1643,7 @@ redraw_window (
                 buttonBorder_outer_color = HONEY_COLOR_BUTTON_DEFAULT_OUTER;
                 break;
         };
+        */
 
         // name support.
         size_t tmp_size = (size_t) strlen((const char *) window->name);
@@ -2011,6 +1660,7 @@ redraw_window (
             ( ( (unsigned long) window->height - FontInitialization.height ) >> 1 );
 
 
+        /*
         // Redraw the button border
         // #ps: Drawing directly into the backbuffer
         if (Compositor.is_composition_disabled == TRUE){
@@ -2033,6 +1683,7 @@ redraw_window (
                 (unsigned int) buttonBorder_br1_color,  // br 1 most inner
                 (unsigned int) buttonBorder_outer_color );
         }
+        */
 
         // Button label
         //server_debug_print ("redraw_window: [FIXME] Button label\n"); 
@@ -2314,6 +1965,361 @@ int redraw_window_by_id(int wid, unsigned long flags)
 
 fail:
     return (int) (-1);
+}
+
+// Paint the controls, but do not show them.
+// IN: Titlebar window.
+int redraw_controls(struct gws_window_d *tb_window)
+{
+    struct gws_window_d *parent;
+    register int wid = -1;
+
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+
+    //printf("redraw_controls:\n");
+    //while(1){}
+
+// -- Title bar -------------------------------
+    if ((void*) tb_window == NULL){
+        goto fail;
+    }
+    if (tb_window->magic != 1234){
+        goto fail;
+    }
+
+
+// -- Title bar's parent -----------------------
+    parent = (struct gws_window_d *) tb_window->parent;
+    if ( (void*) parent == NULL )
+        goto fail;
+    if (parent->magic != 1234)
+        goto fail;
+
+    if (Compositor.is_composition_disabled == FALSE)
+    {
+        if (parent->type == WT_OVERLAPPED){
+            ci00 = parent->frame_canvas;
+            dc00 = ci00->dc;
+        }
+    }
+
+// #todo:
+// We gotta change the state of the controls based on the
+// parent window state. And switchback when the parent changes its state.
+
+// #todo
+// Check if its really a taskbar?
+
+// Redraw controls
+
+    /*
+    wid = (int) tb_window->Controls.minimize_wid;
+    redraw_window_by_id(wid,FALSE);
+    wid = (int) tb_window->Controls.maximize_wid;
+    redraw_window_by_id(wid,FALSE);
+    wid = (int) tb_window->Controls.close_wid;
+    redraw_window_by_id(wid,FALSE);
+    */
+
+    // #test
+    // Drawing one control
+    struct gws_window_d* w;
+    int isDarkTheme = FALSE;
+
+    if (Compositor.is_composition_disabled == FALSE)
+    {
+        // -----------------------------------------------------
+        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.minimize_wid);
+        redraw_window(w, FALSE);
+        /*
+        dc_draw_rectangle0 (
+            dc00,
+            w->left, w->top, w->width, w->height,
+            w->bg_color,
+            w->rop_bg
+        );
+        */
+        /*
+        //#test
+        if (isDarkTheme == TRUE) {
+                // Dark theme
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_DARK;  //COLOR_RED;    // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_DARK;  //COLOR_BLUE;   // highlight
+        } else {
+                // Light theme
+                window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_LIGHT; //COLOR_GREEN;  // baseline
+                window->label_color_when_selected     = HONEY_COLOR_LABEL_SELECTED_LIGHT;  //COLOR_YELLOW; // highlight
+        }
+        label_color = window->label_color_when_not_selected;
+        if (ButtonState == BS_PRESSED)
+            label_color = window->label_color_when_selected;
+            // ...
+        */
+
+        // -----------------------------------------------------
+        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.maximize_wid);
+        redraw_window(w, FALSE);
+        /*
+        dc_draw_rectangle0 (
+            dc00,
+            w->left, w->top, w->width, w->height,
+            w->bg_color,
+            w->rop_bg
+        );
+        */
+
+        // -----------------------------------------------------
+        w = (struct gws_window_d*) get_window_from_wid(tb_window->Controls.close_wid);
+        redraw_window(w, FALSE);
+        /*
+        dc_draw_rectangle0 (
+            dc00,
+            w->left, w->top, w->width, w->height,
+            w->bg_color,
+            w->rop_bg
+        );
+        */
+    }
+
+    return 0;
+
+fail:
+    // printf("fail\n"); while(1){}
+    return (int) -1;
+}
+
+// Repaints the titlebar background, ornament line, icon, and text.
+// IN: Titlebar window
+int redraw_titlebar_window(struct gws_window_d *window)
+{
+    struct gws_window_d *parent;
+    struct gws_window_d *tb_window;
+
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+
+
+// -- Title bar -------------------------------
+    if ( (void*) window == NULL )
+        return -1;
+    if (window->magic != 1234)
+        return -1;
+    tb_window = (struct gws_window_d *) window;
+
+// -- Title bar's parent -----------------------
+    parent = (struct gws_window_d *) tb_window->parent;
+    if ( (void*) parent == NULL )
+        return -1;
+    if (parent->magic != 1234)
+        return -1;
+
+
+    if (Compositor.is_composition_disabled == FALSE)
+    {
+        if (parent->type == WT_OVERLAPPED){
+            ci00 = parent->frame_canvas;
+            dc00 = ci00->dc;
+        }
+    }
+
+// ------------------
+// Parent is active
+    if (parent == WindowManager.active_window)
+    {
+        tb_window->bg_color = 
+            (unsigned int) get_color(csiActiveWindowTitleBar);
+
+        parent->titlebar_color = 
+            (unsigned int) get_color(csiActiveWindowTitleBar);
+        parent->titlebar_ornament_color = xCOLOR_BLACK;
+    }
+
+// ------------------
+// Parent is NOT active
+    if (parent != WindowManager.active_window)
+    {
+        tb_window->bg_color = 
+            (unsigned int) get_color(csiInactiveWindowTitleBar);
+
+        parent->titlebar_color = 
+            (unsigned int) get_color(csiInactiveWindowTitleBar);
+        parent->titlebar_ornament_color = xCOLOR_GRAY2;
+    }
+
+//--------
+
+//
+// Paint
+//
+
+// Update the absolute right and bottom values 
+// for mouse hit test.
+    wm_sync_absolute_dimensions(tb_window);
+
+// ----------------
+// bg
+
+    if (Compositor.is_composition_disabled == TRUE){
+
+        // #ps: Drawing directly into the backbuffer
+        rectBackbufferDrawRectangle ( 
+            tb_window->absolute_x, 
+            tb_window->absolute_y, 
+            tb_window->width, 
+            tb_window->height, 
+            tb_window->bg_color, 
+            TRUE,   // fill
+            (unsigned long) tb_window->rop_bg // rop for this window 
+        );
+    } else {
+        // #todo: 
+        // (maybe) Draw titlebar's bg when the compisition is on 
+    }
+
+
+// ----------------
+// Ornament
+    if (Compositor.is_composition_disabled == TRUE){
+
+        rectBackbufferDrawRectangle ( 
+            tb_window->absolute_x, 
+            ( (tb_window->absolute_y) + (tb_window->height) - METRICS_TITLEBAR_ORNAMENT_SIZE ),  
+            tb_window->width, 
+            METRICS_TITLEBAR_ORNAMENT_SIZE, 
+            parent->titlebar_ornament_color, 
+            TRUE,  // fill
+            (unsigned long) tb_window->rop_ornament  // rop_flags 
+        );  
+
+    } else {
+
+        // Draw ornament into the canvas
+        if ((void*)dc00 == NULL)
+            return -1;
+
+        // Draw a line into the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            tb_window->left,  // x1 
+            tb_window->top,   // y
+            tb_window->width, // x2
+            parent->titlebar_ornament_color,  
+            tb_window->rop_ornament
+        );
+
+        // Draw a into line the frame canvas
+        dc_draw_horizontal_line( 
+            dc00, 
+            tb_window->left,    // x1 
+            tb_window->height,  // y
+            tb_window->width,   // x2
+            parent->titlebar_ornament_color, 
+            tb_window->rop_ornament
+        );
+    }
+
+// --------------------
+// Icon
+
+    int useIcon = parent->titlebarHasIcon;
+    //int icon_id = (int) parent->frame.titlebar_icon_id;
+
+// Decode the bmp that is in a buffer
+// and display it directly into the framebuffer. 
+// IN: index, left, top
+// see: bmp.c
+    unsigned long iL=0;
+    unsigned long iT=0;
+    unsigned long iWidth = 16;
+
+    //#hack #todo
+    if (useIcon == TRUE)
+    {
+        // Icon position inside the titlebar
+        iL = (unsigned long) (METRICS_ICON_LEFTPAD);
+        iT = (unsigned long) (METRICS_ICON_TOPPAD);
+
+        if (Compositor.is_composition_disabled == TRUE){
+            /*
+            // #suspended
+            // #ps: Drawing directly inside the backbuffer
+            bmp_decode_system_icon( 
+                (int) icon_id, 
+                (unsigned long) iL, 
+                (unsigned long) iT,
+                FALSE 
+            );
+            */
+        } else {
+
+            // Icon position inside the titlebar
+            iL = (unsigned long) (METRICS_ICON_LEFTPAD_USING_COMPOSITOR);
+            iT = (unsigned long) (METRICS_ICON_TOPPAD_USING_COMPOSITOR);
+
+            struct bmp_cache_d *icon_cache = 
+                (struct bmp_cache_d *) parent->titlebar_icon_cache;
+            if (icon_cache && icon_cache->loaded){
+                bmp_decode_bmp_image(icon_cache, dc00, iL, iT, 1, 0);
+            }
+        }
+    }
+
+// ---------------
+
+//
+// Text
+//
+
+    unsigned long sL=0;
+    unsigned long sT=0;
+    unsigned int sColor = (unsigned int) parent->titlebar_text_color;
+
+    int useTitleString = TRUE; //#HACK
+    if (useTitleString == TRUE)
+    {
+        // margin + relative position.
+        sL = 
+            (unsigned long) 
+            ( tb_window->absolute_x + parent->titlebar_text_left);
+        sT = 
+            (unsigned long) 
+            ( tb_window->absolute_y + parent->titlebar_text_top);
+        
+        if ((void*) tb_window->name != NULL)
+        {
+            if (Compositor.is_composition_disabled == TRUE){
+
+                // #ps: Drawing directly inside the backbuffer
+                grDrawString ( sL, sT, sColor, tb_window->name );
+
+            } else {
+
+                // Draw string into de frame canvas
+                if ((void*)dc00 != NULL)
+                {
+                    // #todo: Fix the position for the text
+                    dc_drawstring ( 
+                        dc00, 
+                        tb_window->left + parent->titlebar_text_left, 
+                        tb_window->top + parent->titlebar_text_top, 
+                        sColor, 
+                        HONEY_COLOR_TITLEBAR_BG,
+                        ROP_COPY, 
+                        tb_window->name );
+                }
+            }
+        }
+    }
+
+// Invalidate
+    window->dirty = TRUE;
+
+// Redraw the controls in the titlebar
+// IN: titlebar
+    redraw_controls(window);
+
+    return 0;
 }
 
 // Clear the window

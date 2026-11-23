@@ -32,6 +32,10 @@
 #define LIBGUI_COLOR_BUTTON_FACE   LIBGUI_PAL_GRAY        // button, icon
 //#endif
 
+//#define LIBGUI_COLOR_ICON_FACE   LIBGUI_PAL_GRAY        // button, icon
+#define LIBGUI_COLOR_ICON_FACE   LIBGUI_PAL_GRAY_LIGHT        // button, icon
+
+
 //#ifndef LIBGUI_COLOR_PANEL_FACE
 #define LIBGUI_COLOR_PANEL_FACE    LIBGUI_PAL_GRAY_LIGHT  // label, header, footer
 //#endif

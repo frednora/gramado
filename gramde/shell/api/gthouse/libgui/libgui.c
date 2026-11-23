@@ -97,6 +97,16 @@ __draw_rectangle_via_kgws (
     unsigned int color,
     unsigned long rop_flags );
 
+
+static void __draw_component_borders_dc(
+    struct dccanvas_d *dc,
+    struct ui_component_d *ui_c,
+    unsigned int tl_2,  // tl 2 inner (light)
+    unsigned int tl_1,  // tl 1 most inner (lighter)
+    unsigned int br_2,  // br 2 inner (dark)
+    unsigned int br_1,  // br 1 most inner (light) 
+    unsigned int outer_color );
+
 // ===================================================
 
 
@@ -2747,10 +2757,8 @@ void libgui_on_button_released(struct ui_component_d *uic, struct dccanvas_d *dc
     libgui_redraw_ui_component(uic, dc);
 }
 
-
 // Draw button given the dc and the ui component
-void 
-__draw_button_borders_dc(
+static void __draw_component_borders_dc(
     struct dccanvas_d *dc,
     struct ui_component_d *ui_c,
     unsigned int tl_2,  // tl 2 inner (light)
@@ -3085,7 +3093,7 @@ struct ui_component_d *libgui_create_ui_component(
     {
         // #todo: Hardcoded for now. Maybe the function can receive a parameter for the status.
         uic->status = BS_DEFAULT;  // default status for buttons
-        __draw_button_borders_dc(
+        __draw_component_borders_dc(
             dc,
             uic,
             0x00E0E0E0,  // tl 2 inner (light)
@@ -3100,7 +3108,7 @@ struct ui_component_d *libgui_create_ui_component(
     if (is_editbox == TRUE)
     {
         uic->status = BS_DEFAULT;
-        __draw_button_borders_dc(
+        __draw_component_borders_dc(
             dc,
             uic,
             LIBGUI_COLOR_BEVEL_SUNKEN_TL_2,
@@ -3346,7 +3354,7 @@ libgui_redraw_ui_component(
 
     if (has_borders == TRUE || is_editbox == TRUE)
     {
-        __draw_button_borders_dc(
+        __draw_component_borders_dc(
             dc,
             uic,
             tl2_color,   // tl 2 inner

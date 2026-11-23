@@ -19,25 +19,6 @@ struct gws_window_d *do_create_titlebar(
     int has_string,
     unsigned long string_color );
 
-// #important: 
-// O frame de uma janela deve fazer parte do window manager
-// e não das primitivas do window server.
-// Estamos falando da parte do ws que opera como wm,
-// ou oferece recursos que serão usados pelo wm.
-// In: style = estilo do frame.
-int 
-doCreateAndDrawWindowFrame ( 
-    struct gws_window_d *parent,
-    struct gws_window_d *window,
-    unsigned long border_size,
-    unsigned int border_color1,
-    unsigned int border_color2,
-    unsigned int border_color3,
-    unsigned int ornament_color1,
-    unsigned int ornament_color2,
-    int frame_style );
-
-
 //
 // Create window. (Worker)
 //

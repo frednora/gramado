@@ -221,16 +221,6 @@ void libgui_set_mouse_pointer(unsigned long x, unsigned long y);
 void libgui_on_button_pressed(struct ui_component_d *uic, struct dccanvas_d *dc);
 void libgui_on_button_released(struct ui_component_d *uic, struct dccanvas_d *dc);
 
-void 
-__draw_button_borders_dc(
-    struct dccanvas_d *dc,
-    struct ui_component_d *ui_c,
-    unsigned int tl_2,  // tl 2 inner (light)
-    unsigned int tl_1,  // tl 1 most inner (lighter)
-    unsigned int br_2,  // br 2 inner (dark)
-    unsigned int br_1,  // br 1 most inner (light) 
-    unsigned int outer_color );
-
 struct ui_component_d *libgui_create_ui_component(
     struct dccanvas_d *dc,
     int type,
