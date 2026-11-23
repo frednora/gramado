@@ -689,9 +689,7 @@ __dc_draw_button_borders(
         BorderSize,
         br_1,
         ROP_COPY);
-
 }
-
 
 
 // worker:

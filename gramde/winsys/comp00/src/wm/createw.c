@@ -412,8 +412,7 @@ static struct gws_window_d *__create_window_object(void)
     window->rop_right_border = THEME_ROP_RIGHT_BORDER;
     window->rop_bottom_border= THEME_ROP_BOTTOM_BORDER;
 
-    // We dont have any icon cache for the titlebar yet.
-    window->titlebar_icon_cache = NULL;
+    window->titlebar_icon_cache = NULL;  // No icon cache for now
 
     return (struct gws_window_d *) window;
 }
@@ -503,7 +502,7 @@ static int __do_create_controls(struct gws_window_d *w_titlebar)
     w_minimize->left_offset = (unsigned long) (w_titlebar->width - LastLeft);
 
     id = (int) RegisterWindow(w_minimize);
-    if (id<0){
+    if (id < 0){
         goto fail;
     }
     w_titlebar->Controls.minimize_wid = (int) id;
@@ -1572,6 +1571,62 @@ doCreateAndDrawWindowFrame (
         return 0;
     }
 
+//
+// #test
+//
+
+// Button suport: Just create. Not initialized yet.
+    //unsigned int buttonBorder_tl2_color=0;    // tl2 inner
+    //unsigned int buttonBorder_tl1_color=0;    // tl1 most inner
+    //unsigned int buttonBorder_br2_color=0;    // br2 inner
+    //unsigned int buttonBorder_br1_color=0;    // br1 most inner
+    //unsigned int buttonBorder_outer_color=0;  // It changes when focus change
+
+    // BS_DEFAULT
+    unsigned int buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DEFAULT_TL2; 
+    unsigned int buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DEFAULT_TL1;
+    unsigned int buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DEFAULT_BR2;
+    unsigned int buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DEFAULT_BR1;
+    unsigned int buttonBorder_outer_color = HONEY_COLOR_BUTTON_DEFAULT_OUTER;
+
+
+    if (Type == WT_BUTTON)
+    {
+
+        // #bugbug
+        // It's crashing when we call this routine.
+        // But this is the right moment to draw the borders for the buttons.
+        // Maybe we have some inconsistences in the values.
+ 
+        /*
+            if (Compositor.is_composition_disabled == TRUE){
+                // #ps: Drawing directly into the backbuffer
+                __draw_button_borders (
+                    (struct gws_window_d *) window,
+                    (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
+                    (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
+                    (unsigned int) buttonBorder_br2_color,  // br 2 inner
+                    (unsigned int) buttonBorder_br1_color,  // br 1 most inner
+                    (unsigned int) buttonBorder_outer_color );
+
+            } else {
+                // #todo
+                // Draw some border to the button when in compositor mode.
+
+                // if ((void*) dc00 != NULL)
+                __dc_draw_button_borders (
+                    dc00,
+                    (struct gws_window_d *) window,
+                    (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
+                    (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
+                    (unsigned int) buttonBorder_br2_color,  // br 2 inner
+                    (unsigned int) buttonBorder_br1_color,  // br 1 most inner
+                    (unsigned int) buttonBorder_outer_color );
+
+            }
+        */
+    }
+
 // Nothing to draw, but nothing failed. 
 // We just have a frameless window type.
     return 0;
@@ -1702,14 +1757,6 @@ void *doCreateAndDrawWindow (
     unsigned long fullWindowY      = (unsigned long) deviceTop;
     unsigned long fullWindowWidth  = (unsigned long) deviceWidth;
     unsigned long fullWindowHeight = (unsigned long) deviceHeight;
-
-
-// Button suport: Just create. Not initialized yet.
-    unsigned int buttonBorder_tl2_color=0;    // tl2 inner
-    unsigned int buttonBorder_tl1_color=0;    // tl1 most inner
-    unsigned int buttonBorder_br2_color=0;    // br2 inner
-    unsigned int buttonBorder_br1_color=0;    // br1 most inner
-    unsigned int buttonBorder_outer_color=0;  // It changes when focus change
 
 // ROP (Raster Operations)
 // 0 means that there is no ROP. 
@@ -2929,62 +2976,6 @@ void *doCreateAndDrawWindow (
 
     if ((unsigned long) type == WT_BUTTON)
     {
-        // #ps: ButtonState = window status.
-        switch (ButtonState){
-
-            // It’s the state when the button has keyboard focus (first responder).
-            case BS_FOCUS:
-                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_FOCUS_TL2;
-                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_FOCUS_TL1;
-                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_FOCUS_BR2;
-                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_FOCUS_BR1;
-                buttonBorder_outer_color = HONEY_COLOR_BUTTON_FOCUS_OUTER;
-                break;
-
-            case BS_PRESSED:
-                //printf("BS_PRESSED\n"); exit(0);
-                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_PRESSED_TL2; 
-                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_PRESSED_TL1; 
-                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_PRESSED_BR2;
-                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_PRESSED_BR1; 
-                buttonBorder_outer_color = HONEY_COLOR_BUTTON_PRESSED_OUTER;
-                break;
-
-            case BS_HOVER:
-                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_HOVER_TL2; 
-                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_HOVER_TL1; 
-                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_HOVER_BR2;
-                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_HOVER_BR1; 
-                buttonBorder_outer_color = HONEY_COLOR_BUTTON_HOVER_OUTER;
-                break;
-
-            case BS_DISABLED:
-                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DISABLED_TL2;
-                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DISABLED_TL1;
-                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DISABLED_BR2;
-                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DISABLED_BR1;
-                buttonBorder_outer_color = HONEY_COLOR_BUTTON_DISABLED_OUTER;
-                break;
-
-            case BS_PROGRESS:
-                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_PROGRESS_TL2;
-                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_PROGRESS_TL1;
-                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_PROGRESS_BR2;
-                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_PROGRESS_BR1;
-                buttonBorder_outer_color = HONEY_COLOR_BUTTON_PROGRESS_OUTER;
-                break;
-
-            // The same as BS_RELEASED
-            case BS_DEFAULT:
-            default: 
-                buttonBorder_tl2_color   = HONEY_COLOR_BUTTON_DEFAULT_TL2; 
-                buttonBorder_tl1_color   = HONEY_COLOR_BUTTON_DEFAULT_TL1;
-                buttonBorder_br2_color   = HONEY_COLOR_BUTTON_DEFAULT_BR2;
-                buttonBorder_br1_color   = HONEY_COLOR_BUTTON_DEFAULT_BR1;
-                buttonBorder_outer_color = HONEY_COLOR_BUTTON_DEFAULT_OUTER;
-                break;
-        };
-
         //
         // Label support
         //
@@ -3018,45 +3009,6 @@ void *doCreateAndDrawWindow (
         // Paint the button only if it has a parent window
         if ((void*) Parent != NULL)
         {
-            // #todo
-            // Esses valores precisam estar na estrutura para
-            // podermos chamar a rotina redraw para repintar 
-            // as bordas do botao.
-            // See: wm.c
-            // color1: left/top
-            // color2: right/bottom
-            // #check
-            // This routine is calling the kernel to paint the rectangle.
-            // #todo
-            // We can register these colors inside the windows structure.
-
-            if (Compositor.is_composition_disabled == TRUE){
-                // #ps: Drawing directly into the backbuffer
-                __draw_button_borders (
-                    (struct gws_window_d *) window,
-                    (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
-                    (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
-                    (unsigned int) buttonBorder_br2_color,  // br 2 inner
-                    (unsigned int) buttonBorder_br1_color,  // br 1 most inner
-                    (unsigned int) buttonBorder_outer_color );
-
-            } else {
-                // #todo
-                // Draw some border to the button when in compositor mode.
-
-                // if ((void*) dc00 != NULL)
-                __dc_draw_button_borders (
-                    dc00,
-                    (struct gws_window_d *) window,
-                    (unsigned int) buttonBorder_tl2_color,  // tl 2 inner
-                    (unsigned int) buttonBorder_tl1_color,  // tl 1 most inner
-                    (unsigned int) buttonBorder_br2_color,  // br 2 inner
-                    (unsigned int) buttonBorder_br1_color,  // br 1 most inner
-                    (unsigned int) buttonBorder_outer_color );
-
-            }
-
-
             if (isDarkTheme == TRUE) {
                 // Dark theme
                 window->label_color_when_not_selected = HONEY_COLOR_LABEL_BASELINE_DARK;  // baseline
@@ -3499,7 +3451,7 @@ void *CreateWindow (
 // Used to create controls into the titlebar
 // #ps: Podemos usar o esquema padrão de cores ...
     if (type == WT_BUTTON)
-    {     
+    { 
         //if ((void*) pWindow == NULL){ return NULL; }
 
         if (width < BUTTON_MIN_WIDTH)  { width=BUTTON_MIN_WIDTH; }
@@ -3723,7 +3675,8 @@ draw_frame:
         // during the creation step. And the worker we 
         // are about to call do not have support for buttons.
 
-        if ((void*) __w != NULL)
+        //if ((void*) __w != NULL)
+        if ((void*) pWindow != NULL && (void*) __w != NULL)
         {
             doCreateAndDrawWindowFrame ( 
                 (struct gws_window_d *) pWindow,
