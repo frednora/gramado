@@ -1013,8 +1013,9 @@ int main(int argc, char *argv[])
     DeviceInfo.height = (unsigned long) (h & 0xFFFF);
 
 //
-// Desktop window
+// == Desktop window =====================================
 //
+
 
     unsigned long d_l = 0;
     unsigned long d_t = 0;
@@ -1026,7 +1027,7 @@ int main(int argc, char *argv[])
     desktop_window = 
         (int) gws_create_window (
                 client_fd,
-                WT_POPUP,  // type 
+                WT_SIMPLE,   //WT_POPUP  // type 
                 WINDOW_STATUS_ACTIVE,  // status
                 WINDOW_STATE_NULL,     // state
                 "Desktop",
@@ -1091,7 +1092,7 @@ int main(int argc, char *argv[])
     taskbar_window = 
         (int) gws_create_window (
                 client_fd,
-                WT_POPUP,  // type 
+                WT_SIMPLE,  //WT_POPUP // type
                 WINDOW_STATUS_ACTIVE,  // status
                 WINDOW_STATE_NULL,     // state
                 program_name,

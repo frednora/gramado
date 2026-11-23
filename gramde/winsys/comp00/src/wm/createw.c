@@ -2550,6 +2550,30 @@ void *doCreateAndDrawWindow (
     case WT_SIMPLE:
     case WT_TITLEBAR:
 
+        // #important: Set the taskbar created by the user.
+        if (window->style & WS_TASKBAR)
+        {
+            window->isTaskBar = TRUE;
+            WindowManager.taskbar_window = window;
+
+            // ---- Update Working Area --------------------------------
+            // #bugbug: Valid only for taskbars at bottom fo the screen.
+            if (WindowManager.initialized == TRUE)
+            {
+                WindowManager.wa.left   = 0;
+                WindowManager.wa.top    = 0;
+                WindowManager.wa.width  = deviceWidth;
+                WindowManager.wa.height = window->top;
+
+                //printf ("window: l=%d t=%d w=%d h=%d\n",
+                    //window->left, window->top, window->width, window->height );
+                //printf ("device: w=%d h=%d\n", deviceWidth, deviceHeight );
+                //printf ("taskbar: w=%d h=%d\n",
+                    //WindowManager.wa.width, WindowManager.wa.height );
+                //while(1){}
+            }
+        }
+
         /*
         // #important: Set the taskbar created by the user.
         if (window->style & WS_TASKBAR)
@@ -2622,7 +2646,7 @@ void *doCreateAndDrawWindow (
                 WindowManager.wa.left   = 0;
                 WindowManager.wa.top    = 0;
                 WindowManager.wa.width  = deviceWidth;
-                WindowManager.wa.height = window->top; 
+                WindowManager.wa.height = window->top;
 
                 //printf ("window: l=%d t=%d w=%d h=%d\n",
                     //window->left, window->top, window->width, window->height );
@@ -2635,11 +2659,12 @@ void *doCreateAndDrawWindow (
         window->ip_device = IP_DEVICE_NULL;
         window->frame.used = FALSE;
         Shadow = TRUE;
+        window->shadowUsed = TRUE;
         if (window->style & WS_TASKBAR){
             Shadow = FALSE;
+            window->shadowUsed = FALSE;
         }
         Background = TRUE;
-        window->shadowUsed = TRUE;
         window->backgroundUsed = TRUE;
         window->background_style = 0;
         break;
@@ -3692,6 +3717,12 @@ draw_frame:
          type == WT_BUTTON ||
          type == WT_ICON )
     {
+
+        // #bugbug
+        // Actually the frame for the buttons was already drawn 
+        // during the creation step. And the worker we 
+        // are about to call do not have support for buttons.
+
         if ((void*) __w != NULL)
         {
             doCreateAndDrawWindowFrame ( 

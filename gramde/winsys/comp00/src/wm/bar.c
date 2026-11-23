@@ -13,7 +13,7 @@ struct yellow_dialog_info_d  YellowDialogInfo;
 
 // yellow bar. (rectangle not window)
 // developer status.
-void yellowstatus0(const char *string,int refresh)
+void yellowstatus0(const char *string, int refresh)
 {
 // System notifications?
 // Combinations
@@ -31,7 +31,6 @@ void yellowstatus0(const char *string,int refresh)
 
     if (WindowManager.initialized != TRUE)
         return;
-
 
     // Initializing
     if (StatusBarInfo.initialized != TRUE)
