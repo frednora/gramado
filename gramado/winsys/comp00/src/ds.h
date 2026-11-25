@@ -8,13 +8,13 @@ extern int os_mode;      // GRAMADO_P1 ...
 extern int server_mode;  // DEMO ...
 
 
-// #ps
+// #ps Provisory
 // Ugly path
 
-#include "../../../../core/admin/product.h"
-#include "../../../../core/admin/version.h"
-#include "../../../../core/admin/utsname.h"
-#include "../../../../core/admin/u.h"
+#include "../../../../base/admin/product.h"
+#include "../../../../base/admin/version.h"
+#include "../../../../base/admin/utsname.h"
+#include "../../../../base/admin/u.h"
 
 
 // rtl

@@ -4,12 +4,21 @@
 # Compiling on gcc 11.4.0 (Ubuntu on wsl)
 # Linking on ld 2.38
 
-# Building full distributions into this directory.
-BASE = base
+# Building full distributions into this directory
+ALL_BUILDS = x1
 
 # Target directory for the binaries.
 # The binaries compiled here will go to this directory.
-BUILD = $(BASE)/build1
+BUILD = $(ALL_BUILDS)/build1
+
+# Desktop Environment
+DE_DIR = ../gramado
+
+# POSIX-like commands
+CMDS_DIR = ../cmds
+
+# Kernel image
+KERNEL_DIR = kernel
 
 # #test
 # Putting the dependencies inside the kernel source tree.
@@ -22,35 +31,31 @@ BUILD = $(BASE)/build1
 
 # The init process
 # The first ring 3 process
-INIT_PROCESS = sysd
+INIT_SYSTEM_DIR = sysd
 
-
-# Desktop Environment
-__CURRENT_DE = ../gramde
-# __CURRENT_DE = ../xxxde
 
 # =================================
 # L1: cmds - POSIX-like commands and experiments
 
-L1_CMDS  = $(__CURRENT_DE)/cmds/cmds00
-L1_CPP00 = $(__CURRENT_DE)/cmds/cpp00
+L1_CMDS  = $(CMDS_DIR)/cmds00
+L1_CPP00 = $(CMDS_DIR)/cpp00
 
 
 # =================================
 # L2: GUI
 
 # comp00: Display server / compositor
-L2_COMP     = $(__CURRENT_DE)/winsys/comp00
+L2_COMP     = $(DE_DIR)/winsys/comp00
 
 # assets: Assets for shell
-L2_SHELL_ASSETS = $(__CURRENT_DE)/shell/assets
+L2_SHELL_ASSETS = $(DE_DIR)/shell/assets
 
 # Client-side GUI applications (Nomad Pastors)
-L2_WINAPPS  = $(__CURRENT_DE)/shell/winapps
-L2_WINSHELL = $(__CURRENT_DE)/shell/winshell
+L2_WINAPPS  = $(DE_DIR)/shell/winapps
+L2_WINSHELL = $(DE_DIR)/shell/winshell
 
 # velo3d: 3D demo
-L2_VELO3D   = $(__CURRENT_DE)/velo3d
+L2_VELO3D   = $(DE_DIR)/velo3d
 
 
 
@@ -74,18 +79,19 @@ PYTHON3 = python3
 # The script starts here.
 #
 # The six steps:
-# + We build the core components and install them into the base folder.
+# + We build the core components and install them into the ALL_BUILDS folder.
 # + We also install the pre-built desktop environment componets.
 # + We mount the virtual disk.
-# + We copy the base folder into the virtual disk.
+# + We copy the ALL_BUILDS folder into the virtual disk.
 # + We unmount the virtual disk.
 #
 
 PHONY := all
 all:  \
-build-core \
-build-de \
-$(BASE)/gramvd \
+build-base \
+build-install-cmds \
+build-install-de \
+$(ALL_BUILDS)/gramvd \
 vhd-mount \
 vhd-copy-files \
 vhd-unmount \
@@ -97,12 +103,34 @@ clean
 	chmod 755 ./runt1
 	chmod 755 ./runt2
 
-	@echo "Done?"
+	@echo "Done? (base + cmds + DE)"
+
+
+# ===================================
+# Alternative path: core only (no Desktop Environment)
+# Produces a VHD that contains boot, kernel, init and modules
+# but none of the gramado DE binaries/assets.
+PHONY := all-base
+all-base: \
+build-base \
+build-install-cmds \
+$(ALL_BUILDS)/gramvd \
+vhd-mount \
+vhd-copy-files \
+vhd-unmount \
+clean
+
+	chmod 755 ./run
+	chmod 755 ./run2
+	chmod 755 ./runt1
+	chmod 755 ./runt2
+
+	@echo "Done? (base + cmds, no DE)"
 
 # ===================================
 # Step 1) Build and install core components
-PHONY := build-core  
-build-core:     
+PHONY := build-base  
+build-base:     
 	@echo ":: [] Building VHD, bootloaders and kernel image."
 # options: 
 # main.asm and main2.asm
@@ -141,22 +169,22 @@ build-core:
 # Copy the bootloader into the DE/ directory.
 #	@cp boot/arch/x86/bin/APX86.BIN   $(BUILD)/DE   
 
-# (2) castleos/
+# (2) $(KERNEL_DIR)/
 
-# ::Build kernel image.
-	@echo "Compiling castleos/"
-	@$(MAKE) -C castleos/
+# ::Build kernel image
+	@echo "Compiling $(KERNEL_DIR)/"
+	@$(MAKE) -C $(KERNEL_DIR)/
 
-	@echo "Installing castleos/"
+	@echo "Installing kernel/"
 
 # Copy the kernel to the standard system folder.
-	@cp castleos/KERNEL.BIN  $(BUILD)/GRAMADO
+	@cp $(KERNEL_DIR)/KERNEL.BIN  $(BUILD)/GRAMADO
 # Create a backup; The bootloder expects this.
-	@cp castleos/KERNEL.BIN  $(BUILD)/DE
+	@cp $(KERNEL_DIR)/KERNEL.BIN  $(BUILD)/DE
 
 # The init process
-	@$(MAKE) -C $(INIT_PROCESS)/
-	@cp $(INIT_PROCESS)/src/bin/INIT.BIN  $(BUILD)/
+	@$(MAKE) -C $(INIT_SYSTEM_DIR)/
+	@cp $(INIT_SYSTEM_DIR)/src/bin/INIT.BIN  $(BUILD)/
 
 
 # (3) modules/
@@ -180,14 +208,18 @@ build-core:
 #	@-cp modules/servers/vgad/bin/VGAD.BIN  $(BUILD)/GRAMADO
 
 
-	@echo "~build-core end?"
+	@echo "~build-base end?"
+
 
 # ===================================
-# Step 2) Importing the Desktop Environment.
+# Step 2.0) Importing the some core cmds if available.
 # ps: It was previously built by another project.
-PHONY := build-de
-build-de:
-	@echo "build-de"
+PHONY := build-install-cmds
+build-install-cmds:
+	@echo "build-install-cmds"
+# ----------------------------------
+# L1: Install binaries
+	@echo "Installing Core commands"
 
 # ----------------------------------
 # L1: Install binaries
@@ -235,6 +267,15 @@ build-de:
 
 	@-cp $(L1_CPP00)/bin/CPP00.BIN    $(BUILD)/DE
 
+	@echo "~build-install-cmds"
+
+# ===================================
+# Step 2.1) Importing the Desktop Environment.
+# ps: It was previously built by another project.
+PHONY := build-install-de
+build-install-de:
+	@echo "build-install-de"
+
 # ----------------------------------
 # L2: Install binaries, theme and 3d demos
 	@echo "Installing L2"
@@ -272,22 +313,23 @@ build-de:
 	@-cp $(L2_VELO3D)/assets/OBJ08.TXT  $(BUILD)/
 
 
-	@echo "~build-de"
+	@echo "~build-install-de"
+
 
 # ===================================
 # Step 3: Creating the directory where we're gonna mount the VHD
-$(BASE)/gramvd:
+$(ALL_BUILDS)/gramvd:
 	@echo "Build: Creating the directory to mount the VHD ..."
-	@sudo mkdir $(BASE)/gramvd
+	@sudo mkdir $(ALL_BUILDS)/gramvd
 
 # ===================================
 # Step 4: Mounting the VHD
 # ps: It depends on the directory we already created
-vhd-mount: $(BASE)/gramvd
+vhd-mount: $(ALL_BUILDS)/gramvd
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
-	@-sudo umount $(BASE)/gramvd
-	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(BASE)/gramvd/
+	@-sudo umount $(ALL_BUILDS)/gramvd
+	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(ALL_BUILDS)/gramvd/
 
 # ===================================
 # Step 5: Copying files into the mounted VHD
@@ -298,14 +340,14 @@ vhd-copy-files: vhd-mount
 	@echo "Build: Copying files into the mounted VHD ..."
 	# Copy $(BUILD)/
 	# sends everything from disk/ to root.
-	@sudo cp -r $(BUILD)/*  $(BASE)/gramvd
+	@sudo cp -r $(BUILD)/*  $(ALL_BUILDS)/gramvd
 
 # --------------------------------------
 # Step 6: Unmounting the VHD
 vhd-unmount: vhd-copy-files
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
-	@sudo umount $(BASE)/gramvd
+	@sudo umount $(ALL_BUILDS)/gramvd
 
 # --------------------------------------
 # Run on qemu using kvm.
@@ -322,16 +364,16 @@ do_runnokvm:
 	sh ./runnokvm
 
 
-test-vhd-mount: $(BASE)/gramvd
+test-vhd-mount: $(ALL_BUILDS)/gramvd
 	@echo "=========================="
 	@echo "Build: Mounting the VHD ..."
-	@-sudo umount $(BASE)/gramvd
-	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(BASE)/gramvd/
+	@-sudo umount $(ALL_BUILDS)/gramvd
+	@sudo mount -t vfat -o loop,offset=32256 GRAMHV.VHD  $(ALL_BUILDS)/gramvd/
 
 test-vhd-unmount:
 	@echo "======================"
 	@echo "Build: Unmounting the VHD ..."
-	@sudo umount $(BASE)/gramvd
+	@sudo umount $(ALL_BUILDS)/gramvd
 
 # --------------------------------------
 # build: Developer comand 1.
@@ -340,7 +382,7 @@ test-vhd-unmount:
 PHONY := install
 install: do_install
 do_install: \
-build-core  
+build-base  
 
 # --------------------------------------
 # build: Developer comand 2.
@@ -349,7 +391,7 @@ build-core
 PHONY := image
 image: do_image
 do_image: \
-$(BASE)/gramvd    \
+$(ALL_BUILDS)/gramvd    \
 vhd-mount          \
 vhd-copy-files     \
 vhd-unmount        \
@@ -359,11 +401,11 @@ vhd-unmount        \
 clean:
 	-rm *.o
 	-rm *.BIN
-	-rm castleos/*.o
-	-rm castleos/*.BIN
+	-rm $(KERNEL_DIR)/*.o
+	-rm $(KERNEL_DIR)/*.BIN
 	@echo "~clean"
 
-# #todo: Delete some files in the BASE/ folder.
+# #todo: Delete some files in the ALL_BUILDS/ folder.
 # dist-clean:
 #	@echo "~dist-clean"
 
@@ -385,18 +427,18 @@ clean-all: clean
 	-rm -rf boot/arch/x86/bin/*.BIN
 
 # ==================
-# (2) castleos/
+# (2) $(KERNEL_DIR)/
 # Clear kernel image
-	-rm castleos/*.o
-	-rm castleos/*.BIN
-	-rm -rf castleos/KERNEL.BIN
-	-rm -rf castleos/castleos.map 
+	-rm $(KERNEL_DIR)/*.o
+	-rm $(KERNEL_DIR)/*.BIN
+	-rm -rf $(KERNEL_DIR)/KERNEL.BIN
+	-rm -rf $(KERNEL_DIR)/kernel.map 
 
 # ==================
 # Clear INIT.BIN
-	-rm $(INIT_PROCESS)/src/*.o
-	-rm $(INIT_PROCESS)/src/*.BIN 
-	-rm $(INIT_PROCESS)/src/bin/*.BIN 
+	-rm $(INIT_SYSTEM_DIR)/src/*.o
+	-rm $(INIT_SYSTEM_DIR)/src/*.BIN 
+	-rm $(INIT_SYSTEM_DIR)/src/bin/*.BIN 
 
 # ==================
 # modules/

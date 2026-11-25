@@ -1,4 +1,4 @@
-# os - Core system components
+# base - Base system components
 
 **A lightweight 64-bit graphical hobby operating system built from scratch.**
 
@@ -42,53 +42,51 @@ Some extra features are:
 > Documentation for this distribution is still under development.
 > Folder names are subject to change.
 
-## Core System  (Pride)
+## Base system
 
 ```
-core/boot/      - Gramado OS bootloader.
-core/castleos   - Gramado OS kernel.
-modules/dungeon - Ring 0 loadable kernel modules. (Not dynlinked).
-sysd/           - The init process.
+base/boot/       - Gramado OS bootloader.
+base/kernel/     - Gramado OS kernel.
+modules/dungeon/ - Ring 0 loadable kernel modules. (Not dynlinked).
+sysd/            - The init process.
 ```
 
 ```
 This creates a very clear startup flow:
-    boot → castleos → dungeon → sysd (init)
+    boot → kernel → dungeon → sysd (init)
 ```
 
-## gramde/cmds/
+## cmds/
 
 ```
-gramde/cmds/ - Posix-like commands and experiments.
+cmds/ - Posix-like commands and experiments.
 ```
 
-## gramde/winsys/
+## gramado/winsys/
 
 ```
-gramde/winsys/ - Compositor / display server
+gramado/winsys/ - Compositor / display server
 ```
 
-## gramde/shell/
+## gramado/shell/
 
 ```
-gramde/shell/ - Client-side GUI application
+gramado/shell/ - Client-side GUI application
 ```
 
-## gramde/velo3d/
+## gramado/velo3d/
 
 ```
-gramde/velo3d/ - 3D demo
+gramado/velo3d/ - 3D demo
 ```
-
-
 
 
 ## Other folders
 
 ```
-docs/      - Documentation.
-tools/     - Gramado Tools.
-core/base/ - Complete distributions are built here.
+docs/    - Documentation.
+tools/   -  Gramado Tools.
+base/x1/ - Complete distributions are built here.
 ```
 
 ## Key artifacts produced
@@ -106,7 +104,7 @@ boot/
 
 ## 2. Where is the kernel?
 
-castleos/
+kernel/
 
 ## 3. Where are the ring 0 kernel modules?
 
@@ -138,7 +136,7 @@ It is part of the Native UI, the Graphical User Interface.
 
 ## Where are the POSIX-like command programs?
 
-winsys/cmds/
+cmds/
 
 ```
 These are the basic posix commands.
@@ -191,7 +189,7 @@ Gramado OS Kernel is 64bit image running in ring 0.
 
 ## What is Gramado Operating System?
 
-GramadoOS is a 64-bit graphical operating system, featuring a bootloader, kernel, and a desktop environment. This is the first distribution created using the Gramado OS kernel.
+Gramado OS is a 64-bit graphical operating system, featuring a bootloader, kernel, and a desktop environment. This is the first distribution created using the Gramado OS kernel.
 
 This image shows the first process that runs after the kernel initialization.
 ![Screenshot](https://raw.githubusercontent.com/noraside/screenshots/main/kernel-01.png)
@@ -312,6 +310,14 @@ $ make clean-all
 > * Gramado OS has been compiled and tested on Ubuntu LTS releases, 
 >   including WSL2 on Windows and various Ubuntu versions.
 > * A typical build environment:
+
+```
+    Host machine: Windows 10, wsl2 with Ubuntu.
+    Linux kernel: 5.15.147.4-microsoft-standard-WSL2
+    gcc (Ubuntu) 13.3.0 
+    GNU ld (GNU Binutils for Ubuntu) 2.42
+    NASM version 2.16.01
+```
 
 ```
     Host machine: Windows 10, wsl2 with Ubuntu.

@@ -1,4 +1,8 @@
 
+DE_DIR = gramado
+CMDS_DIR = cmds
+BASE_DIR = base
+
 
 #
 # Config
@@ -15,6 +19,8 @@ else
 endif
 
 
+build: all
+
 all:
 
 	@echo "\n"
@@ -22,23 +28,42 @@ all:
 
 	@echo "\n"
 	@echo "==== Compiling gramde ===="
-	make -C gramde/
+	make -C $(DE_DIR)/
+
+	@echo "\n"
+	@echo "==== Compiling cmds ===="
+	make -C $(CMDS_DIR)/
 
 	@echo "\n"
 	@echo "==== Compiling core ===="
-	make -C core/
+	make -C $(BASE_DIR)/
+
 
 	@echo "\n"
 	@echo "Done."
 
+all-base:
+	cd $(BASE_DIR)/  && make all-base
 
-gramde:
-	make -C gramde/
-core:
-	make -C core/
+de:
+	make -C $(DE_DIR)/
 
-tools:
-	echo "Build tool"
+cmds:
+	make -C $(CMDS_DIR)/
+
+base:
+	make -C $(BASE_DIR)/
+
+clean:
+	cd $(DE_DIR)/    && make clean  
+	cd $(CMDS_DIR)/  && make clean-all
+	cd $(BASE_DIR)/  && make clean-all
+
+clean-all:
+	cd $(DE_DIR)/    && make clean  
+	cd $(CMDS_DIR)/  && make clean-all
+	cd $(BASE_DIR)/  && make clean-all
+
 run:
-	cd core/ && ./run  
+	cd $(BASE_DIR)/ && ./run  
 

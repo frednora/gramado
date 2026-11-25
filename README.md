@@ -5,14 +5,15 @@ Fred Nora: gramado
 # Main folders
 
 ```
-admin/  - Administrator stuff
+admin/   - Administrator stuff
 
-core/   - Gramado Core OS Components
+base/    - Gramado Core OS Components
 
-docs/   - Documentation for Gramado 
+cmds/    - Posix-like commands
 
-gramde/ - Gramado Desktop Environment
-        + Posix-like commands
+docs/    - Documentation for Gramado 
+
+gramado/ - Gramado Desktop Environment
         + Compositor / display server
         + Client-side GUI applications
         + 3D demo
@@ -24,7 +25,7 @@ tools/  - Gramado Tools
 # Usage
 
 ```
-$ cd core/
+$ cd base/
 $ make
 ```
 

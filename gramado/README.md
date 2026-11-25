@@ -1,8 +1,4 @@
-# gramde - Gramado Desktop Environment
-
-Ring 3 programs for Gramado OS
-
-## cmds - POSIX-like commands
+# GRAMADO - Gramado Desktop Environment
 
 Programs for Virtual Terminal or Kernel Console. (codename: Mammal)
 

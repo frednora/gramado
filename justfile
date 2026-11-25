@@ -1,27 +1,44 @@
 # justfile
 
-projects_dir := "gramde"
-os_dir := "core"
+DE_DIR:= "gramado"
+CMDS_DIR:= "cmds"
+BASE_DIR := "base"
 
 # Default recipe
 default: build
 
 build:
-    cd {{projects_dir}} && make
-    cd {{os_dir}} && make
+    cd {{DE_DIR}} && make
+    cd {{CMDS_DIR}} && make
+    cd {{BASE_DIR}} && make
 
 all:
-    cd {{projects_dir}} && make all
-    cd {{os_dir}} && make all
+    cd {{DE_DIR}}    && make all
+    cd {{CMDS_DIR}}  && make all
+    cd {{BASE_DIR}}  && make all
+
+all-base:
+    cd {{BASE_DIR}}  && make all-base
+
+de:
+    cd {{DE_DIR}} && make all
+
+cmds:
+    cd {{CMDS_DIR}} && make all
+
+base:
+    cd {{BASE_DIR}} && make all
 
 clean:
-    cd {{projects_dir}} && make clean
-    cd {{os_dir}} && make clean
+    cd {{DE_DIR}}    && make clean
+    cd {{CMDS_DIR}}  && make clean
+    cd {{BASE_DIR}}  && make clean
 
 clean-all:
-    cd {{projects_dir}} && make clean-all
-    cd {{os_dir}} && make clean-all
+    cd {{DE_DIR}}    && make clean-all
+    cd {{CMDS_DIR}}  && make clean-all
+    cd {{BASE_DIR}}  && make clean-all
 
 run:
-    cd {{os_dir}} && ./run
+    cd {{BASE_DIR}} && ./run
 

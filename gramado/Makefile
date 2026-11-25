@@ -17,9 +17,6 @@ endif
 
 all:
 
-# Commands
-	$(Q)make -C cmds/
-
 # Shell
 	$(Q)make -C shell/
 
