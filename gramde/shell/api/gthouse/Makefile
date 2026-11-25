@@ -8,6 +8,13 @@ all:
 	make -C libgr3d/
 
 # Client-side library for primitive drawing routines.
+# This is an old version that draws using the dc but it is also 
+# capable of drawing directly into the full screen.
+# Not in use. Just backup.
+#	make -C libgui00/
+
+# Client-side library for primitive drawing routines.
+# It uses the dc/canvas, not the display.
 	make -C libgui/
 
 # Gramado Window System

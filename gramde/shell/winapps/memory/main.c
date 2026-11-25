@@ -261,6 +261,9 @@ static void draw_label(int fd, int x, int y, const char *text)
 
     // gws_draw_text(fd, main_window, x, y, COLOR_BLACK, (char *)text);
 
+/*
+// #ps: This was drawing directly ... we need to use the canvas now.
+// libgui_drawstring_dc
     // Draw the label string inside
     libgui_drawstring(
         frame_left + cr_left + x,  //20, 
@@ -268,6 +271,8 @@ static void draw_label(int fd, int x, int y, const char *text)
         text,
         COLOR_BLACK, COLOR_GRAY, 0
     );
+*/
+
 }
 
 static void 

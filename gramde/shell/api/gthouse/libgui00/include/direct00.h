@@ -144,7 +144,7 @@ libgui_BackbufferDrawCharBlockStyle(
     unsigned long y,
     unsigned int  fgcolor,
     int           ch,         // character code
-    int           scale);      // 1 = classic 8×8, 2 = 16×16 blocks, etc.
+    int           scale);     // 1 = classic 8×8, 2 = 16×16 blocks, etc.
 
 
 void 

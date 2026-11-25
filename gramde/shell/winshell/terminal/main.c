@@ -1720,6 +1720,10 @@ static void doPrompt(int fd)
     unsigned long x = (cursor_x*CharWidth);
     unsigned long y = (cursor_y*CharHeight);
 
+/*
+// #bugbug
+// Drawing it directly ... use a worker to draw using dc.
+
     libgui_drawchar( 
         frame_left + AppViewPort.left + (x & 0xFFFF),
         frame_top  + AppViewPort.top  + (y & 0xFFFF),
@@ -1728,7 +1732,11 @@ static void doPrompt(int fd)
         __bg_color,
         0
     );
+*/
 
+/*
+// #bugbug
+// Drawing it directly ... use a worker to draw using dc.
 // Refresh to show it
     libgui_refresh_rectangle_via_kernel(
         frame_left + AppViewPort.left + (x & 0xFFFF), 
@@ -1736,6 +1744,7 @@ static void doPrompt(int fd)
         8, 
         8
     );
+*/
 }
 
 // Testing the standard stream.

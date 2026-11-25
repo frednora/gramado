@@ -1216,9 +1216,13 @@ static int create_icons_on_desktop(int fd)
                 COLOR_WHITE, COLOR_WHITE );
         */
 
+        /*
+        // #bugbug
+        // Drawing it directly ... use a worker to draw using dc.
         libgui_backbuffer_draw_rectangle0(
             l, t, w, h,
             COLOR_GRAY, 1, 0, FALSE);
+        */
 
         iconID = i;
 
@@ -1276,15 +1280,19 @@ static int create_desktop_area(int fd)
     } 
     */
 
+    /*
+    // #bugbug
+    // Drawing it directly ... use a worker to draw using dc.
     libgui_backbuffer_draw_rectangle0(
         l, t, w, h,
         Color01, 1, 0, FALSE);
+    */
 
     create_icons_on_desktop(fd);
     
     //gws_refresh_window(fd, desktop_window);
-    libgui_refresh_rectangle_via_kernel(l, t, w, h);
-    
+    // libgui_refresh_rectangle_via_kernel(l, t, w, h);
+
     return 0;
 
 fail:

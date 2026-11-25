@@ -1,0 +1,226 @@
+// ui.h
+// UI component support for libgui library
+// Created by Fred Nora
+
+#ifndef __LIBGUI_UI_H
+#define __LIBGUI_UI_H    1
+
+
+// Button states (int)
+#define BS_NULL      0 
+#define BS_RELEASED  1
+#define BS_FOCUS     2
+#define BS_PRESSED   3
+#define BS_HOVER     4
+#define BS_DISABLED  5
+#define BS_PROGRESS  6
+// ...
+#define BS_DEFAULT   BS_RELEASED
+
+
+// Char
+struct libgui_char_initialization_d
+{
+    int initialized;
+
+    int width;
+    int height;
+};
+
+// Rectangule
+// Structure for a rectangle.
+// A rectangle belongs to a window.
+struct libgui_rect_d 
+{
+    int used;
+    int magic;
+
+    // struct libdisp_window_d *window;
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+    unsigned int bg_color;  // color
+    int is_filled;          // filled or not
+    unsigned long rop;      // raster operation
+
+    //unsigned int flags;      // Reserved for future use
+
+    int dirty;  // Validation
+	int is_solid; // Is it a solid color rectangle?
+
+    struct libgui_rect_d *next;
+};
+
+
+// The view:
+// UI element / UI component.
+struct libgui_view_d 
+{
+    int used;
+	int magic;
+
+// If we want to draw the component in an offscreen buffer, 
+// we can use this field to store the buffer's address.
+// Offscreen buffer for the component's content
+	//char *offscreen_buffer;
+
+// Type of the component (e.g., button, checkbox, text field)
+// it also can be a container for other components, like a panel or a window.
+// maybe called viewgroup or something like that.
+	int type;
+
+// Text label for the component (e.g., button text, checkbox label)
+    char *label;
+
+    unsigned int fg;  // foreground (text, icon, border)
+    unsigned int bg;  // background (fill)
+	unsigned long rop; // raster operation for drawing the component
+
+// Geometry
+// The values here are relative to the window's client area.
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+// State of the component (e.g., normal, hovered, pressed, disabled)
+	int state;
+
+//
+// Input Pointer support (keyboard)
+//
+
+// The state of the input ponter.
+// Used to blink the cursor.
+    int ip_on;
+
+    unsigned long ip_x;
+    unsigned long ip_y;
+    unsigned int ip_color;
+    unsigned long width_in_chars;
+    unsigned long height_in_chars;
+
+    //unsigned long ip_type; //?? algum estilo especifico de cursor?
+    //unsigned long ip_style;
+    // ...
+
+// para input do tipo teclado
+    unsigned long ip_pixel_x;
+    unsigned long ip_pixel_y;
+
+// Navigation
+    struct libgui_view_d *next;
+};
+
+struct libgui_node_d 
+{
+	int used;
+	int magic;
+
+	struct libgui_view_d *component;
+	struct libgui_node_d *next;
+};
+
+
+//
+// UI component
+//
+
+// UI component flags
+#define UIC_FLAG_CENTER_H  0x0001
+#define UIC_FLAG_CENTER_V  0x0002
+
+// UI component label
+#define UIC_LABEL_PADDING  8
+#define UIC_LABEL_COLOR    0x00101010
+
+// UI component types
+#define UI_COMPONENT_BUTTON   1
+#define UI_COMPONENT_ICON     2
+#define UI_COMPONENT_LABEL    3
+#define UI_COMPONENT_HEADER   4
+#define UI_COMPONENT_FOOTER   5
+#define UI_COMPONENT_EDITBOX  6 
+// ...
+
+
+// Optional: editbox colors
+#define LIBGUI_COLOR_EDITBOX_BG    0x00FFFFFF
+#define LIBGUI_COLOR_EDITBOX_TEXT  0x00101010
+
+// Generic ui component for the apps.
+// (it's like a window, but for client side inside the client area)
+// The plain is reuse this kind of structure for webpages components.
+
+struct ui_component_d 
+{
+    int used;
+    int magic;
+    int id;
+
+// type = 
+    int type;
+
+// status = interaction state
+    int status;
+
+// state = lifecycle/runtime state
+    int state;
+
+// style = appearance
+    int style;
+
+
+// 0x0001 - (centered horizontally) (header, label, footer ...)
+// 0x0002 - (centered vertically)   (header, label, footer ...)
+// 0x0004 ...
+    unsigned long flags;
+
+// Relative with the viewport 
+// (client area or screen of its in fullscreen mode)
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+    char label[64];
+    size_t label_size;
+
+    // ...
+
+    struct ui_component *next;
+};
+
+//
+// Viewport
+//
+
+// A viewport is the rectangular region of a rendering surface
+// (such as a canvas, buffer, or screen) that defines the visible
+// portion of the content. 
+// - It specifies position and dimensions (left, top, width, height).
+// - Drawing operations are clipped to this region.
+// - The viewport may show only part of a larger buffer; scrolling
+//   or resizing changes which portion is visible.
+// - Commonly used in graphics systems, window managers, and browsers
+//   to describe the area where content is displayed.
+//
+
+struct viewport_d 
+{
+    int initialized;
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+    // ...
+};
+
+
+#endif  
+

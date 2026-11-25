@@ -25,13 +25,6 @@
 
 #include "ui.h"
 
-// Header for functions that belongs to the old
-// implementation of the library, before the usage of
-// dc as parameter they were drawing directly to the 
-// backbuffer/frontbuffer.
-// #ps: Maybe it will be deleted.
-#include "direct00.h"
-
 
 // Each window needs to have an index for one of this structurea.
 // This way the display server will know the information about 
@@ -40,7 +33,7 @@ struct canvas_information_d
 {
     int used;
     int magic;
-    int initialized;       // Safety first
+    int initialized;  // The structure is initialized
 
 // If dirty, flush it into the backbuffer.
     int dirty;
@@ -57,11 +50,9 @@ struct canvas_information_d
 
     struct dccanvas_d *dc;  // DC associated with this canvas information
 
-    //struct gws_window_d *owner_window;
     int owner_wid;
 
-    //struct canvas_information_d *clientarea_canvas;
-    //struct canvas_information_d *next;
+    // struct canvas_information_d *next;
 };
 
 // List of canvases
