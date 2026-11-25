@@ -1,6 +1,6 @@
 // taskbar.h
-// This is the header for the taskbar application.
-// Created by Fred Nora.
+// This is the header for the desktop application. (explorer-like)
+// Created by Fred Nora
 
 #ifndef __TASKBAR_H
 #define __TASKBAR_H    1
@@ -16,11 +16,27 @@ extern struct gws_display_d *Display;
 #define TB_ICON_STATE_CLOSED    4
 */
 
+// Think it as a container
+struct ui_area_d
+{
+    int initialized;
+    //int pinned;
+
+    unsigned long left;
+    unsigned long top;
+    unsigned long width;
+    unsigned long height;
+
+    int component_count;
+
+    unsigned long component_list[32];
+};
+
 struct icon_info_d
 {
-// The offset in the taskbar.
+// The offset in the taskbar
     int icon_id;
-// This is the window id that represents the icon.
+// This is the window id that represents the icon
     int wid;
 
 // Absolute values
@@ -72,6 +88,13 @@ struct taskbar_info_d
     unsigned long top;
     unsigned long width;
     unsigned long height;
+
+    // The launchers for the fixed components
+    struct ui_area_d launch_area;        // w/4
+    // The icons for components created on the fly
+    struct ui_area_d icon_area;          // (w/4) * 2
+    // Notification components
+    struct ui_area_d notification_area;  // w/4
 };
 extern struct taskbar_info_d  TaskbarInfo;
 
