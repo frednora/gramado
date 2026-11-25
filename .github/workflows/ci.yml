@@ -1,4 +1,4 @@
-name: Build and Test Gramado OS Core Components (64-bit)
+name: Build and Test Gramado OS Base Components (64-bit)
 
 on:
   push:
@@ -19,14 +19,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential gcc make nasm qemu-system-x86 qemu-utils python3 
 
-      - name: Build Gramado OS Core Components
+      - name: Build Gramado OS Base Components
         run: | 
-          cd core/
+          cd base/
           make all
 
       - name: Run QEMU 64-bit test (headless)
         run: |
-          cd core/
+          cd base/
           chmod +x ./run
           qemu-system-x86_64 -m 1024M -drive file=GRAMHV.VHD,format=raw -nographic &
           sleep 10
