@@ -21,7 +21,8 @@ struct endpoint_d  Caller;
 
 struct next_msg_d  NextMessage;
 
-
+#define NET_ON   1
+#define NET_OFF  0
 
 //
 // ============================================================
@@ -29,7 +30,7 @@ struct next_msg_d  NextMessage;
 
 // Handlers for the events processed by xxxProcessEvent().
 void do_dhcp_dialog(void);
-void do_hello(int src_tid);
+void do_hello_received(int src_tid);
 void do_reboot(int src_tid);
 void do_net_off(void);
 void do_net_on(void);
@@ -38,7 +39,7 @@ void do_net_on(void);
 // Events
 //
 
-void xxxSendResponse(void);
+static void xxxSendResponse(void);
 
 static int 
 xxxProcessEvent ( 
@@ -73,33 +74,24 @@ void do_reboot(int src_tid)
 // Disable network
 void do_net_off(void)
 {
-    sc82 ( 
-        22001, 
-        0,  // OFF
-        0, 
-        0 );
+    sc82(22001, NET_OFF, 0, 0);
 }
 
 // Enable network
 void do_net_on(void)
 {
-    sc82 ( 
-        22001, 
-        1,  // ON 
-        0, 
-        0 );
+    sc82(22001, NET_ON, 0, 0);
 }
-
 
 // Do the dhcp dialog for the first time.
 void do_dhcp_dialog(void)
 {
-    sc82( 22003, 3, 0, 0 );
+    sc82(22003, 3, 0, 0);
 }
 
 // Process the hello request.
 // Posting a response.
-void do_hello(int src_tid)
+void do_hello_received(int src_tid)
 {
     int dst_tid = src_tid;  // The caller receives the response
     // The message buffer address
@@ -138,8 +130,7 @@ void do_hello(int src_tid)
 
 }
 
-
-void xxxSendResponse(void)
+static void xxxSendResponse(void)
 {
     if (NoReply == TRUE){
         return;
@@ -335,13 +326,14 @@ xxxProcessEvent (
 // 'Hello' received. Let's respond it.
     case 44888:
         // printf("44888\n");
-        do_hello(caller_tid);
+        do_hello_received(caller_tid);
         break;
 
 // Out of range for system messages
 // comp00 display server is telling us that 
 // it was initialized and running.
 // The signature is 1234 5678
+// #bugbug: Any process can send these and flip.
     case 44900:
         Init.is_ds_running = TRUE;
         // printf("Init: DS is up!\n");
@@ -351,6 +343,7 @@ xxxProcessEvent (
 // comp00 display server is telling us that 
 // it is shutting down.
 // The signature is 1234 5678
+// #bugbug: Any process can send these and flip.
     case 44901:
         Init.is_ds_running = FALSE;
         // printf("Init: DS is down!\n");

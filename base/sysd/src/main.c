@@ -66,6 +66,9 @@ struct init_d  Init;
 // -----------------------------------------------------------
 // private functions: prototypes;
 
+static void draw_cool_menu(void);
+static void draw_exit_menu(void);
+
 
 // Workers called by 'compare string'.
 static void do_clear_console(void);
@@ -75,7 +78,7 @@ static void do_help(void);
 static void do_test_thread(void);
 static void do_init_prompt(void);
 static inline void do_int3(void);
-static void do_launch_de(void);
+static int do_launch_de(void);
 static void do_launch_de2(void);
 static void do_launch_list(void);
 static int do_init_winu(void);
@@ -306,7 +309,7 @@ static inline void do_int3(void)
 }
 
 // Main worker to launch the display server
-static void do_launch_de(void)
+static int do_launch_de(void)
 {
     int ret_val=-1;
     char filename[32];
@@ -345,7 +348,7 @@ static void do_launch_de(void)
     ret_val = (int) rtl_clone_and_execute(app1_name);
     if (ret_val <= 0){
         printf("Couldn't clone\n");
-        return;
+        goto fail;
     }
     Init.environment = EnvironmentWinuCore;
 
@@ -357,6 +360,10 @@ static void do_launch_de(void)
 
 // Quit the command line interface
     isTimeToQuitCmdLine = TRUE;
+    return 0;  // OK
+
+fail:
+    return (int) -1;
 }
 
 static void do_launch_de2(void)
@@ -414,8 +421,9 @@ static void do_launch_list(void)
 // Initialize Winu subsystem
 static int do_init_winu(void)
 {
-    do_launch_de();
-    return 0;
+    int rv = -1;
+    rv = (int) do_launch_de();
+    return rv;
 }
 
 static inline void do_sti(void)
@@ -1130,6 +1138,30 @@ static int loopSTDIN(void)
 //================================
 }
 
+
+static void draw_cool_menu(void)
+{
+    do_clear_console();
+
+    printf("\n");
+    printf("=============================================================\n");
+    printf("                     System Configuration  \n");
+    printf("=============================================================\n");
+    printf("\n");
+    printf("\n");
+    printf("  + (g) - Initialize GUI\n");
+    printf("\n");
+    printf("  + (q) - Quit the cool menu\n");
+    printf("\n");
+    printf("  + (r) - Reboot the system\n");
+    printf("\n");
+    printf("  + (s) - Shutdown the system\n");
+    printf("\n");
+
+    do_init_prompt();
+}
+
+/*
 // Coolmenu
 // Get input from sdtin.
 static int loopMenu(void)
@@ -1173,11 +1205,17 @@ static int loopMenu(void)
 
         if (C == 'g')
         {
-            do_launch_de();
-            msgloop_RunServer();
-            printf ("init: Unexpected error\n");
-            exit(0);
-            break;
+            //do_launch_de();
+            //msgloop_RunServer();
+            //printf ("init: Unexpected error\n");
+            //exit(0);
+            //break;
+
+            if (do_launch_de() == 0){
+                break;                  // flag is set, main will start the server loop
+            }
+            // Failed: stay in the menu, redraw the prompt.
+            do_init_prompt();
         }
 
         // q - Quit the cool menu.
@@ -1192,6 +1230,10 @@ static int loopMenu(void)
             if (yn_result == TRUE){
                 rtl_clone_and_execute("reboot.bin");
             }
+            if (yn_result != TRUE){
+                printf("Cancelled (%d)\n", yn_result);  // shows what came back
+                do_init_prompt();                       // redraw, so we can see we're alive
+            }
         }
         // Poweroff the system.
         if (C =='s')
@@ -1201,10 +1243,85 @@ static int loopMenu(void)
             if (yn_result == TRUE){
                 rtl_clone_and_execute("shutdown.bin");
             }
+            if (yn_result != TRUE){
+                printf("Cancelled (%d)\n", yn_result);  // shows what came back
+                do_init_prompt();                       // redraw, so we can see we're alive
+            }
         }
     };
 }
+*/
 
+static int loopMenu(void)
+{
+    register int C=0;
+    static int yn_result = FALSE;
+
+    draw_cool_menu();
+
+    while (1)
+    {
+        if (isTimeToQuitCmdLine == TRUE){
+            break;
+        }
+
+        C = (int) fgetc(stdin);
+
+        if (C == 'g')
+        {
+            if (do_launch_de() == 0){
+                break;
+            }
+            draw_cool_menu();       // launch failed: redraw
+        }
+
+        if (C == 'q'){
+            break;
+        }
+
+        if (C == 'r')
+        {
+            printf ("Reboot the system? (yn)\n");
+            yn_result = (int) rtl_y_or_n();
+            if (yn_result == TRUE){
+                rtl_clone_and_execute("reboot.bin");
+            }
+            if (yn_result != TRUE){
+                draw_cool_menu();   // cancelled: clear, header, prompt
+            }
+        }
+
+        if (C == 's')
+        {
+            printf ("Shutdown the system? (yn)\n");
+            yn_result = (int) rtl_y_or_n();
+            if (yn_result == TRUE){
+                rtl_clone_and_execute("shutdown.bin");
+            }
+            if (yn_result != TRUE){
+                draw_cool_menu();
+            }
+        }
+    };
+
+    return 0;
+}
+
+static void draw_exit_menu(void)
+{
+    do_clear_console();
+
+    printf("\n");
+    printf(":: Exit Gramado OS ::\n");
+    printf("\n");
+    printf("  + (s) - Shutdown the system\n");
+    printf("\n");
+    printf("  + (c) - Cancel\n");
+
+    do_init_prompt();
+}
+
+/*
 // menu: Exit Gramado OS.
 // Get input from sdtin.
 static int loopMenu_ExitGramadoOS(void)
@@ -1255,6 +1372,43 @@ static int loopMenu_ExitGramadoOS(void)
         }
     };
 }
+*/
+
+static int loopMenu_ExitGramadoOS(void)
+{
+    register int C=0;
+    static int yn_result = FALSE;
+
+    draw_exit_menu();
+
+    while (1){
+        if (isTimeToQuitCmdLine == TRUE){
+            break;
+        }
+
+        C = (int) fgetc(stdin);
+
+        if (C == 'c' || C == 'C'){
+            break;
+        }
+
+        if (C == 's' || C == 'S')
+        {
+            printf ("Shutdown the system? (yn)\n");
+            yn_result = (int) rtl_y_or_n();
+            if (yn_result == TRUE){
+                rtl_clone_and_execute("shutdown.bin");
+            }
+            if (yn_result != TRUE){
+                draw_exit_menu();
+            }
+        }
+    };
+
+    return 0;
+}
+
+
 
 //
 // $
@@ -1638,8 +1792,15 @@ Standard Linux Runlevels (0-6)
 
     if (fRunDesktop) {
         printf ("init: Desktop\n");
-        do_launch_de();
-        msgloop_RunServer();
+
+        if (do_launch_de() < 0)
+            loopMenu();
+        // Either the DS is coming, or the user picked 'g' in the menu
+        // and do_launch_de() succeeded there.
+        if (isTimeToQuitCmdLine == TRUE)
+        {
+            msgloop_RunServer();
+        }
         goto unexpected_exit;
 
     } else if (fRunShell) {
@@ -1709,6 +1870,7 @@ CommandInterpreter:
         if (isTimeToQuitCmdLine == TRUE)
         {
             msgloop_RunServer();
+            loopMenu();
             printf("init: Unexpected exit\n");
             exit(0);
         }   

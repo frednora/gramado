@@ -54,6 +54,10 @@ struct init_d
     pid_t pid;
     tid_t tid;
 
+    // Init process has a state machine.
+    // lts track the phases.
+    // int state;
+
 // Save the current runlevel
 // syscall: 288
     int __runlevel;
