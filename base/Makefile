@@ -20,6 +20,9 @@ CMDS_DIR = ../cmds
 # Kernel image
 KERNEL_DIR = kernel
 
+BOOT_DIR = boot
+# BOOT_DIR = boot2
+
 # #test
 # Putting the dependencies inside the kernel source tree.
 # The OS has two major components:
@@ -142,32 +145,32 @@ build-base:
 # O BL.BIN procura o kernel no diretorio GRAMADO/
 # See: fs/loader.c
 
-# (1) boot/arch/ 
+# (1) $(BOOT_DIR)/arch/ 
 
 # ::Build the bootloader.
-	@echo "Compiling boot/"
-	@$(MAKE) -C boot/arch/
+	@echo "Compiling $(BOOT_DIR)/"
+	@$(MAKE) -C $(BOOT_DIR)/arch/
 
-	@echo "Installing boot/"
+	@echo "Installing $(BOOT_DIR)/"
 
 # Copy the virtual disk into the rootdir.
-	@cp boot/arch/GRAMHV.VHD  .
+	@cp $(BOOT_DIR)/arch/GRAMHV.VHD  .
 
 # Copy the bootloader into the rootdir
-	@cp boot/arch/x86/bin/MIAMI.BIN   $(BUILD)/
-	@cp boot/arch/x86/bin/BMGRAM.BIN  $(BUILD)/
-	@cp boot/arch/x86/bin/BLGRAM.BIN  $(BUILD)/
-	@cp boot/arch/x86/bin/MBR0.BIN    $(BUILD)/
-	@cp boot/arch/x86/bin/APX86.BIN   $(BUILD)/
+	@cp $(BOOT_DIR)/arch/x86/bin/MIAMI.BIN   $(BUILD)/
+	@cp $(BOOT_DIR)/arch/x86/bin/BMGRAM.BIN  $(BUILD)/
+	@cp $(BOOT_DIR)/arch/x86/bin/BLGRAM.BIN  $(BUILD)/
+	@cp $(BOOT_DIR)/arch/x86/bin/MBR0.BIN    $(BUILD)/
+	@cp $(BOOT_DIR)/arch/x86/bin/APX86.BIN   $(BUILD)/
 
 # Copy the bootloader into the GRAMADO/ directory
-	@cp boot/arch/x86/bin/MIAMI.BIN   $(BUILD)/
-	@cp boot/arch/x86/bin/BMGRAM.BIN  $(BUILD)/GRAMADO
-	@cp boot/arch/x86/bin/BLGRAM.BIN  $(BUILD)/GRAMADO
-	@cp boot/arch/x86/bin/MBR0.BIN    $(BUILD)/GRAMADO
+	@cp $(BOOT_DIR)/arch/x86/bin/MIAMI.BIN   $(BUILD)/
+	@cp $(BOOT_DIR)/arch/x86/bin/BMGRAM.BIN  $(BUILD)/GRAMADO
+	@cp $(BOOT_DIR)/arch/x86/bin/BLGRAM.BIN  $(BUILD)/GRAMADO
+	@cp $(BOOT_DIR)/arch/x86/bin/MBR0.BIN    $(BUILD)/GRAMADO
 
 # Copy the bootloader into the DE/ directory.
-#	@cp boot/arch/x86/bin/APX86.BIN   $(BUILD)/DE   
+#	@cp $(BOOT_DIR)/arch/x86/bin/APX86.BIN   $(BUILD)/DE   
 
 # (2) $(KERNEL_DIR)/
 
@@ -418,13 +421,13 @@ clean-all: clean
 	-rm *.VHD
 	-rm *.ISO
 
-	-rm boot/arch/*.VHD 
+	-rm $(BOOT_DIR)/arch/*.VHD 
 
 # ==================
-# (1) boot/arch/
+# (1) $(BOOT_DIR)/arch/
 # Clear boot images
-#	-rm -rf boot/arch/arm/bin/*.BIN
-	-rm -rf boot/arch/x86/bin/*.BIN
+#	-rm -rf $(BOOT_DIR)/arch/arm/bin/*.BIN
+	-rm -rf $(BOOT_DIR)/arch/x86/bin/*.BIN
 
 # ==================
 # (2) $(KERNEL_DIR)/

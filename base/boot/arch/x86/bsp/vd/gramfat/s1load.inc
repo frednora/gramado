@@ -404,8 +404,7 @@ __loop_LOAD_IMAGE:
 Step8_PARAMETERS:
     mov dl, byte [DriveNumber]
 Step9_FLY:
-    PUSH WORD  0         ; CS
-    PUSH WORD  0x8000    ; Offset 
+    PUSH WORD  IMAGE_SEGMENT  ;0       ; CS
+    PUSH WORD  IMAGE_OFFSET   ;0x8000  ; Offset 
     RETF
-
 

@@ -7,15 +7,15 @@ all:
 
 # Create the virtual disk 0.
 	@echo "Create VHD using nasm"
-	@$(NASM) x86/bsp/vd/fat/main.asm \
-	-I x86/bsp/vd/fat/ \
+	@$(NASM) x86/bsp/vd/gramfat/main.asm \
+	-I x86/bsp/vd/gramfat/ \
 	-o GRAMHV.VHD 
 
 # MBR (backup version)
 # Create backup for MBR 0.
 	@echo "Building MBR0.BIN"
-	@$(NASM) x86/bsp/vd/fat/stage1.asm \
-	-I x86/bsp/vd/fat/ \
+	@$(NASM) x86/bsp/vd/gramfat/stage1.asm \
+	-I x86/bsp/vd/gramfat/ \
 	-o MBR0.BIN
 	@echo "Copying MBR0.BIN"
 	@-cp MBR0.BIN  x86/bin/

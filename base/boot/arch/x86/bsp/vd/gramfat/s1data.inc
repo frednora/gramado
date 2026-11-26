@@ -144,7 +144,7 @@ ImageName db  "BMGRAM  BIN", 0x0D, 0x0A, 0x00
 ; It is a new version for my standard BM, but more MS-DOS compatible if possible.
 ; DOS 1.25, 2.00 and 4.00. (MIT license)
 
-;ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
+; ImageName db  "MIAMI   BIN", 0x0D, 0x0A, 0x00
 
 
 ; ---------------------------
