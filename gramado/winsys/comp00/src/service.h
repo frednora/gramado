@@ -117,13 +117,8 @@ int serviceAsyncCommand(void);
 // 2222: service 1
 void serviceExitGWS(void);
 
-// 2223
-// Put a message into the client's queue.
-int servicePutClientMessage(void);
-
-// 2224
-// Get a message from the client's queue.
-int serviceGetClientMessage(void);
+// 2223: #deprecated
+// 2224: #deprecated
 
 // 2240
 // Set a text into a buffer in the window structure.
@@ -155,14 +150,6 @@ int serviceGetWindowInfo(void);
 // given the image name.
 void serviceCloneAndExecute(void);
 
-
-// --------------
-
-// ??
-// Button
-// Deprecated?
-// See: main.c
-int serviceDrawButton(void); 
 
 // ??
 // Get a message given the Index and the Restart flag.

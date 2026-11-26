@@ -519,12 +519,7 @@ int serviceClientEvent(void)
 }
 
 // serviceNextEvent:
-// When a client get the next event from it's own queue.
-// :: Retira em head.
-// #todo: #bugbug: Por enquando só pegamos
-// os eventos que estao na janela com o foco de entrada.
-// Mas talvez devamos pegar os eventos em todas as janelas
-// que pertencem ao cliente que chamou esse serviço.
+// We get the message from the Head index.
 int serviceNextEvent(void)
 {
 // Get an event from the queue in a given window.
@@ -533,8 +528,8 @@ int serviceNextEvent(void)
 // Get the window in the queue of a given window.
 // #old from Window with focus.
 
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d *w;
+    unsigned long *message_address = (unsigned long *) &__buffer[0];
     register int Head=0;
     register int i=0;
 
@@ -560,8 +555,11 @@ int serviceNextEvent(void)
         goto fail;
     }
 
-// Building the next response.
-// It will be sent in the socket loop. Lets clean it.
+//
+// Building the next response
+//
+
+// Lets clean the response buffer
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
@@ -583,6 +581,7 @@ int serviceNextEvent(void)
     next_response[9] = (unsigned long) w->ev_long4[Head];
 
 // It advances the queue head, clears the slot, and returns.
+
     w->ev_head++;
     if (w->ev_head >= 32){
         w->ev_head = 0;
@@ -602,19 +601,22 @@ fail:
 
 // serviceNextEvent2:
 // Get a message given the Index and the Restart flag.
+// Get an event from a queue of a given window, and queue index.
+// #bugbug: 
+// Why are we rounding is we are getting from a 
+// given slot, not the current head?
 // IN: long1=index, long2=restart index or not.
+
 int serviceNextEvent2(void)
 {
-// # Not used!
-// Business Logic:
-// Get an event from a queue of a given window, and queue index.
 
+// #ps: Not in use used
+
+    struct gws_window_d *focus_w;  // Window with focus
     unsigned long *message_address = (unsigned long *) &__buffer[0];
-// Window with focus.
-    struct gws_window_d *focus_w;
     int Index=0;
     int Restart=0;
-    register int Head=0;
+    register int FromThisIndex = 0;
     register int i=0;
 
     focus_w = (struct gws_window_d *) get_focus();
@@ -629,64 +631,74 @@ int serviceNextEvent2(void)
     Index   = (int) message_address[2];  //long1
     Restart = (int) message_address[3];  //long2
 
-// ====================================
+//
 // Building the next response.
-// It will be sent in the socket loop.
+//
 
+// Clean the message buffer
     for (i=0; i<32; i++)
         next_response[i] = 0;
 
 // Header: Nothing, msg type, signature, signature.
+
     next_response[0] = 0;
     next_response[1] = SERVER_PACKET_TYPE_EVENT;
     next_response[2] = 1234;
     next_response[3] = 5678;
 
-// Index
+// Index:
 // It comes in the request.
-    Head = (int) (Index & 0xFFFFFFFF);
-    if (Head<0||Head>=32){
+    FromThisIndex = (int) (Index & 0xFFFFFFFF);
+    if (FromThisIndex < 0 || FromThisIndex >= 32)
+    {
         goto fail;
     }
 // The message packet: wid, msg=(event type), data1, data2.
-    next_response[4] = (unsigned long) focus_w->ev_wid[Head];
-    next_response[5] = (unsigned long) focus_w->ev_msg[Head];
-    next_response[6] = (unsigned long) focus_w->ev_long1[Head];
-    next_response[7] = (unsigned long) focus_w->ev_long2[Head];
+    next_response[4] = (unsigned long) focus_w->ev_wid[FromThisIndex];
+    next_response[5] = (unsigned long) focus_w->ev_msg[FromThisIndex];
+    next_response[6] = (unsigned long) focus_w->ev_long1[FromThisIndex];
+    next_response[7] = (unsigned long) focus_w->ev_long2[FromThisIndex];
 
 // Extra
-    next_response[8] = (unsigned long) focus_w->ev_long3[Head];
-    next_response[9] = (unsigned long) focus_w->ev_long4[Head];
+    next_response[8] = (unsigned long) focus_w->ev_long3[FromThisIndex];
+    next_response[9] = (unsigned long) focus_w->ev_long4[FromThisIndex];
 
 // Clean
-    focus_w->ev_wid[Head] = 0;
-    focus_w->ev_msg[Head] = 0;
-    focus_w->ev_long1[Head] = 0;
-    focus_w->ev_long2[Head] = 0;
+    focus_w->ev_wid[FromThisIndex] = 0;
+    focus_w->ev_msg[FromThisIndex] = 0;
+    focus_w->ev_long1[FromThisIndex] = 0;
+    focus_w->ev_long2[FromThisIndex] = 0;
+
 // Restart
-    if (Restart==TRUE){
+    if (Restart == TRUE){
         focus_w->ev_head = 0;
         focus_w->ev_tail = 0;
         return 0;
     }
+
 // Round
+// #bugbug: 
+// Why are we rounding is we are getting from a 
+// given slot, not the current head?
     focus_w->ev_head++;
     if (focus_w->ev_head >= 32){
         focus_w->ev_head=0;
     }
-// Done
-    return 0;
-// Fail
+
+    return 0;  // Done
+
 fail:
 // Restart
-    if (Restart == TRUE){
-        if ((void*) focus_w != NULL){
-            if (focus_w->magic == 1234){
-            focus_w->ev_head = 0;
-            focus_w->ev_tail = 0;
+    if (Restart == TRUE)
+    {
+        if ((void*) focus_w != NULL)
+        {
+            if (focus_w->magic == 1234)
+            {
+                focus_w->ev_head = 0;
+                focus_w->ev_tail = 0;
             }
         }
-
         return 0;  // Done
     }
 
@@ -695,18 +707,21 @@ fail:
 
 // Query window info.
 // #todo: We can deliver more information yet.
+// Getting information about a given window.
+// #ps: This is a big response with multiple fields.
 // IN: wid ...
+
 int serviceGetWindowInfo(void)
 {
-// Business Logic:
-// Getting information about a given window.
-
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
-// The request will give us the wid and the message code.
     struct gws_window_d *w;
+    unsigned long *message_address = (unsigned long *) &__buffer[0];
     int wid = -1;
     int msg_code = -1;
     register int i=0;
+
+    struct dccanvas_d *dc00;
+    struct canvas_information_d *ci00;
+
 
 // Get wid and message code
     wid      = (int) message_address[0];  // window id 
@@ -730,6 +745,10 @@ int serviceGetWindowInfo(void)
     if (w->magic != 1234){
         goto fail;
     }
+
+//
+// Building the response
+//
 
 // Clear the buffer used for responses
     for (i=0; i<32; i++){
@@ -768,12 +787,8 @@ int serviceGetWindowInfo(void)
     //next_response[14] = (unsigned long) 0;
 
 // ==========================================
-// #test
 // Information about the canvas for the client area
 // if the window has one.
-
-    struct dccanvas_d *dc00;
-    struct canvas_information_d *ci00;
 
     if (w->style & WS_APP)
     {
@@ -818,8 +833,6 @@ int serviceGetWindowInfo(void)
         next_response[8] = (unsigned long) w->shflags_p; 
     } 
 
-// ==========================================
-
 // The response buffer is done.
 // Return and send the response.
 done:
@@ -834,7 +847,6 @@ fail:
 // Close all the clients and close the server.
 void serviceExitGWS(void)
 {
-// Business Logic:
 // Exit the display server.
 // For now we're exiting without any kind of notification.
 // Maybe we need to notify all the clients before exiting.
@@ -850,23 +862,9 @@ void serviceExitGWS(void)
     yellow_status("serviceExitGWS");
 
     DestroyAllWindows();
+
+    // IsTimeToQuit = TRUE;
     exit(0);
-}
-
-// #todo
-// Now we put messages only in the window structure's message queue.
-int servicePutClientMessage(void)
-{
-    debug_print("servicePutClientMessage: deprecated\n");
-    return 0;
-}
-
-// #todo
-// Now we get messages only in the window structure's message queue.
-int serviceGetClientMessage(void)
-{
-    debug_print("serviceGetClientMessage: deprecated\n");
-    return 0;
 }
 
 // serviceAsyncCommand:
@@ -876,13 +874,14 @@ int serviceGetClientMessage(void)
 // Asunchronous Command.
 // + We're a receiving asynchronous events
 //   and reacting to these events.
+
 int serviceAsyncCommand(void)
 {
     unsigned long *message_address = (unsigned long *) &__buffer[0];
 
     // int window_id=0;
     unsigned long message_id=0;
-    unsigned long request_id=0;
+    register unsigned long request_id = 0;
     unsigned long subrequest_id=0;
     unsigned long data=0;
 
@@ -894,7 +893,7 @@ int serviceAsyncCommand(void)
 
 // Helper
     int wid = -1;
-    register int i=0;
+    int i=0;
 
     //server_debug_print ("serviceAsyncCommand:\n");
     //asm("cli");
@@ -1204,38 +1203,40 @@ int serviceAsyncCommand(void)
     // 1000 - Put a pixel into the backbuffer
     // IN: color, x, y, rop
     // #todo: Explain it better.
+    // #ps: Why. This is so slow for any kind of drawing.
+    // We don't need this.
     case ASYNC_REQUEST_PUT_PIXEL:
-        // #debug
         // printf("1000: %d %d %d\n",data1,data2,data3);
         libdisp_backbuffer_putpixel(
             (unsigned int) data3,
             (data1 & 0xFFFFFFFF),
             (data2 & 0xFFFFFFFF),
-            (data4 & 0xFFFFFFFF) );
+            (data4 & 0xFFFFFFFF) 
+        );
         break;
 
-    //
-    case ASYNC_REQUEST_DESTROY_ALL_WINDOWS:  // 1010:
+    // 1010
+    case ASYNC_REQUEST_DESTROY_ALL_WINDOWS:
         DestroyAllWindows();
         break;
 
-    //
-    case ASYNC_REQUEST_MINIMIZE_ALL_WINDOWS:  //1011:
+    // 1011
+    case ASYNC_REQUEST_MINIMIZE_ALL_WINDOWS:
         MinimizeAllWindows();
         break;
 
-    //
-    case ASYNC_REQUEST_MAXIMIZE_ALL_WINDOWS:  //1012:
+    // 1012
+    case ASYNC_REQUEST_MAXIMIZE_ALL_WINDOWS:
         MaximizeAllWindows();
         break;
 
-    //
-    case ASYNC_REQUEST_RESTORE_ALL_WINDOWS:  //1013:
+    // 1013
+    case ASYNC_REQUEST_RESTORE_ALL_WINDOWS:
         RestoreAllWindows();
         break;
 
-    //
-    case ASYNC_REQUEST_MAXIMIZE_ACTIVE_WINDOWS:  //1014:
+    // 1014
+    case ASYNC_REQUEST_MAXIMIZE_ACTIVE_WINDOWS:
         if ((void*) WindowManager.active_window != NULL)
             maximize_window(WindowManager.active_window);
         break;
@@ -1273,7 +1274,6 @@ done:
     for (i=0; i<MSG_BUFFER_SIZE; i++){
         __buffer[i] = 0;
     };
-
     return 0;  // Done
 
 fail:
@@ -2048,20 +2048,16 @@ fail:
     return (int) -1;
 }
 
+// Change window position
 int serviceChangeWindowPosition(void)
 {
-// Business Logic:
-// Change window position.
-
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d *window;
     int window_id = -1;
+    unsigned long *message_address = (unsigned long *) &__buffer[0];
     unsigned long x = 0;
-    unsigned long y = 0;
-    
+    unsigned long y = 0;   
     register int i=0;
 
-    // #debug
     //server_debug_print ("gwssrv: serviceChangeWindowPosition\n");
 
     window_id = message_address[0];  // Get wid
@@ -2160,15 +2156,6 @@ int serviceResizeWindow(void)
         __buffer[i] = 0;
 
     return 0;
-}
-
-// #deprecated
-int serviceDrawButton(void)
-{
-    printf            ("serviceDrawButton: deprecated\n");
-    // #hang because we need a response
-    exit(1);
-    return -1;
 }
 
 // Redraw a window. (Repaint).
@@ -2416,24 +2403,21 @@ fail:
 
 
 // 1006
+// Refresh a window.
 // Flush a given window into the backbuffer.
 // #todo: Here we can simple mark this window as 'dirty'
 // and let the compositor do its job.
 int serviceRefreshWindow(void)
 {
-// Business Logic:
-// Refresh a window.
-
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d *window;
     int window_id = -1;
+    unsigned long *message_address = (unsigned long *) &__buffer[0];
     //unsigned long x;
     //unsigned long y;
     //unsigned long color;
     //int __char;
     //char *text_buffer;    // #todo
 
-    // #debug
     // server_debug_print ("serviceRefreshWindow:\n");
 
     // #todo
@@ -2510,13 +2494,11 @@ fail:
 }
 
 // #todo
+// Clone this process and execute the child.
 // Get the name of the image for a process to lauch.
 // IN: for arguments and a string.
 void serviceCloneAndExecute(void)
 {
-// Business Logic:
-// Clone this process and execute the child.
-
     unsigned long *message_address = (unsigned long *) &__buffer[0];
 // ==================================
 // Get string from message
@@ -2701,20 +2683,17 @@ fail:
     return (int) -1;
 }
 
+// Set a text into a buffer in the window structure.
 // Put the text into the buffer
 // if the window is an editbox window.
 int serviceSetText(void)
 {
-// Business Logic:
-// Set a text into a buffer in the window structure.
-
-    unsigned long *message_address = (unsigned long *) &__buffer[0];
     struct gws_window_d  *window;
     int window_id = -1;      // index 4
+    unsigned long *message_address = (unsigned long *) &__buffer[0];
     unsigned long x;         // index 5
     unsigned long y;         // index 6
     unsigned int color;      // index 7
-
     register int i=0;
 
 // Device context
@@ -2886,7 +2865,6 @@ fail:
 
 int serviceGetText(void)
 {
-// Business Logic:
 // Get a text from a window.
 // Editbox only.
 
@@ -3038,7 +3016,6 @@ crazy_fail:
 int 
 servicelineBackbufferDrawHorizontalLine(void)
 {
-// Business Logic:
 // Draw a horizontal line.
 
     unsigned long *message_address = (unsigned long *) &__buffer[0];
@@ -3301,7 +3278,7 @@ exit0:
 // OUT
 // <0 : error 
 // Process the requests.
-// All the services are the 'Business Logic'.
+
 static int
 dsProcedure ( 
     int client_fd,
@@ -3521,19 +3498,14 @@ dsProcedure (
         NoReply = TRUE;
         break;
 
-    // 2223:
-    // Put a message into the client's queue.
-    // No response.
+    // 2223: #deprecated
     case GWS_PutClientMessage:
-        servicePutClientMessage();
-        NoReply = TRUE;
+        goto fail;
         break;
 
-    // 2224:
-    // Get a message from the client's queue.
+    // 2224: #deprecated
     case GWS_GetClientMessage:
-        serviceGetClientMessage();
-        NoReply = FALSE;
+        goto fail;
         break;
 
     // 2240:
@@ -3589,13 +3561,12 @@ dsProcedure (
 
     // ...
 
-    // Business Logic: Invalid request.
     default:
         goto fail;
         break;
     }
-// Done
-    return (int) Status;
+
+    return (int) Status;  // Done
 
 fail:
     return (int) -1;

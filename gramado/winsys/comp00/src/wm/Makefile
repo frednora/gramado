@@ -117,7 +117,7 @@ main.o:
 	$(CC)  -c wm.c    $(CFLAGS) $(CINCLUDES) -o wm.o
 all-c:
 
-	$(CC)  -c wminput.c    $(CFLAGS) $(CINCLUDES) -o wminput.o
+	$(CC)  -c wminput.c  $(CFLAGS) $(CINCLUDES) -o wminput.o
 
 	$(CC) -c bmp.c       $(CFLAGS) $(CINCLUDES) -o bmp.o
 

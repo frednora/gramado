@@ -2,7 +2,7 @@
 // Created by Fred Nora.
 
 // Version?
-// See protocol version in api/protocol.h.
+// See protocol version in protocol.h.
 
 extern int os_mode;      // GRAMADO_P1 ...
 extern int server_mode;  // DEMO ...
@@ -39,8 +39,8 @@ extern int server_mode;  // DEMO ...
 
 // Configuration and debug support.
 #include "config/config.h"
-#include "api/protocol.h"
-#include "api/async.h"
+#include "protocol.h"
+#include "async.h"
 
 #include "libds/dsglob.h"
 #include "comp/compglob.h"
@@ -148,7 +148,7 @@ extern int server_mode;  // DEMO ...
 
 // The services called by the dispacher.
 // It needs to be the last one.
-#include "api/service.h"
+#include "service.h"
 
 #include "comp/comploop.h"
 
