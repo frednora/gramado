@@ -1,0 +1,253 @@
+=============================================================================
+DESIGN NOTE: APIC / APIC TIMER / IOAPIC INITIALIZATION
+=============================================================================
+Files:   apic.c, apictim.c, ioapic.c
+Status:  BSP path working (timer rate verified after divisor fix).
+         AP path (per-core LAPIC + timer) still to be implemented/verified.
+Credits: Parts ported from Sirius-x86-64 (Nelson Cole) and OSDev wiki.
+
+
+-----------------------------------------------------------------------------
+1. OVERVIEW
+-----------------------------------------------------------------------------
+The kernel replaces the legacy 8259 PIC with the APIC architecture:
+
+  LAPIC   - one per CPU core. Handles the core's own timer, IPIs
+            (INIT/STARTUP), error and local interrupt lines.
+  IOAPIC  - one for the system. Routes external device IRQs (keyboard,
+            mouse, IDE, NIC) to a LAPIC.
+  PIC     - disabled (all lines masked) after the switch to APIC.
+
+Key principle:
+  * Some work is SYSTEM-WIDE and happens ONCE, on the BSP.
+  * Some work is PER-CPU and must be done by EACH core on itself
+    (BSP and every AP).
+
+Device interrupts are all routed to the BSP. The APs receive only their
+own LAPIC timer interrupt and IPIs.
+
+
+-----------------------------------------------------------------------------
+2. ONCE vs PER-CPU
+-----------------------------------------------------------------------------
+ONCE (BSP only):
+  - Map LAPIC MMIO (0xFEE00000 -> LAPIC_VA) and save g_lapic_va.
+  - Fill the lapic_info[] array (all NR_CPUS entries).
+  - Disable the legacy PIC (__apic_disable_legacy_pic).
+  - Initialize the IOAPIC and its redirection table.
+  - Calibrate the LAPIC timer against the PIT (apictim_calibrate).
+
+PER-CPU (BSP and each AP, on itself):
+  - Enable the LAPIC: IA32_APIC_BASE MSR enable bit, then SVR.
+  - Set TPR = 0.
+  - Program LVT entries (timer, perf, LINT0, LINT1, error).
+  - Load the IDT (lidt) containing the timer, spurious and IPI vectors.
+  - Program the LAPIC timer (divide, LVT, initial count) using the
+    ticks_per_ms value calibrated by the BSP.
+  - Execute STI.
+
+
+-----------------------------------------------------------------------------
+3. BOOT ORDER (BSP)
+-----------------------------------------------------------------------------
+  1. lapic_info_initializing(lapic_pa, 0)
+       - Maps LAPIC registers (2MB region in PD0, flush TLB via CR3 reload).
+       - Sets g_lapic_va = LAPIC_VA.
+       - Initializes all lapic_info[i] fields, reads hw LAPIC ID/version.
+       - Marks the cpu as running.
+  2. apic_setup_registers(0)
+       - Disables legacy PIC.
+       - Sets DFR/LDR, TPR = 0.
+       - Masks all LVT entries.
+       - Writes SVR = 0x100 | LAPIC_SPURIOUS_VECTOR (enable + spurious).
+       - Sets IA32_APIC_BASE enable bit.
+       - Calls apictim_initialize(0).
+  3. ioapic_initialize()   (called by archinit() in kmain.c)
+       - Maps IOAPIC registers, builds redirection table, unmasks
+         selected IRQs.
+  4. Start the other cores (see section 8).
+  5. STI when kernel initialization is complete.
+
+
+-----------------------------------------------------------------------------
+4. LAPIC REGISTER SETUP (apic.c)
+-----------------------------------------------------------------------------
+  TPR  (0x80)   = 0         Accept all interrupt priorities.
+  DFR  (0xE0)   = 0xFFFFFFFF  Flat mode.
+  LDR  (0xD0)   = 0x01000000  (all cores currently use logical id 1)
+  SVR  (0xF0)   = 0x100 | spurious vector
+                  bit 8 = LAPIC enabled. An IDT entry MUST exist for the
+                  spurious vector (handler just returns, no EOI).
+  LVT entries   All masked at setup. Timer is unmasked later.
+  EOI  (0xB0)   Write 0. Every LAPIC-delivered interrupt handler must
+                send it (local_apic_eoi_00()).
+
+Two access styles exist in the code:
+  - local_apic_*_command(addr, val, lapic_info_id)  - "old", per-info VA.
+  - local_apic_*_command_00(addr, val)              - "new", uses global
+    g_lapic_va. Preferred for code that runs ON the core being
+    configured (ISRs, AP entry), because all cores see their OWN LAPIC at
+    the same virtual address.
+
+
+-----------------------------------------------------------------------------
+5. LAPIC TIMER (apictim.c)
+-----------------------------------------------------------------------------
+5.1 Calibration (once, BSP, ~10 ms using PIT channel 2)
+  - Mask LVT timer.
+  - Set divide register to APIC_TIMER_DIVIDE_VALUE.
+  - Program PIT ch2 one-shot for 1/100 s (10 ms).
+  - Write initial count 0xFFFFFFFF.
+  - Wait for PIT ch2 to expire.
+  - Read current count right after the wait.
+  - elapsed = 0xFFFFFFFF - current_count   (counts in 10 ms)
+  - ticks_per_ms = elapsed / 10
+
+5.2 Running the timer (per CPU)
+  - Divide register = APIC_TIMER_DIVIDE_VALUE   (SAME value as calibration)
+  - LVT timer = periodic mode, vector LVT_TIMER_VECTOR, unmasked
+  - Initial count = ticks_per_ms * period_ms
+
+5.3 THE DIVISOR RULE  (bug found and fixed)
+  The divisor used for calibration and the divisor used at runtime MUST
+  be identical. The old code calibrated at /16 (0x3) and ran at /128
+  (0xA), so each "1 ms" tick was really ~8 ms.
+
+      Hz = 1000 * (cal_divisor / run_divisor)     (initial = ticks_per_ms)
+
+  Divide register encoding:
+      0x0 = /2    0x1 = /4    0x2 = /8     0x3 = /16
+      0x8 = /32   0x9 = /64   0xA = /128   0xB = /1
+
+  Current choice: 0x3 (/16). Define it ONCE:
+      #define APIC_TIMER_DIVIDE_VALUE 0x3
+  and use it in both calibration and runtime.
+
+  Choosing the tick rate:
+      initial_count = ticks_per_ms * 1000 / desired_hz
+      e.g. 100 Hz = ticks_per_ms * 10
+
+5.4 Timer vector
+  The timer uses LVT_TIMER_VECTOR (e.g. 220), NOT vector 32, because
+  32..55 are used by the IOAPIC redirection table (see section 6).
+
+5.5 Notes
+  - The LAPIC timer is PER CORE. Each core must program its own.
+  - The LAPIC timer clock is normally the same on all cores, so
+    calibrate ONCE and reuse ticks_per_ms on the APs.
+  - Do NOT run the PIT calibration on the APs: PIT ch2 / port 0x61 is
+    shared, and apic_timer_ticks is a single static variable.
+
+
+-----------------------------------------------------------------------------
+6. IOAPIC (ioapic.c)
+-----------------------------------------------------------------------------
+  - Initialized once, by the BSP, from archinit().
+  - Registers mapped at IOAPIC_VA (PA = IO_APIC_BASE).
+  - Access is indirect: write register index to IOREGSEL, then
+    read/write IOWIN. This pair is NOT atomic.
+  - Redirection table: 24 entries, pin n -> vector (32 + n).
+  - All entries start masked, fixed delivery, physical destination,
+    edge, active high, destination = BSP hardware LAPIC ID.
+  - Selectively unmasked by config flags:
+        IRQ1  keyboard
+        NIC   currentNIC->irq_line
+        IRQ12 mouse
+        IRQ14 primary IDE
+        IRQ15 secondary IDE
+  - All device interrupts therefore go to the BSP.
+
+Vector map (summary):
+    32..55            IOAPIC pins 0..23 (devices)
+    LVT_TIMER_VECTOR  LAPIC timer (e.g. 220)
+    LAPIC_SPURIOUS    Spurious (SVR low byte, e.g. 0xFF)
+    IPI vectors       (as defined by the SMP code)
+
+
+-----------------------------------------------------------------------------
+7. INTERRUPT HANDLER RULES
+-----------------------------------------------------------------------------
+  - With the PIC disabled, EVERY handler for IOAPIC/LAPIC vectors must
+    send the LAPIC EOI. A PIC EOI (out 0x20) is no longer correct.
+  - The spurious vector handler must NOT send EOI.
+  - Timer ISR: increment a PER-CPU tick counter, send EOI, then call
+    the scheduler.
+  - Scheduler state ("current thread", run queue) must be per-CPU or
+    protected by spinlocks.
+  - apic_TimerHandler0000() is a test routine (draws rectangles, no
+    EOI). It must NOT be wired to the timer vector.
+
+
+-----------------------------------------------------------------------------
+8. AP (SECONDARY CORE) BRING-UP  -  PLAN
+-----------------------------------------------------------------------------
+BSP side:
+  - Send INIT IPI, wait, send STARTUP IPI twice (vector 0x08 = 0x8000
+    trampoline), clearing ESR before each send.
+AP side (after trampoline reaches long mode):
+  1. Set up stack, GDT/TSS (per-CPU).
+  2. lidt (same IDT as the BSP).
+  3. apic_init_this_cpu(id):
+       - IA32_APIC_BASE enable
+       - TPR = 0, LVTs masked
+       - SVR = 0x100 | spurious
+       - store hw LAPIC ID (use a LOCAL variable, not a global)
+  4. apictim_start_this_cpu(id):
+       - divide = APIC_TIMER_DIVIDE_VALUE
+       - LVT periodic, unmasked, LVT_TIMER_VECTOR
+       - initial count = ticks_per_ms * period_ms
+  5. STI.
+  6. Enter idle/scheduler loop.
+
+
+-----------------------------------------------------------------------------
+9. KNOWN ISSUES / TODO
+-----------------------------------------------------------------------------
+  [ ] apic_setup_registers() mixes once-per-system and per-CPU work.
+      Split into apic_init_system() (BSP) and apic_init_this_cpu() (all).
+  [ ] Split apictim_initialize() into apictim_calibrate() (BSP, once)
+      and apictim_start_this_cpu() (all cores).
+  [ ] Remove the meaningless first count read (write 0xFFFFFFFF then
+      read immediately) in the calibration.
+  [ ] Global 'localId' in apic.c: use a local variable.
+  [ ] cpu_get_apic_base(): passes (unsigned int)&eax / &edx to
+      cpuGetMSR, which truncates pointers on x86-64. Use real pointers
+      or return a 64-bit value.
+  [ ] Enable LAPIC (MSR) BEFORE writing SVR/LVTs.
+  [ ] LDR: all cores use logical id 1. Fix if logical-mode IPIs are used.
+  [ ] __apic_disable_legacy_pic() must run only once.
+  [ ] IOAPIC: IO_APIC_ID write (bits 24-27, not 0-7); verify
+      struct __IOAPIC_REDIR_TBL is packed and exactly 8 bytes (or build
+      the two 32-bit words with shifts); IOREGSEL as 32-bit write.
+  [ ] IOAPIC: PCI devices (e.g. NIC) normally want level-triggered,
+      active-low. ISA IRQ0 (PIT) is often on pin 2 (MADT override).
+  [ ] Map LAPIC/IOAPIC pages uncacheable (PCD/PWT) for real hardware.
+  [ ] Spinlock around IOAPIC index/data access if APs ever touch it.
+  [ ] Per-CPU tick counter in the timer ISR.
+
+
+-----------------------------------------------------------------------------
+10. VERIFICATION CHECKLIST
+-----------------------------------------------------------------------------
+  - Log ticks_per_ms after calibration (and the divisor used).
+  - Count timer interrupts over exactly one second per CPU:
+        expected ~ 1000 * (cal_divisor / run_divisor) * (1ms / period)
+    If the BSP shows ~125 Hz instead of ~1000 Hz, suspect a divisor
+    mismatch.
+  - Print per-CPU tick counters from each core's idle loop.
+        AP counter stays 0  -> AP timer not running (LAPIC enable,
+                               lidt, LVT/initial count, or missing STI).
+        AP counts but threads don't switch -> scheduler problem
+                               (global state, missing locks).
+  - Test with and without SMP: tick rate on the BSP should match.
+
+
+-----------------------------------------------------------------------------
+11. HISTORY
+-----------------------------------------------------------------------------
+  - Bug: calibrated at divide /16 (0x3), ran at /128 (0xA). Effective
+    tick was ~8 ms (125 Hz) instead of 1 ms (1000 Hz). Threads ran longer
+    before preemption and tick counts in logs were lower.
+    Fix: single APIC_TIMER_DIVIDE_VALUE (0x3) for both. Behavior now
+    matches the non-SMP configuration.
+=============================================================================

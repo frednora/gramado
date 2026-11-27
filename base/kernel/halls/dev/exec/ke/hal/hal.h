@@ -91,6 +91,8 @@ struct hardware_d  *Hardware;
 // == prototypes =================
 //
 
+void hal_DeviceInterface_TIMER(void); 
+
 void hal_io_delay(void);
 
 unsigned long hal_get_date(void);

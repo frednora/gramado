@@ -175,7 +175,6 @@ unsigned long get_milliseconds(void);
 unsigned long get_hz(void);
 unsigned long now(void);
 
-void DeviceInterface_PIT(void); 
 
 void set_timeout(unsigned long ticks);
 unsigned long get_timeout(void);

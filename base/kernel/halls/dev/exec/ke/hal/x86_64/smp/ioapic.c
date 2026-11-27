@@ -210,6 +210,7 @@ __set_ioapic_redir_table(
 }
 
 // Initialize the redirection table
+// Masking all the itnerrupts
 // Called by __setup_ioapic().
 static int __ioapic_initialize_redirection_table(int maximum_redirection)
 {
@@ -239,7 +240,7 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
     unsigned char First = 32;  // Start with irq0?
     const unsigned char IsMasked = 1;
 
-    for (i=0; i<Max; i++) 
+    for (i=0; i < Max; i++) 
     {
         //if (i == 11){
         //}
@@ -248,7 +249,7 @@ static int __ioapic_initialize_redirection_table(int maximum_redirection)
         // Escreve na tabela e configura registradores.
         __set_ioapic_redir_table(
 	        i,            // IRQn
-	        (First + i),  // vector
+	        (First + i),  // vector (Start in 32)
 	        0,            // Delivery Mode
 	        0,            // Destination Mode
 	        0,            // RO
@@ -307,6 +308,11 @@ static int __setup_ioapic(void)
 // Unmask some of them
 //
 
+// #ps:
+// Maybe the initialization of apictimer is done after this initialization.
+// So the IRQ0 is unmasked later, not now. (confirmation needed)
+
+// IRQ0 (later)
 // IRQ1  → vector 33 (PS/2 Keyboard)
 // IRQ9  →           (NIC)
 // IRQ12 → vector 44 (PS/2 Mouse)
@@ -328,14 +334,16 @@ static int __setup_ioapic(void)
     }
 */
 
-    // (Probably 9) - NIC
-    // #test 
-    // If the NIC device is already initialized.
-    if ((void*) currentNIC != NULL)
+
+// NIC
+// (Probably 9)
+// #test: If the NIC device is already initialized
+
+    if (CONFIG_INITIALIZE_IOAPIC_UNMASK_NIC == 1)
     {
-        if (currentNIC->magic == 1234)
+        if ((void*) currentNIC != NULL)
         {
-            if (CONFIG_INITIALIZE_IOAPIC_UNMASK_NIC == 1)
+            if (currentNIC->magic == 1234)
             {
                 printk("IOAPIC: Unmasking NIC IRQ line %d\n", 
                     currentNIC->irq_line );
@@ -343,6 +351,7 @@ static int __setup_ioapic(void)
             }
         }
     }
+
 
     // 12 - Mouse
     if (CONFIG_INITIALIZE_IOAPIC_UNMASK_MOUSE == 1)

@@ -7,6 +7,9 @@
 
 #include <kernel.h>
 
+#define APIC_TIMER_DIVIDE_VALUE    0x3
+
+
 #define APIC_TIMER_NULL  0
 
 #define APIC_TIMER_CONFIG_DATA_LVT(TimerMode,Mask,TriggerMode,Remote,InterruptInput,DeliveryMode,Vector)(\
@@ -202,9 +205,15 @@ int apictim_initialize(int lapic_info_id)
     __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
 
 // --------------------------------------------------
+// Step 2 (calibration): divide by 16
 // 2 -Set divide configuration:
 // Divide Configuration Register, to divide by 16
-    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0x3, lapic_info_id);
+
+    __apictim_write_command(
+        LAPIC_DIVIDE_TIMER, 
+        APIC_TIMER_DIVIDE_VALUE,  // 0x3 
+        lapic_info_id
+    );
 
 
 // --------------------------------------------------
@@ -276,12 +285,30 @@ int apictim_initialize(int lapic_info_id)
     __apictim_write_command(LAPIC_LVT_TIMER, val, lapic_info_id);
 
 // --------------------------------------------------
+// Step 10 (runtime): divide by 128   <-- the bug
 // 10 - Set divide register again (optional, hardware quirk):
 // Setting divide value register again not needed by the manuals
 // Although I have found buggy hardware that required it
 // divide by 128
 // Option: 0x3
-    __apictim_write_command(LAPIC_DIVIDE_TIMER, 0xa, lapic_info_id);
+
+// Value  Divide by
+// 0x0	  2
+// 0x1	  4
+// 0x2	  8
+// 0x3	  16   1 ms (1000 ticks)
+// 0x8	  32
+// 0x9	  64
+// 0xA	  128  8 ms (125 ticks)
+// 0xB	  1
+
+// Keep a single constant for the divisor.
+
+    __apictim_write_command(
+        LAPIC_DIVIDE_TIMER, 
+        APIC_TIMER_DIVIDE_VALUE,  // 0x3 
+        lapic_info_id 
+    );
 
 
 // --------------------------------------------------

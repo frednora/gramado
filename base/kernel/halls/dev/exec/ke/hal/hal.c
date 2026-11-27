@@ -101,6 +101,33 @@ struct UPProcessorBlock_d  UPProcessorBlock;
 struct processor_d  *processor;
 
 
+//
+// =============================
+//
+
+
+// The PIT handler for timer routines.
+// Called by irq0_TIMER().
+void hal_DeviceInterface_TIMER(void)
+{
+    // if (PITInfo.initialized != TRUE)
+        // return;
+
+    jiffies++;  // Increment global tick counter
+
+// Update the seed for rand() function.
+// Ring0 only
+// see: kstdlib.c
+    unsigned int new_seed = (unsigned int) (jiffies & 0xFFFFFFFF);
+    srand(new_seed);
+
+// The master timer.
+// see: grinput.c
+
+    wmTimerEvent(1234);
+}
+
+
 void hal_io_delay(void)
 {
     io_delay();

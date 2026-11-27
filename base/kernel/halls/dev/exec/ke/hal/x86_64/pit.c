@@ -186,10 +186,15 @@ void pit_speaker_off (void)
  *     but if a spawn occurs here, the spawn routine must send EOI itself.
  */
 
+// #bugbug
+// Actually this is not a good name for the case
+// when we stop using PIT and initializes the LAPIC with the same handler
 
 // __VOID_IRQ
 unsigned long irq0_TIMER(void)
 {
+// #ps: Used by PIT and LAPIC timer.
+
     unsigned long rv;
 
 // Set the current IRQL to timer interrupt level
@@ -206,7 +211,9 @@ unsigned long irq0_TIMER(void)
 
 
 // Calling the timer routine
-    DeviceInterface_PIT();
+
+    hal_DeviceInterface_TIMER();
+
 
 // Polling mode: 
 // If PS/2 devices are configured for polling, 
@@ -274,26 +281,6 @@ unsigned long irq0_TIMER(void)
     return (unsigned long) rv;
 }
 
-
-// The PIT handler for timer routines.
-// Called by irq0_TIMER().
-void DeviceInterface_PIT(void)
-{
-    if (PITInfo.initialized != TRUE)
-        return;
-
-    jiffies++;  // Increment global tick counter
-
-// Update the seed for rand() function.
-// Ring0 only
-// see: kstdlib.c
-    unsigned int new_seed = (unsigned int) (jiffies & 0xFFFFFFFF);
-    srand(new_seed);
-
-// The master timer.
-// see: grinput.c
-    wmTimerEvent(1234);
-}
 
 //-------------------------
 
