@@ -47,17 +47,64 @@ char __string_buffer[512];   // dst
 // == prototyes (internals) =========================
 //
 
-// == Get window info ==========================
-static int __gws_get_window_info_request(int fd, int wid);
-static struct gws_window_info_d *__gws_get_window_info_response(
+// == Draw Char ==========================
+// No response
+static int 
+__gws_drawchar_request (
     int fd,
-    struct gws_window_info_d *window_info );
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned int color,
+    unsigned int ch );
 
-// == Get next event ==========================
-static int __gws_get_next_event_request(int fd,int wid);
-static struct gws_event_d *__gws_get_next_event_response ( 
-    int fd, 
-    struct gws_event_d *event );
+
+// == Draw text ==========================
+// No response
+static int 
+__gws_drawtext_request (
+    int fd,
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned int color,
+    const char *string );
+
+
+// == Set text ==========================
+// No response
+static int 
+__gws_settext_request (
+    int fd,
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned long color,
+    char *string );
+
+
+// == Get text ==========================
+static int 
+__gws_gettext_request (
+    int fd,
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned long color,
+    char *string );
+static char *__gws_gettext_response(int fd);
+
+
+// == Clone and execute ==========================
+static int 
+__gws_clone_and_execute_request (
+    int fd,
+    unsigned long arg1,
+    unsigned long arg2,
+    unsigned long arg3,
+    unsigned long arg4,
+    const char *string );
+static int __gws_clone_and_execute_response(int fd);
 
 // == Change window position ==================
 static int 
@@ -65,18 +112,36 @@ __gws_change_window_position_request (
     int fd, int window, unsigned long x, unsigned long y );
 static int __gws_change_window_position_reponse(int fd);
 
+
 // == Resize window ==========================
 static int 
 __gws_resize_window_request ( 
     int fd, int window, unsigned long w, unsigned long h );
 static int __gws_resize_window_reponse(int fd);
 
+
 // == Redraw window ==========================
+// No response
 static int 
 __gws_redraw_window_request( int fd, int window, unsigned long flags );
 
+
+// == Get next event ==========================
+static int __gws_get_next_event_request(int fd,int wid);
+static struct gws_event_d *__gws_get_next_event_response ( 
+    int fd, 
+    struct gws_event_d *event );
+
+// == Get window info ==========================
+static int __gws_get_window_info_request(int fd, int wid);
+static struct gws_window_info_d *__gws_get_window_info_response(
+    int fd,
+    struct gws_window_info_d *window_info );
+
 // == Refresh Window ==========================
+// No response
 static int __gws_refresh_window_request(int fd, int window);
+
 
 // == Create Window ==========================
 static int 
@@ -94,6 +159,7 @@ __gws_createwindow_request (
     unsigned long parent,
     const char *name );
 static wid_t __gws_createwindow_response(int fd);
+
 
 // == refresh rectangle ====================
 static int 
@@ -121,61 +187,7 @@ __gws_draw_rectangle_request (
 static int __gws_draw_rectangle_response(int fd);
 
 
-// == Draw Char ==========================
-static int 
-__gws_drawchar_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned int color,
-    unsigned int ch );
-
-// == Draw text ==========================
-static int 
-__gws_drawtext_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned int color,
-    const char *string );
-
-// == set text ==========================
-static int 
-__gws_settext_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned long color,
-    char *string );
-
-// == get text ==========================
-static int 
-__gws_gettext_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned long color,
-    char *string );
-static char *__gws_gettext_response(int fd);
-
-// ----------------------
-
-static int 
-__gws_clone_and_execute_request (
-    int fd,
-    unsigned long arg1,
-    unsigned long arg2,
-    unsigned long arg3,
-    unsigned long arg4,
-    const char *string );
-static int __gws_clone_and_execute_response(int fd);
-
-// == ... ==========================
-
+// worker: Clear message buffer
 static void __gws_clear_msg_buff(void);
 
 //
@@ -194,6 +206,428 @@ static void __gws_clear_msg_buff(void)
     for (i=0; i<512; i++){
         libgws_disp->packet[i] = 0;
     };
+}
+
+static int 
+__gws_drawchar_request (
+    int fd,
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned int color,
+    unsigned int ch )
+{
+    int n_writes = 0;
+
+// Parameters:
+    if (fd<0){
+        goto fail;
+    }
+    // #todo? wid
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+
+// 0, msg code, 0, 0
+    message_buffer[0] = (unsigned long) 0;
+    message_buffer[1] = (unsigned long) GWS_DrawChar;
+    message_buffer[2] = (unsigned long) 0;
+    message_buffer[3] = (unsigned long) 0;
+// wid, l, t, color.
+    message_buffer[4] = (unsigned long) window_id;
+    message_buffer[5] = (unsigned long) (left  & 0xFFFF); 
+    message_buffer[6] = (unsigned long) (top   & 0xFFFF); 
+    message_buffer[7] = (unsigned long) (color & 0xFFFFFFFF); 
+// The 'char'.
+    message_buffer[8] = (unsigned long) (ch & 0xFF);
+    //message_buffer[0] = (unsigned long) 0;
+    // ...
+
+// Write
+    n_writes = 
+        (int) send ( 
+                fd, 
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
+    if (n_writes <= 0){
+        goto fail;
+    }
+    return (int) n_writes;
+fail:
+    return (int) -1;
+}
+
+// Draw text
+static int 
+__gws_drawtext_request (
+    int fd,
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned int color,
+    const char *string )
+{
+    register int i=0;
+    int n_writes = 0;
+    char LocalString[256];
+
+// Parameters:
+    if (fd<0){
+        goto fail;
+    }
+    // #todo: wid
+// String validation
+    if ((void*) string == NULL)
+        goto fail;
+    if (*string == 0)
+        goto fail;
+
+// String size
+    size_t StringSize = 0;
+    StringSize = (size_t) strlen(string);
+    if (StringSize <= 0)
+        goto fail;
+    if (StringSize > 256)
+        goto fail;
+
+    memset(LocalString, 0, 256);
+    sprintf(LocalString,string);
+    // #todo #bugbug
+    // That’s not safe — sprintf expects a format string. It should be:
+    //snprintf(LocalString, sizeof(LocalString), "%s", string);
+    // Otherwise, if string contains % characters, it will misbehave.
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+
+// Clean the main buffer
+    for (i=0; i<512; i++){
+        libgws_disp->packet[i] = 0;
+    };
+
+// 0, msg code, 0, 0
+    message_buffer[0] = 0;
+    message_buffer[1] = GWS_DrawText;
+    message_buffer[2] = 0;
+    message_buffer[3] = 0;
+// wid, l, t, color
+    message_buffer[4] = window_id;
+    message_buffer[5] = left;
+    message_buffer[6] = top;
+    message_buffer[7] = (unsigned long) (color & 0xFFFFFFFF);
+
+// String support
+// Fill the string buffer
+    const int StringOffset = 8;
+    char *target_base = (char *) &message_buffer[StringOffset];
+    // Clean the target buffer.
+    memset(target_base, 0, 256);
+    if (StringSize > 256)
+        goto fail;
+    // Copy the string, given it's size.
+    for (i=0; i<StringSize; i++)
+    {
+        //*target_base = *string;   // Put a char.
+        // Increment both
+        //target_base++;
+        //string++; 
+        *target_base = LocalString[i];
+        target_base++;
+    };
+    // Finalize the string
+    *target_base = 0;
+
+// Write
+    n_writes = 
+        (int) send ( 
+                fd, 
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
+    if (n_writes <= 0){
+        goto fail;
+    }
+    return (int) n_writes;
+
+fail:
+    return (int) -1;
+}
+
+// request: set text
+static int 
+__gws_settext_request (
+    int fd,
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned long color,
+    char *string )
+{
+    register int i=0;
+    int n_writes = 0;
+
+// Parameters:
+    if (fd<0){
+        goto fail;
+    }
+    // #todo: wid
+    if ((void*) string == NULL)
+        goto fail;
+    if (*string == 0)
+        goto fail;
+
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+
+// 0, msg code, 0, 0.
+    message_buffer[0] = 0;
+    message_buffer[1] = GWS_SetText;
+    message_buffer[2] = 0;
+    message_buffer[3] = 0;
+// wid, l, t, color.
+    message_buffer[4] = window_id;
+    message_buffer[5] = left; 
+    message_buffer[6] = top; 
+    message_buffer[7] = color;
+
+// String support
+// Fill the string buffer
+    static int string_off = 8;
+    char *p = (char *) &message_buffer[string_off];
+
+    // 250 is the max limit for now.
+    // #bugbug: Too smal for multiple lines.
+    // #bugbug: What is the string size?
+
+    size_t StringLenght = 0;
+    StringLenght = (size_t) strlen(string);
+    if (StringLenght <= 0){
+        printf("__gws_settext_request: StringLenght\n");
+        exit(0);
+    }
+    if (StringLenght > 250)
+        StringLenght = 250;
+
+    for (i=0; i<StringLenght; i++)
+    {
+        *p = *string;    // Put a char
+        p++;             // Increment target pointer
+        string++;        // Increment source pointer 
+    };
+
+    *p = 0;  // Finalize the string
+
+// Write
+    n_writes = 
+        (int) send ( 
+                fd, 
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
+    if (n_writes <= 0){
+        goto fail;
+    }
+    return (int) n_writes;
+
+fail:
+    return (int) -1;
+}
+
+// request: get text
+static int 
+__gws_gettext_request (
+    int fd,
+    int window_id,
+    unsigned long left,
+    unsigned long top,
+    unsigned long color,
+    char *string )
+{
+    int n_writes = 0;
+
+// Parameters:
+    if (fd<0){
+        goto fail;
+    }
+    // #todo: wid
+    if ((void*) string == NULL)
+        goto fail;
+    if (*string == 0)
+        goto fail;
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+
+// 0, msgcode, 0, 0
+    message_buffer[0] = 0;
+    message_buffer[1] = GWS_GetText;
+    message_buffer[2] = 0;
+    message_buffer[3] = 0;
+// wid, l, t, color
+    message_buffer[4] = window_id;
+    message_buffer[5] = left; 
+    message_buffer[6] = top; 
+    message_buffer[7] = color;
+
+/*
+// String support
+// Fill the string buffer
+    register int i=0;
+    int string_off=8;
+    char *p = (char *) &message_buffer[string_off];
+    for (i=0; i<250; i++)
+    {
+        *p = *string;   // Put a char.
+        // Increment both
+        p++;
+        string++; 
+    };
+    *p = 0;  // finalize the string
+*/
+
+// Write
+    n_writes = 
+        (int) send ( 
+                fd, 
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
+    if (n_writes <= 0){
+        goto fail;
+    }
+    return (int) n_writes;
+
+fail:
+    return (int) -1;
+}
+
+// response: get text
+// Waiting for response.
+// Espera para ler a resposta. 
+// Esperando com yield como teste.
+// Isso demora, pois a resposta só será enviada depois de
+// prestado o servido.
+// obs: Nesse momento deveríamos estar dormindo.
+// #todo
+// Podemos checar antes se o fd 
+// representa um objeto que permite leitura.
+// Pode nem ser possível.
+// Mas como sabemos que é um soquete,
+// então sabemos que é possível ler.
+
+static char *__gws_gettext_response(int fd)
+{
+    register int i=0;
+    ssize_t n_reads=0;
+
+    if (fd<0){
+        //printf ("__gws_gettext_response: fd\n");
+        return NULL;  
+    }
+
+    if ((void*) libgws_disp == NULL)
+        return NULL;
+    if (libgws_disp->magic != 1234)
+        return NULL;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+    char *p = (char *) &message_buffer[8];  // src
+
+// #caution
+// Waiting for response.
+// We can stay here for ever.
+
+response_loop:
+
+    n_reads = 
+        (ssize_t) recv(
+                fd, 
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
+
+    //if (n_reads<=0){
+    //    goto response_loop;
+    //}
+    
+    // #bugbug: Loop infinito.
+    // Se retornou 0, podemos tentar novamente.
+    if (n_reads == 0){
+        goto response_loop;
+    }
+    
+    // Se retornou -1 é porque algo está errado com o arquivo.
+    if (n_reads < 0)
+    {
+        gws_debug_print ("__gws_gettext_response: recv fail.\n");
+        printf          ("__gws_gettext_response: recv fail.\n");
+        printf ("Something is wrong with the socket.\n");
+        return NULL;
+    }
+
+// Get the message sent by the server.
+    int msg = (int) message_buffer[1];   
+    switch (msg){
+        case SERVER_PACKET_TYPE_REPLY:
+            goto process_reply;
+            break;
+        //case SERVER_PACKET_TYPE_REQUEST:
+        //case SERVER_PACKET_TYPE_EVENT:            
+        //case SERVER_PACKET_TYPE_ERROR:
+        default:
+            //printf ("__gws_gettext_response: Not a reply\n");
+            return NULL;
+            break; 
+    };
+
+// Process reply
+// A resposta tras o window id no início do buffer. 
+process_reply:
+
+    // #test
+    //gws_debug_print ("terminal: Testing close() ...\n"); 
+    //close (fd);
+
+    //gws_debug_print ("terminal: bye\n"); 
+    //printf ("terminal: Window ID %d \n", message_buffer[0] );
+    //printf ("__gws_gettext_response: process_reply\n");
+
+    // #todo
+    // Podemos usar a biblioteca e testarmos
+    // vários serviços da biblioteca nesse momento.
+    memset(__string_buffer, 0 ,512);
+// Get from message buffer
+// and put it into the local buffer.
+    for (i=0; i<256; i++)
+    {
+        __string_buffer[i] = *p; 
+        p++;
+    };
+    __string_buffer[i+1] = 0; // finalize the local buffer.
+
+   //printf ("__gws_gettext_response: __string_buffer[] %s\n",__string_buffer);
+   //while(1){}
+
+// Return the address of a local buffer.
+    return (char*) __string_buffer;
 }
 
 // == get window info request ==========================
@@ -1265,425 +1699,6 @@ fail:
 }
 //============================================
 
-static int 
-__gws_drawchar_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned int color,
-    unsigned int ch )
-{
-    int n_writes = 0;
-
-// Parameters:
-    if (fd<0){
-        goto fail;
-    }
-    // #todo? wid
-
-    if ((void*) libgws_disp == NULL)
-        goto fail;
-    if (libgws_disp->magic != 1234)
-        goto fail;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
-
-// 0, msg code, 0, 0
-    message_buffer[0] = (unsigned long) 0;
-    message_buffer[1] = (unsigned long) GWS_DrawChar;
-    message_buffer[2] = (unsigned long) 0;
-    message_buffer[3] = (unsigned long) 0;
-// wid, l, t, color.
-    message_buffer[4] = (unsigned long) window_id;
-    message_buffer[5] = (unsigned long) (left  & 0xFFFF); 
-    message_buffer[6] = (unsigned long) (top   & 0xFFFF); 
-    message_buffer[7] = (unsigned long) (color & 0xFFFFFFFF); 
-// The 'char'.
-    message_buffer[8] = (unsigned long) (ch & 0xFF);
-    //message_buffer[0] = (unsigned long) 0;
-    // ...
-
-// Write
-    n_writes = 
-        (int) send ( 
-                fd, 
-                libgws_disp->packet, 
-                sizeof(libgws_disp->packet), 
-                0 );
-    if (n_writes <= 0){
-        goto fail;
-    }
-    return (int) n_writes;
-fail:
-    return (int) -1;
-}
-
-// Draw text
-static int 
-__gws_drawtext_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned int color,
-    const char *string )
-{
-    register int i=0;
-    int n_writes = 0;
-    char LocalString[256];
-
-// Parameters:
-    if (fd<0){
-        goto fail;
-    }
-    // #todo: wid
-// String validation
-    if ((void*) string == NULL)
-        goto fail;
-    if (*string == 0)
-        goto fail;
-
-// String size
-    size_t StringSize = 0;
-    StringSize = (size_t) strlen(string);
-    if (StringSize <= 0)
-        goto fail;
-    if (StringSize > 256)
-        goto fail;
-
-    memset(LocalString, 0, 256);
-    sprintf(LocalString,string);
-    // #todo #bugbug
-    // That’s not safe — sprintf expects a format string. It should be:
-    //snprintf(LocalString, sizeof(LocalString), "%s", string);
-    // Otherwise, if string contains % characters, it will misbehave.
-
-    if ((void*) libgws_disp == NULL)
-        goto fail;
-    if (libgws_disp->magic != 1234)
-        goto fail;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
-
-// Clean the main buffer
-    for (i=0; i<512; i++){
-        libgws_disp->packet[i] = 0;
-    };
-
-// 0, msg code, 0, 0
-    message_buffer[0] = 0;
-    message_buffer[1] = GWS_DrawText;
-    message_buffer[2] = 0;
-    message_buffer[3] = 0;
-// wid, l, t, color
-    message_buffer[4] = window_id;
-    message_buffer[5] = left;
-    message_buffer[6] = top;
-    message_buffer[7] = (unsigned long) (color & 0xFFFFFFFF);
-
-// String support
-// Fill the string buffer
-    const int StringOffset = 8;
-    char *target_base = (char *) &message_buffer[StringOffset];
-    // Clean the target buffer.
-    memset(target_base, 0, 256);
-    if (StringSize > 256)
-        goto fail;
-    // Copy the string, given it's size.
-    for (i=0; i<StringSize; i++)
-    {
-        //*target_base = *string;   // Put a char.
-        // Increment both
-        //target_base++;
-        //string++; 
-        *target_base = LocalString[i];
-        target_base++;
-    };
-    // Finalize the string
-    *target_base = 0;
-
-// Write
-    n_writes = 
-        (int) send ( 
-                fd, 
-                libgws_disp->packet, 
-                sizeof(libgws_disp->packet), 
-                0 );
-    if (n_writes <= 0){
-        goto fail;
-    }
-    return (int) n_writes;
-
-fail:
-    return (int) -1;
-}
-
-static int 
-__gws_settext_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned long color,
-    char *string )
-{
-    register int i=0;
-    int n_writes = 0;
-
-// Parameters:
-    if (fd<0){
-        goto fail;
-    }
-    // #todo: wid
-    if ((void*) string == NULL)
-        goto fail;
-    if (*string == 0)
-        goto fail;
-
-
-    if ((void*) libgws_disp == NULL)
-        goto fail;
-    if (libgws_disp->magic != 1234)
-        goto fail;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
-
-// 0, msg code, 0, 0.
-    message_buffer[0] = 0;
-    message_buffer[1] = GWS_SetText;
-    message_buffer[2] = 0;
-    message_buffer[3] = 0;
-// wid, l, t, color.
-    message_buffer[4] = window_id;
-    message_buffer[5] = left; 
-    message_buffer[6] = top; 
-    message_buffer[7] = color;
-
-// String support
-// Fill the string buffer
-    static int string_off = 8;
-    char *p = (char *) &message_buffer[string_off];
-
-    // 250 is the max limit for now.
-    // #bugbug: Too smal for multiple lines.
-    // #bugbug: What is the string size?
-
-    size_t StringLenght = 0;
-    StringLenght = (size_t) strlen(string);
-    if (StringLenght <= 0){
-        printf("__gws_settext_request: StringLenght\n");
-        exit(0);
-    }
-    if (StringLenght > 250)
-        StringLenght = 250;
-
-    for (i=0; i<StringLenght; i++)
-    {
-        *p = *string;    // Put a char
-        p++;             // Increment target pointer
-        string++;        // Increment source pointer 
-    };
-
-    *p = 0;  // Finalize the string
-
-// Write
-    n_writes = 
-        (int) send ( 
-                fd, 
-                libgws_disp->packet, 
-                sizeof(libgws_disp->packet), 
-                0 );
-    if (n_writes <= 0){
-        goto fail;
-    }
-    return (int) n_writes;
-
-fail:
-    return (int) -1;
-}
-
-static int 
-__gws_gettext_request (
-    int fd,
-    int window_id,
-    unsigned long left,
-    unsigned long top,
-    unsigned long color,
-    char *string )
-{
-    int n_writes = 0;
-
-// Parameters:
-    if (fd<0){
-        goto fail;
-    }
-    // #todo: wid
-    if ((void*) string == NULL)
-        goto fail;
-    if (*string == 0)
-        goto fail;
-
-    if ((void*) libgws_disp == NULL)
-        goto fail;
-    if (libgws_disp->magic != 1234)
-        goto fail;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
-
-// 0, msgcode, 0, 0
-    message_buffer[0] = 0;
-    message_buffer[1] = GWS_GetText;
-    message_buffer[2] = 0;
-    message_buffer[3] = 0;
-// wid, l, t, color
-    message_buffer[4] = window_id;
-    message_buffer[5] = left; 
-    message_buffer[6] = top; 
-    message_buffer[7] = color;
-
-/*
-// String support
-// Fill the string buffer
-    register int i=0;
-    int string_off=8;
-    char *p = (char *) &message_buffer[string_off];
-    for (i=0; i<250; i++)
-    {
-        *p = *string;   // Put a char.
-        // Increment both
-        p++;
-        string++; 
-    };
-    *p = 0;  // finalize the string
-*/
-
-// Write
-    n_writes = 
-        (int) send ( 
-                fd, 
-                libgws_disp->packet, 
-                sizeof(libgws_disp->packet), 
-                0 );
-    if (n_writes <= 0){
-        goto fail;
-    }
-    return (int) n_writes;
-
-fail:
-    return (int) -1;
-}
-
-// Draw text - response.
-// Waiting for response.
-// Espera para ler a resposta. 
-// Esperando com yield como teste.
-// Isso demora, pois a resposta só será enviada depois de
-// prestado o servido.
-// obs: Nesse momento deveríamos estar dormindo.
-// #todo
-// Podemos checar antes se o fd 
-// representa um objeto que permite leitura.
-// Pode nem ser possível.
-// Mas como sabemos que é um soquete,
-// então sabemos que é possível ler.
-
-static char *__gws_gettext_response(int fd)
-{
-    register int i=0;
-    ssize_t n_reads=0;
-
-    if (fd<0){
-        //printf ("__gws_gettext_response: fd\n");
-        return NULL;  
-    }
-
-    if ((void*) libgws_disp == NULL)
-        return NULL;
-    if (libgws_disp->magic != 1234)
-        return NULL;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
-    char *p = (char *) &message_buffer[8];  // src
-
-// #caution
-// Waiting for response.
-// We can stay here for ever.
-
-response_loop:
-
-    n_reads = 
-        (ssize_t) recv(
-                fd, 
-                libgws_disp->packet, 
-                sizeof(libgws_disp->packet), 
-                0 );
-
-    //if (n_reads<=0){
-    //    goto response_loop;
-    //}
-    
-    // #bugbug: Loop infinito.
-    // Se retornou 0, podemos tentar novamente.
-    if (n_reads == 0){
-        goto response_loop;
-    }
-    
-    // Se retornou -1 é porque algo está errado com o arquivo.
-    if (n_reads < 0)
-    {
-        gws_debug_print ("__gws_gettext_response: recv fail.\n");
-        printf          ("__gws_gettext_response: recv fail.\n");
-        printf ("Something is wrong with the socket.\n");
-        return NULL;
-    }
-
-// Get the message sent by the server.
-    int msg = (int) message_buffer[1];   
-    switch (msg){
-        case SERVER_PACKET_TYPE_REPLY:
-            goto process_reply;
-            break;
-        //case SERVER_PACKET_TYPE_REQUEST:
-        //case SERVER_PACKET_TYPE_EVENT:            
-        //case SERVER_PACKET_TYPE_ERROR:
-        default:
-            //printf ("__gws_gettext_response: Not a reply\n");
-            return NULL;
-            break; 
-    };
-
-// Process reply
-// A resposta tras o window id no início do buffer. 
-process_reply:
-
-    // #test
-    //gws_debug_print ("terminal: Testing close() ...\n"); 
-    //close (fd);
-
-    //gws_debug_print ("terminal: bye\n"); 
-    //printf ("terminal: Window ID %d \n", message_buffer[0] );
-    //printf ("__gws_gettext_response: process_reply\n");
-
-    // #todo
-    // Podemos usar a biblioteca e testarmos
-    // vários serviços da biblioteca nesse momento.
-    memset(__string_buffer, 0 ,512);
-// Get from message buffer
-// and put it into the local buffer.
-    for (i=0; i<256; i++)
-    {
-        __string_buffer[i] = *p; 
-        p++;
-    };
-    __string_buffer[i+1] = 0; // finalize the local buffer.
-
-   //printf ("__gws_gettext_response: __string_buffer[] %s\n",__string_buffer);
-   //while(1){}
-
-// Return the address of a local buffer.
-    return (char*) __string_buffer;
-}
 
 // Clone and execute - request.
 static int 
@@ -2149,6 +2164,198 @@ void gws_free(void *ptr)
         return;
     }
     free(ptr);
+}
+
+// Send async request.
+// Single data. (1 data)
+// No response.
+// #todo
+// List some standard commands accepted by the ws.
+// IN: 
+// fd, request number, subrequest.
+// #todo: We need a list of services we can all with this function.
+void
+gws_async_command ( 
+    int fd, 
+    unsigned long request,
+    unsigned long sub_request,
+    unsigned long data )
+{
+    int n_writes=0;
+    int Value=0;
+    register int i=0;
+
+// Enviamos um request para o servidor.
+// Precisamos mesmo de um loop para isso?
+// Write!
+// Se foi possível enviar, então saimos do loop.  
+// Nesse caso, corremos o risco de ficarmos presos
+// caso não seja possível escrever.
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = 
+        (unsigned long *) libgws_disp->packet;
+
+// --------------------
+// Clear the main buffer
+    for (i=0; i<512; i++){
+        libgws_disp->packet[i] = 0;
+    };
+
+// wid, message code, request, subrequest, data1
+// #todo: 
+// We need a list of services we can all with this function.
+// We can deliver more data if we want.
+    message_buffer[0] = 0;
+    message_buffer[1] = GWS_AsyncCommand;
+    message_buffer[2] = request;
+    message_buffer[3] = sub_request;
+    message_buffer[4] = data;  // data1
+    // ...
+
+// Parameters
+    if (fd<0){
+        debug_print("gws_async_command: fd\n");
+        goto fail;
+    }
+// ...
+
+// Sending ...
+    n_writes = 
+        (int) send ( 
+            fd,
+            libgws_disp->packet, 
+            sizeof(libgws_disp->packet), 
+            0 );
+
+    if (n_writes <= 0){
+        goto fail;
+    }
+
+// Sync
+    rtl_set_file_sync(fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST);
+
+// No return
+    while (1){
+        Value = (int) rtl_get_file_sync(fd, SYNC_REQUEST_GET_ACTION);
+        // Essa é a sincronização esperada.
+        // Não teremos uma resposta, mas precisamos
+        // conferir a sincronização.
+        //if (Value == ACTION_REQUEST){}
+        if (Value == ACTION_NULL )  { goto done; }
+        if (Value == ACTION_ERROR ) { goto done; }
+        //#debug
+        gws_debug_print ("gws_async_command: Waiting sync flag\n"); 
+    };
+
+done:
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
+    return;
+
+fail:
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
+    return; 
+}
+
+// Send async request.
+// Multiple data. (4 data)
+void
+gws_async_command2 ( 
+    int fd, 
+    unsigned long request,
+    unsigned long sub_request,
+    unsigned long data1,
+    unsigned long data2,
+    unsigned long data3,
+    unsigned long data4 )
+{
+    register int i=0;
+    int n_writes=0;
+    int Value=0;
+
+    // #debug
+    // gws_debug_print ("gws_async_command2: send...\n"); 
+
+// Enviamos um request para o servidor.
+// Precisamos mesmo de um loop para isso?
+// Write!
+// Se foi possível enviar, então saimos do loop.  
+// Nesse caso, corremos o risco de ficarmos presos
+// caso não seja possível escrever.
+
+    if ((void*) libgws_disp == NULL)
+        goto fail;
+    if (libgws_disp->magic != 1234)
+        goto fail;
+    unsigned long *message_buffer = (unsigned long *) libgws_disp->packet;
+
+// --------------------
+// Clean the main buffer
+    for (i=0; i<512; i++){
+        libgws_disp->packet[i] = 0;
+    };
+
+// wid, msg code, request, subrequest.
+// #todo: We need a list of services we can all with this function.
+    message_buffer[0] = 0;
+    message_buffer[1] = GWS_AsyncCommand;
+    message_buffer[2] = request;
+    message_buffer[3] = sub_request;
+
+// Data field
+// #todo: We can deliver more data if we want
+    message_buffer[4] = (unsigned long) data1;
+    message_buffer[5] = (unsigned long) data2;
+    message_buffer[6] = (unsigned long) data3;
+    message_buffer[7] = (unsigned long) data4;
+    // ...
+
+    if (fd<0){
+        debug_print("gws_async_command2: fd\n");
+        goto fail;
+    }
+
+    n_writes = 
+        (int) send ( 
+                fd,
+                libgws_disp->packet, 
+                sizeof(libgws_disp->packet), 
+                0 );
+
+    if (n_writes <= 0){
+        goto fail;
+    }
+
+// Sync
+    rtl_set_file_sync ( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
+
+// No return
+    while (1){
+        Value = (int) rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
+        // Essa é a sincronização esperada.
+        // Não teremos uma resposta, mas precisamos
+        // conferir a sincronização.
+        //if (Value == ACTION_REQUEST){}
+        if (Value == ACTION_NULL )  { goto done; }
+        if (Value == ACTION_ERROR ) { goto done; }
+        //#debug
+        gws_debug_print ("gws_async_command2: Waiting sync flag\n"); 
+    };
+
+done:
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
+    return;
+
+fail:
+    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
+    __gws_clear_msg_buff();
+    return; 
 }
 
 // Draw char.
@@ -4192,198 +4399,6 @@ void gws_dock_active_window(int fd, int witch_side)
 // witch_side: 1=top, 2=right, 3=bottom, 4=left
 // 93
     gws_async_command( fd, ASYNC_REQUEST_DOCK_ACTIVE_WINDOW, witch_side, 0 );
-}
-
-// Send async request.
-// Single data. (1 data)
-// No response.
-// #todo
-// List some standard commands accepted by the ws.
-// IN: 
-// fd, request number, subrequest.
-// #todo: We need a list of services we can all with this function.
-void
-gws_async_command ( 
-    int fd, 
-    unsigned long request,
-    unsigned long sub_request,
-    unsigned long data )
-{
-    int n_writes=0;
-    int Value=0;
-    register int i=0;
-
-// Enviamos um request para o servidor.
-// Precisamos mesmo de um loop para isso?
-// Write!
-// Se foi possível enviar, então saimos do loop.  
-// Nesse caso, corremos o risco de ficarmos presos
-// caso não seja possível escrever.
-
-    if ((void*) libgws_disp == NULL)
-        goto fail;
-    if (libgws_disp->magic != 1234)
-        goto fail;
-    unsigned long *message_buffer = 
-        (unsigned long *) libgws_disp->packet;
-
-// --------------------
-// Clear the main buffer
-    for (i=0; i<512; i++){
-        libgws_disp->packet[i] = 0;
-    };
-
-// wid, message code, request, subrequest, data1
-// #todo: 
-// We need a list of services we can all with this function.
-// We can deliver more data if we want.
-    message_buffer[0] = 0;
-    message_buffer[1] = GWS_AsyncCommand;
-    message_buffer[2] = request;
-    message_buffer[3] = sub_request;
-    message_buffer[4] = data;  // data1
-    // ...
-
-// Parameters
-    if (fd<0){
-        debug_print("gws_async_command: fd\n");
-        goto fail;
-    }
-// ...
-
-// Sending ...
-    n_writes = 
-        (int) send ( 
-            fd,
-            libgws_disp->packet, 
-            sizeof(libgws_disp->packet), 
-            0 );
-
-    if (n_writes <= 0){
-        goto fail;
-    }
-
-// Sync
-    rtl_set_file_sync(fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST);
-
-// No return
-    while (1){
-        Value = (int) rtl_get_file_sync(fd, SYNC_REQUEST_GET_ACTION);
-        // Essa é a sincronização esperada.
-        // Não teremos uma resposta, mas precisamos
-        // conferir a sincronização.
-        //if (Value == ACTION_REQUEST){}
-        if (Value == ACTION_NULL )  { goto done; }
-        if (Value == ACTION_ERROR ) { goto done; }
-        //#debug
-        gws_debug_print ("gws_async_command: Waiting sync flag\n"); 
-    };
-
-done:
-    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    __gws_clear_msg_buff();
-    return;
-
-fail:
-    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    __gws_clear_msg_buff();
-    return; 
-}
-
-// Send async request.
-// Multiple data. (4 data)
-void
-gws_async_command2 ( 
-    int fd, 
-    unsigned long request,
-    unsigned long sub_request,
-    unsigned long data1,
-    unsigned long data2,
-    unsigned long data3,
-    unsigned long data4 )
-{
-    register int i=0;
-    int n_writes=0;
-    int Value=0;
-
-    // #debug
-    // gws_debug_print ("gws_async_command2: send...\n"); 
-
-// Enviamos um request para o servidor.
-// Precisamos mesmo de um loop para isso?
-// Write!
-// Se foi possível enviar, então saimos do loop.  
-// Nesse caso, corremos o risco de ficarmos presos
-// caso não seja possível escrever.
-
-    if ((void*) libgws_disp == NULL)
-        goto fail;
-    if (libgws_disp->magic != 1234)
-        goto fail;
-    unsigned long *message_buffer = (unsigned long *) libgws_disp->packet;
-
-// --------------------
-// Clean the main buffer
-    for (i=0; i<512; i++){
-        libgws_disp->packet[i] = 0;
-    };
-
-// wid, msg code, request, subrequest.
-// #todo: We need a list of services we can all with this function.
-    message_buffer[0] = 0;
-    message_buffer[1] = GWS_AsyncCommand;
-    message_buffer[2] = request;
-    message_buffer[3] = sub_request;
-
-// Data field
-// #todo: We can deliver more data if we want
-    message_buffer[4] = (unsigned long) data1;
-    message_buffer[5] = (unsigned long) data2;
-    message_buffer[6] = (unsigned long) data3;
-    message_buffer[7] = (unsigned long) data4;
-    // ...
-
-    if (fd<0){
-        debug_print("gws_async_command2: fd\n");
-        goto fail;
-    }
-
-    n_writes = 
-        (int) send ( 
-                fd,
-                libgws_disp->packet, 
-                sizeof(libgws_disp->packet), 
-                0 );
-
-    if (n_writes <= 0){
-        goto fail;
-    }
-
-// Sync
-    rtl_set_file_sync ( fd, SYNC_REQUEST_SET_ACTION, ACTION_REQUEST );
-
-// No return
-    while (1){
-        Value = (int) rtl_get_file_sync( fd, SYNC_REQUEST_GET_ACTION );
-        // Essa é a sincronização esperada.
-        // Não teremos uma resposta, mas precisamos
-        // conferir a sincronização.
-        //if (Value == ACTION_REQUEST){}
-        if (Value == ACTION_NULL )  { goto done; }
-        if (Value == ACTION_ERROR ) { goto done; }
-        //#debug
-        gws_debug_print ("gws_async_command2: Waiting sync flag\n"); 
-    };
-
-done:
-    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    __gws_clear_msg_buff();
-    return;
-
-fail:
-    rtl_set_file_sync( fd, SYNC_REQUEST_SET_ACTION, ACTION_NULL );
-    __gws_clear_msg_buff();
-    return; 
 }
 
 void
